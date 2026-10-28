@@ -1013,6 +1013,40 @@ input[type=file]{font-size:12.5px;color:var(--ink-2);max-width:100%}
 input[type=file]::file-selector-button{font:inherit;font-weight:600;font-size:12.5px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);border-radius:5px;padding:6px 12px;margin-right:10px;cursor:pointer}
 input[type=file]::file-selector-button:hover{background:var(--surface-3)}
 #pp-q{width:min(300px,100%)!important}
+.helpwrap{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:start}
+@media(max-width:860px){.helpwrap{grid-template-columns:minmax(0,1fr)}}
+.helpnav{position:sticky;top:calc(var(--hq-h) + 16px);display:flex;flex-direction:column;gap:2px}
+.helpnav input{margin-bottom:8px}
+.helpnav .hg{font-size:10px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;color:var(--ink-3);padding:10px 8px 4px}
+.helpnav button{text-align:left;background:none;border:0;border-radius:5px;padding:7px 10px;font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer}
+.helpnav button:hover{background:var(--surface-3);color:var(--ink)}
+.helpnav button[aria-current]{background:var(--accent-soft);color:var(--ink);font-weight:700;box-shadow:inset 3px 0 0 var(--sky)}
+.helpbody .cb{padding:22px 26px 26px}
+.helpbody .eyebrow{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+.helpbody h2{font-size:22px;margin:2px 0 12px}
+.helpbody h3{font-size:15px;margin:20px 0 8px}
+.helpbody p,.helpbody li,.helpbody dd{font-size:14px;line-height:1.6;color:var(--ink)}
+.helpbody .lead{font-size:15.5px;color:var(--ink)}
+.helpbody ul,.helpbody ol{padding-left:20px;margin:6px 0}
+.helpbody li{margin:5px 0}
+.helpbody table.t{margin:8px 0 4px;border:1px solid var(--border);border-radius:6px}
+.helpbody code{font-size:12.5px;background:var(--surface-3);padding:1px 5px;border-radius:3px}
+.helpbody kbd{font:inherit;font-size:11.5px;font-weight:600;border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--surface-2)}
+.hcode{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.5;overflow-x:auto;white-space:pre}
+.hflow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin:10px 0 14px}
+.hflow div{padding:11px 13px;border-right:1px solid var(--rule);border-top:3px solid var(--sky);background:var(--surface-2)}
+.hflow div:last-child{border-right:0}
+.hflow span{display:block;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;font-weight:700;color:var(--c2)}
+.hflow b{display:block;font-size:13.5px;margin-top:3px}
+.hflow small{display:block;font-size:12px;color:var(--ink-2);margin-top:2px;line-height:1.4}
+.faq dt{font-weight:700;margin-top:14px}
+.faq dd{margin:4px 0 0}
+.helpnext{display:flex;justify-content:space-between;gap:10px;margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);flex-wrap:wrap}
+.feedrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.feedst{display:grid;grid-template-columns:12px 1fr;gap:2px 8px;align-items:center}
+.feedst small{grid-column:2;color:var(--ink-3);font-size:12px}
+.fdot{width:10px;height:10px;border-radius:50%;background:var(--border-strong)}
+.fdot.on{background:var(--good)}
 /* swimlanes: the next four weeks, one lane per channel */
 .lanes{position:relative;padding:8px 16px 14px}
 .lanehead{display:grid;grid-template-columns:128px minmax(0,1fr);margin-bottom:4px}
@@ -1179,6 +1213,10 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="lists" title="Lists and Unsubscribes">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.6M18 14a5 5 0 013 6"/></svg>
       <span>Lists &amp; Unsubscribes</span><b class="nbadge" id="nb-lists" hidden></b></button>
+    <div class="navsep">Help</div>
+    <button type="button" data-hq="help" title="Help">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
+      <span>Help &amp; How-To</span></button>
   </nav>
   <div class="mast-right">
     <div class="railnote" id="rail-save"><b>Saving</b><span>Connecting…</span></div>
@@ -1205,6 +1243,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-news" hidden></section>
   <section class="page" id="page-people" hidden></section>
   <section class="page" id="page-lists" hidden></section>
+  <section class="page" id="page-help" hidden></section>
 </main>
 
 <aside class="pane" id="pane" aria-hidden="true" aria-labelledby="pane-title">
@@ -1237,7 +1276,7 @@ const MAST_IMG = "https://images.axiosplus.com/tzKbRNmynBmTCrGlg0sQ7oUtFc4=/2026
 const SEC = Object.fromEntries(SECTIONS.map(s=>[s.key,s]));
 const PEOPLE = ["Jonna","Vanessa","Kelly","Amy","Brian","Jonathan","Perry","Kathryn"];
 const SSTAT = {waiting:["Waiting on Content","wait"], in:["Content In","in"], review:["With Amy for Review","review"], changes:["Changes Requested","changes"], approved:["Approved","ok"]};
-const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], done:["Posted / Sent","ok"]};
+const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], staged:["Staged to Post","in"], done:["Posted / Sent","ok"]};
 const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", community:"Community Posts", news:"In the News", setup:"Setup", other:"Other"};
 const REUSE = [["linkedin","LinkedIn","LI"],["mailchimp","Mailchimp","MC"],["website","Website","WB"],["youtube","YouTube","YT"],["summit","Summit","SU"]];
 const MILES = [
@@ -1344,7 +1383,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -1534,7 +1573,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","results","news","people","lists"];
+const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","results","news","people","lists","help"];
 let TAB="overview";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -1545,10 +1584,17 @@ function show(tab){
   try{ if(location.hash!=="#"+tab) history.replaceState(null,"","#"+tab); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
-function renderAll(){ renderTab(TAB); badges(); }
+/* What the posting flow has already put on LinkedIn (data/posted.json, written only by the flow). */
+function applyPosted(){
+  Object.values(S.posted||{}).forEach(x=>{
+    const id=x.id||""; if(id.startsWith("ep-")){ const e=S.episodes[id.slice(3)]; if(e && !e.linkedinDone){ e.linkedinDone=true; if(x.url && !e.linkedinUrl) e.linkedinUrl=x.url; } }
+    else { const pc=S.pieces[id]; if(pc && pc.status!=="done"){ pc.status="done"; if(x.url && !pc.postedUrl) pc.postedUrl=x.url; } }
+  });
+}
+function renderAll(){ applyPosted(); renderTab(TAB); badges(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, people:renderPeople, results:renderResults})[t]();
+    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
@@ -1899,10 +1945,10 @@ function statsCalc(st){
 }
 const pct = x=>(x*100).toFixed(1)+"%";
 function statsView(ed){
-  const st=ed.stats||{}, c=statsCalc(st), has=!!c.r;
+  const st=edStats(ed), c=statsCalc(st), has=!!c.r;
   const fun = has ? '<div class="funnel">'+[["Sent",c.r],["Delivered",c.dl],["Opened",c.o],["Clicked",c.c]].map(([l,v])=>'<div class="fr"><span>'+l+'</span><span class="bar"><i style="width:'+(c.r?Math.max(1,v/c.r*100):0)+'%"></i></span><span class="fv">'+v.toLocaleString()+'</span></div>').join("")+'</div>' : '';
   const top = (st.topLinks||"").split("\n").filter(Boolean);
-  const rows = editionsSorted().filter(e=>e.stats&&+e.stats.recipients).reverse().map(e=>{ const x=statsCalc(e.stats); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td><td class="n">'+pct(x.cto)+'</td><td class="n">'+x.u.toLocaleString()+'</td></tr>'; }).join("");
+  const rows = editionsSorted().filter(e=>+edStats(e).recipients).reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td><td class="n">'+pct(x.cto)+'</td><td class="n">'+x.u.toLocaleString()+'</td></tr>'; }).join("");
   return '<div class="grid2"><div class="card"><div class="ch"><h2>This Edition</h2><div class="r"><button class="btn pri" type="button" id="ms-stats">'+(has?"Update Stats":"Record Stats")+'</button></div></div>'+
     (has?'<div class="cb"><dl class="kv"><dt>Open Rate</dt><dd>'+pct(c.openRate)+'</dd><dt>Click Rate</dt><dd>'+pct(c.ctr)+'</dd><dt>Click to Open</dt><dd>'+pct(c.cto)+'</dd><dt>Unsubscribes</dt><dd>'+c.u.toLocaleString()+'</dd></dl></div>'+fun:'<div class="empty"><b>No stats yet.</b> A week after sending, copy the numbers from Higher Logic\'s marketing report into Record Stats. Axios never gave us these, so every edition from November on is the first real record.</div>')+
     '</div><div class="card"><div class="ch"><h2>Most-Clicked Links</h2></div>'+(top.length?'<div class="checks">'+top.map(l=>'<div class="chk"><span class="ct">'+linkify(l)+'</span></div>').join("")+'</div>':'<div class="empty">Add the top links when you record the stats.</div>')+'</div></div>'+
@@ -2063,14 +2109,14 @@ function hbars(items, fmt){
 }
 function renderResults(){
   const el=$("#page-results");
-  const eds=editionsSorted().filter(e=>e.stats&&+e.stats.recipients);
-  const avgOpen = eds.length? eds.reduce((n,e)=>n+statsCalc(e.stats).openRate,0)/eds.length : 0;
+  const eds=editionsSorted().filter(e=>+edStats(e).recipients);
+  const avgOpen = eds.length? eds.reduce((n,e)=>n+statsCalc(edStats(e)).openRate,0)/eds.length : 0;
   const li=vals("pieces").filter(p=>p.channel==="linkedin" && +p.impressions);
   const liEp=vals("episodes").filter(e=>+e.liImpressions);
   const liAll=li.map(p=>({l:p.title||"Post",v:+p.impressions,c:"--c3"})).concat(liEp.map(e=>({l:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:""),v:+e.liImpressions,c:"--c3"})));
-  const yt=vals("episodes").filter(e=>+e.views);
+  const yt=vals("episodes").filter(e=>epViews(e)).map(e=>Object.assign({},e,{views:epViews(e)}));
   const ytViews=yt.reduce((n,e)=>n+(+e.views),0);
-  const mc=vals("pieces").filter(p=>p.channel==="mailchimp"&&+p.sent);
+  const mcOwn=vals("pieces").filter(p=>p.channel==="mailchimp"&&+p.sent); const mc=mcOwn.concat(feedCampaigns().filter(c=>+c.sent && !mcOwn.some(p=>(p.title||"").toLowerCase()===(c.subject||"").toLowerCase())));
   const mcOpen=mc.length? mc.reduce((n,p)=>n+(+p.opens||0)/(+p.sent),0)/mc.length : 0;
   const ppl=peopleIndex(); const dls=ppl.filter(p=>p.lists.downloaders);
   const what={}; dls.forEach(p=>p.x.forEach(x=>what[x]=(what[x]||0)+1));
@@ -2083,6 +2129,7 @@ function renderResults(){
       '<div class="tile"><div class="v">'+(mc.length?pct(mcOpen):"—")+'</div><div class="k">Mailchimp Open Rate</div><div class="s">'+mc.length+' sends logged</div></div>'+
       '<button class="tile" type="button" data-go="people"><div class="v">'+ppl.filter(p=>p.lists.subscribers).length.toLocaleString()+'</div><div class="k">Subscribers</div><div class="s">'+dls.length.toLocaleString()+' downloaders</div></button>'+
     '</div></div>'+
+    '<div class="card"><div class="ch"><h2>Daily Feed</h2><span class="note">filled in each morning by Power Automate once it\'s set up</span></div><div class="cb"><div class="feedrow">'+[["matters","MISMO Matters"],["youtube","YouTube"],["mailchimp","Mailchimp"],["linkedin","LinkedIn"]].map(([k,l])=>'<div class="feedst"><span class="fdot'+(feed(k)?" on":"")+'"></span><b>'+l+'</b><small>'+(feed(k)?"Updated "+esc(feedAge(k)):(k==="linkedin"?"Export by hand for now":"Not connected yet"))+'</small></div>').join("")+'</div></div></div>'+
     '<div class="card"><div class="ch"><h2>Bring In the Numbers</h2><span class="note">drop the file each platform exports; rows are matched to what\'s already here</span></div><div class="cb"><div class="fgrid">'+
       '<div class="field"><label class="flabel" for="rs-yt">YouTube Studio Export</label><input type="file" id="rs-yt" accept=".csv,.xlsx"><span class="hint">Analytics › Advanced mode › Content › Export. Matched to episodes by the number in the title.</span></div>'+
       '<div class="field"><label class="flabel" for="rs-li">LinkedIn Page Analytics Export</label><input type="file" id="rs-li" accept=".csv,.xlsx,.xls"><span class="hint">MISMO page › Analytics › Content › Export (the All Posts tab). Matched by post link or date.</span></div>'+
@@ -2091,7 +2138,7 @@ function renderResults(){
     '<div class="grid2" style="margin-top:22px"><div class="card"><div class="ch"><h2>Most-Watched Mic\'d Up Episodes</h2></div>'+(yt.length?hbars(yt.sort((a,b)=>b.views-a.views).slice(0,10).map(e=>({l:"Ep "+e.num+": "+(e.title||""),v:+e.views,c:"--c2"}))):'<div class="empty">Drop the YouTube Studio export above.</div>')+'</div>'+
       '<div class="card"><div class="ch"><h2>LinkedIn Posts That Reached the Most People</h2></div>'+(liAll.length?hbars(liAll.sort((a,b)=>b.v-a.v).slice(0,10)):'<div class="empty">Drop the LinkedIn export above, or type impressions on a post.</div>')+'</div></div>'+
     '<div class="grid2" style="margin-top:22px"><div class="card"><div class="ch"><h2>What People Download</h2><span class="cnt">'+dls.length.toLocaleString()+' people</span></div>'+(topWhat.length?hbars(topWhat):'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>')+'</div>'+
-      '<div class="card"><div class="ch"><h2>MISMO Matters by Edition</h2></div>'+(eds.length?'<div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent To</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+eds.slice().reverse().map(e=>{ const x=statsCalc(e.stats); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td></tr>'; }).join("")+'</tbody></table></div>':'<div class="empty">Axios never shared numbers, so the first edition here will be November. Record its stats on the MISMO Matters page a week after it goes out.</div>')+'</div></div>';
+      '<div class="card"><div class="ch"><h2>MISMO Matters by Edition</h2></div>'+(eds.length?'<div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent To</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+eds.slice().reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td></tr>'; }).join("")+'</tbody></table></div>':'<div class="empty">Axios never shared numbers, so the first edition here will be November. Record its stats on the MISMO Matters page a week after it goes out.</div>')+'</div></div>';
   $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
   const msg=$("#rs-msg",el);
   $("#rs-yt",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, miss=[];
@@ -2115,6 +2162,256 @@ function renderResults(){
       const p=vals("pieces").find(x=>x.channel==="mailchimp" && x.title && x.title.toLowerCase()===subj.toLowerCase());
       if(p){ await patch("pieces",p.id,Object.assign({status:"done"},st)); n++; } else { await put("pieces",uid("p"),Object.assign({channel:"mailchimp",title:subj,date:d,status:"done"},st)); added++; } }
     msg.textContent=n+" matched and "+added+" new Mailchimp sends brought in."; }catch(err){ msg.textContent=err.message; } };
+}
+
+/* ================= the daily stats feed (Power Automate writes data/feeds.json) ================= */
+function feed(k){ return S.feeds[k] || null; }
+function ytId(u){ const m=String(u||"").match(/(?:v=|youtu\.be\/|shorts\/)([\w-]{6,})/); return m?m[1]:""; }
+function ytStat(e,k){ if(+e[k]) return +e[k]; const f=feed("youtube"); const v=f&&f.videos&&f.videos[ytId(e.youtubeUrl)]; return v? (+v[k]||0) : 0; }
+function epViews(e){ return ytStat(e,"views"); }
+function edStats(ed){
+  if(ed.stats && +ed.stats.recipients) return ed.stats;
+  const f=feed("matters"); const m=f && (f.mailings||[]).find(x=>x.month===ed.month);
+  return m ? {recipients:m.sent, delivered:m.delivered||m.sent, opens:m.opens, clicks:m.clicks, unsubs:m.unsubs, bounces:m.bounces, topLinks:(m.topLinks||[]).join("\n"), fromFeed:true} : (ed.stats||{});
+}
+function feedCampaigns(){ const f=feed("mailchimp"); return (f&&f.campaigns)||[]; }
+function feedAge(k){ const f=feed(k); if(!f||!f.updated) return ""; const d=new Date(f.updated); return isNaN(d)?"":(MON[d.getMonth()]+" "+d.getDate()+", "+d.toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})); }
+
+/* ================= Help ================= */
+const HELP = [
+ {id:"start", t:"Start Here", g:"Basics", b:`
+  <p class="lead">Marketing HQ is MISMO's one place for marketing. Every MISMO Matters edition, Mic'd Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push lives here, on one schedule, so nothing gets missed and everyone can see what's happening.</p>
+  <h3>Finding Your Way</h3>
+  <ul>
+   <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. The small number beside a page is what needs attention there (red means past due).</li>
+   <li><b>Search</b> at the top of the menu finds sections, episodes, posts, articles and help topics. Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd>+<kbd>K</kbd> on a Mac) from anywhere.</li>
+   <li><b>Narrow the menu</b> with the arrow at its top, or press <kbd>\\</kbd>. Your choice is remembered.</li>
+   <li><b>Dark Mode</b> is at the foot of the menu. It carries across every MISMO tool.</li>
+  </ul>
+  <h3>How Editing Works</h3>
+  <ul>
+   <li><b>Click any row</b> to open it in the panel on the right. Change what you need and press <b>Save</b>. Nothing in the panel saves until you do.</li>
+   <li><b>Tick boxes</b> (setup items, summit tasks, the send checklist, milestones) save the moment you tick them, and untick to undo.</li>
+   <li><b>Close</b> without saving and the panel asks once before throwing your changes away. <kbd>Esc</kbd> also closes it.</li>
+   <li><b>Delete</b> always asks you to press it twice.</li>
+   <li><b>Dates</b> can be typed the way you'd write them (11/18/26, Nov 18) or picked from the calendar button beside the box.</li>
+  </ul>`},
+ {id:"who", t:"Who Does What", g:"Basics", b:`
+  <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
+   <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
+   <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
+   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, logs In the News, and records stats.</td></tr>
+   <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
+   <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends the episode's Google Drive link and his description in Teams.</td></tr>
+   <tr><td><b>Contributors</b></td><td>Facilitators (through Kathryn), sponsors and members send copy, quotes and headshots to Kelly. They don't need to log in.</td></tr>
+  </tbody></table>`},
+ {id:"schedule", t:"The Schedule", g:"Pages", b:`
+  <p>The Schedule page is the overview of everything.</p>
+  <ul>
+   <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page.</li>
+   <li><b>The Next Four Weeks</b> shows one line per channel. Each marker is a day with something due; hover for what it is, click to open it. A filled marker is open, a check is done, a dashed outline is an open Mic'd Up slot, and a pulsing red marker is past due.</li>
+   <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back.</li>
+   <li><b>Next Two Weeks</b> lists what's due by day, past-due items first, with who owns each.</li>
+   <li><b>Getting Set Up</b> is the checklist for launching the system. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
+  </ul>
+  <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
+ {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
+  <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, and can be changed under <b>Dates &amp; Notes</b>.</p>
+  <div class="hflow">
+   <div><span>2 weeks before</span><b>Content Due</b><small>Contributors send copy to Kelly</small></div>
+   <div><span>Next day</span><b>Sections In</b><small>Kelly drops each piece into its section</small></div>
+   <div><span>1 week before</span><b>Amy's Review</b><small>Section by section, approve or send back</small></div>
+   <div><span>Next day</span><b>Built in Higher Logic</b><small>Vanessa pastes the HTML</small></div>
+   <div><span>2 days before</span><b>Test Send</b><small>Kelly and Amy open the test</small></div>
+   <div><span>Day before</span><b>Final Approval</b><small>Amy signs off</small></div>
+   <div><span>Third Wednesday</span><b>Sent</b><small>To the MISMO Matters group</small></div>
+   <div><span>A week later</span><b>Stats Recorded</b><small>Opens, clicks, top links</small></div>
+  </div>
+  <h3>Step by Step</h3>
+  <ol>
+   <li><b>Start the edition.</b> On MISMO Matters, press <b>Start the Next Edition</b>. It creates the next month with all thirteen sections, waiting for content.</li>
+   <li><b>Drop content in as it arrives.</b> Click a section, paste the headline, body copy, quote and link, add the image, and press <b>Save</b>. There's no need to wait for everything.</li>
+   <li><b>Send each section to Amy.</b> <b>Save &amp; Send to Amy</b> marks it "With Amy for Review" and it shows in her count.</li>
+   <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
+   <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
+   <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b> and paste it into the email's HTML block, or hand it to Claude in Chrome to build. <b>Copy Plain Text</b> is the text-only version.</li>
+   <li><b>Work the Send Checklist</b> and tick each step: lists refreshed, unsubscribes removed, links tested, test send reviewed, and the rest.</li>
+   <li><b>Mark the milestones.</b> Click a date in the strip under the band to mark it done (click again to undo).</li>
+   <li><b>Record the stats</b> a week later under <b>Stats</b>, unless the daily feed is filling them in.</li>
+  </ol>
+  <p>The ring in the band shows the edition at a glance: each slice is a section, colored by where it stands. Click a slice to open that section.</p>`},
+ {id:"sections", t:"Working a Section", g:"MISMO Matters", b:`
+  <h3>The Thirteen Sections</h3>
+  <p>President's Vieaux Point, Summit Spotlight, MISMO Highlight, Workgroup Highlight, Sponsor Highlight, Implementation Success, MISMO Mic'd Up, Member Highlight, New Member Welcome, Education, Certifications, Engagement &amp; Events, and In the News. The names match the header graphics from the October edition.</p>
+  <h3>Inside a Section</h3>
+  <ul>
+   <li><b>Headline, Body Copy, Quote, Quote Attribution, Link Text and Link</b> each have their own box. Leave a blank line between paragraphs in the body.</li>
+   <li><b>Image.</b> Upload it here so it can be reused for LinkedIn and Mailchimp, or say where it is (the Q drive path). Once it's uploaded to Higher Logic, paste that link in <b>Image Link in Higher Logic</b> so the email shows it.</li>
+   <li><b>Section Header Graphic</b> is filled in from the October edition. Leave it blank to keep it, or paste a new graphic's link.</li>
+   <li><b>Collecting It, Comes From and Status</b> say who's chasing it, where it comes from and where it stands.</li>
+   <li><b>Also Use It In</b>: tick LinkedIn, Mailchimp, Website, YouTube or Summit and the section shows up as ready to reuse on that page. The small boxes on each row show where it's going.</li>
+  </ul>
+  <h3>Arranging the Edition</h3>
+  <ul>
+   <li><b>Reorder</b> by dragging a row by its grip (the six dots).</li>
+   <li><b>Leave a section out</b> this month by unticking its box. It stays in the list, greyed, for next time.</li>
+   <li><b>+ One-Off Section</b> adds something special, like a Summit Sponsor Spotlight or a sponsor banner.</li>
+   <li><b>MISMO Mic'd Up and In the News fill themselves</b> from those pages: every episode and article dated after the last edition and up to this send date. You only write the intro line.</li>
+  </ul>`},
+ {id:"preview", t:"Preview, HTML and the Send Checklist", g:"MISMO Matters", b:`
+  <ul>
+   <li>The preview only shows sections that are running and have content.</li>
+   <li>Every section has its own link, an "In This Issue" list at the top jumps to each one, and every section has "Back to top," so readers can share one story.</li>
+   <li><b>Copy HTML for Higher Logic</b> copies the whole email. Paste it into Higher Logic's HTML block. If copying is blocked, a box opens with the HTML selected so you can copy it yourself.</li>
+   <li>Images that haven't been uploaded to Higher Logic show as a placeholder saying which image goes there.</li>
+   <li>The header graphics currently load from the October edition's copies. Moving them into Higher Logic is on the setup list.</li>
+   <li>The footer's unsubscribe line is a placeholder for Higher Logic's own unsubscribe and preferences links.</li>
+  </ul>`},
+ {id:"micdup", t:"The Weekly Mic'd Up Run", g:"Channels", b:`
+  <div class="hflow">
+   <div><span>Friday · 7:30 AM</span><b>Mic'd Up</b><small>Brian sends the Google Drive link and his description in Teams</small></div>
+   <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with his description and proofed captions</small></div>
+   <div><span>Monday</span><b>MISMO LinkedIn</b><small>Post written from his description, driving to YouTube</small></div>
+   <div><span>Next Edition</span><b>MISMO Matters</b><small>Listed by itself once it's on YouTube</small></div>
+  </div>
+  <ol>
+   <li><b>Open Friday's row</b> on The Weekly Run (or press <b>+ Add Episode</b>).</li>
+   <li><b>Paste Brian's whole Teams message</b> into "Paste Brian's Teams Message." The Google Drive link, his description and the episode number are pulled out for you. Check them and press <b>Save</b>.</li>
+   <li><b>Upload to YouTube Friday afternoon.</b> Title: <i>MISMO Mic'd Up Episode NN: Title with Guest, Company</i>. Use Brian's description as written. Upload the caption file and proof every name; never burn captions into the video.</li>
+   <li><b>Tick "Posted to YouTube"</b> and paste the link. On resources.mismo.org this happens by itself: the page reads the YouTube list the home page keeps and marks each episode with its link as soon as it's up.</li>
+   <li><b>Write Monday's LinkedIn post.</b> Press <b>Write the LinkedIn Post from Brian's Description</b>, read it over, post it on the MISMO page Monday, then tick "Posted on LinkedIn" and paste the post's link.</li>
+   <li><b>The website</b> adds each episode on YouTube to its home page list by itself. <b>MISMO Matters</b> lists it in the next edition by itself.</li>
+  </ol>
+  <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>`},
+ {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
+  <ul>
+   <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
+   <li><b>Ready to Reuse from MISMO Matters</b>: any section with LinkedIn ticked under "Also Use It In." <b>Make a Post</b> starts one with its headline and copy.</li>
+   <li><b>News to Share</b>: articles from In the News not yet posted. <b>Make a Post</b> starts one with the link.</li>
+   <li><b>Make a Post</b> starts a draft here in Marketing HQ. It does not put anything on LinkedIn by itself.</li>
+   <li><b>Stage it</b> to have it go up automatically: give it a date and a post time, tick "Stage it," and save. It shows as <b>Staged to Post</b>. Once the posting flow is running (see <b>Posting and Scheduling</b>), it posts on the MISMO page at that time and marks itself posted with its link.</li>
+   <li>If you post it yourself, open it, set Status to <b>Posted / Sent</b>, paste the post's link and save. Impressions, clicks, reactions, comments and reposts can be typed in, or brought in from the LinkedIn export on Results.</li>
+  </ul>`},
+ {id:"posting", t:"Posting and Scheduling", g:"Channels", b:`
+  <p>Everything starts as a draft in Marketing HQ. Here's what can go out on its own and what's still done in the platform.</p>
+  <table class="t"><thead><tr><th>Where</th><th>Can Marketing HQ Post It?</th><th>How</th></tr></thead><tbody>
+   <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Monday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
+   <tr><td>LinkedIn, image, video or document posts</td><td>No</td><td>Power Automate's LinkedIn connector only posts link posts. Schedule these in LinkedIn itself (the clock icon next to Post on the MISMO page), then set the post's Status to Approved and note the time.</td></tr>
+   <tr><td>YouTube uploads</td><td>No</td><td>Power Automate can't upload to YouTube. Upload in YouTube Studio and set Visibility to <b>Schedule</b> for the time you want; it goes public by itself. Marketing HQ marks it on YouTube once it's up.</td></tr>
+   <tr><td>MISMO Matters</td><td>No</td><td>Built and scheduled in Higher Logic from the HTML.</td></tr>
+   <tr><td>Mailchimp</td><td>No</td><td>Scheduled in Mailchimp.</td></tr>
+  </tbody></table>
+  <h3>How the Posting Flow Works</h3>
+  <ol>
+   <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Monday posts).</li>
+   <li>Any whose date and time have arrived, and that haven't gone out, are posted on the MISMO page.</li>
+   <li>It writes what it posted, with each post's link, to <code>data/posted.json</code>. Only the flow writes that file. Marketing HQ reads it and marks each post as posted, the same way Member 360 reads what its email flow has sent.</li>
+  </ol>
+  <p>To stop a staged post, untick "Stage it" before its time.</p>`},
+ {id:"youtube", t:"YouTube", g:"Channels", b:`
+  <ul>
+   <li><b>Upload Queue</b>: episodes that have aired, or air this week, and aren't on YouTube yet.</li>
+   <li><b>Captions to Fix</b>: episodes on YouTube without proofed captions.</li>
+   <li><b>Every Upload</b> is the checklist: title format, Brian's description, captions, the Mic'd Up playlist, the website list and MISMO Matters.</li>
+   <li><b>Other Videos</b> logs FRAME videos, the MISMO Initiatives series, webinar recordings and special content.</li>
+  </ul>`},
+ {id:"mailchimp", t:"Mailchimp", g:"Channels", b:`
+  <p>Mailchimp is the stopgap while marketing email moves into Higher Logic. Log each campaign with its subject, audience (for example the compliance list or the tech list), send date and copy. Before any send, pull Mailchimp's latest unsubscribes into the one unsubscribe list. Results come from the Mailchimp export on Results, or the daily feed once it's set up.</p>`},
+ {id:"summits", t:"Summits", g:"Channels", b:`
+  <ul>
+   <li>Pick the summit at the top. The band counts the days to go, what's done and what's due.</li>
+   <li><b>Load the Standard Summit Plan</b> lays out about 27 posts and emails before, during and after, dated from the summit's first day: save the date, registration open, early-bird reminders, agenda highlights, speaker spotlights, sponsor thank-yous, countdown, know-before-you-go, daily posts at the summit, award winners, the thank-you and survey, the recap and the MISMO Matters Summit Spotlight. Anything already past is skipped.</li>
+   <li>Tick tasks off as they're done. Click one to change its date, owner, where it goes or its copy. <b>+ New Task</b> adds your own.</li>
+   <li>Summit planning (the agenda, Run of Show, hotel) stays in Summit HQ. This page is only the marketing.</li>
+  </ul>`},
+ {id:"news", t:"In the News", g:"Sources", b:`
+  <ul>
+   <li>Log each MISMO press release and each article that mentions MISMO with <b>+ Add an Article</b>: headline, outlet, date, link, and whether it's a press release or a mention.</li>
+   <li>Each item lands in the In the News section of the edition its date falls in. If an older item was missed, set <b>Goes in MISMO Matters</b> to the edition it should run in.</li>
+   <li>Items marked <b>Found Automatically</b> came from the weekly search (once it's switched on). Check each one, then untick "Found automatically · needs a look."</li>
+   <li>Outlets to check: HousingWire, National Mortgage News, Mortgage News Daily and Chrisman Commentary, Inside Mortgage Finance, Scotsman Guide, National Mortgage Professional, The Mortgage Point, Commercial Observer and MBA NewsLink.</li>
+  </ul>`},
+ {id:"results", t:"Results and Stats", g:"Sources", b:`
+  <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most.</p>
+  <h3>Bringing Numbers In by Hand</h3>
+  <table class="t"><thead><tr><th>Platform</th><th>Where the Export Is</th><th>How It's Matched</th></tr></thead><tbody>
+   <tr><td>YouTube</td><td>YouTube Studio › Analytics › Advanced mode › Content › Export</td><td>By the episode number in the title</td></tr>
+   <tr><td>LinkedIn</td><td>MISMO page › Analytics › Content › Export (All Posts tab)</td><td>By the post's link, or its date and wording; unmatched posts are added</td></tr>
+   <tr><td>Mailchimp</td><td>Campaigns › Reports › Export</td><td>By subject; unmatched campaigns are added</td></tr>
+   <tr><td>MISMO Matters</td><td>Higher Logic's report for the mailing</td><td>Typed into Record Stats on the edition</td></tr>
+  </tbody></table>
+  <p>Once the daily feed is running (see <b>Daily Stats from Power Automate</b>), YouTube, MISMO Matters and Mailchimp numbers fill themselves in every morning and these exports are only needed for LinkedIn.</p>`},
+ {id:"people", t:"Subscribers and Downloaders", g:"Sources", b:`
+  <ul>
+   <li><b>Look someone up</b> by typing any part of a name, email, organization or title. Pick a list to narrow it. Click a person for their details and everything they've downloaded.</li>
+   <li><b>Load a List</b> takes an Excel or CSV export: the website subscriber export, the downloader export, a prospect list, the MISMO Matters group, or an unsubscribe list. Columns are matched by name. People already there are kept and updated; new people are added.</li>
+   <li>The first lists loaded are Kelly's website subscribers (64) and downloaders (764) from May 1 to September 8, 2026.</li>
+   <li>This page holds names and email addresses. Share it only with the MISMO team.</li>
+  </ul>`},
+ {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
+  <ul>
+   <li><b>The Compound</b> is the set of lists behind the MISMO Matters group: the MBA Annual/IMB/LIRC list, active community members, event attendees, associate contacts, ResTech, website subscribers and downloaders, plus the member contacts, VIPs and current Axios audience still to come. Ciara Durkan at MBA refreshes it quarterly; the next refresh is November.</li>
+   <li>Counts only live here. No names are kept on this page.</li>
+   <li><b>The unsubscribe rule:</b> one list across every platform. Anyone who unsubscribed in Mailchimp, Axios or Higher Logic is left off every MISMO send, and MISMO's sends stay separate from MBA's Aptify unsubscribes.</li>
+  </ul>`},
+ {id:"saving", t:"Saving, Access and Where Things Live", g:"Behind the Scenes", b:`
+  <ul>
+   <li><b>The page</b> lives at <b>resources.mismo.org/marketing-hq/</b>, behind the shared MISMO sign-in (the same one as Summit HQ and Member 360).</li>
+   <li><b>The records</b> live in a private GitHub repository, GitMISMO/marketing-hq-data, and are read and saved through the resources.mismo.org relay. Every save is a real change with a record of who made it and when, so anything can be rolled back.</li>
+   <li><b>Two people at once:</b> if someone saved the same part a moment before you, your change is laid on top of theirs and saved again, so nobody's work is lost. Other people's changes show up within about a minute.</li>
+   <li><b>Access</b> is set per person in People &amp; Access: <b>Admin</b> and <b>Staff</b> can change anything; <b>View</b> can look but not save, and the page says so at the top.</li>
+   <li><b>Preview:</b> while the page says "Preview," nothing saves and the team keeps working in the Claude version.</li>
+   <li><b>If a save fails</b>, a red line at the bottom says why. "Not saved yet, trying again" means keep the tab open; nothing is lost.</li>
+   <li>Uploading images and "Write the LinkedIn Post" work in the Claude version today and will come to resources.mismo.org when the relay supports them.</li>
+  </ul>`},
+ {id:"automation", t:"Daily Stats from Power Automate", g:"Behind the Scenes", b:`
+  <p>Once Marketing HQ is saving on resources.mismo.org, a scheduled Power Automate flow can bring the numbers in every morning instead of anyone importing them. The flow writes one file, <code>data/feeds.json</code>, into marketing-hq-data, the same way the Member 360 email flow writes its results file. Marketing HQ reads it and fills in Results, the edition stats and the episode views on its own. Typed or imported numbers always win over the feed.</p>
+  <table class="t"><thead><tr><th>Source</th><th>Daily?</th><th>How the Flow Gets It</th></tr></thead><tbody>
+   <tr><td>MISMO Matters (Higher Logic)</td><td>Yes</td><td>HTTP call to Higher Logic's marketing (Informz) API for each mailing: sent, delivered, unique opens, unique clicks, unsubscribes, bounces. Needs an API user from Higher Logic.</td></tr>
+   <tr><td>YouTube</td><td>Yes</td><td>HTTP call to the YouTube Data API with a Google API key for views, likes and comments. Power Automate's own YouTube connector only announces new uploads; it has no view counts.</td></tr>
+   <tr><td>Mailchimp</td><td>Yes</td><td>HTTP call to Mailchimp's reports API with a Mailchimp API key.</td></tr>
+   <tr><td>LinkedIn</td><td>Not yet</td><td>Power Automate has no LinkedIn analytics action. Page analytics need a LinkedIn developer app approved for organization data. Until then, drop the monthly export on Results.</td></tr>
+   <tr><td>Website subscribers</td><td>Yes</td><td>The Subscribe button is a Smartsheet form today: a flow on "when a new row is created" can add each sign-up to the subscriber list.</td></tr>
+  </tbody></table>
+  <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
+  <h3>What the File Looks Like</h3>
+<pre class="hcode">{ "docs": {
+  "feeds/youtube":   { "updated": "2026-11-03T11:00:00Z",
+                       "videos": { "UlUdGHyQ6v0": { "views": 412, "likes": 18, "comments": 2 } } },
+  "feeds/matters":   { "updated": "…", "mailings": [ { "month": "2026-11", "sent": 31250,
+                       "delivered": 30710, "opens": 9120, "clicks": 1480, "unsubs": 41,
+                       "bounces": 540, "topLinks": ["Winter Summit registration — 212"] } ] },
+  "feeds/mailchimp": { "updated": "…", "campaigns": [ { "subject": "…", "date": "2026-11-02",
+                       "audience": "Compliance list", "sent": 1800, "opens": 610, "clicks": 95, "unsubs": 3 } ] }
+} }</pre>
+  <p>The API keys stay inside Power Automate. They never go in the page or in either repository.</p>`},
+ {id:"faq", t:"Questions and Fixes", g:"Behind the Scenes", b:`
+  <dl class="faq">
+   <dt>I don't see a Save button, or the page says view-only.</dt><dd>Your access is View. Ask Jonna to change it in People &amp; Access.</dd>
+   <dt>A red line says a change didn't save.</dt><dd>It says why and puts your change back. "Trying again" means it will save once the connection is back; keep the tab open.</dd>
+   <dt>A date won't take.</dt><dd>Type it like 11/18/26 or Nov 18, or use the calendar button.</dd>
+   <dt>Copy HTML doesn't copy.</dt><dd>A box opens with the HTML already selected. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> (<kbd>⌘</kbd>+<kbd>C</kbd>).</dd>
+   <dt>An episode is on YouTube but the page says it isn't.</dt><dd>The YouTube list refreshes every few hours. Open the episode, tick "Posted to YouTube" and paste the link.</dd>
+   <dt>An article ran last month but wasn't in that edition.</dt><dd>Open it and set "Goes in MISMO Matters" to this month.</dd>
+   <dt>Where do I add something that isn't on any page?</dt><dd>Use <b>+ New Item</b> on the Schedule, or + Add under Getting Set Up.</dd>
+  </dl>`}
+];
+const HL = {id:"start", q:""};
+function renderHelp(){
+  const el=$("#page-help"); const q=HL.q.trim().toLowerCase();
+  const strip=s=>s.replace(/<[^>]+>/g," ").toLowerCase();
+  const list=HELP.filter(h=>!q || (h.t+" "+strip(h.b)).toLowerCase().includes(q));
+  if(!HELP.find(h=>h.id===HL.id)) HL.id="start";
+  const cur=HELP.find(h=>h.id===HL.id);
+  const groups=[...new Set(HELP.map(h=>h.g))];
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use Marketing HQ</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
+    '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
+      groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
+      '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
+    '</div></article></div>';
+  $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
+  const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
 
 /* ================= MISMO Mic'd Up ================= */
@@ -2179,6 +2476,8 @@ function openEpisode(id, seed){
     {k:"youtubeUrl",label:"YouTube Link",type:"url",ph:"https://www.youtube.com/watch?v=…"},
     {sec:"MISMO LinkedIn · Monday"},
     {k:"linkedinDate",label:"LinkedIn Post Date",type:"date",hint:"The Monday after the episode"},
+    {k:"linkedinTime",label:"Post Time",ph:"e.g. 9:00 AM"},
+    {k:"linkedinAuto",label:"Stage it: post on the MISMO page automatically Monday (links to YouTube)",type:"cb",wide:true},
     {k:"linkedinDone",label:"Posted on LinkedIn",type:"cb"},
     {k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},
     {k:"linkedinCopy",label:"LinkedIn Post",type:"textarea",rows:7,ph:"Written from Brian's description. Ends with the YouTube link."},
@@ -2225,6 +2524,7 @@ function pieceFields(ch){
     {k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true},
     {k:"status",label:"Status",type:"select",opts:Object.entries(PSTAT).map(([v,[l]])=>[v,l])},
     {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["matters","micdup","news"].includes(k))}];
+  if(ch==="linkedin") base.push({k:"postTime",label:"Post Time",ph:"e.g. 9:00 AM"},{k:"autoPost",label:"Stage it: post on the MISMO page automatically at this date and time (link posts)",type:"cb",wide:true});
   if(ch==="linkedin") base.push({k:"kind",label:"Kind of Post",type:"select",opts:["Mic'd Up","In the News","Summit","Member Highlight","Sponsor Highlight","Certification","Press Release","Workgroup","MISMO Matters","Other"]});
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
   if(ch==="mailchimp") base.push({k:"audience",label:"Audience",ph:"e.g. Compliance list, Tech list"});
@@ -2243,7 +2543,7 @@ function openPiece(id, seed){
   const p = id ? Object.assign({}, S.pieces[id]) : Object.assign({}, seed);
   const ch = p.channel||"other"; const nid=id||uid("p");
   openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item")), fields:pieceFields(ch), data:p,
-    save:async v=>{ await put("pieces",nid,Object.assign({},p,v)); },
+    save:async v=>{ if(ch==="linkedin"){ if(v.autoPost && v.status!=="done") v.status="staged"; else if(!v.autoPost && v.status==="staged") v.status="ready"; } await put("pieces",nid,Object.assign({},p,v)); },
     del: id ? async()=>remove("pieces",id) : null });
 }
 function pieceRows(list, cols){
@@ -2260,7 +2560,7 @@ function wirePieceRows(el){
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
   const own=vals("pieces").filter(p=>p.channel==="linkedin");
-  const fromEp=vals("episodes").filter(e=>liDate(e)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up Episode "+(e.num||"?")+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea")), notes:e.linkedinCopy?"":"Written from Brian's description"}));
+  const fromEp=vals("episodes").filter(e=>liDate(e)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up Episode "+(e.num||"?")+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
   const upcoming=all.filter(p=>p.status!=="done" && p.date && p.date<=add(t,45)).sort((a,b)=>a.date<b.date?-1:1);
@@ -2465,9 +2765,10 @@ function openList(id){
     try{ editionsSorted().forEach(ed=>{ edSections(ed).forEach(s=>{ const nm=(s.doc.headline||s.doc.name||s.meta.name); const hay=[s.meta.name,s.doc.headline,s.doc.body,s.doc.quoteBy].join(" "); if(norm(hay).indexOf(t)<0) return; push('MISMO Matters', nm, s.meta.name+' · '+monthName(ed.month), ()=>{ go('matters'); MS.ed=ed.id; MS.sub="sections"; renderMatters(); if(!ed.archived) openSection(ed,s.k); }, hay); }); }); }catch(e){}
     try{ vals("episodes").forEach(e=>{ const hay=["Episode "+e.num,e.title,e.guests,e.company].join(" "); if(norm(hay).indexOf(t)<0) return; push("Mic'd Up", "Ep "+(e.num||"?")+": "+(e.title||""), [e.guests,e.company].filter(Boolean).join(", "), ()=>{ go('micdup'); openEpisode(e.id); }, hay); }); }catch(e){}
     try{ vals("pieces").forEach(p=>{ const hay=[p.title,p.copy,p.notes,p.kind].join(" "); if(norm(hay).indexOf(t)<0) return; push(CH[p.channel]||"Items", p.title||"Untitled", fS(p.date)+(p.owner?" · "+p.owner:""), ()=>{ const tab={linkedin:"linkedin",youtube:"youtube",mailchimp:"mailchimp",summit:"summits"}[p.channel]||"overview"; go(tab); openPiece(p.id); }, hay); }); }catch(e){}
+    try{ HELP.forEach(h=>{ const hay=h.t+" "+h.b.replace(/<[^>]+>/g," "); if(norm(hay).indexOf(t)<0) return; push("Help", h.t, h.g, ()=>{ HL.id=h.id; go('help'); renderHelp(); }, hay); }); }catch(e){}
     try{ vals("news").forEach(n=>{ const hay=[n.headline,n.outlet].join(" "); if(norm(hay).indexOf(t)<0) return; push("In the News", n.headline||"", (n.outlet||"")+" · "+fS(n.date), ()=>{ go('news'); openNews(n.id); }, hay); }); }catch(e){}
     const best={}; out.forEach(h=>{ best[h.group]=Math.max(best[h.group]||0, h.s); });
-    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Setup'];
+    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Setup','Help'];
     out.sort((a,b)=>(best[b.group]-best[a.group])||(ORDER.indexOf(a.group)-ORDER.indexOf(b.group))||(b.s-a.s)||String(a.name).localeCompare(String(b.name)));
     return out;
   }
