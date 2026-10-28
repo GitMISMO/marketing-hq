@@ -693,9 +693,9 @@ body.railmini .railfind{padding:9px 0 2px;display:flex;justify-content:center}
 body.railmini .railfind .fi,body.railmini .railfind input,body.railmini .railq-x,body.railmini .railhits{display:none}
 body.railmini .railfind-b{display:flex}
 body.railmini .hq nav{padding:6px 0 4px;align-items:center;gap:4px}
-body.railmini .hq nav button{width:42px;padding:10px 0;justify-content:center;border-radius:9px;box-shadow:none}
-body.railmini .hq nav button span,body.railmini .hq nav button .nbadge{display:none}
-body.railmini .hq nav button svg{width:19px;height:19px}
+body.railmini .hq nav button,body.railmini .hq nav a.navlink{width:42px;padding:10px 0;justify-content:center;border-radius:9px;box-shadow:none}
+body.railmini .hq nav a.navlink span,body.railmini .hq nav a.navlink .ext,body.railmini .hq nav button span,body.railmini .hq nav button .nbadge{display:none}
+body.railmini .hq nav a.navlink svg,body.railmini .hq nav button svg{width:19px;height:19px}
 body.railmini .hq nav button[aria-current]{background:var(--sky);color:var(--navy-deep,#06202f)}
 body.railmini .hq nav button[aria-current] svg{stroke:var(--navy-deep,#06202f);opacity:1}
 body.railmini .hq .mast-right{gap:3px;padding:8px 0 11px;align-items:center}
@@ -729,9 +729,11 @@ body.railmini .railnote{display:none}
 .railhits .rh i{display:block;font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;color:var(--ink-3);margin-top:1px;overflow-wrap:anywhere}
 .railhits .rh-none{padding:10px;font-size:12px;color:var(--ink-3)}
 .hq nav{display:flex;flex-direction:column;gap:1px;padding:8px 8px 4px;flex:0 0 auto}
-.hq nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:6px;color:rgba(255,255,255,.76);padding:8px 10px;font:inherit;font-family:var(--display);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
-.hq nav button svg{width:17px;height:17px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
-.hq nav button:hover{color:#fff;background:rgba(255,255,255,.09)}
+.hq nav a.navlink{text-decoration:none;box-sizing:border-box}
+.hq nav a.navlink .ext{margin-left:auto;font-style:normal;font-size:12px;opacity:.6}
+.hq nav button,.hq nav a.navlink{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:6px;color:rgba(255,255,255,.76);padding:8px 10px;font:inherit;font-family:var(--display);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap}
+.hq nav a.navlink svg,.hq nav button svg{width:17px;height:17px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.hq nav a.navlink:hover,.hq nav button:hover{color:#fff;background:rgba(255,255,255,.09)}
 .hq nav button[aria-current]{color:#fff;font-weight:600;background:var(--navy-mid,#14486e);box-shadow:inset 3px 0 0 var(--sky)}
 .hq nav button[aria-current] svg{opacity:1;stroke:var(--sky)}
 .hq nav button:focus-visible{outline:2px solid var(--sky);outline-offset:-2px}
@@ -1217,6 +1219,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="help" title="Help">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
       <span>Help &amp; How-To</span></button>
+    <a class="navlink" href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener" title="Open the public Subscribe form (new tab)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M16 2.5h5.5V8M21.5 2.5l-6 6" style="stroke-width:1.5"/></svg>
+      <span>Subscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
   </nav>
   <div class="mast-right">
     <div class="railnote" id="rail-save"><b>Saving</b><span>Connecting…</span></div>
@@ -1338,7 +1343,7 @@ const SUMMIT_PLAN = [
 ];
 const SUMMIT_VIA = ["LinkedIn","MISMO Matters","Email","Website","Event App","Onsite","Mailchimp","YouTube"];
 const MICDUP_START = "2026-10-23";
-const SUBSCRIBE_URL = "https://app.smartsheet.com/b/form/a468c0d093284b9ba54fd2f3afad7731";
+const SUBSCRIBE_URL = "https://resources.mismo.org/forms/subscribe/";  // MISMO's own form (replaced the Smartsheet form)
 
 /* ================= little helpers ================= */
 const $ = (s,r=document)=>r.querySelector(s);
@@ -2034,7 +2039,7 @@ const HLST = {added:["In Higher Logic","ok"], pending:["Not in Higher Logic Yet"
 function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),String(s.at||"").slice(0,10)].map(q).join(","))).join("\n"); }
 function signupsCard(){
   const list=signupsSorted(), t=T(), wk=list.filter(s=>String(s.at||"").slice(0,10)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
-  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r">'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
+  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r"><a class="btn sm" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener">Open Subscribe Form&nbsp;↗</a><button class="btn sm" type="button" id="su-link">Copy Form Link</button>'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Signed Up</th><th>Name</th><th>Email</th><th>Company</th><th>Interests</th><th>Higher Logic</th></tr></thead><tbody>'+
       list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(String(s.at||"").slice(0,10)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
     :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, already added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
@@ -2063,6 +2068,7 @@ function renderPeople(){
     '</div>'+
     '<p class="foot">Lists loaded: '+(vals("audience").filter(d=>d.part===1||!d.part).map(d=>esc(d.label||PEOPLE_LISTS[d.list]||d.list)+(d.covers?' ('+esc(d.covers)+')':'')).join(" · ")||"none")+'. This page is for the MISMO team only; share it with care.</p>';
   $("#pp-import",el).onclick=openImportPeople;
+  const sl=$("#su-link",el); if(sl) sl.onclick=()=>copyText(SUBSCRIBE_URL,"Subscribe form link");
   const sc=$("#su-csv",el); if(sc) sc.onclick=()=>copyText(signupCSV(signupsSorted().filter(s=>s.hl!=="added")),"Sign-ups for Higher Logic (CSV)");
   const qi=$("#pp-q",el); qi.oninput=()=>{ PL.q=qi.value; PL.limit=150; clearTimeout(PL._t); PL._t=setTimeout(()=>{ renderPeople(); const n=$("#pp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
   $("#pp-list",el).onchange=e=>{ PL.list=e.target.value; renderPeople(); };
@@ -2364,7 +2370,8 @@ const HELP = [
    <li>This page holds names and email addresses. Share it only with the MISMO team.</li>
   </ul>`},
  {id:"subscribe", t:"The Subscribe Form", g:"Sources", b:`
-  <p>The website's Subscribe button opens MISMO's own form at <b>resources.mismo.org/forms/subscribe/</b>, in the website's look. It replaces the Smartsheet form.</p>
+  <p>The website's Subscribe button opens MISMO's own form at <a href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener"><b>resources.mismo.org/forms/subscribe/</b></a>, in the website's look. It replaces the Smartsheet form, and the MISMO Matters footer now links to it too.</p>
+  <p>To get there fast: <b>Subscribe Form</b> at the bottom of the left menu, or <b>Open Subscribe Form</b> and <b>Copy Form Link</b> on the Website Sign-Ups card under Subscribers.</p>
   <div class="hflow">
    <div><span>On the Website</span><b>Someone Subscribes</b><small>Name, work email, company, title and what interests them</small></div>
    <div><span>Seconds Later</span><b>Higher Logic</b><small>The sign-up flow adds them to the MISMO Matters list</small></div>
