@@ -1383,7 +1383,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2024,7 +2024,20 @@ function peopleIndex(){
   const map={};
   Object.keys(PEOPLE_LISTS).forEach(l=>audienceRows(l).forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists[l]=true; if(r.l && r.l>p.last) p.last=r.l; if(r.d && r.d>p.last) p.last=r.d; if(r.x) r.x.forEach(x=>{ if(!p.x.includes(x)) p.x.push(x); }); p.c+=(+r.c||0); }));
+  vals("signups").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
+    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=String(r.at||"").slice(0,10); if(d>p.last) p.last=d; });
   return Object.values(map);
+}
+/* sign-ups from the website form, newest first */
+function signupsSorted(){ return vals("signups").sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
+const HLST = {added:["In Higher Logic","ok"], pending:["Not in Higher Logic Yet","review"], failed:["Higher Logic Refused","changes"]};
+function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),String(s.at||"").slice(0,10)].map(q).join(","))).join("\n"); }
+function signupsCard(){
+  const list=signupsSorted(), t=T(), wk=list.filter(s=>String(s.at||"").slice(0,10)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
+  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r">'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
+    (list.length?'<div class="tw"><table class="t"><thead><tr><th>Signed Up</th><th>Name</th><th>Email</th><th>Company</th><th>Interests</th><th>Higher Logic</th></tr></thead><tbody>'+
+      list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(String(s.at||"").slice(0,10)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
+    :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, already added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
 }
 function renderPeople(){
   const el=$("#page-people"); const all=peopleIndex();
@@ -2042,6 +2055,7 @@ function renderPeople(){
       '<div class="tile"><div class="v" style="font-size:19px;line-height:1.25">'+esc(topOrg?topOrg[0]:"—")+'</div><div class="k">Most People From</div><div class="s">'+(topOrg?topOrg[1]+" people":"")+'</div></div>'+
       '<div class="tile"><div class="v">'+esc(lastDl?fS(lastDl):"—")+'</div><div class="k">Latest Download</div><div class="s">in the lists loaded</div></div>'+
     '</div></div>'+
+    signupsCard()+
     '<div class="card"><div class="ch"><h2>Look Someone Up</h2><span class="cnt">'+rows.length.toLocaleString()+'</span><div class="r" style="align-items:center"><input type="search" class="plain" id="pp-q" placeholder="Name, email, organization or title" value="'+esc(PL.q)+'" style="width:300px" autocomplete="off"><select id="pp-list" style="width:auto"><option value="all">Everyone</option>'+Object.entries(PEOPLE_LISTS).map(([k,l])=>'<option value="'+k+'"'+(PL.list===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select></div></div>'+
       (rows.length?'<div class="tw"><table class="t"><thead><tr><th>Name</th><th>Email</th><th>Organization</th><th>Title</th><th>Lists</th><th>Last Activity</th></tr></thead><tbody>'+
         rows.slice(0,PL.limit).map(p=>'<tr class="click" data-pe="'+esc(p.e)+'"><td><b>'+esc(p.n||"—")+'</b></td><td>'+esc(p.e)+'</td><td>'+esc(p.o)+'</td><td>'+esc(p.t)+'</td><td>'+Object.keys(p.lists).map(l=>'<span class="chip '+(l==="unsubscribed"?"changes":l==="subscribers"?"ok":"in")+'">'+esc((PEOPLE_LISTS[l]||l).replace("Website ",""))+'</span>').join(" ")+'</td><td>'+esc(p.last?fS(p.last):"—")+'</td></tr>').join("")+
@@ -2049,6 +2063,7 @@ function renderPeople(){
     '</div>'+
     '<p class="foot">Lists loaded: '+(vals("audience").filter(d=>d.part===1||!d.part).map(d=>esc(d.label||PEOPLE_LISTS[d.list]||d.list)+(d.covers?' ('+esc(d.covers)+')':'')).join(" · ")||"none")+'. This page is for the MISMO team only; share it with care.</p>';
   $("#pp-import",el).onclick=openImportPeople;
+  const sc=$("#su-csv",el); if(sc) sc.onclick=()=>copyText(signupCSV(signupsSorted().filter(s=>s.hl!=="added")),"Sign-ups for Higher Logic (CSV)");
   const qi=$("#pp-q",el); qi.oninput=()=>{ PL.q=qi.value; PL.limit=150; clearTimeout(PL._t); PL._t=setTimeout(()=>{ renderPeople(); const n=$("#pp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
   $("#pp-list",el).onchange=e=>{ PL.list=e.target.value; renderPeople(); };
   const more=$("#pp-more",el); if(more) more.onclick=()=>{ PL.limit+=300; renderPeople(); };
@@ -2345,9 +2360,29 @@ const HELP = [
   <ul>
    <li><b>Look someone up</b> by typing any part of a name, email, organization or title. Pick a list to narrow it. Click a person for their details and everything they've downloaded.</li>
    <li><b>Load a List</b> takes an Excel or CSV export: the website subscriber export, the downloader export, a prospect list, the MISMO Matters group, or an unsubscribe list. Columns are matched by name. People already there are kept and updated; new people are added.</li>
-   <li>The first lists loaded are Kelly's website subscribers (64) and downloaders (764) from May 1 to September 8, 2026.</li>
+   <li>The first lists loaded are Kelly's website subscribers (64) and downloaders (764) from May 1 to September 8, 2026. New subscribers from the website form are added on their own (see <b>The Subscribe Form</b>).</li>
    <li>This page holds names and email addresses. Share it only with the MISMO team.</li>
   </ul>`},
+ {id:"subscribe", t:"The Subscribe Form", g:"Sources", b:`
+  <p>The website's Subscribe button opens MISMO's own form at <b>resources.mismo.org/forms/subscribe/</b>, in the website's look. It replaces the Smartsheet form.</p>
+  <div class="hflow">
+   <div><span>On the Website</span><b>Someone Subscribes</b><small>Name, work email, company, title and what interests them</small></div>
+   <div><span>Seconds Later</span><b>Higher Logic</b><small>The sign-up flow adds them to the MISMO Matters list</small></div>
+   <div><span>Same Moment</span><b>Marketing HQ</b><small>They appear under Website Sign-Ups on Subscribers</small></div>
+  </div>
+  <ul>
+   <li><b>Website Sign-Ups</b> on the Subscribers page lists the newest first, with whether each person made it into Higher Logic.</li>
+   <li>If Higher Logic refused someone, or the automatic step isn't on yet, <b>Copy for Higher Logic</b> copies those people as a CSV to import into the MISMO Matters list by hand.</li>
+   <li>The interests people pick (AI and FRAME, eMortgage, Servicing and so on) are kept with each sign-up, ready for targeted sends later.</li>
+   <li>Robots are turned away quietly: a hidden field and a speed check stop automated sign-ups without bothering real people.</li>
+  </ul>
+  <h3>How It's Wired</h3>
+  <ol>
+   <li>The form sends each sign-up to the <b>MISMO Matters Sign-Ups</b> flow in Power Automate, the same kind of door the certification applications use.</li>
+   <li>The flow adds the person to the MISMO Matters list through Higher Logic's marketing API.</li>
+   <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, with the sign-up and whether Higher Logic took it). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
+   <li>Marketing HQ reads that file and shows the sign-up.</li>
+  </ol>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
    <li><b>The Compound</b> is the set of lists behind the MISMO Matters group: the MBA Annual/IMB/LIRC list, active community members, event attendees, associate contacts, ResTech, website subscribers and downloaders, plus the member contacts, VIPs and current Axios audience still to come. Ciara Durkan at MBA refreshes it quarterly; the next refresh is November.</li>
@@ -2371,7 +2406,7 @@ const HELP = [
    <tr><td>YouTube</td><td>Yes</td><td>HTTP call to the YouTube Data API with a Google API key for views, likes and comments. Power Automate's own YouTube connector only announces new uploads; it has no view counts.</td></tr>
    <tr><td>Mailchimp</td><td>Yes</td><td>HTTP call to Mailchimp's reports API with a Mailchimp API key.</td></tr>
    <tr><td>LinkedIn</td><td>Not yet</td><td>Power Automate has no LinkedIn analytics action. Page analytics need a LinkedIn developer app approved for organization data. Until then, drop the monthly export on Results.</td></tr>
-   <tr><td>Website subscribers</td><td>Yes</td><td>The Subscribe button is a Smartsheet form today: a flow on "when a new row is created" can add each sign-up to the subscriber list.</td></tr>
+   <tr><td>Website subscribers</td><td>As they happen</td><td>MISMO's own Subscribe form sends each sign-up straight to Higher Logic and Marketing HQ (see <b>The Subscribe Form</b>).</td></tr>
   </tbody></table>
   <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
   <h3>What the File Looks Like</h3>
