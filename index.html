@@ -2641,7 +2641,7 @@ const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set()};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
-function imgSrc(im){ return IMG_LOCAL[im.id] || im.url || (im.assetId ? "/_blob/"+im.assetId : ""); }
+function imgSrc(im){ return IMG_LOCAL[im.id] || im.url || (im.assetId ? "/_blob/"+im.assetId : "") || im.hlUrl || ""; }
 /* pictures kept in SharePoint come through the Marketing HQ Images flow (resources.mismo.org only) */
 const SP_IMG = ()=>window.__hqImages || null;
 const IMG_Q = {busy:0, wait:[], tried:{}};
