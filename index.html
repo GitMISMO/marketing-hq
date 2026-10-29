@@ -584,13 +584,53 @@
   }
   function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
 
+  /* ---------- pictures: MISMO's SharePoint, through the "Marketing HQ Images" flow ----------
+     The flow checks the person's resources.mismo.org sign-in with the relay before it does
+     anything, so the address alone opens nothing. Pictures are saved under
+     Q Drive > MISMO > Active Documents > Marketing > Marketing HQ Images > YYYY-MM. */
+  var IMG_FLOW = 'https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/01f7614395764726a891cc4895979fc0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=V95BJOC4MMsJqZ7rtare6aDAbOxfpVJ_PCDOuH65mUo';
+  function imgCall(body) {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Sign in to resources.mismo.org first', 401));
+    body.token = tok;
+    return fetch(IMG_FLOW, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) {
+        if (r.ok) return j;
+        throw err(r.status === 403 ? 'DENIED' : 'HTTP_' + r.status, r.status === 403 ? 'Your account can\u2019t do that in Marketing HQ' : 'SharePoint didn\u2019t answer (' + r.status + ')', r.status);
+      }); }, function () { throw err('OFFLINE', 'Could not reach SharePoint', 0); });
+  }
+  function b64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1] || ''); }; r.onerror = function () { rej(err('read_failed', 'Could not read the file')); }; r.readAsDataURL(blob); }); }
+  function unb64(s, type) { var bin = atob(s || ''), n = bin.length, u = new Uint8Array(n); for (var i = 0; i < n; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: type || 'application/octet-stream' }); }
+  function pick(o, keys) { for (var i = 0; i < keys.length; i++) { var v = o[keys[i]]; if (v !== undefined && v !== null && v !== '') return v; } return ''; }
+  window.__hqImages = {
+    get: function (path) { return imgCall({ action: 'get', path: path }).then(function (j) { return unb64(j.content, j.type); }); },
+    list: function (path) {
+      return imgCall({ action: 'list', path: path }).then(function (j) {
+        return (j.files || []).map(function (f) {
+          var full = String(pick(f, ['{FullPath}', 'FullPath', 'FileRef'])).replace(/^\/+/, '');
+          return { name: String(pick(f, ['{FilenameWithExtension}', 'FileLeafRef', '{Name}', 'Name'])), path: '/' + full,
+            folder: f['{IsFolder}'] === true || String(f.FSObjType) === '1', folderPath: String(pick(f, ['{Path}'])).replace(/\/$/, ''),
+            size: +pick(f, ['{FileSize}', 'File_x0020_Size', 'FileSize']) || 0, modified: pick(f, ['Modified', '{ModifiedDate}']) };
+        });
+      });
+    },
+    save: function (blob, name) {
+      var d = new Date(), folder = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+      var file = now().toString(36) + '-' + String(name || blob.name || 'image').replace(/[\\/:*?"<>|#%]+/g, '-').slice(-80);
+      return b64(blob).then(function (content) { return imgCall({ action: 'save', folder: folder, name: file, content: content }); })
+        .then(function (j) { return { id: '/' + String(j.path || '').replace(/^\/+/, ''), url: '', sizeBytes: blob.size, contentType: blob.type, sp: true }; });
+    }
+  };
+  var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
+
   /* ---------- the door ---------- */
   window.claude = {
     use: function (cap) {
       if (cap === 'db') return whenReady().then(function () { return DB; });
       if (cap === 'user') return whenReady().then(function () { return USER; });
       if (cap === 'downloads') return Promise.resolve(DOWNLOADS);
-      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay; 'assets' (adding pictures) waits for the SharePoint flow */
+      if (cap === 'assets') return whenReady().then(function () { return PREVIEW ? null : ASSETS; });
+      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay */
     }
   };
   /* the notice at the top of the page: preview, or view-only access */
@@ -826,6 +866,7 @@ em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .imnote{display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px}
 .imthumb{aspect-ratio:16/10;background:repeating-conic-gradient(var(--rule) 0 25%,transparent 0 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .imthumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.imload{font-size:12px;color:var(--ink-3)}
 .imbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
 .imbody>b{font-size:13.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .immeta{display:flex;gap:5px;flex-wrap:wrap}
@@ -2520,7 +2561,7 @@ const HELP = [
   <h3>Where the Pictures Live</h3>
   <ul>
    <li><b>Claude version:</b> in the page's own private image store.</li>
-   <li><b>resources.mismo.org version:</b> MISMO's SharePoint, once that's connected. Until then, add pictures on the Claude version.</li>
+   <li><b>resources.mismo.org version:</b> MISMO's SharePoint. New pictures are saved to Q Drive › MISMO › Active Documents › Marketing › Marketing HQ Images, in a folder for each month. <b>Add from SharePoint</b> lists pictures that are already in SharePoint (Branding - 2026, for example) without copying them. Only people signed in with access to Marketing HQ can see or add them.</li>
   </ul>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
@@ -2601,6 +2642,36 @@ const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
 function imgSrc(im){ return IMG_LOCAL[im.id] || im.url || (im.assetId ? "/_blob/"+im.assetId : ""); }
+/* pictures kept in SharePoint come through the Marketing HQ Images flow (resources.mismo.org only) */
+const SP_IMG = ()=>window.__hqImages || null;
+const IMG_Q = {busy:0, wait:[], tried:{}};
+function imgEnsure(im){
+  if(!im || IMG_LOCAL[im.id] || !im.spPath || !SP_IMG()) return Promise.resolve();
+  if(IMG_Q.tried[im.id]) return IMG_Q.tried[im.id];
+  IMG_Q.tried[im.id] = new Promise(res=>{
+    const run=()=>{ IMG_Q.busy++; SP_IMG().get(im.spPath).then(b=>{ IMG_LOCAL[im.id]=URL.createObjectURL(b); schedule(); }).catch(()=>{ delete IMG_Q.tried[im.id]; }).then(()=>{ IMG_Q.busy--; res(); const n=IMG_Q.wait.shift(); if(n) n(); }); };
+    if(IMG_Q.busy<4) run(); else IMG_Q.wait.push(run);
+  });
+  return IMG_Q.tried[im.id];
+}
+const IMG_EXT = /\.(png|jpe?g|gif|svg|webp)$/i;
+async function addFromSharePoint(path, campaign){
+  const sp=SP_IMG(); if(!sp){ toast("SharePoint pictures open on resources.mismo.org."); return; }
+  toast("Reading the SharePoint folder…", 60000);
+  let files; try{ files=await sp.list(path); }catch(e){ toast("Couldn't read that folder: "+(e.message||"try again"), 5000); return; }
+  const have=new Set(vals("images").map(i=>i.spPath).filter(Boolean));
+  const pics=files.filter(f=>!f.folder && IMG_EXT.test(f.name)), other=files.filter(f=>!f.folder && !IMG_EXT.test(f.name)).length;
+  let n=0;
+  for(const f of pics){ if(have.has(f.path)) continue;
+    await put("images", uid("img"), {name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name, campaign:campaign||"brand", edition:"", alt:"", credit:"", notes:"From SharePoint: "+f.folderPath, w:0, h:0, size:f.size||0, type:"", url:"", assetId:"", spPath:f.path, at:f.modified||new Date().toISOString(), archived:false, source:"sharepoint"}); n++; }
+  toast(n+" picture"+(n===1?"":"s")+" added from SharePoint"+(pics.length-n?" ("+(pics.length-n)+" already here)":"")+(other?". "+other+" other file"+(other===1?"":"s")+" (PDFs, design files) left in SharePoint.":"."), 7000);
+}
+function openAddFromSharePoint(){
+  openPane({eye:"Image Library", title:"Add Pictures from SharePoint", data:{path:"/MISMO/Active Documents/Marketing/Branding - 2026", campaign:"brand"},
+    fields:[{k:"path",label:"SharePoint Folder (in Q Drive)",wide:true,ph:"/MISMO/Active Documents/Marketing/…"},{k:"campaign",label:"Tag Them As",type:"select",opts:IMG_CAMPS},
+      {k:"_h",type:"html",wide:true,html:()=>'<div class="hint">Every picture in the folder and its subfolders is listed in the library. The files stay where they are in SharePoint, so nothing is copied twice. Pictures already listed are skipped.</div>'}],
+    buttons:[{label:"Add These Pictures", run:async v=>{ closePane(true); await addFromSharePoint(v.path, v.campaign); }}]});
+}
 function imgKB(n){ n=+n||0; return n>=1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(n/1024))+" KB"; }
 function imgsLive(){ return vals("images").filter(im=>IM.arch ? true : !im.archived).sort((a,b)=>(a.at||"")<(b.at||"")?1:-1); }
 function imgDims(file){ return new Promise(res=>{ const u=URL.createObjectURL(file), i=new Image(); i.onload=()=>{ res({w:i.naturalWidth,h:i.naturalHeight}); URL.revokeObjectURL(u); }; i.onerror=()=>{ res({w:0,h:0}); URL.revokeObjectURL(u); }; i.src=u; }); }
@@ -2622,7 +2693,7 @@ async function addImages(files, preset){
         name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name,
         campaign:IM.camp||"matters", edition:(IM.camp||"matters")==="matters" ? (IM.ed||(ed&&ed.id)||"") : "",
         alt:"", credit:"", notes:"", w:dims.w, h:dims.h, size:r.sizeBytes||f.size, type:r.contentType||f.type,
-        url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:"",
+        url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:"", spPath:r.sp ? r.id : "",
         at:new Date().toISOString(), archived:false
       }, preset||{});
       await put("images", id, doc); made.push(Object.assign({id},doc));
@@ -2660,7 +2731,7 @@ async function downloadZip(ims, label){
   const used=new Set(), files=[]; let n=0;
   for(const im of ims){
     n++; toast("Gathering "+n+" of "+ims.length+"…", 60000);
-    try{ const r=await fetch(imgSrc(im)); if(!r.ok) throw 0; const buf=new Uint8Array(await r.arrayBuffer());
+    try{ await imgEnsure(im); const r=await fetch(imgSrc(im)); if(!r.ok) throw 0; const buf=new Uint8Array(await r.arrayBuffer());
       let nm=imgFileName(im), base=nm.replace(/(\.[^.]+)$/,""), ext=(nm.match(/\.[^.]+$/)||[""])[0], i=2; while(used.has(nm.toLowerCase())) nm=base+" ("+(i++)+")"+ext; used.add(nm.toLowerCase());
       files.push({name:nm, data:buf}); }catch(e){}
   }
@@ -2670,6 +2741,7 @@ async function downloadZip(ims, label){
 }
 async function downloadImage(im){
   try{
+    await imgEnsure(im); if(!imgSrc(im)) throw new Error("not loaded");
     const r=await fetch(imgSrc(im)); if(!r.ok) throw new Error("HTTP "+r.status);
     await saveBlob(await r.blob(), imgFileName(im));
   }catch(e){ window.open(imgSrc(im),"_blank","noopener"); toast("Opened the image in a new tab. Right-click it and choose Save Image As.", 5000); }
@@ -2685,7 +2757,7 @@ function renderImages(){
   const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
   const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
-      (ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
+      (SP_IMG()?'<button class="btn" type="button" id="im-sp">Add from SharePoint</button>':'')+(ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
     '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.length+'</em> image'+(live.length===1?"":"s")+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
       (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.' : 'Adding pictures here opens once SharePoint is connected. Use the Claude version until then.')+'</div>'+
       '<div class="tiles"><div class="tile"><div class="v sky">'+live.length+'</div><div class="k">Images</div><div class="s">ready to use</div></div>'+
@@ -2699,12 +2771,14 @@ function renderImages(){
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
       (list.length?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.length+' (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
-          '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy"></div>'+
+          '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
           '<div class="imsub">'+(im.w?im.w+" × "+im.h+" · ":"")+imgKB(im.size)+' · '+esc(fS(String(im.at||"").slice(0,10)))+'</div>'+
           '<div class="imact"><button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button></div></div></div>').join("")+'</div>'
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
     '</div>';
+  const spb=$("#im-sp",el); if(spb) spb.onclick=openAddFromSharePoint;
+  list.slice(0,60).forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
   const add=$("#im-add",el), file=$("#im-file",el);
   if(add) add.onclick=()=>file.click();
   if(file) file.onchange=async()=>{ await addImages(file.files); file.value=""; };
@@ -2719,8 +2793,9 @@ function renderImages(){
   $$("[data-imcp]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); copyImageLink(S.images[b.dataset.imcp]); });
   $$(".imcard",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
 }
-function openImage(id){
-  const im=S.images[id]; if(!im) return;
+async function openImage(id){
+  let im=S.images[id]; if(!im) return;
+  if(!imgSrc(im) && im.spPath && SP_IMG()){ toast("Loading the picture…", 20000); await imgEnsure(im); toast("Ready", 800); im=S.images[id]; }
   const eds=editionsSorted();
   const fields=[
     {k:"_pv",type:"html",wide:true,html:()=>'<div class="impv"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'"></div><div class="imsub" style="margin-top:6px">'+esc(im.file||"")+' · '+(im.w?im.w+" × "+im.h+" px · ":"")+imgKB(im.size)+(imgLink(im)?' · <a href="'+esc(imgLink(im))+'" target="_blank" rel="noopener">Open full size ↗</a>':'')+'</div>'},
@@ -2743,6 +2818,7 @@ function openImage(id){
 function libraryStrip(ed){
   const list=vals("images").filter(i=>!i.archived).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
   if(!list.length) return '<div class="hint">No pictures in the Image Library yet.</div>';
+  list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
   return '<div class="imstrip">'+list.map(im=>'<button type="button" class="impick" data-pick="'+esc(im.id)+'" title="'+esc(im.name||im.file||"")+'"><img src="'+esc(imgSrc(im))+'" alt=""></button>').join("")+'</div>';
 }
 /* drop pictures anywhere on the Image Library page */
