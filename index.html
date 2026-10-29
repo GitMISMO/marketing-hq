@@ -995,6 +995,71 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .chk button.lnk{background:none;border:0;padding:0;color:inherit;cursor:pointer;text-align:left;font:inherit}
 .chk button.lnk:hover b{text-decoration:underline}
 
+/* Schedule: Next Two Weeks */
+.agcard .ch .note{margin-left:auto;font-size:11.5px;color:var(--ink-3)}
+.agwk{border-bottom:1px solid var(--rule)}
+.agwk:last-child{border-bottom:0}
+.agwh{display:flex;align-items:center;gap:8px;padding:10px 16px 4px;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
+.agwh span{font-size:10.5px;letter-spacing:0;background:var(--surface-3);color:var(--ink-2);border-radius:4px;padding:1px 6px}
+.agwk.late{background:var(--bad-soft)}
+.agwk.late .agwh,.sgrp.late .agwh{color:var(--bad)}
+.agwk.late .agwh span,.sgrp.late .agwh span{background:var(--bad);color:#fff}
+.agcard .agday{grid-template-columns:52px minmax(0,1fr);gap:14px;padding:8px 16px 10px;border-bottom:0;align-items:start}
+.agdate{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:6px;background:var(--surface);padding:5px 0 6px;line-height:1.05;text-align:center}
+.agdate small{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.agdate b{font-size:20px;font-weight:700;color:var(--ink);margin:1px 0}
+.agdate.today{background:var(--navy);border-color:var(--navy)}
+.agdate.today small,.agdate.today b{color:#fff}
+.agdate.today small:first-child{color:var(--sky)}
+.agdate.late{border-color:var(--bad);color:var(--bad)}
+.agdate.late b,.agdate.late small{color:var(--bad)}
+.agcard .agitems{gap:6px}
+.agcard .agi{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:7px 10px;border:1px solid var(--border);border-left:3px solid var(--k,var(--ink-3));border-radius:5px;background:var(--surface);font-size:13px;transition:background .12s,border-color .12s}
+.agcard .agi:hover{background:var(--surface-2);border-color:var(--border-strong);border-left-color:var(--k,var(--ink-3))}
+.agcard .agi:hover .tt{text-decoration:none}
+.agcard .agi.big .tt{font-weight:700}
+.agcard .agi.slot{border-style:dashed;border-left-style:solid;background:transparent}
+.agk{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--k,var(--ink-3));background:var(--surface-2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;white-space:nowrap;min-width:64px;text-align:center}
+.agcard .agi .tt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agl{font-size:11px;font-weight:700;color:var(--bad);margin-left:4px}
+.who{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);white-space:nowrap;margin-left:auto}
+.who.none{min-width:0}
+.av{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:10px;font-weight:700;font-style:normal;color:#fff;background:var(--navy-mid);flex:0 0 auto}
+.av.t1{background:#14486e}.av.t2{background:#1a8fe3}.av.t3{background:#0f7b5c}.av.t4{background:#8a6bd1}.av.t5{background:#c0582b}.av.t6{background:#4f6b82}.av.t7{background:#a2701a}.av.t8{background:#b3372c}
+@media(max-width:560px){.agcard .agi{grid-template-columns:minmax(0,1fr) auto}.agk{display:none}.who .wn{display:none}.agcard .ch .note{display:none}}
+
+/* Schedule: Getting Set Up */
+.sprog{padding:12px 16px 14px;border-bottom:1px solid var(--rule)}
+.sprog-t{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;color:var(--ink-2);margin-bottom:7px}
+.sprog-t b{font-weight:700;color:var(--ink)}
+.sprog-t span{font-size:12px;font-weight:700;color:var(--good)}
+.sbar{height:8px;border-radius:4px;background:var(--surface-3);overflow:hidden}
+.sbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--good),#4fc79b)}
+.sgrp{border-bottom:1px solid var(--rule)}
+.sgrp.late{background:var(--bad-soft)}
+.sgrp .checks{padding:2px 0 6px}
+.setcard .chk{padding:8px 16px;border-bottom:0;align-items:center;gap:12px}
+.setcard .chk+.chk{border-top:1px solid var(--rule)}
+.sgrp.late .chk+.chk{border-top-color:rgba(179,55,44,.15)}
+.setcard .chk input{width:18px;height:18px;margin:0;cursor:pointer}
+.setcard .chk .ct b{font-size:13.5px;line-height:1.35}
+.setcard .chk .ct small{font-size:12px;line-height:1.4;margin-top:1px}
+.setcard .chk .meta{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.setcard .chk .meta .who{margin-left:0}
+.due{font-size:11px;font-weight:700;border-radius:4px;padding:1px 7px;background:var(--surface-3);color:var(--ink-2);white-space:nowrap}
+.due.soon{background:var(--warn-soft);color:var(--warn)}
+.due.late{background:var(--bad);color:#fff}
+.setcard .chk.done .due{background:var(--good-soft);color:var(--good)}
+.setcard .chk.done .av{opacity:.55}
+.sdone-t{display:block;width:100%;background:none;border:0;border-top:1px solid var(--rule);padding:10px 16px;font:inherit;font-size:12.5px;font-weight:600;color:var(--navy-mid);text-align:left;cursor:pointer}
+.sdone-t:hover{background:var(--surface-2)}
+.sdone-t.smore{border-top:1px dashed var(--rule);padding:8px 16px 10px;font-weight:600}
+.sgrp.done{border-bottom:0;background:var(--surface-2)}
+.sdone-all{color:var(--good);font-weight:600}
+:root[data-theme="dark"] .sdone-t{color:var(--sky)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sdone-t{color:var(--sky)}}
+@media(max-width:560px){.setcard .who .wn{display:none}}
+
 /* milestones */
 .miles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden;margin-bottom:22px}
 .mile{padding:11px 12px;border-right:1px solid var(--rule);position:relative;cursor:pointer;background:none;border-top:0;border-bottom:0;border-left:0;text-align:left;color:var(--ink);font:inherit}
@@ -1768,16 +1833,36 @@ function renderOverview(){
     d.setDate(d.getDate()+1);
   }
   cal+='</div>';
-  // agenda: next 14 days + overdue
-  const ag = ev.filter(e=>!e.done && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && e.k==="summit")).sort((a,b)=>a.date<b.date?-1:1);
-  const days={}; ag.forEach(e=>{ const key = e.date<t ? "past" : e.date; (days[key]=days[key]||[]).push(e); });
+  // agenda: next 14 days + overdue (setup tasks live in Getting Set Up, so they aren't repeated here)
+  const ag = ev.filter(e=>!e.done && e.k!=="setup" && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && e.k==="summit")).sort((a,b)=>a.date<b.date?-1:1);
+  const agList = [];
+  const agItem = (e, late)=>{ const i=agList.push(e)-1; const tt=agTitle(e);
+    return '<button type="button" class="agi k-'+e.k+(e.big?" big":"")+(e.slot?" slot":"")+'" data-agi="'+i+'"><span class="agk">'+esc(CHS[e.k]||CH[e.k]||"Other")+'</span><span class="tt">'+esc(tt)+(late?' <span class="agl">'+esc(fS(e.date))+'</span>':'')+'</span>'+whoHtml(e.who)+'</button>'; };
   let agh='';
-  Object.keys(days).sort((a,b)=>a==="past"?-1:b==="past"?1:(a<b?-1:1)).forEach(k=>{
-    agh+='<div class="agday'+(k===t?" today":"")+'"><div class="dl">'+(k==="past"?'<span style="color:var(--bad)">Past Due</span>':esc(k===t?"Today":fD(k).split(",")[0])+'<small>'+esc(fS(k))+'</small>')+'</div><div class="agitems">'+
-      days[k].map(e=>'<button type="button" class="agi" data-ev="1"><i class="dot k-'+e.k+'"></i><span class="tt">'+esc(e.label)+(k==="past"?' <span class="note">· '+esc(fS(e.date))+'</span>':'')+'</span><span class="who">'+esc(e.who||"")+'</span></button>').join("")+'</div></div>';
+  const pastDue = ag.filter(e=>e.date<t);
+  if(pastDue.length) agh+='<div class="agwk late"><div class="agwh">Past Due<span>'+pastDue.length+'</span></div><div class="agday"><div class="agdate late"><b>!</b><small>Late</small></div><div class="agitems">'+pastDue.map(e=>agItem(e,true)).join("")+'</div></div></div>';
+  const wkOf = ds=>{ const d=P(ds); return add(ds, -((d.getDay()+6)%7)); };
+  const thisWk = wkOf(t), upcoming = ag.filter(e=>e.date>=t), weeks = {};
+  upcoming.forEach(e=>{ const w=wkOf(e.date); ((weeks[w]=weeks[w]||{})[e.date]=weeks[w][e.date]||[]).push(e); });
+  Object.keys(weeks).sort().forEach(w=>{
+    const n=Object.values(weeks[w]).reduce((x,l)=>x+l.length,0);
+    const wl = w===thisWk ? "This Week" : w===add(thisWk,7) ? "Next Week" : "Week of "+fS(w);
+    agh+='<div class="agwk"><div class="agwh">'+esc(wl)+'<span>'+n+'</span></div>'+
+      Object.keys(weeks[w]).sort().map(ds=>{ const d=P(ds);
+        return '<div class="agday'+(ds===t?" today":"")+'"><div class="agdate'+(ds===t?" today":"")+'"><small>'+(ds===t?"Today":esc(["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]))+'</small><b>'+d.getDate()+'</b><small>'+esc(MON[d.getMonth()])+'</small></div><div class="agitems">'+weeks[w][ds].map(e=>agItem(e,false)).join("")+'</div></div>'; }).join("")+'</div>';
   });
-  const agList = []; Object.keys(days).sort((a,b)=>a==="past"?-1:b==="past"?1:(a<b?-1:1)).forEach(k=>days[k].forEach(e=>agList.push(e)));
-  const setup = vals("pieces").filter(p=>p.channel==="setup").sort((a,b)=>((a.status==="done")-(b.status==="done"))||((a.date||"9")<(b.date||"9")?-1:1));
+  // Getting Set Up: progress, open items grouped by when they're due, finished items tucked away
+  const setup = vals("pieces").filter(p=>p.channel==="setup" && !p.archived).sort((a,b)=>((a.date||"9")<(b.date||"9")?-1:1));
+  const sDone = setup.filter(p=>p.status==="done"), sOpen = setup.filter(p=>p.status!=="done");
+  const sPct = setup.length ? Math.round(sDone.length/setup.length*100) : 0;
+  const sGroups = [["Past Due", sOpen.filter(p=>p.date&&p.date<t), "late"], ["This Week", sOpen.filter(p=>p.date&&p.date>=t&&p.date<=add(thisWk,6)), "soon"], ["Coming Up", sOpen.filter(p=>p.date&&p.date>add(thisWk,6)), ""], ["No Date Yet", sOpen.filter(p=>!p.date), ""]].filter(g=>g[1].length);
+  const sRow = p=>{ const dn=p.status==="done", late=!dn&&p.date&&p.date<t, soon=!dn&&!late&&p.date&&p.date<=add(thisWk,6);
+    return '<div class="chk'+(dn?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(dn?" checked":"")+' aria-label="Mark done: '+esc(p.title||"")+'"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title||"Untitled")+'</b>'+(p.notes?'<small>'+esc(p.notes)+'</small>':'')+'</button><div class="meta">'+(p.date?'<span class="due'+(late?" late":soon?" soon":"")+'">'+esc(dn&&p.doneOn?fS(p.doneOn):fS(p.date))+'</span>':'')+whoHtml(p.owner)+'</div></div>'; };
+  const setupHtml = '<div class="sprog"><div class="sprog-t"><b>'+sDone.length+' of '+setup.length+' done</b><span>'+sPct+'%</span></div><div class="sbar"><i style="width:'+sPct+'%"></i></div></div>'+
+    (sGroups.map(g=>{ const cap = g[0]==="Coming Up" && !OV.showLater && g[1].length>5 ? 4 : g[1].length;
+      return '<div class="sgrp '+g[2]+'"><div class="agwh">'+esc(g[0])+'<span>'+g[1].length+'</span></div><div class="checks">'+g[1].slice(0,cap).map(sRow).join("")+'</div>'+
+        (g[0]==="Coming Up" && g[1].length>5 ? '<button type="button" class="sdone-t smore" id="ov-slater">'+(OV.showLater?"Show fewer":"Show "+(g[1].length-cap)+" more coming up")+'</button>' : '')+'</div>'; }).join("") || (setup.length?'<div class="empty sdone-all">Everything is set up.</div>':'<div class="empty">Nothing to set up.</div>'))+
+    (sDone.length?'<button type="button" class="sdone-t" id="ov-sdone" aria-expanded="'+(!!OV.showDone)+'">'+(OV.showDone?"Hide":"Show")+' '+sDone.length+' finished</button>'+(OV.showDone?'<div class="sgrp done"><div class="checks">'+sDone.slice().reverse().map(sRow).join("")+'</div></div>':''):'');
   el.innerHTML =
     '<div class="phead"><div><div class="eyebrow">MISMO Marketing</div><h1>Marketing Schedule</h1><div class="sub">Every MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push, on one calendar.</div></div>'+
     '<div class="tools"><button class="btn" type="button" id="ov-newpiece">+ New Item</button></div></div>'+
@@ -1794,10 +1879,8 @@ function renderOverview(){
       '<div class="cb flush">'+cal+'</div>'+
       '<div class="legend">'+["matters","micdup","linkedin","youtube","mailchimp","summit","community","setup"].map(k=>'<span><i class="dot k-'+k+'"></i>'+esc(CH[k])+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
     '<div class="grid2" style="margin-top:22px">'+
-      '<div class="card"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks.</div>')+'</div></div>'+
-      '<div class="card"><div class="ch"><h2>Getting Set Up</h2><span class="cnt">'+setupOpen.length+' open</span><div class="r"><button class="btn sm" type="button" id="ov-newsetup">+ Add</button></div></div><div class="checks">'+
-        (setup.map(p=>'<div class="chk'+(p.status==="done"?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(p.status==="done"?" checked":"")+' aria-label="Done"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title)+'</b>'+(p.notes?'<small>'+esc(p.notes)+'</small>':'')+'</button><div class="meta'+(p.status!=="done"&&p.date&&p.date<t?" late":"")+'">'+esc(p.owner||"")+(p.date?'<br>'+esc(fS(p.date)):'')+'</div></div>').join("")||'<div class="empty">Nothing to set up.</div>')+
-      '</div></div>'+
+      '<div class="card agcard"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">setup tasks are under Getting Set Up</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks.</div>')+'</div></div>'+
+      '<div class="card setcard"><div class="ch"><h2>Getting Set Up</h2><span class="cnt">'+sOpen.length+' open</span><div class="r"><button class="btn sm" type="button" id="ov-newsetup">+ Add</button></div></div>'+setupHtml+'</div>'+
     '</div>';
   // wire
   $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
@@ -1805,11 +1888,18 @@ function renderOverview(){
   $("#cal-next",el).onclick=()=>{ OV.month=iso(new Date(yy,mm,1)).slice(0,7); renderOverview(); };
   $("#cal-today",el).onclick=()=>{ OV.month=T().slice(0,7); renderOverview(); };
   $$(".cal .d",el).forEach(c=>{ const list=(byDate[c.dataset.date]||[]).sort((a,b)=>(b.big?1:0)-(a.big?1:0)); $$(".ev",c).forEach((b,i)=>b.onclick=()=>list[i].go()); });
-  $$(".agi",el).forEach((b,i)=>b.onclick=()=>agList[i].go());
+  $$(".agi",el).forEach(b=>b.onclick=()=>agList[+b.dataset.agi].go());
+  const sd=$("#ov-sdone",el); if(sd) sd.onclick=()=>{ OV.showDone=!OV.showDone; renderOverview(); };
+  const sl=$("#ov-slater",el); if(sl) sl.onclick=()=>{ OV.showLater=!OV.showLater; renderOverview(); };
   $("#ov-newpiece",el).onclick=()=>newPiece("linkedin");
   $("#ov-newsetup",el).onclick=()=>newPiece("setup");
   wireChecks(el); wireLanes(el);
 }
+/* short channel names for the agenda tags, and the owner badge */
+const CHS = {matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", other:"Other"};
+function agTitle(e){ let l=String(e.label||""); [CH[e.k], CHS[e.k]].forEach(p=>{ if(p && l.indexOf(p+" · ")===0) l=l.slice(p.length+3); else if(p && l.indexOf(p+" ")===0 && e.k==="micdup") l=l.slice(p.length+1); }); return l; }
+const WHO_TONE = {Jonna:1,Vanessa:2,Kelly:3,Amy:4,Brian:5,Jonathan:6,Perry:7,Kathryn:8};
+function whoHtml(w){ if(!w) return '<span class="who none"></span>'; return '<span class="who" title="'+esc(w)+'"><i class="av t'+(WHO_TONE[w]||0)+'">'+esc(w.charAt(0))+'</i><span class="wn">'+esc(w)+'</span></span>'; }
 function wireChecks(el){
   $$("[data-done]",el).forEach(cb=>cb.onchange=async()=>{
     const id=cb.dataset.done, before=(S.pieces[id]||{}).status||"draft";
@@ -2364,8 +2454,8 @@ const HELP = [
    <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page.</li>
    <li><b>The Next Four Weeks</b> shows one line per channel. Each marker is a day with something due; hover for what it is, click to open it. A filled marker is open, a check is done, a dashed outline is an open Mic'd Up slot, and a pulsing red marker is past due.</li>
    <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back.</li>
-   <li><b>Next Two Weeks</b> lists what's due by day, past-due items first, with who owns each.</li>
-   <li><b>Getting Set Up</b> is the checklist for launching the system. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
+   <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. Each line shows its channel and who owns it; click a line to open it. Setup tasks aren't repeated here; they're under Getting Set Up.</li>
+   <li><b>Getting Set Up</b> is the checklist for launching the system. The bar shows how much is done. Open items are grouped into Past Due, This Week and Coming Up; finished items are tucked under <b>Show finished</b>. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
   </ul>
   <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
