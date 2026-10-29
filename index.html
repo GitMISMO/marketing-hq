@@ -1344,7 +1344,8 @@ const SUMMIT_PLAN = [
 const SUMMIT_VIA = ["LinkedIn","MISMO Matters","Email","Website","Event App","Onsite","Mailchimp","YouTube"];
 const MICDUP_START = "2026-10-23";
 const FRESH_FROM = "2026-10-30";  // fresh start: episodes before this are history, never counted as owed
-function owes(e){ return !e.airDate || e.airDate >= FRESH_FROM; }
+const FRESH_EP = 51;  // first episode of the fresh start (older ones often have no air date)
+function owes(e){ return e.airDate ? e.airDate >= FRESH_FROM : (!e.num || +e.num >= FRESH_EP); }
 const SUBSCRIBE_URL = "https://resources.mismo.org/forms/subscribe/";  // MISMO's own form (replaced the Smartsheet form)
 
 /* ================= little helpers ================= */
@@ -2307,7 +2308,7 @@ const HELP = [
    <li><b>The website</b> adds each episode on YouTube to its home page list by itself. <b>MISMO Matters</b> lists it in the next edition by itself.</li>
   </ol>
   <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
-  <p><b>Fresh start:</b> episodes that aired before Friday, October 30 (Episode 51) are history. They stay in the episode list, but they never count as late, missing captions, waiting for YouTube or LinkedIn, or missing from the website. Everything from Episode 51 on is tracked.</p>`},
+  <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late, missing captions, waiting for YouTube or LinkedIn, or missing from the website. Everything from Episode 51 on is tracked.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
