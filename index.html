@@ -584,73 +584,13 @@
   }
   function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
 
-  /* ---------- pictures: the public marketing-images folder ----------
-     Images are saved through the relay's "marketing-images" project into the public
-     GitMISMO/marketing-images repository, so each one is served at
-     resources.mismo.org/marketing-images/images/YYYY/MM/<name> and its link works in an
-     email or a post. The relay takes about 1 MB a save, so large photos are scaled
-     down in the browser first (longest side 2400 px, then smaller until they fit). */
-  var IMG_PROJECT = 'marketing-images', IMG_BASE = 'https://resources.mismo.org/marketing-images/';
-  var IMG_MAX = 700000;          /* bytes before base64; base64 adds about a third */
-  function b64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1] || ''); }; r.onerror = function () { rej(err('read_failed', 'Could not read the file')); }; r.readAsDataURL(blob); }); }
-  function fit(blob) {
-    if (blob.size <= IMG_MAX) return Promise.resolve(blob);
-    if (!/^image\/(jpeg|png|webp)$/.test(blob.type)) return Promise.reject(err('too_large', 'That file is over 700 KB. Save a smaller copy and try again.'));
-    return new Promise(function (res, rej) {
-      var u = URL.createObjectURL(blob), im = new Image();
-      im.onload = function () {
-        var side = Math.min(2400, Math.max(im.naturalWidth, im.naturalHeight)), tries = 0;
-        (function go(q) {
-          var k = side / Math.max(im.naturalWidth, im.naturalHeight), c = document.createElement('canvas');
-          c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
-          var x = c.getContext('2d'); if (blob.type !== 'image/png') { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
-          x.drawImage(im, 0, 0, c.width, c.height);
-          c.toBlob(function (out) {
-            if (out && (out.size <= IMG_MAX || ++tries > 8)) { URL.revokeObjectURL(u); if (out.size > IMG_MAX) rej(err('too_large', 'Could not make that image small enough.')); else { try { out.name = blob.name; } catch (e) {} res(out); } return; }
-            side = Math.round(side * 0.8); go(Math.max(0.6, q - 0.05));
-          }, blob.type === 'image/png' ? 'image/png' : 'image/jpeg', q);
-        })(0.86);
-      };
-      im.onerror = function () { URL.revokeObjectURL(u); rej(err('read_failed', 'Could not read that image')); };
-      im.src = u;
-    });
-  }
-  var ASSETS = {
-    __public: true,
-    upload: function (blob) {
-      var rs = RS(), tok = rs && rs.token();
-      if (!tok) return Promise.reject(err('SIGNED_OUT', 'Sign in to add images', 401));
-      var name = (blob && blob.name) || 'image', d = new Date();
-      return fit(blob).then(function (b) {
-        var ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' })[b.type] || (name.split('.').pop() || 'img').toLowerCase();
-        var path = 'images/' + d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + now().toString(36) + '-' + safe(name.replace(/\.[a-z0-9]+$/i, '')).slice(0, 50) + '.' + ext;
-        return b64(b).then(function (content) {
-          return fetch(RELAY_URL + '/' + IMG_PROJECT + '/commit', {
-            method: 'POST', cache: 'no-store',
-            headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ files: [{ path: path, content: content, encoding: 'base64' }], message: 'Add image: ' + name, parentSha: null })
-          }).then(function (r) {
-            return r.json().catch(function () { return {}; }).then(function (j) {
-              if (r.ok) return { id: path, url: IMG_BASE + path, sizeBytes: b.size, contentType: b.type };
-              if (r.status === 401 && rs) needSignIn();
-              throw err((j && j.error) || ('HTTP_' + r.status), r.status === 404 || r.status === 403 ? 'The image folder isn\u2019t switched on for you yet' : ((j && j.message) || 'The relay refused the image'), r.status);
-            });
-          }, function () { throw err('OFFLINE', 'Could not reach the relay', 0); });
-        });
-      });
-    },
-    list: function () { return Promise.resolve({ assets: [], usage: { files: 0, bytes: 0, maxFiles: 0, maxBytes: 0 } }); },
-    delete: function () { return Promise.reject(err('not_supported', 'Images are archived, never deleted')); }
-  };
-
   /* ---------- the door ---------- */
   window.claude = {
     use: function (cap) {
       if (cap === 'db') return whenReady().then(function () { return DB; });
       if (cap === 'user') return whenReady().then(function () { return USER; });
       if (cap === 'downloads') return Promise.resolve(DOWNLOADS);
-      if (cap === 'assets') return whenReady().then(function () { return PREVIEW ? null : ASSETS; });
-      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay */
+      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay; 'assets' (adding pictures) waits for the SharePoint flow */
     }
   };
   /* the notice at the top of the page: preview, or view-only access */
@@ -858,6 +798,19 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--sky);outline-off
 .band .say{font-size:16.5px;font-weight:600;line-height:1.45;margin:6px 0 14px}
 .band .say em{font-style:normal;color:var(--sky)}
 em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
+/* Branding */
+.brorders{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.brorders .lnk{font-size:13.5px}
+.brbar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);margin-top:8px;overflow:hidden}
+.brbar i{display:block;height:100%;background:var(--sky);border-radius:3px}
+.brkinds{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:6px 22px;padding:14px 16px}
+.brk{display:grid;grid-template-columns:minmax(0,1fr) 90px auto;align-items:center;gap:10px;border:1px solid transparent;background:none;color:inherit;font:inherit;text-align:left;padding:7px 8px;border-radius:6px;cursor:pointer}
+.brk:hover{background:var(--surface-3)}
+.brk.on{border-color:var(--sky);background:var(--accent-soft)}
+.brk-n{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brk-bar{height:6px;border-radius:3px;background:var(--surface-3);overflow:hidden}
+.brk-bar i{display:block;height:100%;background:var(--good);border-radius:3px}
+.brk-c{font-size:12px;color:var(--ink-3);font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Image Library */
 .im-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .im-filters select,.im-filters input[type=search]{height:34px;font-size:13px;min-width:0;width:auto}
@@ -867,6 +820,10 @@ em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .imcard{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
 .imcard:hover,.imcard:focus-visible{border-color:var(--sky);box-shadow:0 8px 22px -14px rgba(7,29,46,.55);transform:translateY(-1px);outline:none}
 .imcard.arch{opacity:.6}
+.imcard{position:relative}
+.imsel{position:absolute;top:8px;left:8px;z-index:2;background:var(--surface);border:1px solid var(--border);border-radius:5px;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.imsel input{width:16px;height:16px;margin:0;accent-color:var(--navy,#0d314c);cursor:pointer}
+.imnote{display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px}
 .imthumb{aspect-ratio:16/10;background:repeating-conic-gradient(var(--rule) 0 25%,transparent 0 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .imthumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
 .imbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
@@ -941,7 +898,7 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 :root[data-theme="dark"] .chip.in{color:var(--sky)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.in{color:var(--sky)}}
 .dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex:0 0 auto}
-.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)}
+.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)}
 .dot{background:var(--k,var(--ink-3))}
 .ticks{display:inline-flex;gap:3px;align-items:center}
 .tk{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--border-strong);color:var(--ink-3)}
@@ -1287,6 +1244,12 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="summits" title="Summits">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><circle cx="17" cy="6" r="2"/></svg>
       <span>Summits</span><b class="nbadge" id="nb-summits" hidden></b></button>
+    <button type="button" data-hq="branding" title="Rebranding">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.5L12 15.3 7 18.1l1.2-5.5L4 8.8l5.6-.6z"/></svg>
+      <span>Rebranding</span><b class="nbadge" id="nb-branding" hidden></b></button>
+    <button type="button" data-hq="orders" title="Orders: Pins, Swag, Banners">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>
+      <span>Orders</span><b class="nbadge" id="nb-orders" hidden></b></button>
     <button type="button" data-hq="results" title="Results">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span>Results</span><b class="nbadge" id="nb-results" hidden></b></button>
@@ -1337,6 +1300,8 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-people" hidden></section>
   <section class="page" id="page-lists" hidden></section>
   <section class="page" id="page-images" hidden></section>
+  <section class="page" id="page-branding" hidden></section>
+  <section class="page" id="page-orders" hidden></section>
   <section class="page" id="page-help" hidden></section>
 </main>
 
@@ -1371,7 +1336,7 @@ const SEC = Object.fromEntries(SECTIONS.map(s=>[s.key,s]));
 const PEOPLE = ["Jonna","Vanessa","Kelly","Amy","Brian","Jonathan","Perry","Kathryn"];
 const SSTAT = {waiting:["Waiting on Content","wait"], in:["Content In","in"], review:["With Amy for Review","review"], changes:["Changes Requested","changes"], approved:["Approved","ok"]};
 const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], staged:["Staged to Post","in"], done:["Posted / Sent","ok"]};
-const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", community:"Community Posts", news:"In the News", setup:"Setup", other:"Other"};
+const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", other:"Other"};
 const REUSE = [["linkedin","LinkedIn","LI"],["mailchimp","Mailchimp","MC"],["website","Website","WB"],["youtube","YouTube","YT"],["summit","Summit","SU"]];
 const MILES = [
   ["content","Content Due","Contributors to Kelly"],
@@ -1489,7 +1454,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -1601,6 +1566,11 @@ function allEvents(){
   });
   fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), done:p.status==="done"||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
+  vals("orders").filter(o=>!o.archived && o.status!=="cancelled").forEach(o=>{
+    const pre=["toorder","quote"].includes(o.status||"toorder");
+    if(o.orderBy && (pre || o.orderedOn)) ev.push({date:o.orderBy, k:"orders", label:"Order By · "+(o.name||"Order"), done:!pre, who:o.owner||"", go:()=>{ go("orders"); openOrder(o.id); }});
+    const need=o.neededBy||orEventDate(o); if(need) ev.push({date:need, k:"orders", label:"Needed · "+(o.name||"Order")+(orEventName(o)?" for "+orEventName(o):""), done:o.status==="received", who:o.owner||"", go:()=>{ go("orders"); openOrder(o.id); }});
+  });
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
 }
@@ -1617,12 +1587,12 @@ function openPane(cfg){
   f.innerHTML = (cfg.save?'<button class="btn pri" id="pf-save" type="button">Save</button>':"") +
     (cfg.buttons||[]).map((x,i)=>'<button class="btn" type="button" data-pb="'+i+'">'+esc(x.label)+'</button>').join("") +
     '<span class="msg" id="pf-msg"></span><span class="sp"></span>' +
-    (cfg.del?'<button class="btn danger" id="pf-del" type="button">Delete</button>':"");
+    (cfg.del?'<button class="btn danger" id="pf-del" type="button">'+(cfg.delLabel||"Delete")+'</button>':"");
   wireFields(b);
   b.addEventListener("input",()=>{ if(PANE) PANE.dirty=true; },{once:false});
   if(cfg.save) $("#pf-save").onclick=async()=>{ const v=readFields(cfg.fields); if(v===null) return; try{ await cfg.save(v); PANE.dirty=false; toast("Saved"); closePane(true); }catch(e){} };
   (cfg.buttons||[]).forEach((x,i)=>{ f.querySelector('[data-pb="'+i+'"]').onclick=async()=>{ const v=readFields(cfg.fields); if(v===null) return; try{ await x.run(v); PANE.dirty=false; }catch(e){} }; });
-  if(cfg.del){ const d=$("#pf-del"); d.onclick=async()=>{ if(d.dataset.sure){ await cfg.del(); toast("Deleted"); closePane(true); } else { d.dataset.sure="1"; d.textContent="Press Again to Delete"; setTimeout(()=>{ if(d){ delete d.dataset.sure; d.textContent="Delete"; } },3500); } }; }
+  if(cfg.del){ const d=$("#pf-del"); d.onclick=async()=>{ if(d.dataset.sure){ await cfg.del(); toast(cfg.delLabel==="Archive"?"Archived":"Deleted"); closePane(true); } else { d.dataset.sure="1"; d.textContent="Press Again to "+(cfg.delLabel||"Delete"); setTimeout(()=>{ if(d){ delete d.dataset.sure; d.textContent=cfg.delLabel||"Delete"; } },3500); } }; }
   if(cfg.after) cfg.after(b);
   const p=$("#pane"); p.classList.add("open"); p.setAttribute("aria-hidden","false");
   b.scrollTop=0;
@@ -1681,7 +1651,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","results","news","people","lists","images","help"];
+const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","results","news","people","lists","images","help"];
 let TAB="overview";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -1702,7 +1672,7 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, branding:renderBranding, orders:renderOrders, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
@@ -1714,6 +1684,8 @@ function badges(){
   badge("micdup", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1), false);
   badge("linkedin", ev.filter(e=>e.k==="linkedin" && !e.done && e.date<=wk).length);
   badge("youtube", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length);
+  badge("orders", vals("orders").filter(o=>!o.archived && orRisk(o)).length, true);
+  badge("branding", vals("branding").filter(b=>!b.archived && b.status==="old").length);
   badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && p.status!=="done" && p.date && p.date<=wk).length);
   badge("summits", vals("pieces").filter(p=>p.channel==="summit" && p.status!=="done" && p.date && p.date<=add(T(),14)).length);
   badge("news", vals("news").filter(n=>!n.linkedinDone && n.date>=add(T(),-30)).length);
@@ -1952,7 +1924,7 @@ function imageField(d){
 function wireImage(b, doc, setId){
   const up=$("#img-up",b), f=$("#img-file",b), rm=$("#img-rm",b), lb=$("#img-lib",b), strip=$("#img-strip",b);
   const redraw=()=>{ if(PANE) PANE.dirty=true; $("#f-_img",b).innerHTML=imageField(doc); wireImage(b,doc,setId); };
-  const use=im=>{ doc.imageLib=im.id; setId(im.assetId||""); const u=$("#f-imageUrl",b); if(u && !u.value && /resources\.mismo\.org/.test(im.url||"")) u.value=im.url; const a=$("#f-imageAlt",b); if(a && !a.value && im.alt) a.value=im.alt; redraw(); };
+  const use=im=>{ doc.imageLib=im.id; setId(im.assetId||""); const u=$("#f-imageUrl",b); if(u && !u.value && im.hlUrl) u.value=im.hlUrl; const a=$("#f-imageAlt",b); if(a && !a.value && im.alt) a.value=im.alt; redraw(); };
   if(up) up.onclick=()=>f.click();
   if(f) f.onchange=async()=>{ const file=f.files[0]; if(!file) return; const made=await addImages([file],{campaign:"matters", edition:doc.month||""}); if(made[0]){ use(made[0]); toast("Image added to the section and the Image Library. Press Save to keep it."); } };
   if(lb) lb.onclick=()=>{ strip.hidden=!strip.hidden; if(!strip.hidden){ strip.innerHTML=libraryStrip(S.editions[doc.month]||curEdition()); $$("[data-pick]",strip).forEach(p=>p.onclick=()=>{ const im=S.images[p.dataset.pick]; if(im) use(im); }); } };
@@ -1989,7 +1961,7 @@ function checksView(ed){
 /* ---- the newsletter itself: email-safe HTML for Higher Logic ---- */
 function paras(s){ return String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean); }
 function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" style="color:#14486e">$1</a>').replace(/\n/g,"<br>"); }
-function buildEmail(ed){
+function buildEmail(ed, preview){
   const F='font-family:Arial,Helvetica,sans-serif;';
   const on=edSections(ed).filter(s=>s.on);
   const navy="#0d314c", bar="#cfe0f3";
@@ -2012,8 +1984,11 @@ function buildEmail(ed){
     } else {
       if(!d.headline && !d.body && !d.quote) return;
       if(d.headline) inner+='<h2 style="'+F+'font-size:21px;line-height:1.3;color:'+navy+';margin:0 0 12px">'+esc(d.headline)+'</h2>';
-      if(d.imageUrl) inner+='<img src="'+esc(d.imageUrl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
-      else if(d.imageId||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in Marketing HQ")+' — upload to Higher Logic and paste its link</div>';
+      const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
+      const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
+      if(hl) inner+='<img src="'+esc(hl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
+      else if(preview && local) inner+='<img src="'+esc(local)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0;outline:2px dashed #e0a440;outline-offset:-2px"><span style="display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</span>';
+      else if(d.imageId||d.imageLib||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in Marketing HQ")+' — upload to Higher Logic and paste its link</div>';
       inner+=paras(d.body).map(p=>'<p style="'+F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36">'+linkify(p)+'</p>').join("");
       if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+esc(d.quote)+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
       if(d.ctaUrl) inner+='<p style="margin:4px 0 12px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:4px">'+esc(d.ctaText||"Learn more")+' &rarr;</a></p>';
@@ -2045,7 +2020,7 @@ function buildText(ed){
 }
 function previewView(ed){
   return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
-    '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed)+'</div></div>'+
+    '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed,true)+'</div></div>'+
     '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block (or hand to Claude in Chrome to build). Each section has its own link, so a reader can share one story, and every section has a way back to the top.</p></div></div>';
 }
 function copyText(s, what){
@@ -2056,7 +2031,7 @@ function fallbackCopy(s,what){
   openPane({eye:"Copy", title:what, fields:[{k:"cp",label:"Select all and copy",type:"textarea",rows:18}], data:{cp:s}, noFocus:false, after:b=>{ const t=$("#f-cp",b); t.focus(); t.select(); }});
 }
 function wirePreview(el,ed){
-  $("#pv-html",el).onclick=()=>copyText(buildEmail(ed),"HTML");
+  $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length; if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
   $$("[data-dev]",el).forEach(b=>b.onclick=()=>{ $$("[data-dev]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $(".mailwrap",el).classList.toggle("phone",b.dataset.dev==="phone"); });
 }
@@ -2095,7 +2070,7 @@ function archiveView(ed){
 }
 
 /* ================= the wow layer ================= */
-const LANES=[["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community"],["setup","Setup"]];
+const LANES=[["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["orders","Orders"],["community","Community"],["setup","Setup"]];
 function lanesHtml(ev){
   const t=T(), start=add(nextDow(t,1),-7), N=28; // from Monday of this week
   const s0 = t>=add(start,7) ? add(start,7) : start;
@@ -2508,19 +2483,44 @@ const HELP = [
    <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, connected as Jonna, with the GitMISMO organization's approval for Power Automate). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
    <li>Marketing HQ reads that file and shows the sign-up.</li>
   </ol>`},
+ {id:"branding", t:"The Rebranding Tracker", g:"Channels", b:`
+  <p>The running list of everything that carries MISMO's look, so nothing with the old branding gets missed. Open <b>Rebranding</b> in the left menu.</p>
+  <ul>
+   <li><b>Add anything branded:</b> marketing materials, documents and templates, slide decks, email templates and signatures, social profiles and video art, web pages and tools, signs, print and summit pieces. Press <b>+ Add Item</b>.</li>
+   <li><b>Statuses:</b> <b>To Check</b> (found, not looked at yet), <b>Old Branding</b> (needs replacing), <b>In Progress</b>, <b>Rebranded</b> and <b>Retiring</b> (won't be redone, so it drops out of the percentage).</li>
+   <li><b>The boxes at the top</b> show how far along the rebrand is. Press one to see just those items. <b>By Type</b> shows progress for each kind of item, and pressing a type narrows the list to it.</li>
+   <li><b>Keep the links:</b> each item can hold where it lives, a link to the old version and a link to the rebranded one. That way the new website, the Image Library and Higher Logic all point at the current files.</li>
+   <li>The menu shows how many items still have <b>Old Branding</b>. <b>Archive</b> takes an item off the list without losing it.</li>
+  </ul>`},
+ {id:"orders", t:"Orders: Pins, Swag and Banners", g:"Channels", b:`
+  <p>Anything physical that has to be ordered: pins, swag and giveaways, banners and signs, print, apparel and booth pieces. Open <b>Orders</b> in the left menu.</p>
+  <ul>
+   <li><b>New Order:</b> say what it is, the type, quantity, vendor and cost, and the <b>Order By</b> and <b>Needed By</b> dates. Move the status along as it goes: To Order, Getting Quotes, Ordered, Shipped, Received.</li>
+   <li><b>For an event:</b> pick the summit, or Another Event and type its name and date. The order then shows on that summit's page under <b>Orders for This Summit</b>, and if no Needed By date is set, the event date is used.</li>
+   <li><b>On the Schedule:</b> each order's Order By and Needed By dates show on the calendar and in the Orders swimlane, so a banner that has to ship before a summit isn't missed.</li>
+   <li><b>Need Attention</b> counts orders that are past their order-by or needed-by date, or needed within two weeks. The menu shows the same count.</li>
+   <li><b>Tied to the rebrand:</b> on a Rebranding item, <b>Order a Replacement</b> starts an order already linked to it. The item moves to In Progress, and the order is listed on it.</li>
+  </ul>`},
  {id:"images", t:"The Image Library", g:"Sources", b:`
   <p>One place for the pictures every campaign uses. Open <b>Image Library</b> in the left menu.</p>
   <ul>
-   <li><b>Add pictures:</b> press <b>+ Add Images</b> (pick several at once) or drag them onto the page. JPG, PNG, GIF, SVG and WebP all work.</li>
+   <li><b>Add pictures:</b> press <b>+ Add Images</b> (pick several at once) or drag them onto the page. JPG, PNG, GIF, SVG and WebP all work. The original file is kept, full size.</li>
    <li><b>Tag them:</b> press a picture to name it, choose its campaign (MISMO Matters, Mic'd Up, LinkedIn, Mailchimp, Summits and so on) and, for MISMO Matters, its edition. Add alt text so the picture still makes sense when an email blocks images.</li>
-   <li><b>Get them back out:</b> <b>Download</b> saves the file to your computer, ready to upload to Higher Logic, LinkedIn or Mailchimp. <b>Copy Link</b> copies its web address.</li>
+   <li><b>Download one:</b> <b>Download</b> on the card, or <b>Download Original</b> inside it, saves the full-size file.</li>
+   <li><b>Download many:</b> tick the box on each picture you want and press <b>Download Selected (ZIP)</b>. With nothing ticked, <b>Download All (ZIP)</b> zips everything the filters are showing, for example every picture for the November MISMO Matters.</li>
    <li><b>In a MISMO Matters section:</b> <b>Upload Image</b> adds the picture to the section and to the library, tagged to that edition. <b>Pick from Image Library</b> reuses one that's already there.</li>
    <li><b>Nothing is deleted:</b> tick <b>Archived</b> to hide a picture you no longer need. <b>Show Archived</b> brings archived pictures back into view.</li>
   </ul>
+  <h3>Pictures in the Email (Higher Logic)</h3>
+  <ul>
+   <li>The preview shows each section's picture so the team can review the whole email. A picture that isn't in Higher Logic yet has an orange "Preview only" note under it.</li>
+   <li><b>Before sending, every picture goes into Higher Logic's image library.</b> An email can only show pictures stored somewhere public on the web. The Image Library is private to MISMO, so people receiving the email couldn't see pictures from it.</li>
+   <li>The steps: download the picture (or the whole edition as a ZIP), upload it to the Higher Logic image library, copy its link, and paste that link into the picture's <b>Link in Higher Logic's Image Library</b> in the Image Library (every section that uses it picks it up) or straight into the section's <b>Image Link in Higher Logic</b>. Then <b>Copy HTML</b> and paste it into Higher Logic. If a link is still missing, Copy HTML tells you, and that picture shows as a placeholder box.</li>
+  </ul>
   <h3>Where the Pictures Live</h3>
   <ul>
-   <li><b>On resources.mismo.org</b>, each picture is saved to MISMO's public image folder, at an address like <code>resources.mismo.org/marketing-images/images/2026/11/…</code>. Its link works in an email or a post, and anyone with the link can see it, so keep anything private out of the library. Big photos are scaled down automatically to fit (longest side 2,400 pixels).</li>
-   <li><b>On the Claude version</b>, pictures are kept in the page's own image store. Their links work for the team while signed in. Download a picture before putting it in an email.</li>
+   <li><b>Claude version:</b> in the page's own private image store.</li>
+   <li><b>resources.mismo.org version:</b> MISMO's SharePoint, once that's connected. Until then, add pictures on the Claude version.</li>
   </ul>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
@@ -2591,11 +2591,12 @@ function renderHelp(){
 /* One place for the pictures every campaign uses. Upload, tag to a campaign (and a
    MISMO Matters edition), preview, download, copy the link, and pick one for a section.
    Claude version: files go to this page's own image store.
-   resources.mismo.org: files go to the public marketing-images folder, so every image
-   has a public web address that works in an email or a post. */
+   resources.mismo.org: files will go to MISMO's SharePoint through a Power Automate flow.
+   Emails can't show private pictures, so each one also goes into the Higher Logic image
+   library before a send (its link is pasted into the section). */
 const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["other","Other"]];
 const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
-const IM = {camp:"", ed:"", q:"", arch:false};
+const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set()};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
@@ -2607,7 +2608,7 @@ function imgDims(file){ return new Promise(res=>{ const u=URL.createObjectURL(fi
 async function addImages(files, preset){
   files=[...(files||[])].filter(f=>/^image\//.test(f.type));
   if(!files.length){ toast("Pick image files (JPG, PNG, GIF, SVG or WebP)."); return []; }
-  if(!ASSETS){ toast("Adding images isn't switched on here yet. Use the Claude version for now.", 4500); return []; }
+  if(!ASSETS){ toast("Adding pictures here opens once SharePoint is connected. Use the Claude version for now.", 4500); return []; }
   const made=[]; let n=0;
   for(const f of files){
     n++; toast("Adding "+n+" of "+files.length+"…", 60000);
@@ -2621,7 +2622,7 @@ async function addImages(files, preset){
         name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name,
         campaign:IM.camp||"matters", edition:(IM.camp||"matters")==="matters" ? (IM.ed||(ed&&ed.id)||"") : "",
         alt:"", credit:"", notes:"", w:dims.w, h:dims.h, size:r.sizeBytes||f.size, type:r.contentType||f.type,
-        url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:/^images\//.test(r.id||"") ? r.id : "",
+        url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:"",
         at:new Date().toISOString(), archived:false
       }, preset||{});
       await put("images", id, doc); made.push(Object.assign({id},doc));
@@ -2630,17 +2631,51 @@ async function addImages(files, preset){
   toast(made.length===1 ? "Image added. Press it to name and tag it." : made.length+" images added. Press each to name and tag it.", 4000);
   return made;
 }
+/* a plain ZIP (stored, no compression: pictures are already compressed) */
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_T[(c^u8[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function makeZip(files){
+  const enc=new TextEncoder(), parts=[], cen=[]; let off=0;
+  const d=new Date(), dt=((d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1)), dd=(((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate());
+  files.forEach(f=>{
+    const name=enc.encode(f.name), data=f.data, crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30)); h.setUint32(0,0x04034b50,true); h.setUint16(4,20,true); h.setUint16(6,0x0800,true); h.setUint16(8,0,true); h.setUint16(10,dt,true); h.setUint16(12,dd,true); h.setUint32(14,crc,true); h.setUint32(18,data.length,true); h.setUint32(22,data.length,true); h.setUint16(26,name.length,true); h.setUint16(28,0,true);
+    parts.push(new Uint8Array(h.buffer), name, data);
+    const c=new DataView(new ArrayBuffer(46)); c.setUint32(0,0x02014b50,true); c.setUint16(4,20,true); c.setUint16(6,20,true); c.setUint16(8,0x0800,true); c.setUint16(10,0,true); c.setUint16(12,dt,true); c.setUint16(14,dd,true); c.setUint32(16,crc,true); c.setUint32(20,data.length,true); c.setUint32(24,data.length,true); c.setUint16(28,name.length,true); c.setUint32(42,off,true);
+    cen.push(new Uint8Array(c.buffer), name);
+    off+=30+name.length+data.length;
+  });
+  const csize=cen.reduce((n,p)=>n+p.length,0);
+  const e=new DataView(new ArrayBuffer(22)); e.setUint32(0,0x06054b50,true); e.setUint16(8,files.length,true); e.setUint16(10,files.length,true); e.setUint32(12,csize,true); e.setUint32(16,off,true);
+  return new Blob(parts.concat(cen,[new Uint8Array(e.buffer)]),{type:"application/zip"});
+}
+function imgFileName(im){ return im.file || ((im.name||"image").replace(/[^\w\- ]+/g,"").trim()+"."+((im.type||"image/png").split("/")[1]||"png").replace("jpeg","jpg").replace("svg+xml","svg")); }
+async function saveBlob(blob,name){
+  if(DL){ try{ await DL.save({filename:name, data:blob}); return; }catch(e){ if(e && e.code==="declined") return; } }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+}
+async function downloadZip(ims, label){
+  ims=ims.filter(Boolean); if(!ims.length){ toast("Pick some pictures first."); return; }
+  const used=new Set(), files=[]; let n=0;
+  for(const im of ims){
+    n++; toast("Gathering "+n+" of "+ims.length+"…", 60000);
+    try{ const r=await fetch(imgSrc(im)); if(!r.ok) throw 0; const buf=new Uint8Array(await r.arrayBuffer());
+      let nm=imgFileName(im), base=nm.replace(/(\.[^.]+)$/,""), ext=(nm.match(/\.[^.]+$/)||[""])[0], i=2; while(used.has(nm.toLowerCase())) nm=base+" ("+(i++)+")"+ext; used.add(nm.toLowerCase());
+      files.push({name:nm, data:buf}); }catch(e){}
+  }
+  if(!files.length){ toast("Couldn't fetch those pictures. Try again.", 4000); return; }
+  await saveBlob(makeZip(files), (label||"MISMO Images").replace(/[^\w\- ]+/g,"").trim()+".zip");
+  toast(files.length+" picture"+(files.length===1?"":"s")+" zipped"+(files.length<ims.length?" ("+(ims.length-files.length)+" couldn't be fetched)":"")+".", 4000);
+}
 async function downloadImage(im){
   try{
     const r=await fetch(imgSrc(im)); if(!r.ok) throw new Error("HTTP "+r.status);
-    const blob=await r.blob(), name=im.file || ((im.name||"image").replace(/[^\w\- ]+/g,"").trim()+"."+((im.type||"image/png").split("/")[1]||"png").replace("jpeg","jpg").replace("svg+xml","svg"));
-    if(DL){ try{ await DL.save({filename:name, data:blob}); return; }catch(e){ if(e && e.code==="declined") return; } }
-    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
-    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+    await saveBlob(await r.blob(), imgFileName(im));
   }catch(e){ window.open(imgSrc(im),"_blank","noopener"); toast("Opened the image in a new tab. Right-click it and choose Save Image As.", 5000); }
 }
 function imgLink(im){ return im.url || (im.assetId ? location.origin+"/_blob/"+im.assetId : ""); }
-function copyImageLink(im){ const u=imgLink(im); if(!u){ toast("No link for this one yet."); return; } copyText(u, /resources\.mismo\.org/.test(u) ? "Public image link" : "Image link (works for the team while signed in)"); }
+function copyImageLink(im){ const u=imgLink(im); if(!u){ toast("No link for this one yet."); return; } copyText(u, "Image link (works for the MISMO team while signed in, not in emails)"); }
 
 function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
@@ -2649,11 +2684,10 @@ function renderImages(){
   const list=imgsLive().filter(im=>(!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
   const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
   const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
-  const pub = !!(ASSETS && ASSETS.__public);
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
       (ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
     '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.length+'</em> image'+(live.length===1?"":"s")+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
-      (ASSETS ? (pub?'Each image gets a public web address on resources.mismo.org, so its link can go straight into an email or a post.':'Drop pictures anywhere on this page or press Add Images.') : 'Adding images opens here once the image folder is switched on. Use the Claude version until then.')+'</div>'+
+      (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.' : 'Adding pictures here opens once SharePoint is connected. Use the Claude version until then.')+'</div>'+
       '<div class="tiles"><div class="tile"><div class="v sky">'+live.length+'</div><div class="k">Images</div><div class="s">ready to use</div></div>'+
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<div class="tile"><div class="v">'+month+'</div><div class="k">Added This Month</div><div class="s">'+esc(MONL[+t.slice(5,7)-1])+'</div></div>'+
@@ -2662,9 +2696,10 @@ function renderImages(){
       '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
-      '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label></div></div>'+
+      '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
+      (list.length?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.length+' (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
-          '<div class="imthumb"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy"></div>'+
+          '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy"></div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
           '<div class="imsub">'+(im.w?im.w+" × "+im.h+" · ":"")+imgKB(im.size)+' · '+esc(fS(String(im.at||"").slice(0,10)))+'</div>'+
           '<div class="imact"><button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button></div></div></div>').join("")+'</div>'
@@ -2677,6 +2712,9 @@ function renderImages(){
   const se=$("#im-ed",el); if(se) se.onchange=e=>{ IM.ed=e.target.value; renderImages(); };
   const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
   $("#im-arch",el).onchange=e=>{ IM.arch=e.target.checked; renderImages(); };
+  $$("[data-imsel]",el).forEach(c=>c.onchange=()=>{ if(c.checked) IM.sel.add(c.dataset.imsel); else IM.sel.delete(c.dataset.imsel); renderImages(); });
+  const z=$("#im-zip",el); if(z) z.onclick=()=>{ const pick=IM.sel.size ? [...IM.sel].map(i=>S.images[i]) : list; const ced=IM.ed&&S.editions[IM.ed]; downloadZip(pick, "MISMO Images"+(IM.camp?" - "+IMG_CAMP[IM.camp]:"")+(ced?" - "+monthName(ced.month):"")); };
+  const zc=$("#im-clr",el); if(zc) zc.onclick=()=>{ IM.sel.clear(); renderImages(); };
   $$("[data-imdl]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); downloadImage(S.images[b.dataset.imdl]); });
   $$("[data-imcp]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); copyImageLink(S.images[b.dataset.imcp]); });
   $$(".imcard",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
@@ -2691,13 +2729,14 @@ function openImage(id){
     {k:"campaign",label:"Campaign",type:"select",opts:IMG_CAMPS},
     {k:"edition",label:"MISMO Matters Edition",type:"select",blank:true,opts:eds.map(e=>[e.id,monthName(e.month)])},
     {k:"alt",label:"Alt Text",wide:true,ph:"What the picture shows, for screen readers and email clients that block images"},
+    {k:"hlUrl",label:"Link in Higher Logic's Image Library",type:"url",wide:true,ph:"Paste once it's uploaded to Higher Logic; MISMO Matters sections then use it automatically"},
     {k:"credit",label:"Credit or Source",ph:"Photographer, partner or where it came from"},
     {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"Where it has been used, rights or size limits"},
     {k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}
   ];
   openPane({eye:"Image Library", title:im.name||im.file||"Image", fields, data:im, noFocus:true,
-    save:async v=>{ await patch("images",id,{name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, credit:v.credit, notes:v.notes, archived:!!v.archived}); },
-    buttons:[{label:"Download", run:async()=>downloadImage(S.images[id])},{label:"Copy Link", run:async()=>copyImageLink(S.images[id])}]
+    save:async v=>{ await patch("images",id,{name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, hlUrl:v.hlUrl||"", credit:v.credit, notes:v.notes, archived:!!v.archived}); },
+    buttons:[{label:"Download Original", run:async()=>downloadImage(S.images[id])},{label:"Copy Link", run:async()=>copyImageLink(S.images[id])}]
   });
 }
 /* the picker used by MISMO Matters sections: pictures already in the library */
@@ -2715,6 +2754,184 @@ function libraryStrip(ed){
   document.addEventListener("dragover",e=>{ if(on()) e.preventDefault(); });
   document.addEventListener("drop",e=>{ if(!on()) return; e.preventDefault(); depth=0; document.body.classList.remove("im-drop"); addImages(e.dataTransfer.files); });
 })();
+/* ================= Branding ================= */
+/* The running list of everything that carries MISMO's branding: what's already on the
+   new 2026 brand and what still has the old look and needs replacing. */
+const BR_STAT = {check:["To Check","wait"], old:["Old Branding","changes"], progress:["In Progress","review"], done:["Rebranded","ok"], retire:["Retiring","wait"]};
+const BR_KINDS = ["Documents & Templates","Email","Events & Summits","Marketing Materials","Presentations","Print & Signage","Products & Standards","Social & Video","Web Pages & Tools","Other"];
+const BR_ORDER = ["old","progress","check","done","retire"];
+const BR = {st:"", kind:"", q:""};
+const brNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
+function brItems(){ return vals("branding").filter(b=>!b.archived); }
+
+function renderBranding(){
+  const el=$("#page-branding"), all=brItems(), t=T();
+  const cnt=k=>all.filter(b=>(b.status||"check")===k).length;
+  const live=all.filter(b=>(b.status||"check")!=="retire");
+  const done=cnt("done"), pct=live.length?Math.round(done/live.length*100):0;
+  const late=all.filter(b=>b.due && b.due<t && !["done","retire"].includes(b.status||"check")).length;
+  const q=brNorm(BR.q);
+  const list=all.filter(b=>(!BR.st||(b.status||"check")===BR.st) && (!BR.kind||b.kind===BR.kind) && (!q||brNorm([b.name,b.kind,b.where,b.owner,b.notes].join(" ")).indexOf(q)>=0))
+    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  const kinds=BR_KINDS.map(k=>{ const its=live.filter(b=>b.kind===k); return {k, n:its.length, d:its.filter(b=>b.status==="done").length}; }).filter(x=>x.n);
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">The 2026 Brand Everywhere</div><h1>Rebranding</h1><div class="sub">Everything that carries MISMO\'s look: what\'s on the new brand already and what still has the old branding and needs replacing.</div></div><div class="tools"><button class="btn pri" type="button" id="br-add">+ Add Item</button></div></div>'+
+    '<div class="band"><div class="tiles">'+
+      '<button class="tile" type="button" data-brst="done"><div class="v sky">'+pct+'%</div><div class="k">Rebranded</div><div class="s">'+done+' of '+live.length+' items</div><div class="brbar"><i style="width:'+pct+'%"></i></div></button>'+
+      '<button class="tile" type="button" data-brst="old"><div class="v'+(cnt("old")?" hot":"")+'">'+cnt("old")+'</div><div class="k">Old Branding</div><div class="s">still to replace</div></button>'+
+      '<button class="tile" type="button" data-brst="progress"><div class="v">'+cnt("progress")+'</div><div class="k">In Progress</div><div class="s">'+(late?late+" past due":"being redone")+'</div></button>'+
+      '<button class="tile" type="button" data-brst="check"><div class="v">'+cnt("check")+'</div><div class="k">To Check</div><div class="s">found, not reviewed yet</div></button>'+
+      '<button class="tile" type="button" data-brst="retire"><div class="v">'+cnt("retire")+'</div><div class="k">Retiring</div><div class="s">won\'t be redone</div></button>'+
+    '</div></div>'+
+    (kinds.length?'<div class="card" style="margin-bottom:22px"><div class="ch"><h2>By Type</h2></div><div class="brkinds">'+kinds.map(x=>'<button type="button" class="brk'+(BR.kind===x.k?" on":"")+'" data-brk="'+esc(x.k)+'"><span class="brk-n">'+esc(x.k)+'</span><span class="brk-bar"><i style="width:'+Math.round(x.d/x.n*100)+'%"></i></span><span class="brk-c">'+x.d+' of '+x.n+'</span></button>').join("")+'</div></div>':'')+
+    '<div class="subtabs" role="group" aria-label="Status">'+[["","All",all.length]].concat(BR_ORDER.map(k=>[k,BR_STAT[k][0],cnt(k)])).map(([k,l,n])=>'<button type="button" data-brf="'+k+'" aria-pressed="'+(BR.st===k)+'">'+esc(l)+' · '+n+'</button>').join("")+'</div>'+
+    '<div class="card"><div class="ch"><h2>'+(BR.st?esc(BR_STAT[BR.st][0]):"Every Item")+(BR.kind?' · '+esc(BR.kind):'')+'</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
+      '<select id="br-kind" aria-label="Type"><option value="">Every Type</option>'+BR_KINDS.map(k=>'<option'+(BR.kind===k?" selected":"")+'>'+esc(k)+'</option>').join("")+'</select>'+
+      '<input type="search" class="plain" id="br-q" placeholder="Search items" value="'+esc(BR.q)+'" aria-label="Search rebranding items"></div></div>'+
+      (list.length?'<div class="tw"><table class="t"><thead><tr><th>Item</th><th>Type</th><th>Status</th><th>Owner</th><th>Due</th><th>New Version</th></tr></thead><tbody>'+
+        list.map(b=>{ const st=b.status||"check", over=b.due&&b.due<t&&!["done","retire"].includes(st);
+          return '<tr class="click" data-br="'+esc(b.id)+'"><td><b>'+esc(b.name||"Untitled")+'</b>'+(()=>{ const os=orders().filter(o=>o.brandItem===b.id&&orOpen(o)).length; const bits=[b.where, os?os+" order"+(os===1?"":"s")+" open":""].filter(Boolean); return bits.length?'<span class="t2">'+esc(bits.join(" · "))+'</span>':''; })()+'</td><td>'+esc(b.kind||"")+'</td><td>'+chip(BR_STAT,st)+'</td><td>'+esc(b.owner||"")+'</td><td'+(over?' style="color:var(--bad);font-weight:600"':'')+'>'+(b.due?esc(fS(b.due)):"—")+'</td><td>'+(b.newUrl?'<a href="'+esc(b.newUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">Open ↗</a>':(st==="done"&&b.doneOn?esc(fS(b.doneOn)):"—"))+'</td></tr>'; }).join("")+'</tbody></table></div>'
+        :'<div class="empty">'+(all.length?"Nothing matches. Pick another status or type, or clear the search.":"Nothing logged yet. Press Add Item for anything with MISMO branding: a document, template, slide deck, banner, sign, web page or social profile.")+'</div>')+
+    '</div>';
+  $("#br-add",el).onclick=()=>openBrand(null);
+  $$("[data-brf]",el).forEach(b=>b.onclick=()=>{ BR.st=b.dataset.brf; renderBranding(); });
+  $$("[data-brst]",el).forEach(b=>b.onclick=()=>{ BR.st=BR.st===b.dataset.brst?"":b.dataset.brst; renderBranding(); });
+  $$("[data-brk]",el).forEach(b=>b.onclick=()=>{ BR.kind=BR.kind===b.dataset.brk?"":b.dataset.brk; renderBranding(); });
+  $("#br-kind",el).onchange=e=>{ BR.kind=e.target.value; renderBranding(); };
+  const qi=$("#br-q",el); qi.oninput=()=>{ BR.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderBranding(); const n=$("#br-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+  $$("[data-br]",el).forEach(r=>r.onclick=()=>openBrand(r.dataset.br));
+}
+function openBrand(id){
+  const b = id ? S.branding[id] : {status:"old", kind:"Marketing Materials", owner:"Jonna"};
+  if(id && !b) return;
+  const fields=[
+    {k:"name",label:"Item",wide:true,ph:"e.g. Membership Brochure, Letterhead Template, LinkedIn Banner"},
+    {k:"kind",label:"Type",type:"select",opts:BR_KINDS},
+    {k:"status",label:"Status",type:"select",opts:BR_ORDER.map(k=>[k,BR_STAT[k][0]])},
+    {k:"owner",label:"Owner",type:"select",blank:true,opts:PEOPLE},
+    {k:"due",label:"Due",type:"date"},
+    {k:"where",label:"Where It Lives",wide:true,ph:"e.g. SharePoint › Marketing › Templates, the Higher Logic site, the LinkedIn page"},
+    {k:"oldUrl",label:"Link to the Old Version",type:"url",ph:"https://"},
+    {k:"newUrl",label:"Link to the Rebranded Version",type:"url",ph:"https://"},
+    {k:"doneOn",label:"Rebranded On",type:"date"},
+    {k:"found",label:"How We Found It",ph:"e.g. the new website, a team member, research"},
+    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"What needs changing: logo, colors, fonts, tagline, the MISMO Connect name"}
+  ];
+  openPane({eye:"Rebranding", title:id?(b.name||"Item"):"New Rebranding Item", fields, data:b,
+    save:async v=>{ if(!v.name){ toast("Give the item a name."); throw new Error("name"); }
+      if(v.status==="done" && !v.doneOn) v.doneOn=T();
+      await put("branding", id||uid("br"), Object.assign({}, b, v, {archived:false})); },
+    buttons: id ? [{label:"Order a Replacement", run:async()=>{ closePane(true); openOrder(null,{brandItem:id, name:b.name||"", kind:"Print"}); }}] : [],
+    extra: id ? (()=>{ const os=orders().filter(o=>o.brandItem===id); return os.length?'<div class="fsec">Orders</div><div class="brorders">'+os.map(o=>'<button type="button" class="lnk" data-bro="'+esc(o.id)+'"><b>'+esc(o.name||"Order")+'</b> · '+esc(OR_STAT[o.status||"toorder"][0])+(orEventName(o)?' · '+esc(orEventName(o)):'')+'</button>').join("")+'</div>':''; })() : '',
+    after: b2=>{ $$("[data-bro]",b2).forEach(x=>x.onclick=()=>{ closePane(true); go("orders"); openOrder(x.dataset.bro); }); },
+    del: id ? async()=>{ await patch("branding",id,{archived:true}); } : null, delLabel:"Archive"
+  });
+}
+/* ================= Orders: pins, swag, banners, print ================= */
+/* Anything physical that has to be ordered. Each order can be tied to an event (a
+   summit or another event) and to the Rebranding item it replaces, so the Summits page,
+   the Schedule and the Rebranding tab all show the same order. */
+const OR_STAT = {toorder:["To Order","changes"], quote:["Getting Quotes","review"], ordered:["Ordered","in"], shipped:["Shipped","in"], received:["Received","ok"], cancelled:["Cancelled","wait"]};
+const OR_ORDER = ["toorder","quote","ordered","shipped","received","cancelled"];
+const OR_KINDS = ["Pins","Swag & Giveaways","Banners & Signage","Print","Apparel","Booth & Display","Other"];
+const OR = {st:"", ev:"", q:""};
+const orOpen = o=>!["received","cancelled"].includes(o.status||"toorder");
+function orders(){ return vals("orders").filter(o=>!o.archived); }
+function orEventName(o){ if(o.event && o.event!=="other"){ const s=SUMMITS.find(x=>x.id===o.event); return s?s.name:o.event; } return o.eventName||""; }
+function orEventDate(o){ const s=o.event&&SUMMITS.find(x=>x.id===o.event); return s?s.start:(o.eventDate||""); }
+function orMoney(n){ n=+n||0; return "$"+n.toLocaleString(undefined,{minimumFractionDigits:n%1?2:0, maxFractionDigits:2}); }
+function orTotal(o){ return (+o.cost||0) || ((+o.unit||0)*(+o.qty||0)); }
+function orRisk(o){ const t=T(); if(!orOpen(o)) return ""; if(o.orderBy && o.orderBy<t && ["toorder","quote"].includes(o.status||"toorder")) return "Past the order-by date"; const need=o.neededBy||orEventDate(o); if(need && need<t) return "Past the needed-by date"; if(need && diff(need,t)<=14) return "Needed within two weeks"; return ""; }
+
+function orderRows(list, showEvent){
+  const t=T();
+  return '<div class="tw"><table class="t"><thead><tr><th>Item</th><th>Type</th>'+(showEvent?'<th>Event</th>':'')+'<th class="n">Qty</th><th>Status</th><th>Order By</th><th>Needed By</th><th class="n">Cost</th></tr></thead><tbody>'+
+    list.map(o=>{ const st=o.status||"toorder", risk=orRisk(o), need=o.neededBy||orEventDate(o);
+      return '<tr class="click" data-or="'+esc(o.id)+'"><td><b>'+esc(o.name||"Untitled")+'</b>'+(o.vendor||risk?'<span class="t2"'+(risk?' style="color:var(--bad);font-weight:600"':'')+'>'+esc(risk||o.vendor)+'</span>':'')+'</td><td>'+esc(o.kind||"")+'</td>'+(showEvent?'<td>'+esc(orEventName(o)||"—")+'</td>':'')+'<td class="n">'+(o.qty?(+o.qty).toLocaleString():"—")+'</td><td>'+chip(OR_STAT,st)+'</td><td'+(o.orderBy&&o.orderBy<t&&["toorder","quote"].includes(st)?' style="color:var(--bad);font-weight:600"':'')+'>'+(o.orderBy?esc(fS(o.orderBy)):"—")+'</td><td>'+(need?esc(fS(need)):"—")+'</td><td class="n">'+(orTotal(o)?orMoney(orTotal(o)):"—")+'</td></tr>'; }).join("")+'</tbody></table></div>';
+}
+function wireOrderRows(el){ $$("[data-or]",el).forEach(r=>r.onclick=()=>openOrder(r.dataset.or)); }
+
+function renderOrders(){
+  const el=$("#page-orders"), all=orders(), t=T();
+  const open=all.filter(orOpen), cnt=k=>all.filter(o=>(o.status||"toorder")===k).length;
+  const risky=open.filter(o=>orRisk(o)).length;
+  const spend=all.filter(o=>o.status!=="cancelled").reduce((n,o)=>n+orTotal(o),0);
+  const evs=[...new Set(all.map(o=>o.event==="other"?"other:"+(o.eventName||""):(o.event||"")))].filter(Boolean);
+  const q=(OR.q||"").toLowerCase().trim();
+  const list=all.filter(o=>(!OR.st||(o.status||"toorder")===OR.st) && (!OR.ev || (OR.ev==="none"?!o.event:(o.event==="other"?"other:"+(o.eventName||""):o.event)===OR.ev)) && (!q||[o.name,o.kind,o.vendor,o.notes,orEventName(o)].join(" ").toLowerCase().indexOf(q)>=0))
+    .sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Pins, Swag, Banners and Print</div><h1>Orders</h1><div class="sub">Everything that has to be ordered, tied to the event it\'s for and the old-branded piece it replaces.</div></div><div class="tools"><button class="btn pri" type="button" id="or-add">+ New Order</button></div></div>'+
+    '<div class="band"><div class="tiles">'+
+      '<button class="tile" type="button" data-orst="toorder"><div class="v'+(cnt("toorder")?" hot":"")+'">'+cnt("toorder")+'</div><div class="k">To Order</div><div class="s">not placed yet</div></button>'+
+      '<button class="tile" type="button" data-orst="ordered"><div class="v">'+(cnt("ordered")+cnt("shipped")+cnt("quote"))+'</div><div class="k">On the Way</div><div class="s">quoting, ordered or shipped</div></button>'+
+      '<button class="tile" type="button" data-orst="received"><div class="v sky">'+cnt("received")+'</div><div class="k">Received</div><div class="s">in hand</div></button>'+
+      '<div class="tile"><div class="v'+(risky?" hot":"")+'">'+risky+'</div><div class="k">Need Attention</div><div class="s">late or needed within two weeks</div></div>'+
+      '<div class="tile"><div class="v">'+orMoney(spend)+'</div><div class="k">Total Cost</div><div class="s">all orders not cancelled</div></div>'+
+    '</div></div>'+
+    '<div class="subtabs" role="group" aria-label="Status">'+[["","All",all.length]].concat(OR_ORDER.map(k=>[k,OR_STAT[k][0],cnt(k)])).map(([k,l,n])=>'<button type="button" data-orf="'+k+'" aria-pressed="'+(OR.st===k)+'">'+esc(l)+' · '+n+'</button>').join("")+'</div>'+
+    '<div class="card"><div class="ch"><h2>'+(OR.st?esc(OR_STAT[OR.st][0]):"Every Order")+'</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
+      '<select id="or-ev" aria-label="Event"><option value="">Every Event</option>'+SUMMITS.map(s=>'<option value="'+s.id+'"'+(OR.ev===s.id?" selected":"")+'>'+esc(s.name)+'</option>').join("")+evs.filter(e=>e.indexOf("other:")===0).map(e=>'<option value="'+esc(e)+'"'+(OR.ev===e?" selected":"")+'>'+esc(e.slice(6)||"Other Event")+'</option>').join("")+'<option value="none"'+(OR.ev==="none"?" selected":"")+'>Not for an Event</option></select>'+
+      '<input type="search" class="plain" id="or-q" placeholder="Search orders" value="'+esc(OR.q)+'" aria-label="Search orders"></div></div>'+
+      (list.length?orderRows(list,true):'<div class="empty">'+(all.length?"Nothing matches. Pick another status or event, or clear the search.":"No orders yet. Press New Order for pins, swag, banners, signs or anything printed.")+'</div>')+
+    '</div>';
+  $("#or-add",el).onclick=()=>openOrder(null);
+  $$("[data-orf]",el).forEach(b=>b.onclick=()=>{ OR.st=b.dataset.orf; renderOrders(); });
+  $$("[data-orst]",el).forEach(b=>b.onclick=()=>{ OR.st=OR.st===b.dataset.orst?"":b.dataset.orst; renderOrders(); });
+  $("#or-ev",el).onchange=e=>{ OR.ev=e.target.value; renderOrders(); };
+  const qi=$("#or-q",el); qi.oninput=()=>{ OR.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderOrders(); const n=$("#or-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+  wireOrderRows(el);
+}
+function openOrder(id, preset){
+  const o = id ? S.orders[id] : Object.assign({status:"toorder", kind:"Pins", owner:"Jonna"}, preset||{});
+  if(id && !o) return;
+  const brs=brItems().sort((a,b)=>String(a.name||"").localeCompare(String(b.name||"")));
+  const fields=[
+    {k:"name",label:"What's Being Ordered",wide:true,ph:"e.g. MISMO Lapel Pins, Retractable Banner, Tote Bags"},
+    {k:"kind",label:"Type",type:"select",opts:OR_KINDS},
+    {k:"status",label:"Status",type:"select",opts:OR_ORDER.map(k=>[k,OR_STAT[k][0]])},
+    {sec:"Event"},
+    {k:"event",label:"For an Event",type:"select",blank:true,opts:SUMMITS.map(s=>[s.id,s.name]).concat([["other","Another Event"]])},
+    {k:"eventName",label:"Event Name (if another event)",ph:"e.g. MBA Annual, a webinar series"},
+    {k:"eventDate",label:"Event Date (if another event)",type:"date"},
+    {sec:"Dates"},
+    {k:"orderBy",label:"Order By",type:"date"},
+    {k:"neededBy",label:"Needed By",type:"date"},
+    {k:"orderedOn",label:"Ordered On",type:"date"},
+    {k:"receivedOn",label:"Received On",type:"date"},
+    {sec:"Order"},
+    {k:"qty",label:"Quantity",type:"number"},
+    {k:"unit",label:"Cost Each ($)",type:"number"},
+    {k:"cost",label:"Total Cost ($)",type:"number"},
+    {k:"vendor",label:"Vendor",ph:"Who it's ordered from"},
+    {k:"owner",label:"Owner",type:"select",blank:true,opts:PEOPLE},
+    {k:"shipTo",label:"Ship To",wide:true,ph:"Venue, office or person"},
+    {k:"link",label:"Order or Tracking Link",type:"url",wide:true,ph:"https://"},
+    {sec:"Rebranding"},
+    {k:"brandItem",label:"Replaces This Rebranding Item",type:"select",blank:true,opts:brs.map(b=>[b.id,b.name||"Item"])},
+    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"Artwork file, colors, sizes, proof approval"}
+  ];
+  openPane({eye:"Orders", title:id?(o.name||"Order"):"New Order", fields, data:o,
+    save:async v=>{ if(!v.name){ toast("Say what's being ordered."); throw new Error("name"); }
+      if(v.status==="ordered" && !v.orderedOn) v.orderedOn=T();
+      if(v.status==="received" && !v.receivedOn) v.receivedOn=T();
+      if(v.event!=="other"){ v.eventName=""; v.eventDate=""; }
+      const oid=id||uid("or"); await put("orders", oid, Object.assign({}, o, v, {archived:false}));
+      if(v.brandItem && S.branding[v.brandItem] && ["old","check"].includes(S.branding[v.brandItem].status||"check")) await patch("branding", v.brandItem, {status:"progress"});
+    },
+    del: id ? async()=>{ await patch("orders",id,{archived:true}); } : null, delLabel:"Archive"
+  });
+}
+/* orders on the Summits page */
+function summitOrdersCard(s){
+  const list=orders().filter(o=>o.event===s.id).sort((a,b)=>(a.neededBy||a.orderBy||"z")<(b.neededBy||b.orderBy||"z")?-1:1);
+  const open=list.filter(orOpen).length, risky=list.filter(o=>orRisk(o)).length;
+  return '<div class="card" style="margin-top:22px"><div class="ch"><h2>Orders for This Summit</h2><span class="cnt">'+open+' open</span>'+(risky?'<span class="note" style="color:var(--bad);font-weight:600">'+risky+' need attention</span>':'')+'<div class="r"><button class="btn sm" type="button" id="sm-order">+ New Order</button><button class="btn sm" type="button" id="sm-orders">See All Orders</button></div></div>'+
+    (list.length?orderRows(list,false):'<div class="empty">No pins, swag, banners or print ordered for this summit yet.</div>')+'</div>';
+}
+function wireSummitOrders(el,s){
+  const a=$("#sm-order",el); if(a) a.onclick=()=>openOrder(null,{event:s.id, neededBy:add(s.start,-7)});
+  const b=$("#sm-orders",el); if(b) b.onclick=()=>{ OR.ev=s.id; OR.st=""; go("orders"); };
+  wireOrderRows(el);
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -2825,7 +3042,7 @@ function pieceFields(ch){
     {k:"date",label:ch==="linkedin"?"Post Date":ch==="mailchimp"?"Send Date":"Date",type:"date"},
     {k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true},
     {k:"status",label:"Status",type:"select",opts:Object.entries(PSTAT).map(([v,[l]])=>[v,l])},
-    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["matters","micdup","news"].includes(k))}];
+    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["matters","micdup","news","orders"].includes(k))}];
   if(ch==="linkedin") base.push({k:"postTime",label:"Post Time",ph:"e.g. 9:00 AM"},{k:"autoPost",label:"Stage it: post on the MISMO page automatically at this date and time (link posts)",type:"cb",wide:true});
   if(ch==="linkedin") base.push({k:"kind",label:"Kind of Post",type:"select",opts:["Mic'd Up","In the News","Summit","Member Highlight","Sponsor Highlight","Certification","Press Release","Workgroup","MISMO Matters","Other"]});
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
@@ -2951,8 +3168,10 @@ function renderSummits(){
       '<div class="tile"><div class="v'+(over?" hot":"")+'">'+over+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
     '</div></div>'+
     '<div class="phase">'+col("before","Before the Summit","Announcements, registration, early-bird, agenda, countdown.")+col("at","At the Summit","Live posts, photos, Newcomer Orientation, award winners.")+col("after","After the Summit","Thank-you and survey, recap, recordings, the MISMO Matters recap.")+'</div>'+
+    summitOrdersCard(s)+
     '<p class="foot">Planning, the agenda and the Run of Show stay in Summit HQ. This page is only the marketing: what gets posted and sent, and when.</p>';
   $("#sm-pick",el).onchange=e=>{ SM.id=e.target.value; renderSummits(); };
+  wireSummitOrders(el,s);
   $("#sm-new",el).onclick=()=>newPiece("summit",{summit:s.id, phase:"before", via:"LinkedIn", date:T()});
   const pl=$("#sm-plan",el); if(pl) pl.onclick=async()=>{ let n=0, skipped=0; for(const [off,ph,via,title] of SUMMIT_PLAN){ const date=add(s.start,off); if(date<T()){ skipped++; continue; } await put("pieces",uid("p"),{channel:"summit",summit:s.id,phase:ph,via,title,date,status:"idea",owner:via==="Onsite"?"Amy":"Kelly"}); n++; } toast(n+" tasks added"+(skipped?" · "+skipped+" already past were skipped":""),4000); };
   wireChecks(el);
@@ -3069,9 +3288,11 @@ function openList(id){
     try{ vals("pieces").forEach(p=>{ const hay=[p.title,p.copy,p.notes,p.kind].join(" "); if(norm(hay).indexOf(t)<0) return; push(CH[p.channel]||"Items", p.title||"Untitled", fS(p.date)+(p.owner?" · "+p.owner:""), ()=>{ const tab={linkedin:"linkedin",youtube:"youtube",mailchimp:"mailchimp",summit:"summits"}[p.channel]||"overview"; go(tab); openPiece(p.id); }, hay); }); }catch(e){}
     try{ HELP.forEach(h=>{ const hay=h.t+" "+h.b.replace(/<[^>]+>/g," "); if(norm(hay).indexOf(t)<0) return; push("Help", h.t, h.g, ()=>{ HL.id=h.id; go('help'); renderHelp(); }, hay); }); }catch(e){}
     try{ vals("news").forEach(n=>{ const hay=[n.headline,n.outlet].join(" "); if(norm(hay).indexOf(t)<0) return; push("In the News", n.headline||"", (n.outlet||"")+" · "+fS(n.date), ()=>{ go('news'); openNews(n.id); }, hay); }); }catch(e){}
+    try{ vals("orders").filter(o=>!o.archived).forEach(o=>{ const hay=[o.name,o.kind,o.vendor,o.notes,orEventName(o)].join(" "); if(norm(hay).indexOf(t)<0) return; push("Orders", o.name||"Order", (OR_STAT[o.status||"toorder"]||[""])[0]+(orEventName(o)?" · "+orEventName(o):""), ()=>{ go('orders'); openOrder(o.id); }, hay); }); }catch(e){}
+    try{ vals("branding").filter(b=>!b.archived).forEach(b=>{ const hay=[b.name,b.kind,b.where,b.notes].join(" "); if(norm(hay).indexOf(t)<0) return; push("Rebranding", b.name||"Item", (BR_STAT[b.status||"check"]||[""])[0]+(b.kind?" · "+b.kind:""), ()=>{ go('branding'); openBrand(b.id); }, hay); }); }catch(e){}
     try{ vals("images").filter(i=>!i.archived).forEach(im=>{ const hay=[im.name,im.file,im.alt,im.credit,im.notes].join(" "); if(norm(hay).indexOf(t)<0) return; push("Images", im.name||im.file||"Image", (IMG_CAMP[im.campaign]||"Image Library"), ()=>{ go('images'); openImage(im.id); }, hay); }); }catch(e){}
     const best={}; out.forEach(h=>{ best[h.group]=Math.max(best[h.group]||0, h.s); });
-    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Images','Setup','Help'];
+    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Rebranding','Orders','Images','Setup','Help'];
     out.sort((a,b)=>(best[b.group]-best[a.group])||(ORDER.indexOf(a.group)-ORDER.indexOf(b.group))||(b.s-a.s)||String(a.name).localeCompare(String(b.name)));
     return out;
   }
