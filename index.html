@@ -2042,7 +2042,7 @@ function signupsCard(){
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r"><a class="btn sm" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener">Open Subscribe Form&nbsp;↗</a><button class="btn sm" type="button" id="su-link">Copy Form Link</button>'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Signed Up</th><th>Name</th><th>Email</th><th>Company</th><th>Interests</th><th>Higher Logic</th></tr></thead><tbody>'+
       list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(String(s.at||"").slice(0,10)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
-    :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, already added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
+    :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, marked Pending until they are added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
 }
 function renderPeople(){
   const el=$("#page-people"); const all=peopleIndex();
@@ -2374,7 +2374,7 @@ const HELP = [
   <p>To get there fast: <b>Subscribe Form</b> at the bottom of the left menu, or <b>Open Subscribe Form</b> and <b>Copy Form Link</b> on the Website Sign-Ups card under Subscribers.</p>
   <div class="hflow">
    <div><span>On the Website</span><b>Someone Subscribes</b><small>Name, work email, company, title and what interests them</small></div>
-   <div><span>Seconds Later</span><b>Higher Logic</b><small>The sign-up flow adds them to the MISMO Matters list</small></div>
+   <div><span>Seconds Later</span><b>Higher Logic</b><small>Added to the MISMO Matters list (by CSV until Higher Logic gives us an API user)</small></div>
    <div><span>Same Moment</span><b>Marketing HQ</b><small>They appear under Website Sign-Ups on Subscribers</small></div>
   </div>
   <ul>
@@ -2386,8 +2386,8 @@ const HELP = [
   <h3>How It's Wired</h3>
   <ol>
    <li>The form sends each sign-up to the <b>MISMO Matters Sign-Ups</b> flow in Power Automate, the same kind of door the certification applications use.</li>
-   <li>The flow adds the person to the MISMO Matters list through Higher Logic's marketing API.</li>
-   <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, with the sign-up and whether Higher Logic took it). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
+   <li>Once Higher Logic provides a marketing API user, a step goes here that adds the person to the MISMO Matters list automatically. Until then each sign-up arrives marked <b>Pending</b>, and <b>Copy for Higher Logic</b> gives you the CSV to import.</li>
+   <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, connected as Jonna, with the GitMISMO organization's approval for Power Automate). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
    <li>Marketing HQ reads that file and shows the sign-up.</li>
   </ol>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
