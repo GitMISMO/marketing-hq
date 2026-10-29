@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  Marketing HQ, resources.mismo.org/marketing-hq/
+  MISMO Media (formerly Marketing HQ), resources.mismo.org/marketing-hq/
   BEFORE UPLOADING A NEW COPY OF THIS FILE: download the current index.html from GitHub first
   and make your changes to that copy. Uploading an older copy silently undoes everything that
   changed since.
@@ -10,7 +10,7 @@
   in this file, and no records either: they all arrive from marketing-hq-data after sign-in.
 -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Marketing HQ</title>
+<title>MISMO Media</title>
 <!-- Hide the app until someone is signed in. If this file is replaced by an upload, carry this block across. -->
 <style>html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:hidden}</style>
 <script>(function(){
@@ -39,7 +39,7 @@
    MARKETING HQ ON resources.mismo.org - the one door to MISMO's save relay
    ----------------------------------------------------------------------------
    Built the same way as Member 360's, Summit HQ's and the IIF Planning HQ's doors.
-   Marketing HQ was built inside Claude, where it reached its records through
+   MISMO Media was built inside Claude, where it reached its records through
    window.claude.use('db'). This gives the page that same door, backed by the save
    relay instead, so none of the tabs change.
 
@@ -70,8 +70,8 @@
   if (window.__hqRelay) return;
 
   var RELAY_URL = 'https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws';
-  var PROJECT = 'marketing-hq', TOOL = 'Marketing HQ';
-  var PREVIEW = false;          /* see the header: false once Marketing HQ is switched on */
+  var PROJECT = 'marketing-hq', TOOL = 'MISMO Media';
+  var PREVIEW = false;          /* see the header: false once MISMO Media is switched on */
   var POLL_MS = 60000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
   /* collections whose documents each get a file of their own (the big synced ones) */
   var OWN = ['audience'];
@@ -191,7 +191,7 @@
   /* ---------- saving ---------- */
   function queue(path, kind, data) {
     if (PREVIEW) {
-      if (now() - previewWarned > 4000) { previewWarned = now(); toast('This is the preview of Marketing HQ on resources.mismo.org \u2014 nothing here is saved. Keep using the Claude version until it\u2019s switched on.', 'bad'); }
+      if (now() - previewWarned > 4000) { previewWarned = now(); toast('This is the preview of MISMO Media on resources.mismo.org \u2014 nothing here is saved. Keep using the Claude version until it\u2019s switched on.', 'bad'); }
       return Promise.reject(err('invalid_argument', 'Preview: not saved'));
     }
     var p = place(path), f = file(p.file, p.own);
@@ -241,7 +241,7 @@
       return ensure(f).then(function () {
         var next = applyOps(f, clone(f.server), batch);
         /* the relay saves files pretty-printed and can only read back a file under 1 MB, so the pretty size is what counts */
-        if (JSON.stringify(next, null, 2).length > MAX_FILE) throw err('TOO_BIG', 'This part of Marketing HQ has grown too big to save in one piece.');
+        if (JSON.stringify(next, null, 2).length > MAX_FILE) throw err('TOO_BIG', 'This part of MISMO Media has grown too big to save in one piece.');
         return put(f.name, { content: next, sha: f.sha }).then(function (b) {
           f.server = next; f.sha = (b && b.sha) || f.sha; f.loadedAt = now();
           f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
@@ -283,7 +283,7 @@
   }
   function anyPending() { return Object.keys(F).some(function (k) { return F[k].pending.length; }); }
   window.addEventListener('beforeunload', function (e) {
-    if (anyPending()) { e.preventDefault(); e.returnValue = 'Marketing HQ is still saving.'; return e.returnValue; }
+    if (anyPending()) { e.preventDefault(); e.returnValue = 'MISMO Media is still saving.'; return e.returnValue; }
   });
 
   /* ---------- snapshots and listeners ---------- */
@@ -473,12 +473,12 @@
   var ready = false, readyWaiters = [], gateEl = null;
   function whenReady() { return ready ? Promise.resolve() : new Promise(function (r) { readyWaiters.push(r); }); }
   var WHY = {
-    UNKNOWN_PROJECT: 'The save relay doesn\u2019t know Marketing HQ yet. It\u2019s being added to the relay\u2019s project list.',
-    NO_ACCESS: 'Your account doesn\u2019t have Marketing HQ yet. Ask Jonna Critchley to add you.',
+    UNKNOWN_PROJECT: 'The save relay doesn\u2019t know MISMO Media yet. It\u2019s being added to the relay\u2019s project list.',
+    NO_ACCESS: 'Your account doesn\u2019t have MISMO Media yet. Ask Jonna Critchley to add you.',
     TOKEN: 'The save relay\u2019s GitHub key was refused. It needs the marketing-hq-data repository added to it.',
     GITHUB: 'GitHub refused the save. The save relay\u2019s GitHub key most likely doesn\u2019t include the marketing-hq-data repository yet.',
     CONFIG_UNAVAILABLE: 'The save relay can\u2019t read its settings right now.',
-    OFFLINE: 'Marketing HQ couldn\u2019t reach the save relay. Check your connection.'
+    OFFLINE: 'MISMO Media couldn\u2019t reach the save relay. Check your connection.'
   };
   /* The gate sits UNDER the shared sign-in box (session.js draws it at z-index 9500),
      so pressing Sign In shows that box on top rather than behind this card. */
@@ -507,10 +507,10 @@
        waits, loads, or cannot reach its data. 'blank' is the plain backdrop behind the
        shared sign-in window. */
     if (kind === 'blank') { gateEl.innerHTML = ''; return; }
-    if (kind === 'loading') { h = 'Opening Marketing HQ\u2026'; p = 'Reading the latest from the private data store.'; }
-    else if (kind === 'nosession') { h = 'Marketing HQ Couldn\u2019t Load'; p = 'The resources.mismo.org sign-in didn\u2019t load. Check your connection, then reload the page.'; b = 'Reload'; fn = function () { location.reload(); }; }
-    else { h = 'Marketing HQ Couldn\u2019t Reach Its Data'; p = (e && (WHY[e.code] || e.message)) || 'Something went wrong reading the data.'; b = 'Try Again'; fn = function () { start(); }; }
-    gateEl.innerHTML = '<div class="card"><div class="ey">Marketing HQ</div><h1></h1><p></p></div>';
+    if (kind === 'loading') { h = 'Opening MISMO Media\u2026'; p = 'Reading the latest from the private data store.'; }
+    else if (kind === 'nosession') { h = 'MISMO Media Couldn\u2019t Load'; p = 'The resources.mismo.org sign-in didn\u2019t load. Check your connection, then reload the page.'; b = 'Reload'; fn = function () { location.reload(); }; }
+    else { h = 'MISMO Media Couldn\u2019t Reach Its Data'; p = (e && (WHY[e.code] || e.message)) || 'Something went wrong reading the data.'; b = 'Try Again'; fn = function () { start(); }; }
+    gateEl.innerHTML = '<div class="card"><div class="ey">MISMO Media</div><h1></h1><p></p></div>';
     gateEl.querySelector('h1').textContent = h; gateEl.querySelector('p').textContent = p;
     if (b) { var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b; btn.addEventListener('click', fn); gateEl.querySelector('.card').appendChild(btn); }
   }
@@ -596,7 +596,7 @@
     return fetch(IMG_FLOW, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) {
         if (r.ok) return j;
-        throw err(r.status === 403 ? 'DENIED' : 'HTTP_' + r.status, r.status === 403 ? 'Your account can\u2019t do that in Marketing HQ' : 'SharePoint didn\u2019t answer (' + r.status + ')', r.status);
+        throw err(r.status === 403 ? 'DENIED' : 'HTTP_' + r.status, r.status === 403 ? 'Your account can\u2019t do that in MISMO Media' : 'SharePoint didn\u2019t answer (' + r.status + ')', r.status);
       }); }, function () { throw err('OFFLINE', 'Could not reach SharePoint', 0); });
   }
   function b64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1] || ''); }; r.onerror = function () { rej(err('read_failed', 'Could not read the file')); }; r.readAsDataURL(blob); }); }
@@ -637,8 +637,8 @@
   function banner() {
     var b = document.getElementById('savebanner'); if (!b) return;
     b.innerHTML = PREVIEW
-      ? '<b>Preview: Marketing HQ on resources.mismo.org.</b> Nothing here is saved yet. Keep using the Claude version until it\u2019s switched on.'
-      : '<b>You have view-only access to Marketing HQ.</b> You can look around; ask Jonna Critchley if you need to make changes.';
+      ? '<b>Preview: MISMO Media on resources.mismo.org.</b> Nothing here is saved yet. Keep using the Claude version until it\u2019s switched on.'
+      : '<b>You have view-only access to MISMO Media.</b> You can look around; ask Jonna Critchley if you need to make changes.';
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', banner); else banner();
   window.__hqRelay = { files: F, place: place, poll: function () { poll(true); }, pending: anyPending, status: status,
@@ -943,7 +943,7 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 :root[data-theme="dark"] .chip.in{color:var(--sky)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.in{color:var(--sky)}}
 .dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex:0 0 auto}
-.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)}
+.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)} .k-request{--k:#c0582b}
 .dot{background:var(--k,var(--ink-3))}
 .ticks{display:inline-flex;gap:3px;align-items:center}
 .tk{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--border-strong);color:var(--ink-3)}
@@ -1063,6 +1063,43 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 :root[data-theme="dark"] .sdone-t{color:var(--sky)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sdone-t{color:var(--sky)}}
 @media(max-width:560px){.setcard .who .wn{display:none}}
+
+/* Requests */
+.rqbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+.rqbar select{width:auto;min-width:180px}
+.rqbar input{flex:1 1 220px;width:auto}
+.rqboard{display:grid;grid-template-columns:repeat(4,minmax(250px,1fr));gap:14px;overflow-x:auto;padding-bottom:6px;align-items:start}
+.rqcol{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;min-width:0;display:flex;flex-direction:column}
+.rqcol-h{display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);border-bottom:1px solid var(--border);border-top:3px solid var(--rqc,var(--border-strong));border-radius:8px 8px 0 0}
+.rqcol-h b{margin-left:auto;font-size:11px;letter-spacing:0;background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 7px;color:var(--ink)}
+.rq-new{--rqc:#c0582b}.rq-review{--rqc:var(--warn)}.rq-work{--rqc:#1a8fe3}.rq-done{--rqc:var(--good)}
+.rq-new .rqcol-h b{background:#c0582b;border-color:#c0582b;color:#fff}
+.rqcol-b{display:flex;flex-direction:column;gap:10px;padding:12px}
+.rqnone{font-size:12.5px;color:var(--ink-3);padding:14px 6px;text-align:center}
+.rqc{display:flex;flex-direction:column;gap:6px;text-align:left;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:12px 13px;cursor:pointer;font:inherit;color:var(--ink);box-shadow:0 1px 2px rgba(6,32,47,.05);transition:border-color .12s,box-shadow .12s,transform .12s}
+.rqc:hover{border-color:var(--border-strong);box-shadow:0 6px 16px -8px rgba(6,32,47,.35);transform:translateY(-1px)}
+.rqc.fresh{border-left:3px solid #c0582b}
+.rqc-top{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.rqt{font-size:10.5px;font-weight:700;letter-spacing:.02em;color:var(--navy-mid);background:var(--sky-wash);border-radius:4px;padding:2px 7px;white-space:nowrap}
+:root[data-theme="dark"] .rqt{color:var(--sky);background:var(--surface-3)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rqt{color:var(--sky);background:var(--surface-3)}}
+.rqc-t{font-size:14px;font-weight:700;line-height:1.3}
+.rqc-d{font-size:12.5px;color:var(--ink-2);line-height:1.4}
+.rqc-by{font-size:11.5px;color:var(--ink-3)}
+.rqc-foot{display:flex;align-items:center;gap:8px;margin-top:2px}
+.rqc-foot .who{margin-left:auto}
+.rqc-foot .who .wn{display:none}
+.rqc-ln{font-size:11px;color:var(--good);font-weight:600}
+.rqdec{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:14px}
+.rqasked{background:var(--surface-2);border:1px solid var(--border);border-left:3px solid #c0582b;border-radius:7px;padding:14px 16px;margin:0 0 16px}
+.rqasked h3{margin:8px 0 6px;font-size:17px;line-height:1.3}
+.rqasked p{margin:0 0 12px;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+.rqa-h{display:flex;align-items:center;gap:10px}
+.rqa-when{margin-left:auto;font-size:11.5px;color:var(--ink-3)}
+.rqa-r{display:grid;grid-template-columns:110px minmax(0,1fr);gap:10px;font-size:13px;padding:5px 0;border-top:1px solid var(--rule)}
+.rqa-r span{color:var(--ink-3);font-size:12px;font-weight:600}
+.rqa-r a{word-break:break-all}
+@media(max-width:700px){.rqboard{grid-template-columns:repeat(4,minmax(240px,82vw));scroll-snap-type:x mandatory}.rqcol{scroll-snap-align:start}}
 
 /* milestones */
 .miles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden;margin-bottom:22px}
@@ -1309,8 +1346,8 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
 <header class="hqtop">
   <span class="logoplate"><svg class="wordmark" role="img" aria-label="MISMO" viewBox="0 0 708 108"><use href="#mismo-logo"/></svg><svg class="santa" viewBox="0 0 100 100" aria-hidden="true"><use href="#mismo-hat"/></svg></span>
   <span class="mastrule"></span>
-  <span class="hqname">Marketing HQ</span>
-  <span class="hqtop-r"><span class="eyebrow-m">Programs &amp; Operations</span>
+  <span class="hqname">MISMO Media</span>
+  <span class="hqtop-r"><span class="eyebrow-m">Strategic Growth</span>
     <!-- The shared account bubble every tool shows in this spot (session.js fills it). -->
     <div id="rs-account"></div></span>
 </header>
@@ -1331,10 +1368,13 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button class="railq-x" id="rail-qx" type="button" aria-label="Clear the search" hidden>×</button>
     <div class="railhits" id="rail-hits" hidden></div>
   </div>
-  <nav aria-label="Marketing HQ">
+  <nav aria-label="MISMO Media">
     <button type="button" data-hq="overview" aria-current="page" title="Schedule">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
       <span>Schedule</span><b class="nbadge" id="nb-overview" hidden></b></button>
+    <button type="button" data-hq="requests" title="Requests">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
+      <span>Requests</span><b class="nbadge" id="nb-requests" hidden></b></button>
     <div class="navsep">Channels</div>
     <button type="button" data-hq="matters" title="MISMO Matters">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
@@ -1383,6 +1423,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <a class="navlink" href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener" title="Open the public Subscribe form (new tab)">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M16 2.5h5.5V8M21.5 2.5l-6 6" style="stroke-width:1.5"/></svg>
       <span>Subscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
+    <a class="navlink" href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener" title="Open the public Request form (new tab)">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
+      <span>Request Form</span><i class="ext" aria-hidden="true">↗</i></a>
   </nav>
   <div class="mast-right">
     <div class="railnote" id="rail-save"><b>Saving</b><span>Connecting…</span></div>
@@ -1412,6 +1455,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-images" hidden></section>
   <section class="page" id="page-branding" hidden></section>
   <section class="page" id="page-orders" hidden></section>
+  <section class="page" id="page-requests" hidden></section>
   <section class="page" id="page-help" hidden></section>
 </main>
 
@@ -1446,7 +1490,7 @@ const SEC = Object.fromEntries(SECTIONS.map(s=>[s.key,s]));
 const PEOPLE = ["Jonna","Vanessa","Kelly","Amy","Brian","Jonathan","Perry","Kathryn"];
 const SSTAT = {waiting:["Waiting on Content","wait"], in:["Content In","in"], review:["With Amy for Review","review"], changes:["Changes Requested","changes"], approved:["Approved","ok"]};
 const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], staged:["Staged to Post","in"], done:["Posted / Sent","ok"]};
-const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", other:"Other"};
+const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", request:"Requests", other:"Other"};
 const REUSE = [["linkedin","LinkedIn","LI"],["mailchimp","Mailchimp","MC"],["website","Website","WB"],["youtube","YouTube","YT"],["summit","Summit","SU"]];
 const MILES = [
   ["content","Content Due","Contributors to Kelly"],
@@ -1564,7 +1608,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -1595,7 +1639,7 @@ async function connect(){
 }
 let CANWRITE=true, FEED_DONE=false;
 /* On resources.mismo.org the home page already keeps a list of every Mic'd Up episode on
-   YouTube (/podcast/micdup.json, rebuilt from the channel's feed). Marketing HQ reads it so an
+   YouTube (/podcast/micdup.json, rebuilt from the channel's feed). MISMO Media reads it so an
    episode is marked "on YouTube", with its link, the moment it goes up. */
 async function syncFeed(){
   if(FEED_DONE || location.hostname!=="resources.mismo.org" || !CANWRITE) return;
@@ -1681,6 +1725,7 @@ function allEvents(){
     if(o.orderBy && (pre || o.orderedOn)) ev.push({date:o.orderBy, k:"orders", label:"Order By · "+(o.name||"Order"), done:!pre, who:o.owner||"", go:()=>{ go("orders"); openOrder(o.id); }});
     const need=o.neededBy||orEventDate(o); if(need) ev.push({date:need, k:"orders", label:"Needed · "+(o.name||"Order")+(orEventName(o)?" for "+orEventName(o):""), done:o.status==="received", who:o.owner||"", go:()=>{ go("orders"); openOrder(o.id); }});
   });
+  if(typeof requests==="function") requests().forEach(r=>{ if(!r.neededBy || ["done","declined"].includes(r.status) || rqLinked(r.id).length) return; ev.push({date:r.target||r.neededBy, k:"request", label:"Request · "+(r.title||"Untitled"), done:false, who:r.owner||"", go:()=>{ go("requests"); openRequest(r.id); }}); });
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
 }
@@ -1761,7 +1806,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","results","news","people","lists","images","help"];
+const TABS=["overview","requests","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","results","news","people","lists","images","help"];
 let TAB="overview";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -1782,7 +1827,7 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, branding:renderBranding, orders:renderOrders, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
@@ -1794,6 +1839,7 @@ function badges(){
   badge("micdup", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1), false);
   badge("linkedin", ev.filter(e=>e.k==="linkedin" && !e.done && e.date<=wk).length);
   badge("youtube", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length);
+  badge("requests", requests().filter(r=>r.status==="new").length, true);
   badge("orders", vals("orders").filter(o=>!o.archived && orRisk(o)).length, true);
   badge("branding", vals("branding").filter(b=>!b.archived && b.status==="old").length);
   badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && p.status!=="done" && p.date && p.date<=wk).length);
@@ -1822,6 +1868,7 @@ function renderOverview(){
     if(nx) say += 'Next up: '+esc(nx[1].toLowerCase()==="sent"?"sending":nx[1])+' on '+esc(fS(ed.dates[nx[0]]))+' ('+esc(nx[2])+'). ';
   }
   if(over.length) say += '<span class="hot">'+over.length+' item'+(over.length>1?"s are":" is")+' past due.</span> ';
+  { const nr=requests().filter(r=>r.status==="new").length; if(nr) say += '<span class="hot">'+nr+' new request'+(nr>1?"s":"")+' to review.</span> '; }
   if(setupOpen.length) say += setupOpen.length+' setup item'+(setupOpen.length>1?"s":"")+' still open.';
   // calendar month
   if(!OV.month) OV.month = t.slice(0,7);
@@ -1868,7 +1915,7 @@ function renderOverview(){
         (g[0]==="Coming Up" && g[1].length>5 ? '<button type="button" class="sdone-t smore" id="ov-slater">'+(OV.showLater?"Show fewer":"Show "+(g[1].length-cap)+" more coming up")+'</button>' : '')+'</div>'; }).join("") || (setup.length?'<div class="empty sdone-all">Everything is set up.</div>':'<div class="empty">Nothing to set up.</div>'))+
     (sDone.length?'<button type="button" class="sdone-t" id="ov-sdone" aria-expanded="'+(!!OV.showDone)+'">'+(OV.showDone?"Hide":"Show")+' '+sDone.length+' finished</button>'+(OV.showDone?'<div class="sgrp done"><div class="checks">'+sDone.slice().reverse().map(sRow).join("")+'</div></div>':''):'');
   el.innerHTML =
-    '<div class="phead"><div><div class="eyebrow">MISMO Marketing</div><h1>Marketing Schedule</h1><div class="sub">Every MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push, on one calendar.</div></div>'+
+    '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push, on one calendar.</div></div>'+
     '<div class="tools"><button class="btn" type="button" id="ov-newpiece">+ New Item</button></div></div>'+
     '<div class="band"><div class="today">Today · '+esc(fL(t))+'</div><div class="say">'+say+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
@@ -1900,7 +1947,7 @@ function renderOverview(){
   wireChecks(el); wireLanes(el);
 }
 /* short channel names for the agenda tags, and the owner badge */
-const CHS = {matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", other:"Other"};
+const CHS = {matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", request:"Request", other:"Other"};
 function agTitle(e){ let l=String(e.label||""); [CH[e.k], CHS[e.k]].forEach(p=>{ if(p && l.indexOf(p+" · ")===0) l=l.slice(p.length+3); else if(p && l.indexOf(p+" ")===0 && e.k==="micdup") l=l.slice(p.length+1); }); return l; }
 const WHO_TONE = {Jonna:1,Vanessa:2,Kelly:3,Amy:4,Brian:5,Jonathan:6,Perry:7,Kathryn:8};
 function whoHtml(w){ if(!w) return '<span class="who none"></span>'; return '<span class="who" title="'+esc(w)+'"><i class="av t'+(WHO_TONE[w]||0)+'">'+esc(w.charAt(0))+'</i><span class="wn">'+esc(w)+'</span></span>'; }
@@ -2123,7 +2170,7 @@ function buildEmail(ed, preview){
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       if(hl) inner+='<img src="'+esc(hl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
       else if(preview && local) inner+='<img src="'+esc(local)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0;outline:2px dashed #e0a440;outline-offset:-2px"><span style="display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</span>';
-      else if(d.imageId||d.imageLib||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in Marketing HQ")+' — upload to Higher Logic and paste its link</div>';
+      else if(d.imageId||d.imageLib||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' — upload to Higher Logic and paste its link</div>';
       inner+=paras(d.body).map(p=>'<p style="'+F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36">'+linkify(p)+'</p>').join("");
       if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+esc(d.quote)+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
       if(d.ctaUrl) inner+='<p style="margin:4px 0 12px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:4px">'+esc(d.ctaText||"Learn more")+' &rarr;</a></p>';
@@ -2427,7 +2474,7 @@ function feedAge(k){ const f=feed(k); if(!f||!f.updated) return ""; const d=new 
 /* ================= Help ================= */
 const HELP = [
  {id:"start", t:"Start Here", g:"Basics", b:`
-  <p class="lead">Marketing HQ is MISMO's one place for marketing. Every MISMO Matters edition, Mic'd Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push lives here, on one schedule, so nothing gets missed and everyone can see what's happening.</p>
+  <p class="lead">MISMO Media is Strategic Growth's one place for marketing and communications. Every MISMO Matters edition, Mic'd Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push lives here, on one schedule, so nothing gets missed and everyone can see what's happening.</p>
   <h3>Finding Your Way</h3>
   <ul>
    <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. The small number beside a page is what needs attention there (red means past due).</li>
@@ -2462,6 +2509,17 @@ const HELP = [
    <li><b>Getting Set Up</b> is the checklist for launching the system. The bar shows how much is done. Open items are grouped into Past Due, This Week and Coming Up; finished items are tucked under <b>Show finished</b>. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
   </ul>
   <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
+ {id:"requests", t:"Requests and the Request Form", g:"Pages", b:`
+  <p>Staff and facilitators send marketing and communications requests through one form. Every request lands on the <b>Requests</b> page, where the team reviews it and turns it into work.</p>
+  <ul>
+   <li><b>The form:</b> <a href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener">resources.mismo.org/forms/request/</a>. No sign-in is needed. Share the link with staff and facilitators, or press <b>Copy Form Link</b> on the Requests page. It asks who's asking, what they need (LinkedIn post, MISMO Matters item, email blast, community post, video, summit promotion, graphic, print, signage, swag, slides, website update, press release), the details, the needed-by date, the audience, any related event, and links to files.</li>
+   <li><b>The board:</b> requests move from <b>New</b> to <b>In Review</b> (including <b>Need More Info</b>), then to <b>Approved &amp; In Progress</b>, and finally to <b>Done</b>. <b>Declined</b> ones are hidden until you press Show Declined. The menu shows how many are new, and the Schedule mentions them too.</li>
+   <li><b>Reviewing:</b> click a card to see exactly what was asked. Set the status, owner, priority and your target date. <b>Team Notes</b> stay with the team. <b>Email the Requester</b> opens an email to them with your <b>Note to the Requester</b> filled in.</li>
+   <li><b>Turning it into work:</b> <b>Add to the Schedule</b> starts the post, email or task in the right channel, filled in from the request. For print, signage and swag, <b>Create an Order</b> starts an order instead. Either way the request is marked Approved. The request then lists everything made from it, and that item shows on the Schedule.</li>
+   <li><b>On the Schedule:</b> a request with a needed-by date shows on the calendar until something has been made from it.</li>
+   <li><b>Requests that come up in conversation:</b> press <b>+ Add a Request</b> to log it yourself.</li>
+   <li><b>Behind the scenes:</b> the form uses the same Power Automate flow and GitHub workflow as the Subscribe form. The workflow files each request in <code>data/inbox.json</code> (only the workflow writes there), and the team's review is kept in <code>data/requests.json</code>. If a Higher Logic step is ever added to that flow, give it a condition so it only runs when <code>form</code> is <code>mismo-matters-subscribe</code>; otherwise requesters would be added to the MISMO Matters list.</li>
+  </ul>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
   <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which. November goes out Thursday, Nov 19, after the new website launches Nov 16.</p>
@@ -2537,16 +2595,16 @@ const HELP = [
    <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
    <li><b>Ready to Reuse from MISMO Matters</b>: any section with LinkedIn ticked under "Also Use It In." <b>Make a Post</b> starts one with its headline and copy.</li>
    <li><b>News to Share</b>: articles from In the News not yet posted. <b>Make a Post</b> starts one with the link.</li>
-   <li><b>Make a Post</b> starts a draft here in Marketing HQ. It does not put anything on LinkedIn by itself.</li>
+   <li><b>Make a Post</b> starts a draft here in MISMO Media. It does not put anything on LinkedIn by itself.</li>
    <li><b>Stage it</b> to have it go up automatically: give it a date and a post time, tick "Stage it," and save. It shows as <b>Staged to Post</b>. Once the posting flow is running (see <b>Posting and Scheduling</b>), it posts on the MISMO page at that time and marks itself posted with its link.</li>
    <li>If you post it yourself, open it, set Status to <b>Posted / Sent</b>, paste the post's link and save. Impressions, clicks, reactions, comments and reposts can be typed in, or brought in from the LinkedIn export on Results.</li>
   </ul>`},
  {id:"posting", t:"Posting and Scheduling", g:"Channels", b:`
-  <p>Everything starts as a draft in Marketing HQ. Here's what can go out on its own and what's still done in the platform.</p>
-  <table class="t"><thead><tr><th>Where</th><th>Can Marketing HQ Post It?</th><th>How</th></tr></thead><tbody>
+  <p>Everything starts as a draft in MISMO Media. Here's what can go out on its own and what's still done in the platform.</p>
+  <table class="t"><thead><tr><th>Where</th><th>Can MISMO Media Post It?</th><th>How</th></tr></thead><tbody>
    <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Monday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
    <tr><td>LinkedIn, image, video or document posts</td><td>No</td><td>Power Automate's LinkedIn connector only posts link posts. Schedule these in LinkedIn itself (the clock icon next to Post on the MISMO page), then set the post's Status to Approved and note the time.</td></tr>
-   <tr><td>YouTube uploads</td><td>No</td><td>Power Automate can't upload to YouTube. Upload in YouTube Studio and set Visibility to <b>Schedule</b> for the time you want; it goes public by itself. Marketing HQ marks it on YouTube once it's up.</td></tr>
+   <tr><td>YouTube uploads</td><td>No</td><td>Power Automate can't upload to YouTube. Upload in YouTube Studio and set Visibility to <b>Schedule</b> for the time you want; it goes public by itself. MISMO Media marks it on YouTube once it's up.</td></tr>
    <tr><td>MISMO Matters</td><td>No</td><td>Built and scheduled in Higher Logic from the HTML.</td></tr>
    <tr><td>Mailchimp</td><td>No</td><td>Scheduled in Mailchimp.</td></tr>
   </tbody></table>
@@ -2554,7 +2612,7 @@ const HELP = [
   <ol>
    <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Monday posts).</li>
    <li>Any whose date and time have arrived, and that haven't gone out, are posted on the MISMO page.</li>
-   <li>It writes what it posted, with each post's link, to <code>data/posted.json</code>. Only the flow writes that file. Marketing HQ reads it and marks each post as posted, the same way Member 360 reads what its email flow has sent.</li>
+   <li>It writes what it posted, with each post's link, to <code>data/posted.json</code>. Only the flow writes that file. MISMO Media reads it and marks each post as posted, the same way Member 360 reads what its email flow has sent.</li>
   </ol>
   <p>To stop a staged post, untick "Stage it" before its time.</p>`},
  {id:"youtube", t:"YouTube", g:"Channels", b:`
@@ -2603,7 +2661,7 @@ const HELP = [
   <div class="hflow">
    <div><span>On the Website</span><b>Someone Subscribes</b><small>Name, work email, company, title and what interests them</small></div>
    <div><span>Seconds Later</span><b>Higher Logic</b><small>Added to the MISMO Matters list (by CSV until Higher Logic gives us an API user)</small></div>
-   <div><span>Same Moment</span><b>Marketing HQ</b><small>They appear under Website Sign-Ups on Subscribers</small></div>
+   <div><span>Same Moment</span><b>MISMO Media</b><small>They appear under Website Sign-Ups on Subscribers</small></div>
   </div>
   <ul>
    <li><b>Website Sign-Ups</b> on the Subscribers page lists the newest first, with whether each person made it into Higher Logic.</li>
@@ -2616,7 +2674,7 @@ const HELP = [
    <li>The form sends each sign-up to the <b>MISMO Matters Sign-Ups</b> flow in Power Automate, the same kind of door the certification applications use.</li>
    <li>Once Higher Logic provides a marketing API user, a step goes here that adds the person to the MISMO Matters list automatically. Until then each sign-up arrives marked <b>Pending</b>, and <b>Copy for Higher Logic</b> gives you the CSV to import.</li>
    <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, connected as Jonna, with the GitMISMO organization's approval for Power Automate). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
-   <li>Marketing HQ reads that file and shows the sign-up.</li>
+   <li>MISMO Media reads that file and shows the sign-up.</li>
   </ol>`},
  {id:"branding", t:"The Rebranding Tracker", g:"Channels", b:`
   <p>The running list of everything that carries MISMO's look, so nothing with the old branding gets missed. Open <b>Rebranding</b> in the left menu.</p>
@@ -2655,7 +2713,7 @@ const HELP = [
   <h3>Where the Pictures Live</h3>
   <ul>
    <li><b>Claude version:</b> in the page's own private image store.</li>
-   <li><b>resources.mismo.org version:</b> MISMO's SharePoint. New pictures are saved to Q Drive › MISMO › Active Documents › Marketing › Marketing HQ Images, in a folder for each month. <b>Add from SharePoint</b> lists pictures that are already in SharePoint (Branding - 2026, for example) without copying them. Only people signed in with access to Marketing HQ can see or add them.</li>
+   <li><b>resources.mismo.org version:</b> MISMO's SharePoint. New pictures are saved to Q Drive › MISMO › Active Documents › Marketing › Marketing HQ Images, in a folder for each month. <b>Add from SharePoint</b> lists pictures that are already in SharePoint (Branding - 2026, for example) without copying them. Only people signed in with access to MISMO Media can see or add them.</li>
   </ul>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
@@ -2674,13 +2732,13 @@ const HELP = [
    <li>Uploading images and "Write the LinkedIn Post" work in the Claude version today and will come to resources.mismo.org when the relay supports them.</li>
   </ul>`},
  {id:"automation", t:"Daily Stats from Power Automate", g:"Behind the Scenes", b:`
-  <p>Once Marketing HQ is saving on resources.mismo.org, a scheduled Power Automate flow can bring the numbers in every morning instead of anyone importing them. The flow writes one file, <code>data/feeds.json</code>, into marketing-hq-data, the same way the Member 360 email flow writes its results file. Marketing HQ reads it and fills in Results, the edition stats and the episode views on its own. Typed or imported numbers always win over the feed.</p>
+  <p>Once MISMO Media is saving on resources.mismo.org, a scheduled Power Automate flow can bring the numbers in every morning instead of anyone importing them. The flow writes one file, <code>data/feeds.json</code>, into marketing-hq-data, the same way the Member 360 email flow writes its results file. MISMO Media reads it and fills in Results, the edition stats and the episode views on its own. Typed or imported numbers always win over the feed.</p>
   <table class="t"><thead><tr><th>Source</th><th>Daily?</th><th>How the Flow Gets It</th></tr></thead><tbody>
    <tr><td>MISMO Matters (Higher Logic)</td><td>Yes</td><td>HTTP call to Higher Logic's marketing (Informz) API for each mailing: sent, delivered, unique opens, unique clicks, unsubscribes, bounces. Needs an API user from Higher Logic.</td></tr>
    <tr><td>YouTube</td><td>Yes</td><td>HTTP call to the YouTube Data API with a Google API key for views, likes and comments. Power Automate's own YouTube connector only announces new uploads; it has no view counts.</td></tr>
    <tr><td>Mailchimp</td><td>Yes</td><td>HTTP call to Mailchimp's reports API with a Mailchimp API key.</td></tr>
    <tr><td>LinkedIn</td><td>Not yet</td><td>Power Automate has no LinkedIn analytics action. Page analytics need a LinkedIn developer app approved for organization data. Until then, drop the monthly export on Results.</td></tr>
-   <tr><td>Website subscribers</td><td>As they happen</td><td>MISMO's own Subscribe form sends each sign-up straight to Higher Logic and Marketing HQ (see <b>The Subscribe Form</b>).</td></tr>
+   <tr><td>Website subscribers</td><td>As they happen</td><td>MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td></tr>
   </tbody></table>
   <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
   <h3>What the File Looks Like</h3>
@@ -2713,7 +2771,7 @@ function renderHelp(){
   if(!HELP.find(h=>h.id===HL.id)) HL.id="start";
   const cur=HELP.find(h=>h.id===HL.id);
   const groups=[...new Set(HELP.map(h=>h.g))];
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use Marketing HQ</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
     '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
@@ -2773,7 +2831,7 @@ function imgDims(file){ return new Promise(res=>{ const u=URL.createObjectURL(fi
 async function addImages(files, preset){
   files=[...(files||[])].filter(f=>/^image\//.test(f.type));
   if(!files.length){ toast("Pick image files (JPG, PNG, GIF, SVG or WebP)."); return []; }
-  if(!ASSETS){ toast("Adding pictures here opens when Marketing HQ is switched on. Use the Claude version for now.", 4500); return []; }
+  if(!ASSETS){ toast("Adding pictures here opens when MISMO Media is switched on. Use the Claude version for now.", 4500); return []; }
   const made=[]; let n=0;
   for(const f of files){
     n++; toast("Adding "+n+" of "+files.length+"…", 60000);
@@ -2853,7 +2911,7 @@ function renderImages(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
       (SP_IMG()?'<button class="btn" type="button" id="im-sp">Add from SharePoint</button>':'')+(ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
     '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.length+'</em> image'+(live.length===1?"":"s")+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
-      (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.'+(!SP_IMG()&&live.some(i=>i.spPath)?' Pictures kept in SharePoint show their previews on resources.mismo.org.':'') : (SP_IMG()?'Pictures load straight from SharePoint. Adding new ones here opens when Marketing HQ is switched on.':'Adding pictures here opens when Marketing HQ is switched on. Use the Claude version until then.'))+'</div>'+
+      (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.'+(!SP_IMG()&&live.some(i=>i.spPath)?' Pictures kept in SharePoint show their previews on resources.mismo.org.':'') : (SP_IMG()?'Pictures load straight from SharePoint. Adding new ones here opens when MISMO Media is switched on.':'Adding pictures here opens when MISMO Media is switched on. Use the Claude version until then.'))+'</div>'+
       '<div class="tiles"><div class="tile"><div class="v sky">'+live.length+'</div><div class="k">Images</div><div class="s">ready to use</div></div>'+
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<div class="tile"><div class="v">'+month+'</div><div class="k">Added This Month</div><div class="s">'+esc(MONL[+t.slice(5,7)-1])+'</div></div>'+
@@ -3102,6 +3160,161 @@ function wireSummitOrders(el,s){
   const a=$("#sm-order",el); if(a) a.onclick=()=>openOrder(null,{event:s.id, neededBy:add(s.start,-7)});
   const b=$("#sm-orders",el); if(b) b.onclick=()=>{ OR.ev=s.id; OR.st=""; go("orders"); };
   wireOrderRows(el);
+}
+/* ================= Requests ================= */
+/* Where marketing and communications requests come in and get sorted. Staff and facilitators
+   send them through the public form (resources.mismo.org/forms/request/); the form goes through
+   the same Power Automate flow and GitHub workflow as website sign-ups, which files each one in
+   data/inbox.json. Only that workflow writes inbox.json. Everything the team adds while
+   reviewing (status, owner, notes) is kept in data/requests.json, so the two never collide.
+   A request added here by the team goes straight into requests. */
+const REQUEST_FORM = "https://resources.mismo.org/forms/request/";
+const RQ_STAT = {new:["New","changes"], review:["In Review","review"], info:["Need More Info","wait"], approved:["Approved","in"], progress:["In Progress","in"], done:["Done","ok"], declined:["Declined","wait"]};
+const RQ_ORDER = ["new","review","info","approved","progress","done","declined"];
+const RQ_COLS = [["new","New",["new"]],["review","In Review",["review","info"]],["work","Approved & In Progress",["approved","progress"]],["done","Done",["done"]]];
+/* what people can ask for, and where each one lands when it's turned into work */
+const RQ_TYPES = [
+  ["linkedin","LinkedIn Post",{piece:"linkedin"}],
+  ["matters","MISMO Matters Item",{piece:"other",touch:"matters"}],
+  ["email","Email Blast",{piece:"mailchimp"}],
+  ["community","Community Post",{piece:"community"}],
+  ["video","Video or YouTube",{piece:"youtube"}],
+  ["summit","Summit Promotion",{piece:"summit"}],
+  ["graphic","Graphic or Image",{piece:"other"}],
+  ["print","Flyer, One-Pager or Print",{order:"Print"}],
+  ["signage","Event Signage or Banner",{order:"Banners & Signage"}],
+  ["swag","Swag or Pins",{order:"Swag & Giveaways"}],
+  ["slides","Slides or Presentation",{piece:"other"}],
+  ["web","Website Update",{piece:"other"}],
+  ["press","Press Release or News",{piece:"other"}],
+  ["other","Something Else",{piece:"other"}]
+];
+const RQ_TYPE = Object.fromEntries(RQ_TYPES.map(t=>[t[0],t]));
+const RQ_ROLES = ["MISMO Staff","Facilitator","Other"];
+const RQ = {q:"", type:"", declined:false};
+
+/* the inbox copy (what was asked) with the team's review on top */
+function requests(){
+  const ids=new Set(Object.keys(S.inbox||{}).concat(Object.keys(S.requests||{})));
+  return [...ids].map(id=>Object.assign({id, status:"new"}, (S.inbox||{})[id]||{}, (S.requests||{})[id]||{}, {id})).filter(r=>!r.archived);
+}
+function rqGet(id){ return requests().find(r=>r.id===id) || null; }
+function rqTypeName(r){ const t=RQ_TYPE[r.type]; return t?t[1]:(r.typeName||"Request"); }
+function rqLinked(id){ return vals("pieces").filter(p=>p.request===id).map(p=>({k:"piece",id:p.id,label:(CH[p.channel]||"Item")+" · "+(p.title||"Untitled"),done:p.status==="done"}))
+  .concat(vals("orders").filter(o=>o.request===id && !o.archived).map(o=>({k:"order",id:o.id,label:"Order · "+(o.name||"Order"),done:o.status==="received"}))); }
+function rqDue(r){ const t=T(); if(!r.neededBy || ["done","declined"].includes(r.status)) return ""; if(r.neededBy<t) return "late"; if(diff(r.neededBy,t)<=7) return "soon"; return ""; }
+async function rqSave(id, part){
+  /* only the team's fields go to requests.json; what was asked stays in the inbox */
+  const cur=(S.requests||{})[id]||{};
+  await put("requests", id, Object.assign({}, cur, part));
+}
+
+function renderRequests(){
+  const el=$("#page-requests"), all=requests(), t=T();
+  const cnt=k=>all.filter(r=>r.status===k).length;
+  const late=all.filter(r=>rqDue(r)==="late").length, soon=all.filter(r=>rqDue(r)==="soon").length;
+  const month=t.slice(0,7), doneMo=all.filter(r=>r.status==="done" && String(r.doneOn||r.updatedAt||"").slice(0,7)===month).length;
+  const q=(RQ.q||"").toLowerCase().trim();
+  const match=r=>(!RQ.type||r.type===RQ.type) && (!q||[r.title,r.details,r.n,r.e,r.group,r.event,rqTypeName(r),r.owner].join(" ").toLowerCase().indexOf(q)>=0);
+  const list=all.filter(match);
+  const card=r=>{ const due=rqDue(r), ln=rqLinked(r.id).length;
+    return '<button type="button" class="rqc'+(r.status==="new"?" fresh":"")+'" data-rq="'+esc(r.id)+'">'+
+      '<span class="rqc-top"><span class="rqt">'+esc(rqTypeName(r))+'</span>'+(r.status==="info"?'<span class="chip wait">Need Info</span>':'')+(r.priority==="high"?'<span class="chip changes">High</span>':'')+'</span>'+
+      '<b class="rqc-t">'+esc(r.title||"Untitled request")+'</b>'+
+      (r.details?'<span class="rqc-d">'+esc(String(r.details).slice(0,120))+(String(r.details).length>120?"…":"")+'</span>':'')+
+      '<span class="rqc-by">'+esc(r.n||"Someone")+(r.role?' · '+esc(r.role):'')+(r.group?' · '+esc(r.group):'')+'</span>'+
+      '<span class="rqc-foot">'+(r.neededBy?'<span class="due'+(due?" "+due:"")+'">Needed '+esc(fS(r.neededBy))+'</span>':'<span class="due">No date</span>')+(ln?'<span class="rqc-ln">'+ln+' on the schedule</span>':'')+whoHtml(r.owner)+'</span></button>'; };
+  const sortRq=(a,b)=>((a.neededBy||"9")<(b.neededBy||"9")?-1:(a.neededBy||"9")>(b.neededBy||"9")?1:String(b.at||"").localeCompare(String(a.at||"")));
+  const cols=RQ_COLS.map(([k,l,sts])=>{ let its=list.filter(r=>sts.includes(r.status)).sort(sortRq);
+    if(k==="done") its=its.sort((a,b)=>String(b.doneOn||b.updatedAt||"").localeCompare(String(a.doneOn||a.updatedAt||""))).slice(0,12);
+    return '<div class="rqcol rq-'+k+'"><div class="rqcol-h"><span>'+esc(l)+'</span><b>'+list.filter(r=>sts.includes(r.status)).length+'</b></div><div class="rqcol-b">'+(its.map(card).join("")||'<div class="rqnone">'+(k==="new"?"Nothing new. Requests from the form land here.":"Nothing here.")+'</div>')+'</div></div>'; }).join("");
+  const declined=list.filter(r=>r.status==="declined");
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Marketing &amp; Communications Requests</div><h1>Requests</h1><div class="sub">Everything staff and facilitators ask for, in one queue: review it, give it an owner, and turn it into a post, email, order or task.</div></div>'+
+      '<div class="tools"><button class="btn" type="button" id="rq-copy">Copy Form Link</button><a class="btn" href="'+REQUEST_FORM+'" target="_blank" rel="noopener">Open the Form ↗</a><button class="btn pri" type="button" id="rq-add">+ Add a Request</button></div></div>'+
+    '<div class="band"><div class="tiles">'+
+      '<button class="tile" type="button" data-rqcol="new"><div class="v'+(cnt("new")?" hot":"")+'">'+cnt("new")+'</div><div class="k">New</div><div class="s">waiting for a first look</div></button>'+
+      '<div class="tile"><div class="v">'+(cnt("review")+cnt("info"))+'</div><div class="k">In Review</div><div class="s">'+(cnt("info")?cnt("info")+" waiting on the requester":"being looked at")+'</div></div>'+
+      '<div class="tile"><div class="v sky">'+(cnt("approved")+cnt("progress"))+'</div><div class="k">Being Worked On</div><div class="s">approved or in progress</div></div>'+
+      '<div class="tile"><div class="v'+(late?" hot":"")+'">'+(late+soon)+'</div><div class="k">Needed Soon</div><div class="s">'+(late?late+" past the needed-by date":"needed in the next 7 days")+'</div></div>'+
+      '<div class="tile"><div class="v">'+doneMo+'</div><div class="k">Done This Month</div><div class="s">'+esc(MONL[+month.slice(5)-1])+'</div></div>'+
+    '</div></div>'+
+    '<div class="rqbar"><select id="rq-type" aria-label="Type of request"><option value="">Every Type</option>'+RQ_TYPES.map(x=>'<option value="'+x[0]+'"'+(RQ.type===x[0]?" selected":"")+'>'+esc(x[1])+'</option>').join("")+'</select>'+
+      '<input type="search" class="plain" id="rq-q" placeholder="Search requests, people, events" value="'+esc(RQ.q)+'" aria-label="Search requests">'+
+      '<button type="button" class="btn sm" id="rq-dec" aria-pressed="'+RQ.declined+'">'+(RQ.declined?"Hide":"Show")+' Declined · '+declined.length+'</button></div>'+
+    '<div class="rqboard">'+cols+'</div>'+
+    (RQ.declined?'<div class="card" style="margin-top:22px"><div class="ch"><h2>Declined</h2><span class="cnt">'+declined.length+'</span></div>'+(declined.length?'<div class="rqdec">'+declined.sort(sortRq).map(card).join("")+'</div>':'<div class="empty">Nothing declined.</div>')+'</div>':'');
+  $("#rq-add",el).onclick=()=>openRequest(null);
+  $("#rq-copy",el).onclick=()=>copyText(REQUEST_FORM,"The request form link");
+  $("#rq-type",el).onchange=e=>{ RQ.type=e.target.value; renderRequests(); };
+  $("#rq-dec",el).onclick=()=>{ RQ.declined=!RQ.declined; renderRequests(); };
+  const qi=$("#rq-q",el); qi.oninput=()=>{ RQ.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderRequests(); const n=$("#rq-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+  $$("[data-rq]",el).forEach(b=>b.onclick=()=>openRequest(b.dataset.rq));
+  $$("[data-rqcol]",el).forEach(b=>b.onclick=()=>{ const c=$(".rq-"+b.dataset.rqcol,el); if(c) c.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"}); });
+}
+
+function rqAsked(r){
+  const row=(l,v)=>v?'<div class="rqa-r"><span>'+esc(l)+'</span><div>'+v+'</div></div>':'';
+  const links=String(r.links||"").split(/\s+/).filter(x=>/^https?:\/\//i.test(x)).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.length>60?u.slice(0,58)+"…":u)+'</a>').join("<br>");
+  return '<div class="rqasked"><div class="rqa-h"><span class="rqt">'+esc(rqTypeName(r))+'</span><span class="rqa-when">Sent '+esc(r.at?fD(String(r.at).slice(0,10)):"")+'</span></div>'+
+    '<h3>'+esc(r.title||"Untitled request")+'</h3>'+(r.details?'<p>'+esc(r.details).replace(/\n/g,"<br>")+'</p>':'')+
+    row("From", esc(r.n||"")+(r.e?' · <a href="mailto:'+esc(r.e)+'?subject='+encodeURIComponent("Your request: "+(r.title||""))+'">'+esc(r.e)+'</a>':''))+
+    row("Role", esc([r.role,r.group].filter(Boolean).join(" · ")))+
+    row("Needed By", r.neededBy?esc(fD(r.neededBy))+(r.firm?' <b>(firm date)</b>':''):"")+
+    row("Audience", esc(r.audience||""))+row("Event", esc(r.event||""))+row("Links and Files", links)+
+    '</div>';
+}
+function openRequest(id){
+  const isNew=!id, r = id ? rqGet(id) : {status:"review", role:"MISMO Staff", type:"linkedin", owner:"", n:"", e:""};
+  if(id && !r) return;
+  const fromForm = id && (S.inbox||{})[id];
+  const typeOpts=RQ_TYPES.map(x=>[x[0],x[1]]);
+  const asked = fromForm ? [] : [{sec:"The Request"},
+    {k:"title",label:"What's Needed",wide:true,ph:"e.g. LinkedIn post for the eNote webinar"},
+    {k:"type",label:"Type",type:"select",opts:typeOpts},
+    {k:"neededBy",label:"Needed By",type:"date"},
+    {k:"details",label:"Details",type:"textarea",rows:4,ph:"What it is, the key message, anything that must be included"},
+    {k:"n",label:"Requested By"},{k:"e",label:"Their Email",ph:"name@mismo.org"},
+    {k:"role",label:"Role",type:"select",opts:RQ_ROLES},{k:"group",label:"Team or Workgroup"},
+    {k:"audience",label:"Audience"},{k:"event",label:"Related Event"},
+    {k:"links",label:"Links and Files",wide:true,ph:"SharePoint or Drive links, one per line"}];
+  const fields=asked.concat([{sec:"Review"},
+    {k:"status",label:"Status",type:"select",opts:RQ_ORDER.map(k=>[k,RQ_STAT[k][0]])},
+    {k:"owner",label:"Owner",type:"select",blank:true,opts:PEOPLE},
+    {k:"priority",label:"Priority",type:"select",opts:[["normal","Normal"],["high","High"],["low","Low"]]},
+    {k:"target",label:"Our Target Date",type:"date"},
+    {k:"reply",label:"Note to the Requester (sent with Email the Requester)",wide:true,ph:"e.g. Scheduled for LinkedIn on Nov 12; need the speaker's headshot"},
+    {k:"notes",label:"Team Notes",type:"textarea",rows:3,ph:"Only the team sees these"}]);
+  const linked = id ? rqLinked(id) : [];
+  const t=RQ_TYPE[r.type]||RQ_TYPE.other, dest=t[2];
+  const makeLabel = dest.order ? "Create an Order" : "Add to the Schedule";
+  openPane({eye:"Request", title:isNew?"Add a Request":(r.title||"Request"), fields, data:Object.assign({priority:"normal"}, r),
+    extra:(linked.length?'<div class="fsec">On the Schedule</div><div class="brorders">'+linked.map(x=>'<button type="button" class="lnk" data-rql="'+x.k+':'+esc(x.id)+'"><b>'+esc(x.label)+'</b>'+(x.done?' · Done':'')+'</button>').join("")+'</div>':''),
+    save:async v=>{
+      if(isNew && !v.title){ toast("Say what's needed."); throw new Error("title"); }
+      const rid=id||uid("rq");
+      if(v.status==="done" && r.status!=="done") v.doneOn=T();
+      if(!["new"].includes(v.status) && !r.firstLook) v.firstLook=T();
+      if(isNew) Object.assign(v,{at:new Date().toISOString(), source:"team"});
+      await rqSave(rid, Object.assign({archived:false}, v));
+    },
+    buttons: id ? [].concat(r.e?[{label:"Email the Requester", run:async v=>{
+      const body=(v.reply||"")+"\n\n— Your request: "+(r.title||"")+(r.neededBy?" (needed "+fS(r.neededBy)+")":"");
+      window.open("mailto:"+encodeURIComponent(r.e)+"?subject="+encodeURIComponent("Your MISMO request: "+(r.title||""))+"&body="+encodeURIComponent(body.trim()),"_blank");
+      if(v.reply!==(r.reply||"")) await rqSave(id,{reply:v.reply||""});
+    }}]:[]).concat([{label:makeLabel, run:async v=>{
+      const rid=id; const seedNote=[r.details, r.n?"Requested by "+r.n+(r.e?" ("+r.e+")":""):"", r.links].filter(Boolean).join("\n\n");
+      await rqSave(rid, Object.assign({}, v, {status:["new","review","info"].includes(v.status)?"approved":v.status, firstLook:r.firstLook||T()}));
+      closePane(true);
+      const when = v.target || r.neededBy || T();
+      if(dest.order) openOrder(null,{name:r.title||"", kind:dest.order, neededBy:r.neededBy||"", eventName:r.event||"", event:r.event?"other":"", notes:seedNote, owner:v.owner||"", request:rid});
+      else newPiece(dest.piece, {title:(t[0]==="matters"?"MISMO Matters: ":"")+(r.title||""), date:when, owner:v.owner||"", copy:r.details||"", notes:seedNote, request:rid, touch:dest.touch?{[dest.touch]:true}:undefined});
+    }}]) : [],
+    after:b=>{
+      if(fromForm){ const box=document.createElement("div"); box.innerHTML=rqAsked(r); b.insertBefore(box.firstChild, b.firstChild); }
+      $$("[data-rql]",b).forEach(x=>x.onclick=()=>{ const [k,xid]=x.dataset.rql.split(":"); closePane(true); if(k==="order"){ go("orders"); openOrder(xid); } else openPiece(xid); });
+    },
+    del: id ? async()=>{ await rqSave(id,{archived:true}); } : null, delLabel:"Archive"
+  });
 }
 
 /* ================= MISMO Mic'd Up ================= */

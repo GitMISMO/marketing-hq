@@ -1,6 +1,6 @@
 # marketing-hq
 
-Marketing HQ: MISMO's one place for marketing. The schedule across every channel, the MISMO Matters builder (sections, Amy's review, the Higher Logic HTML, stats), MISMO Mic'd Up's weekly run, LinkedIn, YouTube, Mailchimp, summit marketing, results, In the News, subscribers and downloaders, and the send lists.
+MISMO Media (formerly Marketing HQ): Strategic Growth's one place for marketing and communications. The schedule across every channel, the MISMO Matters builder (sections, Amy's review, the Higher Logic HTML, stats), MISMO Mic'd Up's weekly run, LinkedIn, YouTube, Mailchimp, summit marketing, requests from staff and facilitators (form at https://resources.mismo.org/forms/request/), results, In the News, subscribers and downloaders, and the send lists.
 Live at https://resources.mismo.org/marketing-hq/ (sign-in required).
 
 Set up the same way as Member 360 and Summit HQ. The records live in the private `marketing-hq-data` repo and are read and saved through the resources.mismo.org relay under the project key `marketing-hq`. No token, secret, subscriber list or other record is ever kept in this repo.
