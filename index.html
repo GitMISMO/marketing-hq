@@ -878,6 +878,10 @@ em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .impick{aspect-ratio:1;border:1px solid var(--border);border-radius:6px;padding:0;background:var(--surface-2,#f4f7fa);overflow:hidden;cursor:pointer}
 .impick:hover,.impick:focus-visible{border-color:var(--sky);outline:2px solid var(--sky);outline-offset:1px}
 .impick img{width:100%;height:100%;object-fit:cover;display:block}
+.impick span{display:flex;align-items:center;justify-content:center;height:100%;padding:6px;font-size:10px;line-height:1.25;color:var(--ink-3);text-align:center;overflow:hidden}
+.impick.loading{background:linear-gradient(100deg,var(--surface-2) 30%,var(--surface-3) 50%,var(--surface-2) 70%);background-size:300% 100%;animation:imshim 1.3s linear infinite}
+@keyframes imshim{from{background-position:100% 0}to{background-position:0 0}}
+.impick.missing span{color:var(--bad)}
 body.im-drop #page-images .card{outline:3px dashed var(--sky);outline-offset:4px}
 body.im-drop #page-images::before{content:"Drop to add to the Image Library";display:block;text-align:center;font-weight:600;color:var(--sky);margin-bottom:10px}
 .band .say .hot{color:#f3a59b}
@@ -2908,8 +2912,9 @@ async function openImage(id){
 function libraryStrip(ed){
   const list=vals("images").filter(i=>!i.archived).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
   if(!list.length) return '<div class="hint">No pictures in the Image Library yet.</div>';
-  list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
-  return '<div class="imstrip">'+list.map(im=>'<button type="button" class="impick" data-pick="'+esc(im.id)+'" title="'+esc(im.name||im.file||"")+'"><img src="'+esc(imgSrc(im))+'" alt=""></button>').join("")+'</div>';
+  /* SharePoint pictures arrive after the tiles are drawn, so each tile fills itself in */
+  list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im).then(()=>{ const src=imgSrc(im); document.querySelectorAll('.impick[data-pick="'+im.id+'"]').forEach(b=>{ if(src){ b.innerHTML='<img src="'+esc(src)+'" alt="">'; b.classList.remove("loading"); } else { b.classList.remove("loading"); b.classList.add("missing"); } }); }); });
+  return '<div class="imstrip">'+list.map(im=>{ const src=imgSrc(im); return '<button type="button" class="impick'+(src?"":" loading")+'" data-pick="'+esc(im.id)+'" title="'+esc(im.name||im.file||"")+'">'+(src?'<img src="'+esc(src)+'" alt="">':'<span>'+esc((im.name||im.file||"").slice(0,28))+'</span>')+'</button>'; }).join("")+'</div>';
 }
 /* drop pictures anywhere on the Image Library page */
 (function(){
