@@ -584,13 +584,73 @@
   }
   function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
 
+  /* ---------- pictures: the public marketing-images folder ----------
+     Images are saved through the relay's "marketing-images" project into the public
+     GitMISMO/marketing-images repository, so each one is served at
+     resources.mismo.org/marketing-images/images/YYYY/MM/<name> and its link works in an
+     email or a post. The relay takes about 1 MB a save, so large photos are scaled
+     down in the browser first (longest side 2400 px, then smaller until they fit). */
+  var IMG_PROJECT = 'marketing-images', IMG_BASE = 'https://resources.mismo.org/marketing-images/';
+  var IMG_MAX = 700000;          /* bytes before base64; base64 adds about a third */
+  function b64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1] || ''); }; r.onerror = function () { rej(err('read_failed', 'Could not read the file')); }; r.readAsDataURL(blob); }); }
+  function fit(blob) {
+    if (blob.size <= IMG_MAX) return Promise.resolve(blob);
+    if (!/^image\/(jpeg|png|webp)$/.test(blob.type)) return Promise.reject(err('too_large', 'That file is over 700 KB. Save a smaller copy and try again.'));
+    return new Promise(function (res, rej) {
+      var u = URL.createObjectURL(blob), im = new Image();
+      im.onload = function () {
+        var side = Math.min(2400, Math.max(im.naturalWidth, im.naturalHeight)), tries = 0;
+        (function go(q) {
+          var k = side / Math.max(im.naturalWidth, im.naturalHeight), c = document.createElement('canvas');
+          c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+          var x = c.getContext('2d'); if (blob.type !== 'image/png') { x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); }
+          x.drawImage(im, 0, 0, c.width, c.height);
+          c.toBlob(function (out) {
+            if (out && (out.size <= IMG_MAX || ++tries > 8)) { URL.revokeObjectURL(u); if (out.size > IMG_MAX) rej(err('too_large', 'Could not make that image small enough.')); else { try { out.name = blob.name; } catch (e) {} res(out); } return; }
+            side = Math.round(side * 0.8); go(Math.max(0.6, q - 0.05));
+          }, blob.type === 'image/png' ? 'image/png' : 'image/jpeg', q);
+        })(0.86);
+      };
+      im.onerror = function () { URL.revokeObjectURL(u); rej(err('read_failed', 'Could not read that image')); };
+      im.src = u;
+    });
+  }
+  var ASSETS = {
+    __public: true,
+    upload: function (blob) {
+      var rs = RS(), tok = rs && rs.token();
+      if (!tok) return Promise.reject(err('SIGNED_OUT', 'Sign in to add images', 401));
+      var name = (blob && blob.name) || 'image', d = new Date();
+      return fit(blob).then(function (b) {
+        var ext = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/gif': 'gif', 'image/webp': 'webp', 'image/svg+xml': 'svg' })[b.type] || (name.split('.').pop() || 'img').toLowerCase();
+        var path = 'images/' + d.getFullYear() + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + now().toString(36) + '-' + safe(name.replace(/\.[a-z0-9]+$/i, '')).slice(0, 50) + '.' + ext;
+        return b64(b).then(function (content) {
+          return fetch(RELAY_URL + '/' + IMG_PROJECT + '/commit', {
+            method: 'POST', cache: 'no-store',
+            headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ files: [{ path: path, content: content, encoding: 'base64' }], message: 'Add image: ' + name, parentSha: null })
+          }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (j) {
+              if (r.ok) return { id: path, url: IMG_BASE + path, sizeBytes: b.size, contentType: b.type };
+              if (r.status === 401 && rs) needSignIn();
+              throw err((j && j.error) || ('HTTP_' + r.status), r.status === 404 || r.status === 403 ? 'The image folder isn\u2019t switched on for you yet' : ((j && j.message) || 'The relay refused the image'), r.status);
+            });
+          }, function () { throw err('OFFLINE', 'Could not reach the relay', 0); });
+        });
+      });
+    },
+    list: function () { return Promise.resolve({ assets: [], usage: { files: 0, bytes: 0, maxFiles: 0, maxBytes: 0 } }); },
+    delete: function () { return Promise.reject(err('not_supported', 'Images are archived, never deleted')); }
+  };
+
   /* ---------- the door ---------- */
   window.claude = {
     use: function (cap) {
       if (cap === 'db') return whenReady().then(function () { return DB; });
       if (cap === 'user') return whenReady().then(function () { return USER; });
       if (cap === 'downloads') return Promise.resolve(DOWNLOADS);
-      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) and 'assets' (image uploads) wait for the relay */
+      if (cap === 'assets') return whenReady().then(function () { return PREVIEW ? null : ASSETS; });
+      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay */
     }
   };
   /* the notice at the top of the page: preview, or view-only access */
@@ -798,6 +858,30 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--sky);outline-off
 .band .say{font-size:16.5px;font-weight:600;line-height:1.45;margin:6px 0 14px}
 .band .say em{font-style:normal;color:var(--sky)}
 em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
+/* Image Library */
+.im-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.im-filters select,.im-filters input[type=search]{height:34px;font-size:13px;min-width:0;width:auto}
+.im-filters input[type=search]{width:min(220px,100%)}
+.im-arch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.imgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:16px}
+.imcard{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
+.imcard:hover,.imcard:focus-visible{border-color:var(--sky);box-shadow:0 8px 22px -14px rgba(7,29,46,.55);transform:translateY(-1px);outline:none}
+.imcard.arch{opacity:.6}
+.imthumb{aspect-ratio:16/10;background:repeating-conic-gradient(var(--rule) 0 25%,transparent 0 50%) 0 0/16px 16px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.imthumb img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.imbody{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.imbody>b{font-size:13.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.immeta{display:flex;gap:5px;flex-wrap:wrap}
+.imsub{font-size:11.5px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.imact{display:flex;gap:6px;margin-top:2px}
+.impv{background:repeating-conic-gradient(var(--rule) 0 25%,transparent 0 50%) 0 0/16px 16px;border:1px solid var(--border);border-radius:8px;display:flex;justify-content:center;max-height:340px;overflow:hidden}
+.impv img{max-width:100%;max-height:340px;object-fit:contain;display:block}
+.imstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;margin-top:10px;width:100%}
+.impick{aspect-ratio:1;border:1px solid var(--border);border-radius:6px;padding:0;background:var(--surface-2,#f4f7fa);overflow:hidden;cursor:pointer}
+.impick:hover,.impick:focus-visible{border-color:var(--sky);outline:2px solid var(--sky);outline-offset:1px}
+.impick img{width:100%;height:100%;object-fit:cover;display:block}
+body.im-drop #page-images .card{outline:3px dashed var(--sky);outline-offset:4px}
+body.im-drop #page-images::before{content:"Drop to add to the Image Library";display:block;text-align:center;font-weight:600;color:var(--sky);margin-bottom:10px}
 .band .say .hot{color:#f3a59b}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .tile{background:var(--band-tile);border:1px solid var(--band-line);border-radius:6px;padding:12px 14px;min-width:0;text-align:left;color:inherit;font:inherit;cursor:default}
@@ -1216,6 +1300,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="lists" title="Lists and Unsubscribes">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.6M18 14a5 5 0 013 6"/></svg>
       <span>Lists &amp; Unsubscribes</span><b class="nbadge" id="nb-lists" hidden></b></button>
+    <button type="button" data-hq="images" title="Image Library">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+      <span>Image Library</span></button>
     <div class="navsep">Help</div>
     <button type="button" data-hq="help" title="Help">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
@@ -1249,6 +1336,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-news" hidden></section>
   <section class="page" id="page-people" hidden></section>
   <section class="page" id="page-lists" hidden></section>
+  <section class="page" id="page-images" hidden></section>
   <section class="page" id="page-help" hidden></section>
 </main>
 
@@ -1401,7 +1489,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -1420,6 +1508,7 @@ async function connect(){
     }, err=>{ saveNote(false, err && err.message); });
   });
   try{ ASSETS = await c.use("assets"); }catch(e){ ASSETS=null; }
+  try{ DL = await c.use("downloads"); }catch(e){ DL=null; }
   try{ SAMPLE = await c.use("sample"); }catch(e){ SAMPLE=null; }
   if(window.__hqRelay){
     let can=true; try{ const u=await c.use("user"); if(u && u.can) can = await u.can(); }catch(e){}
@@ -1592,7 +1681,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","results","news","people","lists","help"];
+const TABS=["overview","matters","micdup","linkedin","youtube","mailchimp","summits","results","news","people","lists","images","help"];
 let TAB="overview";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -1613,7 +1702,7 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
@@ -1849,18 +1938,25 @@ function openSection(ed,k,isNew){
     del: (!SEC[k] && S.sections[id]) ? async()=>{ await remove("sections",id); await patch("editions",ed.id,{order:edSections(ed).map(s=>s.k).filter(x=>x!==k)}); } : null,
     after: b=>wireImage(b, doc, v=>{ doc.imageId=v; })
   });
-  PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; };
+  PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||""; };
 }
 function imageField(d){
-  const img = d.imageId ? '<img src="/_blob/'+esc(d.imageId)+'" alt="">' : '';
-  if(!ASSETS) return '<div class="imgbox">'+img+'<span class="hint">Uploading pictures works when this page is open on claude.ai while signed in. Until then, say where the image is below.</span></div>';
-  return '<div class="imgbox" id="imgbox">'+img+'<button class="btn sm" type="button" id="img-up">'+(d.imageId?"Replace Image":"Upload Image")+'</button>'+(d.imageId?'<button class="btn sm" type="button" id="img-rm">Remove</button>':'')+'<input type="file" id="img-file" accept="image/*" hidden><span class="hint">Kept here so the same picture can be reused for LinkedIn and Mailchimp.</span></div>';
+  const lib = d.imageLib && S.images[d.imageLib];
+  const src = lib ? imgSrc(lib) : (d.imageId ? "/_blob/"+d.imageId : "");
+  const img = src ? '<img src="'+esc(src)+'" alt="">' : '';
+  const has = !!src;
+  const pick = vals("images").some(i=>!i.archived) ? '<button class="btn sm" type="button" id="img-lib">Pick from Image Library</button>' : '';
+  if(!ASSETS) return '<div class="imgbox" id="imgbox">'+img+pick+(has?'<button class="btn sm" type="button" id="img-rm">Remove</button>':'')+'<span class="hint">Adding new pictures works on the Claude version until the image folder is switched on here.</span><div id="img-strip" hidden></div></div>';
+  return '<div class="imgbox" id="imgbox">'+img+'<button class="btn sm" type="button" id="img-up">'+(has?"Replace Image":"Upload Image")+'</button>'+pick+(has?'<button class="btn sm" type="button" id="img-rm">Remove</button>':'')+'<input type="file" id="img-file" accept="image/*" hidden><span class="hint">Every picture added here also goes into the Image Library, tagged to this edition, so it can be reused for LinkedIn and Mailchimp.</span><div id="img-strip" hidden></div></div>';
 }
 function wireImage(b, doc, setId){
-  const up=$("#img-up",b), f=$("#img-file",b), rm=$("#img-rm",b);
+  const up=$("#img-up",b), f=$("#img-file",b), rm=$("#img-rm",b), lb=$("#img-lib",b), strip=$("#img-strip",b);
+  const redraw=()=>{ if(PANE) PANE.dirty=true; $("#f-_img",b).innerHTML=imageField(doc); wireImage(b,doc,setId); };
+  const use=im=>{ doc.imageLib=im.id; setId(im.assetId||""); const u=$("#f-imageUrl",b); if(u && !u.value && /resources\.mismo\.org/.test(im.url||"")) u.value=im.url; const a=$("#f-imageAlt",b); if(a && !a.value && im.alt) a.value=im.alt; redraw(); };
   if(up) up.onclick=()=>f.click();
-  if(f) f.onchange=async()=>{ const file=f.files[0]; if(!file) return; try{ toast("Uploading…"); const r=await ASSETS.upload(file); setId(r.id); if(PANE) PANE.dirty=true; $("#f-_img",b).innerHTML=imageField(doc); wireImage(b,doc,setId); toast("Image added. Press Save to keep it."); }catch(e){ toast("Couldn't upload: "+(e.message||e.code),4000); } };
-  if(rm) rm.onclick=()=>{ setId(""); if(PANE) PANE.dirty=true; $("#f-_img",b).innerHTML=imageField(doc); wireImage(b,doc,setId); };
+  if(f) f.onchange=async()=>{ const file=f.files[0]; if(!file) return; const made=await addImages([file],{campaign:"matters", edition:doc.month||""}); if(made[0]){ use(made[0]); toast("Image added to the section and the Image Library. Press Save to keep it."); } };
+  if(lb) lb.onclick=()=>{ strip.hidden=!strip.hidden; if(!strip.hidden){ strip.innerHTML=libraryStrip(S.editions[doc.month]||curEdition()); $$("[data-pick]",strip).forEach(p=>p.onclick=()=>{ const im=S.images[p.dataset.pick]; if(im) use(im); }); } };
+  if(rm) rm.onclick=()=>{ doc.imageLib=""; setId(""); redraw(); };
 }
 function openEdition(ed){
   const fields=[{sec:"Dates"}].concat(MILES.map(([k,l,w])=>({k:"d_"+k,label:l,type:"date",get:d=>d.dates&&d.dates[k],hint:w})))
@@ -1919,7 +2015,7 @@ function buildEmail(ed){
       if(d.imageUrl) inner+='<img src="'+esc(d.imageUrl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
       else if(d.imageId||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in Marketing HQ")+' — upload to Higher Logic and paste its link</div>';
       inner+=paras(d.body).map(p=>'<p style="'+F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36">'+linkify(p)+'</p>').join("");
-      if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;font-style:italic;color:#1d2b36">“'+esc(d.quote)+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
+      if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+esc(d.quote)+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
       if(d.ctaUrl) inner+='<p style="margin:4px 0 12px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:4px">'+esc(d.ctaText||"Learn more")+' &rarr;</a></p>';
     }
     toc.push('<a href="#'+anchor+'" style="color:'+navy+';text-decoration:none;font-size:13px;font-weight:bold;'+F+'">'+esc(name)+'</a>');
@@ -2412,6 +2508,20 @@ const HELP = [
    <li>It then fires a "signup" event at the private marketing-hq-data repository (GitHub's "Create a repository dispatch event" action, connected as Jonna, with the GitMISMO organization's approval for Power Automate). A small GitHub workflow in that repository files it in <code>data/signups.json</code>; no key or password is stored anywhere for this.</li>
    <li>Marketing HQ reads that file and shows the sign-up.</li>
   </ol>`},
+ {id:"images", t:"The Image Library", g:"Sources", b:`
+  <p>One place for the pictures every campaign uses. Open <b>Image Library</b> in the left menu.</p>
+  <ul>
+   <li><b>Add pictures:</b> press <b>+ Add Images</b> (pick several at once) or drag them onto the page. JPG, PNG, GIF, SVG and WebP all work.</li>
+   <li><b>Tag them:</b> press a picture to name it, choose its campaign (MISMO Matters, Mic'd Up, LinkedIn, Mailchimp, Summits and so on) and, for MISMO Matters, its edition. Add alt text so the picture still makes sense when an email blocks images.</li>
+   <li><b>Get them back out:</b> <b>Download</b> saves the file to your computer, ready to upload to Higher Logic, LinkedIn or Mailchimp. <b>Copy Link</b> copies its web address.</li>
+   <li><b>In a MISMO Matters section:</b> <b>Upload Image</b> adds the picture to the section and to the library, tagged to that edition. <b>Pick from Image Library</b> reuses one that's already there.</li>
+   <li><b>Nothing is deleted:</b> tick <b>Archived</b> to hide a picture you no longer need. <b>Show Archived</b> brings archived pictures back into view.</li>
+  </ul>
+  <h3>Where the Pictures Live</h3>
+  <ul>
+   <li><b>On resources.mismo.org</b>, each picture is saved to MISMO's public image folder, at an address like <code>resources.mismo.org/marketing-images/images/2026/11/…</code>. Its link works in an email or a post, and anyone with the link can see it, so keep anything private out of the library. Big photos are scaled down automatically to fit (longest side 2,400 pixels).</li>
+   <li><b>On the Claude version</b>, pictures are kept in the page's own image store. Their links work for the team while signed in. Download a picture before putting it in an email.</li>
+  </ul>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
    <li><b>The Compound</b> is the set of lists behind the MISMO Matters group: the MBA Annual/IMB/LIRC list, active community members, event attendees, associate contacts, ResTech, website subscribers and downloaders, plus the member contacts, VIPs and current Axios audience still to come. Ciara Durkan at MBA refreshes it quarterly; the next refresh is November.</li>
@@ -2477,6 +2587,134 @@ function renderHelp(){
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
+/* ================= Image Library ================= */
+/* One place for the pictures every campaign uses. Upload, tag to a campaign (and a
+   MISMO Matters edition), preview, download, copy the link, and pick one for a section.
+   Claude version: files go to this page's own image store.
+   resources.mismo.org: files go to the public marketing-images folder, so every image
+   has a public web address that works in an email or a post. */
+const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["other","Other"]];
+const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
+const IM = {camp:"", ed:"", q:"", arch:false};
+const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
+let DL = null;
+const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
+function imgSrc(im){ return IMG_LOCAL[im.id] || im.url || (im.assetId ? "/_blob/"+im.assetId : ""); }
+function imgKB(n){ n=+n||0; return n>=1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(n/1024))+" KB"; }
+function imgsLive(){ return vals("images").filter(im=>IM.arch ? true : !im.archived).sort((a,b)=>(a.at||"")<(b.at||"")?1:-1); }
+function imgDims(file){ return new Promise(res=>{ const u=URL.createObjectURL(file), i=new Image(); i.onload=()=>{ res({w:i.naturalWidth,h:i.naturalHeight}); URL.revokeObjectURL(u); }; i.onerror=()=>{ res({w:0,h:0}); URL.revokeObjectURL(u); }; i.src=u; }); }
+
+async function addImages(files, preset){
+  files=[...(files||[])].filter(f=>/^image\//.test(f.type));
+  if(!files.length){ toast("Pick image files (JPG, PNG, GIF, SVG or WebP)."); return []; }
+  if(!ASSETS){ toast("Adding images isn't switched on here yet. Use the Claude version for now.", 4500); return []; }
+  const made=[]; let n=0;
+  for(const f of files){
+    n++; toast("Adding "+n+" of "+files.length+"…", 60000);
+    try{
+      const dims=await imgDims(f);
+      const r=await ASSETS.upload(f);
+      const id=uid("img");
+      IMG_LOCAL[id]=URL.createObjectURL(f);
+      const ed=curEdition();
+      const doc=Object.assign({
+        name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name,
+        campaign:IM.camp||"matters", edition:(IM.camp||"matters")==="matters" ? (IM.ed||(ed&&ed.id)||"") : "",
+        alt:"", credit:"", notes:"", w:dims.w, h:dims.h, size:r.sizeBytes||f.size, type:r.contentType||f.type,
+        url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:/^images\//.test(r.id||"") ? r.id : "",
+        at:new Date().toISOString(), archived:false
+      }, preset||{});
+      await put("images", id, doc); made.push(Object.assign({id},doc));
+    }catch(e){ toast("Couldn't add "+f.name+": "+(e.message||e.code||"try again"), 5000); return made; }
+  }
+  toast(made.length===1 ? "Image added. Press it to name and tag it." : made.length+" images added. Press each to name and tag it.", 4000);
+  return made;
+}
+async function downloadImage(im){
+  try{
+    const r=await fetch(imgSrc(im)); if(!r.ok) throw new Error("HTTP "+r.status);
+    const blob=await r.blob(), name=im.file || ((im.name||"image").replace(/[^\w\- ]+/g,"").trim()+"."+((im.type||"image/png").split("/")[1]||"png").replace("jpeg","jpg").replace("svg+xml","svg"));
+    if(DL){ try{ await DL.save({filename:name, data:blob}); return; }catch(e){ if(e && e.code==="declined") return; } }
+    const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
+  }catch(e){ window.open(imgSrc(im),"_blank","noopener"); toast("Opened the image in a new tab. Right-click it and choose Save Image As.", 5000); }
+}
+function imgLink(im){ return im.url || (im.assetId ? location.origin+"/_blob/"+im.assetId : ""); }
+function copyImageLink(im){ const u=imgLink(im); if(!u){ toast("No link for this one yet."); return; } copyText(u, /resources\.mismo\.org/.test(u) ? "Public image link" : "Image link (works for the team while signed in)"); }
+
+function renderImages(){
+  const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
+  const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
+  const q=imNorm(IM.q);
+  const list=imgsLive().filter(im=>(!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
+  const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
+  const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
+  const pub = !!(ASSETS && ASSETS.__public);
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
+      (ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
+    '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.length+'</em> image'+(live.length===1?"":"s")+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
+      (ASSETS ? (pub?'Each image gets a public web address on resources.mismo.org, so its link can go straight into an email or a post.':'Drop pictures anywhere on this page or press Add Images.') : 'Adding images opens here once the image folder is switched on. Use the Claude version until then.')+'</div>'+
+      '<div class="tiles"><div class="tile"><div class="v sky">'+live.length+'</div><div class="k">Images</div><div class="s">ready to use</div></div>'+
+        '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
+        '<div class="tile"><div class="v">'+month+'</div><div class="k">Added This Month</div><div class="s">'+esc(MONL[+t.slice(5,7)-1])+'</div></div>'+
+        '<div class="tile"><div class="v">'+new Set(live.map(i=>i.campaign)).size+'</div><div class="k">Campaigns</div><div class="s">with pictures</div></div></div></div>'+
+    '<div class="card"><div class="ch"><h2>All Images</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
+      '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
+      (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
+      '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
+      '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label></div></div>'+
+      (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
+          '<div class="imthumb"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy"></div>'+
+          '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
+          '<div class="imsub">'+(im.w?im.w+" × "+im.h+" · ":"")+imgKB(im.size)+' · '+esc(fS(String(im.at||"").slice(0,10)))+'</div>'+
+          '<div class="imact"><button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button></div></div></div>').join("")+'</div>'
+        :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
+    '</div>';
+  const add=$("#im-add",el), file=$("#im-file",el);
+  if(add) add.onclick=()=>file.click();
+  if(file) file.onchange=async()=>{ await addImages(file.files); file.value=""; };
+  $("#im-camp",el).onchange=e=>{ IM.camp=e.target.value; if(IM.camp && IM.camp!=="matters") IM.ed=""; renderImages(); };
+  const se=$("#im-ed",el); if(se) se.onchange=e=>{ IM.ed=e.target.value; renderImages(); };
+  const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+  $("#im-arch",el).onchange=e=>{ IM.arch=e.target.checked; renderImages(); };
+  $$("[data-imdl]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); downloadImage(S.images[b.dataset.imdl]); });
+  $$("[data-imcp]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); copyImageLink(S.images[b.dataset.imcp]); });
+  $$(".imcard",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
+}
+function openImage(id){
+  const im=S.images[id]; if(!im) return;
+  const eds=editionsSorted();
+  const fields=[
+    {k:"_pv",type:"html",wide:true,html:()=>'<div class="impv"><img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'"></div><div class="imsub" style="margin-top:6px">'+esc(im.file||"")+' · '+(im.w?im.w+" × "+im.h+" px · ":"")+imgKB(im.size)+(imgLink(im)?' · <a href="'+esc(imgLink(im))+'" target="_blank" rel="noopener">Open full size ↗</a>':'')+'</div>'},
+    {sec:"About This Image"},
+    {k:"name",label:"Name",wide:true,ph:"e.g. Fall Summit Stage, Brian Vieaux Headshot"},
+    {k:"campaign",label:"Campaign",type:"select",opts:IMG_CAMPS},
+    {k:"edition",label:"MISMO Matters Edition",type:"select",blank:true,opts:eds.map(e=>[e.id,monthName(e.month)])},
+    {k:"alt",label:"Alt Text",wide:true,ph:"What the picture shows, for screen readers and email clients that block images"},
+    {k:"credit",label:"Credit or Source",ph:"Photographer, partner or where it came from"},
+    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"Where it has been used, rights or size limits"},
+    {k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}
+  ];
+  openPane({eye:"Image Library", title:im.name||im.file||"Image", fields, data:im, noFocus:true,
+    save:async v=>{ await patch("images",id,{name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, credit:v.credit, notes:v.notes, archived:!!v.archived}); },
+    buttons:[{label:"Download", run:async()=>downloadImage(S.images[id])},{label:"Copy Link", run:async()=>copyImageLink(S.images[id])}]
+  });
+}
+/* the picker used by MISMO Matters sections: pictures already in the library */
+function libraryStrip(ed){
+  const list=vals("images").filter(i=>!i.archived).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
+  if(!list.length) return '<div class="hint">No pictures in the Image Library yet.</div>';
+  return '<div class="imstrip">'+list.map(im=>'<button type="button" class="impick" data-pick="'+esc(im.id)+'" title="'+esc(im.name||im.file||"")+'"><img src="'+esc(imgSrc(im))+'" alt=""></button>').join("")+'</div>';
+}
+/* drop pictures anywhere on the Image Library page */
+(function(){
+  let depth=0;
+  const on=()=>TAB==="images" && ASSETS;
+  document.addEventListener("dragenter",e=>{ if(!on()||!e.dataTransfer||![...e.dataTransfer.types].includes("Files")) return; depth++; document.body.classList.add("im-drop"); });
+  document.addEventListener("dragleave",()=>{ if(!on()) return; depth=Math.max(0,depth-1); if(!depth) document.body.classList.remove("im-drop"); });
+  document.addEventListener("dragover",e=>{ if(on()) e.preventDefault(); });
+  document.addEventListener("drop",e=>{ if(!on()) return; e.preventDefault(); depth=0; document.body.classList.remove("im-drop"); addImages(e.dataTransfer.files); });
+})();
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -2831,8 +3069,9 @@ function openList(id){
     try{ vals("pieces").forEach(p=>{ const hay=[p.title,p.copy,p.notes,p.kind].join(" "); if(norm(hay).indexOf(t)<0) return; push(CH[p.channel]||"Items", p.title||"Untitled", fS(p.date)+(p.owner?" · "+p.owner:""), ()=>{ const tab={linkedin:"linkedin",youtube:"youtube",mailchimp:"mailchimp",summit:"summits"}[p.channel]||"overview"; go(tab); openPiece(p.id); }, hay); }); }catch(e){}
     try{ HELP.forEach(h=>{ const hay=h.t+" "+h.b.replace(/<[^>]+>/g," "); if(norm(hay).indexOf(t)<0) return; push("Help", h.t, h.g, ()=>{ HL.id=h.id; go('help'); renderHelp(); }, hay); }); }catch(e){}
     try{ vals("news").forEach(n=>{ const hay=[n.headline,n.outlet].join(" "); if(norm(hay).indexOf(t)<0) return; push("In the News", n.headline||"", (n.outlet||"")+" · "+fS(n.date), ()=>{ go('news'); openNews(n.id); }, hay); }); }catch(e){}
+    try{ vals("images").filter(i=>!i.archived).forEach(im=>{ const hay=[im.name,im.file,im.alt,im.credit,im.notes].join(" "); if(norm(hay).indexOf(t)<0) return; push("Images", im.name||im.file||"Image", (IMG_CAMP[im.campaign]||"Image Library"), ()=>{ go('images'); openImage(im.id); }, hay); }); }catch(e){}
     const best={}; out.forEach(h=>{ best[h.group]=Math.max(best[h.group]||0, h.s); });
-    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Setup','Help'];
+    const ORDER=['MISMO Matters',"Mic'd Up",'LinkedIn','YouTube','Mailchimp','Summits','In the News','Images','Setup','Help'];
     out.sort((a,b)=>(best[b.group]-best[a.group])||(ORDER.indexOf(a.group)-ORDER.indexOf(b.group))||(b.s-a.s)||String(a.name).localeCompare(String(b.name)));
     return out;
   }
