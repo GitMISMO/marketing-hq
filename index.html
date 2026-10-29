@@ -1496,7 +1496,7 @@ function allEvents(){
     ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up Ep "+(ep.num||"?")+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
     const l=liDate(ep); if(l) ev.push({date:l, k:"linkedin", label:"LinkedIn · Mic'd Up Ep "+(ep.num||"?"), done:!!ep.linkedinDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
-  fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=add(T(),-14) && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
+  fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), done:p.status==="done"||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
@@ -2466,7 +2466,7 @@ function renderMicdup(){
   const ytDue=vals("episodes").filter(e=>e.airDate&&e.airDate<=t&&!e.youtubeDone);
   const liDue=vals("episodes").filter(e=>liDate(e)&&liDate(e)<=add(t,6)&&!e.linkedinDone);
   const webMissing=vals("episodes").filter(e=>e.youtubeDone&&!e.websiteDone);
-  const slots=fridays(add(t,-21),9);
+  const slots=fridays(add(t,-21),12).filter(f=>{ if(f>=t) return true; const e=epOn(f); return !!(e && !(e.youtubeDone&&e.linkedinDone&&e.websiteDone)); }).slice(0,9);  // past Fridays only while their episode still has work left
   const run = slots.map(f=>{ const e=epOn(f); const past=f<t;
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const ed=editionFor(f);
