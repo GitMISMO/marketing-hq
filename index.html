@@ -1343,6 +1343,8 @@ const SUMMIT_PLAN = [
 ];
 const SUMMIT_VIA = ["LinkedIn","MISMO Matters","Email","Website","Event App","Onsite","Mailchimp","YouTube"];
 const MICDUP_START = "2026-10-23";
+const FRESH_FROM = "2026-10-30";  // fresh start: episodes before this are history, never counted as owed
+function owes(e){ return !e.airDate || e.airDate >= FRESH_FROM; }
 const SUBSCRIBE_URL = "https://resources.mismo.org/forms/subscribe/";  // MISMO's own form (replaced the Smartsheet form)
 
 /* ================= little helpers ================= */
@@ -1493,8 +1495,9 @@ function allEvents(){
   });
   vals("episodes").forEach(ep=>{
     if(!ep.airDate) return;
-    ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up Ep "+(ep.num||"?")+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
-    const l=liDate(ep); if(l) ev.push({date:l, k:"linkedin", label:"LinkedIn · Mic'd Up Ep "+(ep.num||"?"), done:!!ep.linkedinDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
+    const old=!owes(ep);
+    if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up Ep "+(ep.num||"?")+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
+    const l=liDate(ep); if(l && (!old || ep.linkedinDone)) ev.push({date:l, k:"linkedin", label:"LinkedIn · Mic'd Up Ep "+(ep.num||"?"), done:!!ep.linkedinDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
   fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), done:p.status==="done"||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
@@ -1608,9 +1611,9 @@ function badges(){
   badge("overview", over, true);
   const ed=curEdition(); badge("matters", ed? edSections(ed).filter(s=>s.on && s.doc.status==="review").length : 0);
   const wk=add(T(),7);
-  badge("micdup", vals("episodes").filter(e=>e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1), false);
+  badge("micdup", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1), false);
   badge("linkedin", ev.filter(e=>e.k==="linkedin" && !e.done && e.date<=wk).length);
-  badge("youtube", vals("episodes").filter(e=>e.airDate && e.airDate<=T() && !e.youtubeDone).length);
+  badge("youtube", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length);
   badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && p.status!=="done" && p.date && p.date<=wk).length);
   badge("summits", vals("pieces").filter(p=>p.channel==="summit" && p.status!=="done" && p.date && p.date<=add(T(),14)).length);
   badge("news", vals("news").filter(n=>!n.linkedinDone && n.date>=add(T(),-30)).length);
@@ -2303,7 +2306,8 @@ const HELP = [
    <li><b>Write Monday's LinkedIn post.</b> Press <b>Write the LinkedIn Post from Brian's Description</b>, read it over, post it on the MISMO page Monday, then tick "Posted on LinkedIn" and paste the post's link.</li>
    <li><b>The website</b> adds each episode on YouTube to its home page list by itself. <b>MISMO Matters</b> lists it in the next edition by itself.</li>
   </ol>
-  <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>`},
+  <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
+  <p><b>Fresh start:</b> episodes that aired before Friday, October 30 (Episode 51) are history. They stay in the episode list, but they never count as late, missing captions, waiting for YouTube or LinkedIn, or missing from the website. Everything from Episode 51 on is tracked.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
@@ -2463,10 +2467,10 @@ function renderMicdup(){
   const fri=nextDow(t,5), ep=epOn(fri);
   const lastFri = add(fri,-7), lastEp=epOn(lastFri);
   const eps=epsSorted();
-  const ytDue=vals("episodes").filter(e=>e.airDate&&e.airDate<=t&&!e.youtubeDone);
-  const liDue=vals("episodes").filter(e=>liDate(e)&&liDate(e)<=add(t,6)&&!e.linkedinDone);
-  const webMissing=vals("episodes").filter(e=>e.youtubeDone&&!e.websiteDone);
-  const slots=fridays(add(t,-21),12).filter(f=>{ if(f>=t) return true; const e=epOn(f); return !!(e && !(e.youtubeDone&&e.linkedinDone&&e.websiteDone)); }).slice(0,9);  // past Fridays only while their episode still has work left
+  const ytDue=vals("episodes").filter(e=>owes(e)&&e.airDate&&e.airDate<=t&&!e.youtubeDone);
+  const liDue=vals("episodes").filter(e=>owes(e)&&liDate(e)&&liDate(e)<=add(t,6)&&!e.linkedinDone);
+  const webMissing=vals("episodes").filter(e=>owes(e)&&e.youtubeDone&&!e.websiteDone);
+  const slots=fridays(add(t,-21),12).filter(f=>{ if(f>=t) return true; const e=epOn(f); return !!(e && owes(e) && !(e.youtubeDone&&e.linkedinDone&&e.websiteDone)); }).slice(0,9);  // past Fridays only while their episode still has work left
   const run = slots.map(f=>{ const e=epOn(f); const past=f<t;
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const ed=editionFor(f);
@@ -2602,7 +2606,7 @@ function wirePieceRows(el){
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
   const own=vals("pieces").filter(p=>p.channel==="linkedin");
-  const fromEp=vals("episodes").filter(e=>liDate(e)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up Episode "+(e.num||"?")+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
+  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||e.linkedinDone)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up Episode "+(e.num||"?")+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
   const upcoming=all.filter(p=>p.status!=="done" && p.date && p.date<=add(t,45)).sort((a,b)=>a.date<b.date?-1:1);
@@ -2632,8 +2636,8 @@ function renderLinkedin(){
 /* ================= YouTube ================= */
 function renderYoutube(){
   const el=$("#page-youtube"), t=T();
-  const queue=vals("episodes").filter(e=>!e.youtubeDone && e.airDate && e.airDate<=add(t,7)).sort((a,b)=>a.airDate<b.airDate?-1:1);
-  const caps=vals("episodes").filter(e=>e.youtubeDone && !e.captions);
+  const queue=vals("episodes").filter(e=>owes(e) && !e.youtubeDone && e.airDate && e.airDate<=add(t,7)).sort((a,b)=>a.airDate<b.airDate?-1:1);
+  const caps=vals("episodes").filter(e=>owes(e) && e.youtubeDone && !e.captions);
   const vids=vals("pieces").filter(p=>p.channel==="youtube").sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
   const onYT=vals("episodes").filter(e=>e.youtubeDone).length;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">@MISMOStandards</div><h1>YouTube</h1><div class="sub">Mic\'d Up goes up Friday afternoon with Brian\'s description. FRAME videos, the initiatives series and recordings live here too.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="yt-new">+ Other Video</button></div></div>'+
