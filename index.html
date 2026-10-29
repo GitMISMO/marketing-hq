@@ -797,6 +797,7 @@ select:focus,input:focus,textarea:focus{outline:2px solid var(--sky);outline-off
 .band .today{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;color:var(--sky)}
 .band .say{font-size:16.5px;font-weight:600;line-height:1.45;margin:6px 0 14px}
 .band .say em{font-style:normal;color:var(--sky)}
+em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .band .say .hot{color:#f3a59b}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
 .tile{background:var(--band-tile);border:1px solid var(--band-line);border-radius:6px;padding:12px 14px;min-width:0;text-align:left;color:inherit;font:inherit;cursor:default}
@@ -1295,6 +1296,15 @@ const MILES = [
   ["stats","Stats Recorded","A week after sending"]
 ];
 const MILE_OFFS = {content:-14, draft:-13, review:-6, build:-5, test:-2, approve:-1, publish:0, stats:7};
+const SEND_SIDE = ["test","approve","publish","stats"];  // the steps that move when the send date moves
+const HOLIDAYS = {"2026-11-11":"Veterans Day","2026-11-26":"Thanksgiving","2026-11-27":"the day after Thanksgiving",
+  "2027-01-18":"MLK Jr. Birthday","2027-02-15":"Presidents' Day","2027-05-31":"Memorial Day","2027-06-18":"Juneteenth (observed)","2027-07-05":"Independence Day (observed)",
+  "2027-09-06":"Labor Day","2027-11-11":"Veterans Day","2027-11-25":"Thanksgiving","2027-11-26":"the day after Thanksgiving",
+  "2027-12-27":"Winter Break","2027-12-28":"Winter Break","2027-12-29":"Winter Break","2027-12-30":"Winter Break","2027-12-31":"Winter Break"};
+function offDay(d){ const w=P(d).getDay(); return w===0||w===6||!!HOLIDAYS[d]; }
+function workday(d,dir){ let x=d, n=0; while(offDay(x) && n++<14) x=add(x,dir); return x; }
+function cadenceFrom(p){ const dates={}; MILES.forEach(([k])=>{ const o=MILE_OFFS[k]; dates[k]= o===0 ? p : workday(add(p,o), o<0?-1:1); }); return dates; }
+function offNote(d){ return HOLIDAYS[d] || "a weekend"; }
 const SEND_CHECKS = [
   ["lists","MISMO Matters group refreshed","Compound lists, website subscribers, downloaders and prospects loaded into the Higher Logic group"],
   ["unsub","Unsubscribes removed","One list across Mailchimp, Axios and Higher Logic: anyone who unsubscribed anywhere is left off"],
@@ -1721,7 +1731,7 @@ function renderMatters(){
   const head = '<div class="phead"><div><div class="eyebrow">MISMO Matters</div><h1>'+esc(monthName(ed.month))+' Edition</h1><div class="sub">'+
     (ed.archived ? 'Sent '+esc(fL(ed.dates.publish))+' through Axios' : 'Goes out '+esc(fL(ed.dates.publish))+' through Higher Logic to the MISMO Matters group')+'</div></div>'+
     '<div class="tools"><div class="field"><label for="ms-pick">Edition</label><select id="ms-pick">'+opts+'</select></div>'+
-    (ed.archived?'':'<button class="btn" type="button" id="ms-dates">Dates &amp; Notes</button>')+
+    (ed.archived?'':'<button class="btn" type="button" id="ms-dates">Change Dates</button>')+
     '<button class="btn" type="button" id="ms-next">Start the Next Edition</button></div></div>';
   if(ed.archived){ el.innerHTML = head + archiveView(ed); wireMattersHead(el, ed); return; }
   const secs=edSections(ed), on=secs.filter(s=>s.on);
@@ -1856,15 +1866,21 @@ function openEdition(ed){
   const fields=[{sec:"Dates"}].concat(MILES.map(([k,l,w])=>({k:"d_"+k,label:l,type:"date",get:d=>d.dates&&d.dates[k],hint:w})))
     .concat([{sec:"Notes"},{k:"notes",label:"Notes for This Edition",type:"textarea",rows:4,ph:"Anything the team should know: who's out, special sections, sponsor banner"}]);
   openPane({eye:"MISMO Matters", title:monthName(ed.month)+" Edition", fields, data:ed,
-    save:async v=>{ const dates=Object.assign({},ed.dates); MILES.forEach(([k])=>{ if(v["d_"+k]!==undefined) dates[k]=v["d_"+k]; }); await patch("editions",ed.id,{dates, notes:v.notes}); },
-    extra: ed.notes?'':'', buttons:[{label:"Reset to the Usual Cadence", run:async()=>{ const p=ed.dates.publish; const dates={}; MILES.forEach(([k])=>dates[k]=add(p,MILE_OFFS[k])); await patch("editions",ed.id,{dates}); toast("Dates reset from the send date"); closePane(true); }}]
+    save:async v=>{ const old=ed.dates||{}, dates=Object.assign({},old); MILES.forEach(([k])=>{ if(v["d_"+k]) dates[k]=v["d_"+k]; });
+      const np=dates.publish, moved = np && old.publish && np!==old.publish && MILES.every(([k])=>k==="publish" || dates[k]===old[k]);
+      let msg="";
+      if(moved){ const delta=diff(np,old.publish); SEND_SIDE.forEach(k=>{ if(k==="publish"||!old[k]||(ed.done&&ed.done[k])) return; dates[k]=workday(add(old[k],delta), k==="stats"?1:-1); }); msg="Send date moved to "+fD(np)+". Test send, final approval and stats moved with it; content dates stayed put."; }
+      const warn=MILES.filter(([k])=>dates[k]&&offDay(dates[k])).map(([k,l])=>l+" falls on "+offNote(dates[k])+" ("+fD(dates[k])+")");
+      await patch("editions",ed.id,{dates, notes:v.notes});
+      if(msg||warn.length) setTimeout(()=>toast([msg].concat(warn.length?["Heads up: "+warn.join("; ")+"."]:[]).filter(Boolean).join(" "), 7000), 700); },
+    extra: ed.notes?'':'', buttons:[{label:"Reset to the Usual Cadence", run:async()=>{ const p=ed.dates.publish; const dates=cadenceFrom(p); await patch("editions",ed.id,{dates}); toast("Dates reset from the send date"); closePane(true); }}]
   });
 }
 async function startNextEdition(){
   const list=editionsSorted(); const last=list[list.length-1];
   let y,m; if(last){ [y,m]=last.month.split("-").map(Number); m++; if(m>12){m=1;y++;} } else { const d=today(); y=d.getFullYear(); m=d.getMonth()+2; if(m>12){m=1;y++;} }
   const month=y+"-"+pad(m); const p=thirdWed(y,m-1);
-  const dates={}; MILES.forEach(([k])=>dates[k]=add(p,MILE_OFFS[k]));
+  const dates=cadenceFrom(workday(p,1));
   await put("editions",month,{month, dates, done:{}, checks:{}, order:SECTIONS.map(s=>s.key), excluded:{}, stats:{}});
   for(const s of SECTIONS){ if(!S.sections[month+"__"+s.key]) await put("sections",month+"__"+s.key,{month,key:s.key,status:"waiting",owner:s.owner,from:s.from}); }
   MS.ed=month; MS.sub="sections"; go("matters"); renderMatters(); toast(monthName(month)+" edition started · goes out "+fS(p));
@@ -2241,7 +2257,8 @@ const HELP = [
   </ul>
   <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
-  <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, and can be changed under <b>Dates &amp; Notes</b>.</p>
+  <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
+  <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which. November goes out Thursday, Nov 19, after the new website launches Nov 16.</p>
   <div class="hflow">
    <div><span>2 weeks before</span><b>Content Due</b><small>Contributors send copy to Kelly</small></div>
    <div><span>Next day</span><b>Sections In</b><small>Kelly drops each piece into its section</small></div>
