@@ -2898,8 +2898,9 @@ async function downloadImage(im){
     await saveBlob(await r.blob(), imgFileName(im));
   }catch(e){ window.open(imgSrc(im),"_blank","noopener"); toast("Opened the image in a new tab. Right-click it and choose Save Image As.", 5000); }
 }
-function imgLink(im){ return im.url || (im.assetId ? location.origin+"/_blob/"+im.assetId : ""); }
-function copyImageLink(im){ const u=imgLink(im); if(!u){ toast("No link for this one yet."); return; } copyText(u, "Image link (works for the MISMO team while signed in, not in emails)"); }
+/* the Higher Logic copy is public, so it's the link to share and to use in emails */
+function imgLink(im){ return im.hlUrl || im.url || (im.assetId ? location.origin+"/_blob/"+im.assetId : ""); }
+function copyImageLink(im){ const u=imgLink(im); if(!u){ toast("This one isn't in Higher Logic yet, so there's no link to share. Upload it there and paste its link on the picture.", 5000); return; } copyText(u, im.hlUrl ? "Image link (public, works in emails)" : "Image link (works for the MISMO team while signed in, not in emails)"); }
 
 function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
