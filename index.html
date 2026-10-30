@@ -621,6 +621,18 @@
         .then(function (j) { return { id: '/' + String(j.path || '').replace(/^\/+/, ''), url: '', sizeBytes: blob.size, contentType: blob.type, sp: true }; });
     }
   };
+  /* Mic'd Up: Brian's Google Drive folders and the "Mic'd Up Writer" prompt, through the same flow */
+  window.__hqImages.drive = {
+    list: function (folderId) { return imgCall({ action: 'drivelist', id: folderId }).then(function (j) {
+      var first = (j.files || [])[0] || {}, segs = String(first.Path || '').split('/').filter(Boolean);
+      return { name: String(j.name || (segs.length > 1 ? segs[segs.length - 2] : '')), files: (j.files || []).map(function (f) {
+        return { id: String(pick(f, ['Id', 'id'])), name: String(pick(f, ['Name', 'DisplayName', 'name'])), size: +pick(f, ['Size', 'size']) || 0,
+          type: String(pick(f, ['MediaType', 'mimeType'])), folder: f.IsFolder === true, modified: pick(f, ['LastModified', 'modifiedTime']) }; }) }; }); },
+    get: function (fileId) { return imgCall({ action: 'driveget', id: fileId }).then(function (j) { return unb64(j.content, j.type); }); },
+    write: function (folderName, post) { return imgCall({ action: 'write', folderName: folderName, post: post }).then(function (j) {
+      var o = j.result || j; if (typeof o === 'string') { try { o = JSON.parse(o.replace(/^```(json)?|```$/g, '')); } catch (e) { o = { text: o }; } }
+      return o || {}; }); }
+  };
   var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
 
   /* ---------- the door ---------- */
@@ -1100,6 +1112,44 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .rqa-r span{color:var(--ink-3);font-size:12px;font-weight:600}
 .rqa-r a{word-break:break-all}
 @media(max-width:700px){.rqboard{grid-template-columns:repeat(4,minmax(240px,82vw));scroll-snap-type:x mandatory}.rqcol{scroll-snap-align:start}}
+
+/* Mic'd Up YouTube Kit */
+.kitcard .ch select{width:auto;min-width:150px}
+.kitcard .ch .note{max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpost{margin:0;padding:10px 16px;border-bottom:1px solid var(--rule);background:var(--surface-2);font-size:13px}
+.kpost summary{cursor:pointer;font-weight:600;color:var(--ink-2)}
+.kpost p{margin:8px 0 2px;color:var(--ink-2);line-height:1.5}
+.ksteps{display:flex;flex-direction:column}
+.kstep{display:grid;grid-template-columns:34px minmax(0,1fr);gap:14px;padding:16px;border-bottom:1px solid var(--rule)}
+.kstep:last-child{border-bottom:0}
+.kn{width:30px;height:30px;border-radius:50%;background:var(--surface-3);color:var(--ink-2);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+.kstep.done .kn{background:var(--good);color:#fff}
+.kt{font-weight:700;font-size:14.5px;margin:4px 0 10px}
+.kfile{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--border);border-radius:7px;padding:10px 12px;background:var(--surface)}
+.kfile>div{flex:1 1 220px;min-width:0}
+.kfile b{display:block;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kfile small{color:var(--ink-3);font-size:12px}
+.kic{width:34px;height:34px;border-radius:7px;background:var(--navy);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px}
+.kthumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.kthumb{border:2px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.kthumb.on{border-color:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
+.kthumb-i{display:block;width:100%;padding:0;border:0;background:var(--surface-2);cursor:pointer;aspect-ratio:16/9}
+.kthumb-i img{width:100%;height:100%;object-fit:cover;display:block}
+.kthumb-f{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:8px 10px;font-size:12px;color:var(--ink-3)}
+.kthumb-f span{flex:1 1 100%}
+.kcopy{margin-bottom:10px}
+.kcopy-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.kcopy textarea,.kcopy input{font-size:13.5px;line-height:1.5}
+.kbtns{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.kbtns input{flex:1 1 240px;width:auto}
+.ktx-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.ktx-l{display:flex;flex-direction:column;gap:4px;max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:6px;padding:8px 10px;background:var(--surface)}
+.ktx-r{display:flex;align-items:center;gap:8px;font-size:13px}
+.ktx-r s{color:var(--bad)}
+.ktx-r small{color:var(--ink-3);margin-left:auto;white-space:nowrap}
+.ktx-ok{color:var(--good);font-weight:600;font-size:13.5px}
+.ktx-add{display:flex;align-items:center;gap:6px;flex:1 1 300px}
+.ktx-add input{flex:1;width:auto;font-size:12.5px;padding:5px 8px}
 
 /* milestones */
 .miles{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0;border:1px solid var(--border);border-radius:8px;background:var(--surface);overflow:hidden;margin-bottom:22px}
@@ -1608,7 +1658,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -1824,7 +1874,7 @@ function applyPosted(){
     else { const pc=S.pieces[id]; if(pc && pc.status!=="done"){ pc.status="done"; if(x.url && !pc.postedUrl) pc.postedUrl=x.url; } }
   });
 }
-function renderAll(){ applyPosted(); renderTab(TAB); badges(); }
+function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
 function renderTab(t){
   try{
     ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
@@ -2590,6 +2640,29 @@ const HELP = [
   </ol>
   <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
   <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late, missing captions, waiting for YouTube or LinkedIn, or missing from the website. Everything from Episode 51 on is tracked.</p>`},
+ {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
+  <p>Everything Vanessa needs to post an episode on YouTube and on MISMO's LinkedIn is filled in for her. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>.</p>
+  <ol>
+   <li><b>Brian posts the episode's Google Drive folder</b> in the MISMO MIC'D UP Teams chat. The "Mic'd Up Chat" flow sends every message in that chat to MISMO Media.</li>
+   <li><b>MISMO Media opens the folder by itself</b> and picks out the files:
+     <ul>
+       <li>The final video: the largest .mp4. Its name sometimes says Full Episode.</li>
+       <li>The thumbnails: the generated-image files. They go into the Image Library, tagged Mic'd Up.</li>
+       <li>The transcript: untitled.txt.</li>
+     </ul>
+     It works out the episode from the folder name ("Ep. 51 - …").</li>
+   <li><b>Brian pastes his LinkedIn post in the same chat.</b> The "Mic'd Up Writer" prompt in Power Automate rewrites it in MISMO's voice: the YouTube title, the YouTube description and MISMO's own LinkedIn post. If his post doesn't come through the chat, paste it into step 4 of the kit.</li>
+  </ol>
+  <p>Then the kit walks through the upload:</p>
+  <ol>
+   <li><b>Download the final video</b> from Google Drive.</li>
+   <li><b>Thumbnail:</b> when there are two, press <b>Use This One</b> on the one that matches Brian's LinkedIn post, then <b>Download</b> it.</li>
+   <li><b>Check the transcript:</b> <b>Check untitled.txt</b> lists misspelled names and MISMO terms (MISMO, Mic'd Up, Vieaux, eNote, eClose, eVault, SMART Doc, the guest's name from the folder and more). Untick anything that's right as it is, then <b>Download Corrected Transcript</b> and upload it to YouTube as the captions. Add other names to watch for in the box.</li>
+   <li><b>Title and description:</b> copy each into YouTube Studio. <b>Write Again</b> asks for a new version.</li>
+   <li><b>Post on YouTube</b>, then paste the YouTube link here. The kit also notices it by itself once the channel lists it.</li>
+   <li><b>MISMO's LinkedIn post</b> is ready for Monday, and the YouTube link goes into it by itself.</li>
+  </ol>
+  <p><b>Pull In a Drive Folder</b> takes any Drive folder link, for an episode posted before the chat was connected. <b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
@@ -3317,6 +3390,248 @@ function openRequest(id){
     del: id ? async()=>{ await rqSave(id,{archived:true}); } : null, delLabel:"Archive"
   });
 }
+/* ================= Mic'd Up YouTube Kit ================= */
+/* Everything Vanessa needs to put an episode on YouTube and on MISMO's LinkedIn, filled in
+   for her. The "Mic'd Up Chat" flow sends every message in the MISMO MIC'D UP Teams chat to
+   data/chat.json. When Brian posts an episode's Google Drive folder, MISMO Media opens the
+   folder (through the Marketing HQ Images flow), finds the final video (the largest .mp4),
+   the generated-image thumbnails and the untitled.txt transcript, and files them on the
+   episode. When Brian pastes his LinkedIn post in the chat, the "Mic'd Up Writer" prompt
+   rewrites it in MISMO's voice: the YouTube title and description and MISMO's LinkedIn post.
+   The kit for each episode lives in the "kits" collection under the episode's id. */
+const KIT = {ep:"", busy:{}, tx:{}, txIssues:{}, tried:{}};
+const DRIVE = ()=> (window.__hqImages && window.__hqImages.drive) || null;
+const FOLDER_RX = /drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([A-Za-z0-9_-]{10,})/;
+function chatMsgs(){ return vals("chat").sort((a,b)=>String(a.at||"").localeCompare(String(b.at||""))); }
+function msgFolder(m){ const l=[].concat(m.links||[], [m.text||""]).join(" "); const x=l.match(FOLDER_RX); return x?x[1]:""; }
+function isBrian(m){ return /vieaux|brian/i.test(m.from||""); }
+function msgIsPost(m){ return isBrian(m) && !msgFolder(m) && ( (m.links||[]).some(u=>/linkedin\.com/i.test(u)) || String(m.text||"").length>220 ); }
+function kitOf(epId){ return (S.kits||{})[epId] || null; }
+/* "Ep. 51 - Factual Data - Reno D'Water" → number, topic, guests */
+function parseFolder(name){
+  const s=String(name||"").replace(/\s+-\s+Google Drive$/i,"").trim();
+  const m=s.match(/^\s*ep(?:isode)?\.?\s*#?\s*(\d{1,3})\s*[-–:.]?\s*/i);
+  const rest=m?s.slice(m[0].length):s;
+  const parts=rest.split(/\s+[-–]\s+/).map(x=>x.trim()).filter(Boolean);
+  return {num:m?+m[1]:0, topic:parts[0]||"", guests:parts.slice(1).join(" and ")};
+}
+function kitVideo(files){ return (files||[]).filter(f=>/\.mp4$/i.test(f.name)||/video\/mp4/i.test(f.type)).sort((a,b)=>(b.size||0)-(a.size||0))[0]||null; }
+function kitThumbFiles(files){ return (files||[]).filter(f=>/^generated-image/i.test(f.name)&&/\.(png|jpe?g|webp)$/i.test(f.name)); }
+function kitTranscriptFile(files){ return (files||[]).find(f=>/^untitled\.txt$/i.test(f.name)) || (files||[]).find(f=>/\.txt$/i.test(f.name)) || null; }
+const driveView = id=>"https://drive.google.com/file/d/"+id+"/view";
+const driveFolderUrl = id=>"https://drive.google.com/drive/folders/"+id;
+function mb(n){ n=+n||0; return n>=1073741824?(n/1073741824).toFixed(2)+" GB":n>=1048576?Math.round(n/1048576)+" MB":Math.max(1,Math.round(n/1024))+" KB"; }
+
+/* ---------- pulling a folder in ---------- */
+async function kitPullFolder(epId, folderId, chatId){
+  const dr=DRIVE(); if(!dr){ toast("Brian's Drive folders open on resources.mismo.org."); return; }
+  if(KIT.busy[epId]) return; KIT.busy[epId]=true;
+  try{
+    toast("Opening Brian's Drive folder…", 60000);
+    const got=await dr.list(folderId);
+    const files=got.files.filter(f=>!f.folder);
+    const info=parseFolder(got.name);
+    const video=kitVideo(files), tf=kitTranscriptFile(files), thumbs=kitThumbFiles(files);
+    const old=kitOf(epId)||{};
+    const kit=Object.assign({}, old, {folderId, folderUrl:driveFolderUrl(folderId), folderName:got.name, files:files.map(f=>({id:f.id,name:f.name,size:f.size,type:f.type})),
+      video:video?{id:video.id,name:video.name,size:video.size}:null, transcriptId:tf?tf.id:"", chatId:chatId||old.chatId||"", pulledAt:new Date().toISOString()});
+    // thumbnails go into the Image Library (and SharePoint), once each
+    const have=(old.thumbs||[]);
+    const out=[];
+    for(const f of thumbs){
+      const prev=have.find(t=>t.driveId===f.id && S.images[t.img]);
+      if(prev){ out.push(prev); continue; }
+      toast("Bringing in the thumbnail "+f.name+"…", 60000);
+      const blob=await dr.get(f.id);
+      const ext=(f.name.match(/\.([a-z0-9]+)$/i)||["","png"])[1].toLowerCase();
+      const file=new File([blob], "Micd-Up-Ep-"+(info.num||"")+"-"+f.name.replace(/[()\s]+/g,"-").replace(/-+/g,"-"), {type:/^image\//.test(blob.type)?blob.type:(ext==="jpg"?"image/jpeg":"image/"+ext)});
+      const made=await addImages([file], {campaign:"micdup", name:"Mic'd Up Ep "+(info.num||"")+" Thumbnail ("+f.name.replace(/\.[a-z]+$/i,"")+")", notes:"From Brian's Drive folder: "+got.name});
+      if(made[0]) out.push({driveId:f.id, name:f.name, img:made[0].id});
+    }
+    kit.thumbs=out;
+    if(!kit.thumbPick && out.length===1) kit.thumbPick=out[0].img;
+    await put("kits", epId, kit);
+    // fill the episode from the folder name where it's blank
+    const e=S.episodes[epId]||{}; const part={};
+    if(!e.fileUrl) part.fileUrl=kit.folderUrl;
+    if(!e.fileIn && video) part.fileIn=true;
+    if(!e.guests && info.guests) part.guests=info.guests;
+    if(Object.keys(part).length) await patch("episodes", epId, part);
+    toast("Episode "+(info.num||"")+" kit is ready: "+(video?"video, ":"")+out.length+" thumbnail"+(out.length===1?"":"s")+(tf?", transcript":""), 5000);
+  }catch(e){ toast("Couldn't open the Drive folder: "+(e.message||e.code||"try again"), 6000); }
+  finally{ KIT.busy[epId]=false; }
+}
+async function kitWrite(epId, force){
+  const dr=DRIVE(); const k=kitOf(epId); if(!dr||!k||!k.brianPost) return;
+  if(k.written && !force) return;
+  if(KIT.busy["w"+epId]) return; KIT.busy["w"+epId]=true;
+  try{
+    toast("Writing the YouTube title, description and MISMO's LinkedIn post…", 60000);
+    const o=await dr.write(k.folderName||("Ep. "+((S.episodes[epId]||{}).num||"")), k.brianPost);
+    const written={title:String(o.youtubeTitle||"").trim(), desc:String(o.youtubeDescription||o.text||"").trim(), li:String(o.linkedinPost||"").trim()};
+    await put("kits", epId, Object.assign({}, kitOf(epId), {written, writtenAt:new Date().toISOString()}));
+    const e=S.episodes[epId]||{}, part={};
+    if(!e.bvDescription) part.bvDescription=k.brianPost;
+    if(!e.linkedinCopy && written.li) part.linkedinCopy = e.youtubeUrl ? written.li.replace(/\[YouTube link\]/gi, e.youtubeUrl) : written.li;
+    if(written.title && !e.ytTitle) part.ytTitle=written.title;
+    if(written.title && !e.title){ const t=written.title.replace(/^MISMO Mic'?d Up Episode\s*\d+\s*:\s*/i,"").replace(/\s+with\s+.*$/i,"").trim(); if(t) part.title=t; }
+    if(Object.keys(part).length) await patch("episodes", epId, part);
+    toast("Written. Read it over in the YouTube Kit.", 4000);
+  }catch(e){ toast("Couldn't write it: "+(e.message||e.code||"try again"), 6000); }
+  finally{ KIT.busy["w"+epId]=false; }
+}
+/* match chat messages to episodes and fill in whatever's new. Runs for anyone who can edit, on resources.mismo.org. */
+let KIT_SYNCING=false;
+async function kitSync(){
+  if(KIT_SYNCING || !DRIVE() || !CANWRITE || !LOADED.has("chat") || !LOADED.has("kits") || !LOADED.has("episodes")) return;
+  KIT_SYNCING=true;
+  try{
+    const msgs=chatMsgs();
+    for(const m of msgs){
+      const fid=msgFolder(m); if(!fid) continue;
+      if(vals("kits").some(k=>k.folderId===fid) || KIT.tried[fid]) continue;
+      KIT.tried[fid]=true;
+      // which episode? read the folder name for the number
+      let info; try{ info=await DRIVE().list(fid); }catch(e){ continue; }
+      const n=parseFolder(info.name).num; if(!n) continue;
+      let ep=vals("episodes").find(e=>+e.num===n);
+      if(!ep){ const id="ep"+String(n).padStart(3,"0"); await put("episodes", id, {num:n, airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
+      await kitPullFolder(ep.id, fid, m.id);
+    }
+    // Brian's LinkedIn posts: tie each to its episode
+    for(const m of msgs){
+      if(!msgIsPost(m) || vals("kits").some(k=>k.postChatId===m.id)) continue;
+      const said=String(m.text||"").match(/ep(?:isode)?\.?\s*#?\s*(\d{1,3})/i);
+      let target=null;
+      if(said){ const ep=vals("episodes").find(e=>+e.num===+said[1]); if(ep && kitOf(ep.id)) target=ep.id; }
+      if(!target){ // the newest folder Brian posted before this, still waiting for its post
+        const cands=vals("kits").filter(k=>!k.brianPost && k.chatId).map(k=>({k, at:(S.chat[k.chatId]||{}).at||k.pulledAt||""})).filter(x=>x.at<=String(m.at||"9")).sort((a,b)=>b.at.localeCompare(a.at));
+        if(cands[0]) target=cands[0].k.id;
+      }
+      if(!target) continue;
+      const li=(m.links||[]).find(u=>/linkedin\.com/i.test(u))||"";
+      const post=String(m.text||"").replace(li,"").trim();
+      await put("kits", target, Object.assign({}, kitOf(target), {brianPost:post, brianPostUrl:li, postChatId:m.id, written:null}));
+      await kitWrite(target, true);
+    }
+    // once the episode is on YouTube, put the real link in MISMO's LinkedIn post
+    for(const e of vals("episodes")){ if(e.youtubeUrl && /\[YouTube link\]/i.test(e.linkedinCopy||"")) await patch("episodes", e.id, {linkedinCopy:e.linkedinCopy.replace(/\[YouTube link\]/gi, e.youtubeUrl)}); }
+  }finally{ KIT_SYNCING=false; }
+}
+
+/* ---------- the transcript check ---------- */
+/* words the transcription tends to get wrong, and how MISMO writes them */
+const TX_TERMS = [
+  [/\b(?:mismo|mizmo|miz mo|mis mo|miss mo|mesmo|misemo|mis-mo)\b/gi, "MISMO", s=>s!=="MISMO"],
+  [/\b(?:mic'?d up|mike'?d up|miked up|mic up|mic'd-up|micd up)\b/gi, "Mic'd Up", s=>s!=="Mic'd Up"],
+  [/\b(?:vieux|vio|veo|viox|vieaux|vyo|vieau|vio's)\b/gi, "Vieaux", s=>s!=="Vieaux"],
+  [/\b(?:e-?note|enote)s?\b/gi, "eNote", s=>!/^eNotes?$/.test(s)],
+  [/\b(?:e-?close|eclose|e-?closing|eclosing)\b/gi, "eClose", s=>!/^eClos(e|ing)$/.test(s)],
+  [/\b(?:e-?vault|evault)s?\b/gi, "eVault", s=>!/^eVaults?$/.test(s)],
+  [/\bsmart doc(?:s)?\b/gi, "SMART Doc", s=>!/^SMART Docs?$/.test(s)],
+  [/\b(?:fannie may|fanny mae|fanny may)\b/gi, "Fannie Mae", s=>s!=="Fannie Mae"],
+  [/\b(?:freddy mac|freddie mack|freddy mack)\b/gi, "Freddie Mac", s=>s!=="Freddie Mac"],
+  [/\b(?:ginny mae|ginnie may|ginny may)\b/gi, "Ginnie Mae", s=>s!=="Ginnie Mae"],
+  [/\b(?:u-?lad|you lad)\b/gi, "ULAD", s=>s!=="ULAD"],
+  [/\b(?:u-?r-?l-?a|earl a)\b/gi, "URLA", s=>s!=="URLA"],
+  [/\b(?:gse|g\.s\.e\.)s?\b/g, "GSE", s=>!/^GSEs?$/.test(s)],
+  [/\b(?:a\.?i\.?)\b/g, "AI", s=>s!=="AI" && s!=="a" && s!=="i"]
+];
+function lev(a,b){ a=a.toLowerCase(); b=b.toLowerCase(); const m=a.length,n=b.length; if(Math.abs(m-n)>3) return 9; const d=Array.from({length:m+1},(_,i)=>[i].concat(Array(n).fill(0))); for(let j=1;j<=n;j++) d[0][j]=j; for(let i=1;i<=m;i++) for(let j=1;j<=n;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return d[m][n]; }
+/* names from the folder and the episode (guests, company): flag near-misses like "Reno Dwater" */
+function txNames(epId){
+  const e=S.episodes[epId]||{}, k=kitOf(epId)||{}, info=parseFolder(k.folderName||"");
+  const people=[e.guests, info.guests, k.extraNames].filter(Boolean).join(",").split(/,|\band\b|&/).map(x=>x.trim()).filter(x=>x.length>2);
+  const words=new Set(); people.forEach(n=>n.split(/\s+/).forEach(w=>{ w=w.replace(/[^A-Za-z'’-]/g,""); if(w.length>=4 && /^[A-Z]/.test(w)) words.add(w); }));
+  const phrases=[e.company, info.topic].concat(String(k.extraNames||"").split(",")).map(x=>String(x||"").trim()).filter(x=>/\s/.test(x)||/^[A-Z]{2,}/.test(x));
+  return {words:[...words], phrases};
+}
+function txCheck(text, epId){
+  const issues=[], seen={};
+  const add=(found,fix,why)=>{ const key=found+"→"+fix; if(seen[key]) { seen[key].n++; return; } seen[key]={found,fix,why,n:1}; issues.push(seen[key]); };
+  TX_TERMS.forEach(([rx,fix,bad])=>{ (text.match(rx)||[]).forEach(s=>{ if(bad(s)) add(s, (/s$/i.test(s)&&/^(eNote|eVault|SMART Doc|GSE)$/.test(fix))?fix+"s":fix, "MISMO style"); }); });
+  const {words:names, phrases}=txNames(epId);
+  if(names.length){
+    const tokens=text.match(/[A-Za-z][A-Za-z'’-]{2,}/g)||[];
+    const counts={}; tokens.forEach(t=>counts[t]=(counts[t]||0)+1);
+    Object.keys(counts).forEach(t=>{ if(!/^[A-Z]/.test(t)) return; names.forEach(nm=>{ if(t===nm || nm.toLowerCase().includes(t.toLowerCase())) return;
+      const dist=lev(t,nm); if(dist<=2 && t.length>=4 && dist/Math.max(t.length,nm.length)<0.34){ const key=t+"→"+nm; if(seen[key]) seen[key].n+=counts[t]; else { seen[key]={found:t,fix:nm,why:"Name from the folder",n:counts[t]}; issues.push(seen[key]); } } }); });
+    names.filter(nm=>/['’-]/.test(nm)).forEach(nm=>{ const plain=nm.replace(/['’-]/g,""), spaced=nm.replace(/['’-]/g," ");
+      [plain, spaced].forEach(v=>{ const rx=new RegExp("\\b"+v.replace(/\s+/g,"\\s+")+"\\b","gi"); (text.match(rx)||[]).forEach(h=>{ if(h!==nm) add(h, nm, "Name from the folder"); }); }); });
+  }
+  phrases.forEach(ph=>{ const rx=new RegExp("\\b"+ph.replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"\\s+")+"\\b","gi"); (text.match(rx)||[]).forEach(h=>{ if(h!==ph) add(h, ph, "Company or topic"); }); });
+  return issues;
+}
+function txFixed(text, issues, skip){
+  /* one pass, longest first, so a fix is never fixed twice */
+  const map={}; issues.forEach((x,i)=>{ if(!(skip && skip[i])) map[x.found]=x.fix; });
+  const keys=Object.keys(map).sort((a,b)=>b.length-a.length); if(!keys.length) return text;
+  const rx=new RegExp("(^|[^A-Za-z'’])("+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")(?=[^A-Za-z]|$)","g");
+  return text.replace(rx,(m,p,w)=>p+(map[w]||w));
+}
+async function kitLoadTranscript(epId){
+  const k=kitOf(epId); if(!k||!k.transcriptId||!DRIVE()) return null;
+  if(KIT.tx[epId]!=null) return KIT.tx[epId];
+  try{ const b=await DRIVE().get(k.transcriptId); KIT.tx[epId]=await b.text(); KIT.txIssues[epId]=txCheck(KIT.tx[epId], epId); }catch(e){ KIT.tx[epId]=""; KIT.txIssues[epId]=[]; toast("Couldn't read the transcript: "+(e.message||"try again"),4000); }
+  return KIT.tx[epId];
+}
+
+/* ---------- the kit card on the Mic'd Up page ---------- */
+function kitEpisodes(){ return vals("kits").filter(k=>k.folderId && S.episodes[k.id]).map(k=>S.episodes[k.id]).sort((a,b)=>(+b.num||0)-(+a.num||0)); }
+function kitCardHtml(){
+  const eps=kitEpisodes();
+  if(!eps.length) return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><span class="note">fills in on its own from the MISMO MIC\'D UP chat</span><div class="r"><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div><div class="empty">When Brian posts an episode\'s Google Drive folder in the MISMO MIC\'D UP chat, the video, thumbnail, transcript, title and description land here, ready to copy into YouTube. You can also press Pull In a Drive Folder and paste the folder link.</div></div>';
+  if(!KIT.ep || !eps.find(e=>e.id===KIT.ep)) KIT.ep=eps[0].id;
+  const e=S.episodes[KIT.ep], k=kitOf(KIT.ep)||{}, w=k.written||{};
+  const tx=KIT.tx[KIT.ep], iss=KIT.txIssues[KIT.ep]||[];
+  const thumbs=(k.thumbs||[]).filter(t=>S.images[t.img]);
+  const step=(n,title,done,body)=>'<div class="kstep'+(done?" done":"")+'"><div class="kn">'+(done?"✓":n)+'</div><div class="kb"><div class="kt">'+title+'</div>'+body+'</div></div>';
+  const copyBox=(id,label,val,rows)=>'<div class="kcopy"><div class="kcopy-h"><span>'+label+'</span><button class="btn sm" type="button" data-kcopy="'+id+'">Copy</button></div>'+(rows?'<textarea id="'+id+'" rows="'+rows+'">'+esc(val||"")+'</textarea>':'<input type="text" id="'+id+'" value="'+esc(val||"")+'">')+'</div>';
+  const liText = (e.linkedinCopy || w.li || "");
+  const body =
+    step(1,"Download the Final Video", !!k.video, k.video ? '<div class="kfile"><span class="kic">▶</span><div><b>'+esc(k.video.name)+'</b><small>'+esc(mb(k.video.size))+' · the largest .mp4 in Brian\'s folder</small></div><a class="btn sm pri" href="'+esc(driveView(k.video.id))+'" target="_blank" rel="noopener">Open to Download ↗</a></div>' : '<div class="hint">No .mp4 in the folder yet.</div>')+
+    step(2,"Thumbnail"+(thumbs.length>1?" · pick the one on Brian's LinkedIn post":""), !!k.thumbPick, thumbs.length ? '<div class="kthumbs">'+thumbs.map(t=>{ const im=S.images[t.img]; return '<div class="kthumb'+(k.thumbPick===t.img?" on":"")+'"><button type="button" class="kthumb-i" data-kpick="'+esc(t.img)+'" title="Use this one"><img data-kimg="'+esc(t.img)+'" src="'+esc(imgSrc(im))+'" alt=""></button><div class="kthumb-f"><span>'+esc(t.name)+'</span>'+(k.thumbPick===t.img?'<b class="chip ok">Using This One</b>':'<button class="btn sm" type="button" data-kpick="'+esc(t.img)+'">Use This One</button>')+'<button class="btn sm" type="button" data-kdl="'+esc(t.img)+'">Download</button></div></div>'; }).join("")+'</div>'+(k.brianPostUrl&&thumbs.length>1?'<div class="hint">Compare with <a href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener">Brian\'s LinkedIn post ↗</a>.</div>':'') : '<div class="hint">No generated-image files in the folder yet.</div>')+
+    step(3,"Check the Transcript", !!k.txOk, !k.transcriptId ? '<div class="hint">No untitled.txt in the folder yet.</div>' :
+      (tx==null ? '<button class="btn sm" type="button" id="kit-tx">Check untitled.txt</button>' :
+        '<div class="ktx">'+(iss.length ? '<div class="ktx-h"><b>'+iss.length+' thing'+(iss.length===1?"":"s")+' to fix</b><span class="hint">Untick any that are right as they are.</span></div><div class="ktx-l">'+iss.map((x,i)=>'<label class="ktx-r"><input type="checkbox" data-ktx="'+i+'" checked> <s>'+esc(x.found)+'</s> → <b>'+esc(x.fix)+'</b> <small>'+x.n+'× · '+esc(x.why)+'</small></label>').join("")+'</div>' : '<div class="ktx-ok">No misspelled names or MISMO terms found.</div>')+
+        '<div class="kbtns"><button class="btn sm pri" type="button" id="kit-txdl">Download '+(iss.length?"Corrected ":"")+'Transcript (.txt)</button><button class="btn sm" type="button" id="kit-txok">'+(k.txOk?"Checked ✓":"Mark as Checked")+'</button><label class="hint ktx-add">Other names to check: <input type="text" id="kit-names" value="'+esc(k.extraNames||"")+'" placeholder="e.g. Dave Savage, Homebase"></label></div></div>'))+
+    step(4,"YouTube Title and Description", !!(w.title||w.desc), (w.title||w.desc) ? copyBox("kit-title","Title",e.ytTitle||w.title)+copyBox("kit-desc","Description",w.desc,8)+'<div class="kbtns"><button class="btn sm" type="button" id="kit-rewrite">Write Again</button><span class="hint">Written in MISMO\'s voice from Brian\'s LinkedIn post.</span></div>'
+      : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Waiting for Brian to paste his LinkedIn post in the MISMO MIC\'D UP chat. Or paste it here:</div><textarea id="kit-post" rows="4" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-postgo">Write It</button></div>'))+
+    step(5,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+
+    step(6,"MISMO's LinkedIn Post · Monday", !!e.linkedinDone, liText ? copyBox("kit-li","Post",liText,6)+'<div class="kbtns"><button class="btn sm" type="button" id="kit-lisave">Save Changes</button><span class="hint">'+(/\[YouTube link\]/i.test(liText)?"The YouTube link goes in by itself once the video is up.":"Ready for Monday "+esc(fS(liDate(e)))+".")+'</span></div>' : '<div class="hint">Written with the YouTube description.</div>');
+  return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>Episode '+esc(x.num||"?")+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||"")+'</span><div class="r"><a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div>'+
+    (k.brianPost?'<details class="kpost"><summary>Brian\'s LinkedIn post'+(k.brianPostUrl?' · <a href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">open ↗</a>':'')+'</summary><p>'+esc(k.brianPost).replace(/\n/g,"<br>")+'</p></details>':'')+
+    '<div class="ksteps">'+body+'</div></div>';
+}
+function wireKit(el){
+  const eid=KIT.ep, k=kitOf(eid)||{}, e=S.episodes[eid]||{};
+  const sel=$("#kit-ep",el); if(sel) sel.onchange=()=>{ KIT.ep=sel.value; renderMicdup(); };
+  const add=$("#kit-add",el); if(add) add.onclick=()=>openPane({eye:"YouTube Kit", title:"Pull In a Drive Folder", data:{}, fields:[{k:"url",label:"Brian's Google Drive Folder Link",type:"url",wide:true,ph:"https://drive.google.com/drive/folders/…"}],
+    buttons:[{label:"Pull It In", run:async v=>{ const m=String(v.url||"").match(FOLDER_RX); if(!m){ toast("That isn't a Google Drive folder link."); return; } closePane(true);
+      let info; try{ info=await DRIVE().list(m[1]); }catch(err){ toast("Couldn't open that folder: "+(err.message||"try again"),5000); return; }
+      const n=parseFolder(info.name).num; let ep=n?vals("episodes").find(x=>+x.num===n):null;
+      if(!ep){ const id=n?"ep"+String(n).padStart(3,"0"):uid("ep"); await put("episodes", id, {num:n||"", airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
+      KIT.ep=ep.id; await kitPullFolder(ep.id, m[1], ""); renderMicdup(); }}]});
+  if(!eid) return;
+  const rp=$("#kit-repull",el); if(rp) rp.onclick=async()=>{ await kitPullFolder(eid, k.folderId, k.chatId); delete KIT.tx[eid]; renderMicdup(); };
+  $$("[data-kcopy]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.kcopy,el); copyText(t.value, b.closest(".kcopy").querySelector("span").textContent); });
+  $$("[data-kpick]",el).forEach(b=>b.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {thumbPick:b.dataset.kpick})); renderMicdup(); });
+  $$("[data-kdl]",el).forEach(b=>b.onclick=()=>downloadImage(S.images[b.dataset.kdl]));
+  $$("img[data-kimg]",el).forEach(i=>{ const im=S.images[i.dataset.kimg]; if(im && !i.getAttribute("src")) imgEnsure(im).then(()=>{ i.src=imgSrc(im); }); });
+  const txb=$("#kit-tx",el); if(txb) txb.onclick=async()=>{ txb.disabled=true; txb.textContent="Reading…"; await kitLoadTranscript(eid); renderMicdup(); };
+  const nm=$("#kit-names",el); if(nm) nm.onchange=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {extraNames:nm.value})); KIT.txIssues[eid]=txCheck(KIT.tx[eid]||"", eid); renderMicdup(); };
+  const dl=$("#kit-txdl",el); if(dl) dl.onclick=()=>{ const skip={}; $$("[data-ktx]",el).forEach(c=>{ if(!c.checked) skip[c.dataset.ktx]=true; }); const out=txFixed(KIT.tx[eid]||"", KIT.txIssues[eid]||[], skip);
+    saveBlob(new Blob([out],{type:"text/plain;charset=utf-8"}), "Micd Up Ep "+(e.num||"")+" Transcript.txt"); };
+  const ok=$("#kit-txok",el); if(ok) ok.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {txOk:!k.txOk})); if(!k.txOk && !e.captions) await patch("episodes", eid, {captions:true}); renderMicdup(); };
+  const rw=$("#kit-rewrite",el); if(rw) rw.onclick=async()=>{ rw.disabled=true; await kitWrite(eid, true); renderMicdup(); };
+  const pg=$("#kit-postgo",el); if(pg) pg.onclick=async()=>{ const t=$("#kit-post",el).value.trim(); if(t.length<40){ toast("Paste Brian's whole LinkedIn post."); return; } const li=(t.match(/https?:\/\/[^\s]*linkedin\.com[^\s]*/i)||[""])[0];
+    await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t.replace(li,"").trim(), brianPostUrl:li, written:null})); await kitWrite(eid, true); renderMicdup(); };
+  const ti=$("#kit-title",el); if(ti) ti.onchange=()=>patch("episodes", eid, {ytTitle:ti.value});
+  const ds=$("#kit-desc",el); if(ds) ds.onchange=()=>put("kits", eid, Object.assign({}, kitOf(eid), {written:Object.assign({}, (kitOf(eid)||{}).written, {desc:ds.value})}));
+  const ys=$("#kit-ytsave",el); if(ys) ys.onclick=async()=>{ const u=$("#kit-yt",el).value.trim(); if(!/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(u)){ toast("Paste the YouTube link."); return; }
+    const part={youtubeUrl:u, youtubeDone:true}; const li=e.linkedinCopy||((k.written||{}).li)||""; if(li) part.linkedinCopy=li.replace(/\[YouTube link\]/gi,u); await patch("episodes", eid, part); toast("Saved. MISMO's LinkedIn post now has the link."); renderMicdup(); };
+  const ls=$("#kit-lisave",el); if(ls) ls.onclick=async()=>{ await patch("episodes", eid, {linkedinCopy:$("#kit-li",el).value}); toast("Saved"); };
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -3348,12 +3663,14 @@ function renderMicdup(){
       '<div class="st"><div class="when">Friday Afternoon</div><b>YouTube</b><small>Upload with Brian\'s description and proofed captions</small></div>'+
       '<div class="st"><div class="when">Monday</div><b>MISMO LinkedIn</b><small>Post written from Brian\'s description, driving people to YouTube</small></div>'+
       '<div class="st"><div class="when">Next MISMO Matters</div><b>Mic\'d Up Section</b><small>Listed automatically once it\'s on YouTube</small></div></div>'+
+    kitCardHtml()+
     '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Brian · Captions · YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th title="File and description from Brian">Brian</th><th>Captions</th><th>YouTube</th><th>LinkedIn</th><th>Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
     '<div class="card"><div class="ch"><h2>All Episodes</h2><span class="cnt">'+eps.length+'</span></div>'+(all?'<div class="tw"><table class="t"><thead><tr><th class="n">Ep</th><th>Title</th><th>Guest</th><th>Friday</th><th>YouTube · LinkedIn · Website</th></tr></thead><tbody>'+all+'</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("episodes")?"Loading episodes…":"No episodes logged yet. Add the first one above.")+'</div>')+'</div>';
   $("#mu-new",el).onclick=()=>newEpisode(epOn(fri)?add(fri,7):fri);
   $$("[data-ep]",el).forEach(r=>r.onclick=()=>openEpisode(r.dataset.ep));
   $$("[data-new]",el).forEach(r=>r.onclick=()=>newEpisode(r.dataset.new));
   const tf=$('[data-tile="fri"]',el); if(tf) tf.onclick=()=>ep?openEpisode(ep.id):newEpisode(fri);
+  wireKit(el);
 }
 function newEpisode(fri){
   const max = Math.max(0,...vals("episodes").map(e=>+e.num||0));
