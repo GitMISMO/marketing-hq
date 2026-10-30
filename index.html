@@ -633,6 +633,8 @@
       var o = j.result || j; if (typeof o === 'string') { try { o = JSON.parse(o.replace(/^```(json)?|```$/g, '')); } catch (e) { o = { text: o }; } }
       return o || {}; }); }
   };
+  /* email notices (e.g. "approval needed" to Amy). The flow only sends to @mismo.org or @mba.org addresses. */
+  window.__hqImages.notify = function (to, subject, html) { return imgCall({ action: 'notify', to: to, subject: subject, html: html }); };
   var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
 
   /* ---------- the door ---------- */
@@ -1687,7 +1689,7 @@ async function connect(){
   try{ DL = await c.use("downloads"); }catch(e){ DL=null; }
   try{ SAMPLE = await c.use("sample"); }catch(e){ SAMPLE=null; }
   if(window.__hqRelay){
-    let can=true; try{ const u=await c.use("user"); if(u && u.can) can = await u.can(); }catch(e){}
+    let can=true; try{ const u=await c.use("user"); if(u && u.can) can = await u.can(); if(u && u.me){ const m=await u.me(); window.__hqWho = (m && (m.name||m.displayName)) || ""; } }catch(e){}
     const sb=$("#savebanner"); if(sb && can===false) sb.hidden=false;
     CANWRITE = can!==false;
     const n=$("#rail-save"); if(n) n.innerHTML = CANWRITE ? '<b>Saving</b><span class="ok">To MISMO\'s records · saves as you press Save</span>' : '<b>Saving</b><span class="no">'+(document.querySelector("#savebanner b")||{}).textContent+'</span>';
@@ -3604,6 +3606,30 @@ async function kitLoadTranscript(epId){
 /* ---------- MISMO LinkedIn Live (Monday 1 PM ET, streamed from Riverside, after Amy approves the wording) ---------- */
 const LI_STAT = {draft:["Draft","in"], review:["With Amy","review"], changes:["Changes Requested","changes"], approved:["Approved by Amy","ok"]};
 function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'?d Up\s*(Season\s*\d+,\s*)?Episode\s*\d+\s*:\s*/i,"").replace(/,\s*[^,]+$/,"").trim(); t="MISMO Mic'd Up: "+t; return t.length>75 ? t.slice(0,72).replace(/\s+\S*$/,"")+"…" : t; }
+const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};
+const MEDIA_URL = "https://resources.mismo.org/marketing-hq/#micdup";
+/* the "approval needed" email to Amy: plain, branded, works in Outlook */
+function liAmyEmail(e, k, name, desc, from){
+  const F='font-family:Arial,Helvetica,sans-serif;';
+  const para=t=>esc(t).replace(/\n/g,"<br>");
+  const when=fD(liDate(e))+", "+(e.linkedinTime||"1:00 PM ET");
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f6fa;padding:24px 0"><tr><td align="center">'+
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #d5e2ed">'+
+    '<tr><td style="background:#0d314c;padding:18px 28px;'+F+'color:#ffffff;font-size:13px;letter-spacing:2px;font-weight:bold">MISMO MEDIA <span style="color:#74bfeb;font-weight:normal">· APPROVAL NEEDED</span></td></tr>'+
+    '<tr><td style="padding:28px 28px 8px;'+F+'color:#0d314c"><div style="font-size:22px;font-weight:bold;line-height:1.3;margin:0 0 8px">Please approve the LinkedIn Live wording</div>'+
+      '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, the LinkedIn Live event for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+' is ready for your review. It streams from Riverside to MISMO\'s LinkedIn page on <b style="color:#0d314c">'+esc(when)+'</b>. Vanessa sets up the event once you approve.</div></td></tr>'+
+    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT NAME</div><div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd">'+esc(name)+'</div></td></tr>'+
+    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT DESCRIPTION</div><div style="font-size:15px;line-height:1.6;color:#0d314c;border-left:4px solid #74bfeb;padding:10px 12px;background:#f6fafd">'+para(desc)+'</div></td></tr>'+
+    '<tr><td style="padding:24px 28px 8px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="'+MEDIA_URL+'" style="display:inline-block;padding:12px 22px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Review and Approve in MISMO Media</a></td></tr></table>'+
+      '<div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:12px">On the MISMO Mic\'d Up page, open the YouTube Kit, step 6, and press <b>Approve</b>, or <b>Request Changes</b> with a note.</div></td></tr>'+
+    '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#7794aa;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Reply to this email with any questions.</td></tr>'+
+    '</table></td></tr></table>';
+}
+async function liSendAmy(e, k, name, desc, to){
+  const n=window.__hqImages && window.__hqImages.notify; if(!n) return false;
+  const who=(window.__hqWho||"");
+  try{ await n(to||LI_APPROVER.email, "Approval needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording", liAmyEmail(e,k,name,desc,who)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
+}
 function kitsWithAmy(){ return vals("kits").filter(k=>k.liStatus==="review" && S.episodes[k.id]); }
 function liLiveHtml(e,k,liText,thumbs){
   if(!liText) return '<div class="hint">Written in MISMO\'s voice from Brian\'s LinkedIn post, then reviewed by Amy.</div>';
@@ -3676,7 +3702,8 @@ function wireKit(el){
     await patch("episodes", eid, {youtubeUrl:u, youtubeDone:true}); toast("Saved"); renderMicdup(); };
   const liVals=()=>({liEventName:($("#kit-liname",el)||{}).value||"", linkedinCopy:($("#kit-li",el)||{}).value||""});
   const ls=$("#kit-lisave",el); if(ls) ls.onclick=async()=>{ await patch("episodes", eid, liVals()); toast("Saved"); };
-  const la=$("#kit-liamy",el); if(la) la.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"review", liSentAt:new Date().toISOString(), liNote:""})); toast("Sent to Amy. It shows under Waiting on Amy."); renderMicdup(); };
+  const la=$("#kit-liamy",el); if(la) la.onclick=async()=>{ la.disabled=true; const v=liVals(); await patch("episodes", eid, v); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"review", liSentAt:new Date().toISOString(), liNote:""}));
+    const ok=await liSendAmy(S.episodes[eid], kitOf(eid), v.liEventName, v.linkedinCopy); toast(ok?"Sent to Amy by email. It also shows under Waiting on Amy.":"Marked as with Amy.", 4000); renderMicdup(); };
   const lok=$("#kit-liok",el); if(lok) lok.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"approved", liApprovedAt:new Date().toISOString(), liApprovedBy:(window.__hqWho||"")})); toast("Approved. Vanessa can set up the event."); renderMicdup(); };
   const lch=$("#kit-lichg",el); if(lch) lch.onclick=async()=>{ const note=($("#kit-linote",el)||{}).value||""; if(!note.trim()){ toast("Say what to change in the note box."); return; } await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"changes", liNote:note})); toast("Sent back with your note."); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
