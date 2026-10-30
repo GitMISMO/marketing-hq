@@ -1700,7 +1700,7 @@ async function syncFeed(){
     const feed=await r.json();
     for(const v of (feed.episodes||[])){
       const m=String(v.title||"").match(/ep(?:isode)?\.?\s*(\d{1,3})/i); if(!m) continue;
-      const ep=vals("episodes").find(e=>+e.num===+m[1]); const url="https://www.youtube.com/watch?v="+v.id;
+      const ep=epByNum(m[1], String(v.published||v.date||"").slice(0,10)||T()); const url="https://www.youtube.com/watch?v="+v.id;
       if(ep && (!ep.youtubeDone || !ep.youtubeUrl)) await patch("episodes",ep.id,{youtubeDone:true, youtubeUrl:ep.youtubeUrl||url});
     }
   }catch(e){}
@@ -1746,7 +1746,22 @@ function edSections(ed){
 function editionFor(dateIso){
   return editionsSorted().find(e=>e.dates && e.dates.publish && dateIso<=e.dates.publish && dateIso>prevPublish(e)) || null;
 }
-function epsSorted(){ return vals("episodes").sort((a,b)=>(+b.num||0)-(+a.num||0)); }
+function epsSorted(){ return vals("episodes").sort((a,b)=>((+b.season||1)-(+a.season||1))||((+b.num||0)-(+a.num||0))); }
+/* Mic'd Up seasons: Season 2 starts over at Episode 1 (Nov 6, 2026) */
+function epTag(e){ return ((+e.season||1)>1?"S"+e.season+" ":"")+"Ep "+(e.num||"?"); }
+function epWord(e){ return ((+e.season||1)>1?"Season "+e.season+", ":"")+"Episode "+(e.num||"?"); }
+/* which episode a number means: the one whose Friday is nearest the date given (a later season reuses numbers) */
+function epByNum(n, near){
+  const d=near||T(), gap=e=>e.airDate?Math.abs(diff(e.airDate,d)):9999;
+  const c=vals("episodes").filter(e=>+e.num===+n).sort((a,b)=>gap(a)-gap(b));
+  if(!c.length) return null;
+  const top=Math.max(1,...vals("episodes").map(e=>+e.season||1));
+  // an old-season episode far from this date isn't the one meant: a new season reuses its number
+  if((+c[0].season||1)<top && gap(c[0])>45) return null;
+  return c[0];
+}
+function epNewId(n){ const top=Math.max(1,...vals("episodes").map(e=>+e.season||1)); return (top>1?"s"+top:"")+"ep"+String(n).padStart(3,"0"); }
+function epNewSeason(){ return String(Math.max(1,...vals("episodes").map(e=>+e.season||1))); }
 function epsInWindow(ed){ const a=prevPublish(ed), b=ed.dates.draft||ed.dates.publish; return vals("episodes").filter(e=>e.airDate && e.airDate>a && e.airDate<=ed.dates.publish).sort((x,y)=>(+x.num||0)-(+y.num||0)); }
 function newsEdition(n){ if(n.edition) return S.editions[n.edition]||null; return n.date ? editionFor(n.date) : null; }
 function newsInWindow(ed){ return vals("news").filter(n=>{ const e=newsEdition(n); return e && e.id===ed.id; }).sort((x,y)=>(x.date||"")<(y.date||"")?1:-1); }
@@ -1765,8 +1780,8 @@ function allEvents(){
   vals("episodes").forEach(ep=>{
     if(!ep.airDate) return;
     const old=!owes(ep);
-    if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up Ep "+(ep.num||"?")+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
-    const l=liDate(ep); if(l && (!old || ep.linkedinDone)) ev.push({date:l, k:"linkedin", label:"LinkedIn · Mic'd Up Ep "+(ep.num||"?"), done:!!ep.linkedinDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
+    if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up "+epTag(ep)+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
+    const l=liDate(ep); if(l && (!old || ep.linkedinDone)) ev.push({date:l, k:"linkedin", label:"LinkedIn · Mic'd Up "+epTag(ep), done:!!ep.linkedinDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
   fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), done:p.status==="done"||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
@@ -1971,7 +1986,7 @@ function renderOverview(){
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
       '<button class="tile" type="button" data-go="matters"><div class="v">'+inN+' of '+secs.length+'</div><div class="k">Sections In</div><div class="s">'+(ed?esc(monthName(ed.month))+' edition':'')+'</div></button>'+
       '<button class="tile" type="button" data-go="matters"><div class="v">'+amy+'</div><div class="k">Waiting on Amy</div><div class="s">sections and posts to review</div></button>'+
-      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?"Ep "+esc(ep.num||"?"):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
+      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
       '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
       '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
     '</div></div>'+
@@ -2108,7 +2123,7 @@ function openSection(ed,k,isNew){
   let fields=[];
   if(!SEC[k]) fields.push({k:"name",label:"Section Name",ph:"e.g. Summit Sponsor Spotlight",wide:true});
   if(auto){
-    const list = k==="micdup" ? epsInWindow(ed).map(e=>"Episode "+(e.num||"?")+": "+(e.title||"")+(e.youtubeDone?"":" (not on YouTube yet)")) : newsInWindow(ed).map(n=>(n.kind==="press"?"Press release · ":"")+(n.outlet?n.outlet+" – ":"")+(n.headline||""));
+    const list = k==="micdup" ? epsInWindow(ed).map(e=>epWord(e)+": "+(e.title||"")+(e.youtubeDone?"":" (not on YouTube yet)")) : newsInWindow(ed).map(n=>(n.kind==="press"?"Press release · ":"")+(n.outlet?n.outlet+" – ":"")+(n.headline||""));
     fields.push({sec:"What Goes In"},{k:"_auto",type:"html",html:()=>'<div class="ro">'+(list.length?esc(list.join("\n")).replace(/\n/g,"<br>"):"Nothing yet for this window ("+esc(fS(add(prevPublish(ed),1)))+" to "+esc(fS(ed.dates.publish))+"). Add it on the "+(k==="micdup"?"Mic'd Up":"In the News")+" page and it shows up here.")+'</div>'},
       {k:"intro",label:"Intro Line",type:"textarea",rows:3,ph:k==="micdup"?"MISMO Mic'd Up spotlights the voices shaping the future of real estate finance…":"MISMO regularly shares key updates…"});
   } else {
@@ -2206,7 +2221,7 @@ function buildEmail(ed, preview){
       if(s.k==="micdup"){
         const eps=epsInWindow(ed); if(!eps.length) return;
         inner+='<p style="'+F+'font-size:15px;margin:0 0 8px">Check out the latest episodes of MISMO Mic\'d Up on MISMO\'s YouTube Channel:</p>';
-        inner+=eps.map(e=>'<p style="'+F+'font-size:15px;line-height:1.5;margin:0 0 8px"><a href="'+esc(e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos")+'" style="color:#14486e;font-weight:bold">MISMO Mic\'d Up Episode '+esc(e.num||"")+': '+esc(e.title||"")+'</a>'+(e.guests?' with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'')+'</p>').join("");
+        inner+=eps.map(e=>'<p style="'+F+'font-size:15px;line-height:1.5;margin:0 0 8px"><a href="'+esc(e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos")+'" style="color:#14486e;font-weight:bold">MISMO Mic\'d Up '+esc(epWord(e))+': '+esc(e.title||"")+'</a>'+(e.guests?' with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'')+'</p>').join("");
       } else {
         const ns=newsInWindow(ed); if(!ns.length) return;
         const pr=ns.filter(n=>n.kind==="press"), mn=ns.filter(n=>n.kind!=="press");
@@ -2242,7 +2257,7 @@ function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
   on.forEach(s=>{ const d=s.doc, name=(d.name||s.meta.name).toUpperCase();
     let body=[];
-    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(d.intro); eps.forEach(e=>body.push("Episode "+e.num+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
+    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(d.intro); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(d.body).forEach(p=>body.push(p)); if(d.quote) body.push("“"+d.quote+"”"+(d.quoteBy?" — "+d.quoteBy:"")); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
@@ -2662,6 +2677,7 @@ const HELP = [
    <li><b>Post on YouTube</b>, then paste the YouTube link here. The kit also notices it by itself once the channel lists it.</li>
    <li><b>MISMO's LinkedIn post</b> is ready for Monday, and the YouTube link goes into it by itself.</li>
   </ol>
+  <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. Each episode has a Season, and a folder named "Ep. 1 - …" is matched to the episode whose Friday is closest, so it never lands on Season 1's Episode 1. Season 2 YouTube titles read "MISMO Mic'd Up Season 2, Episode 1: …".</p>
   <p><b>Pull In a Drive Folder</b> takes any Drive folder link, for an episode posted before the chat was connected. <b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
@@ -3468,7 +3484,8 @@ async function kitWrite(epId, force){
   try{
     toast("Writing the YouTube title, description and MISMO's LinkedIn post…", 60000);
     const o=await dr.write(k.folderName||("Ep. "+((S.episodes[epId]||{}).num||"")), k.brianPost);
-    const written={title:String(o.youtubeTitle||"").trim(), desc:String(o.youtubeDescription||o.text||"").trim(), li:String(o.linkedinPost||"").trim()};
+    const epx=S.episodes[epId]||{};
+    const written={title:String(o.youtubeTitle||"").trim().replace(/^MISMO Mic'?d Up Episode\s*(\d+)/i, (m0,n)=>"MISMO Mic'd Up "+((+epx.season||1)>1?"Season "+epx.season+", ":"")+"Episode "+n), desc:String(o.youtubeDescription||o.text||"").trim(), li:String(o.linkedinPost||"").trim()};
     await put("kits", epId, Object.assign({}, kitOf(epId), {written, writtenAt:new Date().toISOString()}));
     const e=S.episodes[epId]||{}, part={};
     if(!e.bvDescription) part.bvDescription=k.brianPost;
@@ -3494,8 +3511,8 @@ async function kitSync(){
       // which episode? read the folder name for the number
       let info; try{ info=await DRIVE().list(fid); }catch(e){ continue; }
       const n=parseFolder(info.name).num; if(!n) continue;
-      let ep=vals("episodes").find(e=>+e.num===n);
-      if(!ep){ const id="ep"+String(n).padStart(3,"0"); await put("episodes", id, {num:n, airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
+      let ep=epByNum(n, String(m.at||"").slice(0,10)||T());
+      if(!ep){ const id=epNewId(n); await put("episodes", id, {num:n, season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
       await kitPullFolder(ep.id, fid, m.id);
     }
     // Brian's LinkedIn posts: tie each to its episode
@@ -3503,7 +3520,7 @@ async function kitSync(){
       if(!msgIsPost(m) || vals("kits").some(k=>k.postChatId===m.id)) continue;
       const said=String(m.text||"").match(/ep(?:isode)?\.?\s*#?\s*(\d{1,3})/i);
       let target=null;
-      if(said){ const ep=vals("episodes").find(e=>+e.num===+said[1]); if(ep && kitOf(ep.id)) target=ep.id; }
+      if(said){ const ep=epByNum(said[1], String(m.at||"").slice(0,10)||T()); if(ep && kitOf(ep.id)) target=ep.id; }
       if(!target){ // the newest folder Brian posted before this, still waiting for its post
         const cands=vals("kits").filter(k=>!k.brianPost && k.chatId).map(k=>({k, at:(S.chat[k.chatId]||{}).at||k.pulledAt||""})).filter(x=>x.at<=String(m.at||"9")).sort((a,b)=>b.at.localeCompare(a.at));
         if(cands[0]) target=cands[0].k.id;
@@ -3599,7 +3616,7 @@ function kitCardHtml(){
       : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Waiting for Brian to paste his LinkedIn post in the MISMO MIC\'D UP chat. Or paste it here:</div><textarea id="kit-post" rows="4" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-postgo">Write It</button></div>'))+
     step(5,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+
     step(6,"MISMO's LinkedIn Post · Monday", !!e.linkedinDone, liText ? copyBox("kit-li","Post",liText,6)+'<div class="kbtns"><button class="btn sm" type="button" id="kit-lisave">Save Changes</button><span class="hint">'+(/\[YouTube link\]/i.test(liText)?"The YouTube link goes in by itself once the video is up.":"Ready for Monday "+esc(fS(liDate(e)))+".")+'</span></div>' : '<div class="hint">Written with the YouTube description.</div>');
-  return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>Episode '+esc(x.num||"?")+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||"")+'</span><div class="r"><a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div>'+
+  return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>'+esc(epWord(x))+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||"")+'</span><div class="r"><a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div>'+
     (k.brianPost?'<details class="kpost"><summary>Brian\'s LinkedIn post'+(k.brianPostUrl?' · <a href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">open ↗</a>':'')+'</summary><p>'+esc(k.brianPost).replace(/\n/g,"<br>")+'</p></details>':'')+
     '<div class="ksteps">'+body+'</div></div>';
 }
@@ -3609,8 +3626,8 @@ function wireKit(el){
   const add=$("#kit-add",el); if(add) add.onclick=()=>openPane({eye:"YouTube Kit", title:"Pull In a Drive Folder", data:{}, fields:[{k:"url",label:"Brian's Google Drive Folder Link",type:"url",wide:true,ph:"https://drive.google.com/drive/folders/…"}],
     buttons:[{label:"Pull It In", run:async v=>{ const m=String(v.url||"").match(FOLDER_RX); if(!m){ toast("That isn't a Google Drive folder link."); return; } closePane(true);
       let info; try{ info=await DRIVE().list(m[1]); }catch(err){ toast("Couldn't open that folder: "+(err.message||"try again"),5000); return; }
-      const n=parseFolder(info.name).num; let ep=n?vals("episodes").find(x=>+x.num===n):null;
-      if(!ep){ const id=n?"ep"+String(n).padStart(3,"0"):uid("ep"); await put("episodes", id, {num:n||"", airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
+      const n=parseFolder(info.name).num; let ep=n?epByNum(n, T()):null;
+      if(!ep){ const id=n?epNewId(n):uid("ep"); await put("episodes", id, {num:n||"", season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
       KIT.ep=ep.id; await kitPullFolder(ep.id, m[1], ""); renderMicdup(); }}]});
   if(!eid) return;
   const rp=$("#kit-repull",el); if(rp) rp.onclick=async()=>{ await kitPullFolder(eid, k.folderId, k.chatId); delete KIT.tx[eid]; renderMicdup(); };
@@ -3647,13 +3664,13 @@ function renderMicdup(){
   const run = slots.map(f=>{ const e=epOn(f); const past=f<t;
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const ed=editionFor(f);
-    return '<tr class="click'+(past&&e.youtubeDone&&e.linkedinDone?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>Ep '+esc(e.num||"?")+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
+    return '<tr class="click'+(past&&e.youtubeDone&&e.linkedinDone?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
       '<td>'+(e.fileUrl?'<a href="'+esc(e.fileUrl)+'" target="_blank" rel="noopener" class="tk on" title="Open Brian\'s file" onclick="event.stopPropagation()">↗</a>':tk(e.fileIn&&e.bvDescription, past, "File link and description from Brian"))+'</td><td>'+tk(e.captions, past, "Captions proofed and uploaded")+'</td><td>'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td>'+tk(e.linkedinDone, liDate(e)<t, "LinkedIn post Monday "+fS(liDate(e)))+'</td><td>'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
   const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(e.notes)+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td>'+tk(e.youtubeDone,false,"YouTube")+' '+tk(e.linkedinDone,false,"LinkedIn")+' '+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Every Friday at 7:30 AM. On YouTube that afternoon, on the MISMO LinkedIn page Monday, and in the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
     '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 7:30 AM</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
-      '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?"Ep "+esc(ep.num||"?"):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 7:30 AM</div></button>'+
+      '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 7:30 AM</div></button>'+
       '<div class="tile"><div class="v'+(ytDue.length?" hot":"")+'">'+ytDue.length+'</div><div class="k">Waiting for YouTube</div><div class="s">aired, not uploaded</div></div>'+
       '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Monday after each episode</div></div>'+
       '<div class="tile"><div class="v'+(webMissing.length?" hot":"")+'">'+webMissing.length+'</div><div class="k">Missing from Website</div><div class="s">on YouTube, not on the site\'s list</div></div>'+
@@ -3673,8 +3690,9 @@ function renderMicdup(){
   wireKit(el);
 }
 function newEpisode(fri){
-  const max = Math.max(0,...vals("episodes").map(e=>+e.num||0));
-  openEpisode(null, {num:max+1, airDate:fri, linkedinDate:add(fri,3)});
+  const season = Math.max(1,...vals("episodes").map(e=>+e.season||1));
+  const max = Math.max(0,...vals("episodes").filter(e=>(+e.season||1)===season).map(e=>+e.num||0));
+  openEpisode(null, {num:max+1, season:String(season), airDate:fri, linkedinDate:add(fri,3)});
 }
 function openEpisode(id, seed){
   const e = id ? Object.assign({}, S.episodes[id]) : Object.assign({}, seed||{});
@@ -3682,6 +3700,7 @@ function openEpisode(id, seed){
   const fields=[
     {sec:"The Episode"},
     {k:"num",label:"Episode Number",type:"number"},
+    {k:"season",label:"Season",type:"select",opts:[["1","Season 1"],["2","Season 2"],["3","Season 3"]]},
     {k:"airDate",label:"Friday It Runs",type:"date"},
     {k:"title",label:"Title",wide:true,ph:"e.g. Beyond the Next Loan: Building Trust, Community, and Influence"},
     {k:"guests",label:"Guests",ph:"e.g. Steve Manente and Mike Hallman"},
@@ -3712,7 +3731,7 @@ function openEpisode(id, seed){
     {k:"notes",label:"Notes",type:"textarea",rows:2}
   ];
   const nid = id || uid("ep");
-  openPane({eye:"MISMO Mic'd Up", title: e.num?("Episode "+e.num+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
+  openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
     save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); await put("episodes",nid,Object.assign({},e,v)); },
     del: id ? async()=>remove("episodes",id) : null,
     after:b=>{ const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
@@ -3781,7 +3800,7 @@ function wirePieceRows(el){
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
   const own=vals("pieces").filter(p=>p.channel==="linkedin");
-  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||e.linkedinDone)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up Episode "+(e.num||"?")+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
+  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||e.linkedinDone)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", status:e.linkedinDone?"done":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
   const upcoming=all.filter(p=>p.status!=="done" && p.date && p.date<=add(t,45)).sort((a,b)=>a.date<b.date?-1:1);
