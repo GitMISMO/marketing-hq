@@ -2388,7 +2388,7 @@ function buildEmail(ed, preview){
     (toc.length?'<tr><td style="padding:16px 30px;border-bottom:1px solid #e5eef5"><div style="'+F+'font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#7794aa;font-weight:bold;margin-bottom:6px">In This Issue</div><div style="line-height:1.9">'+toc.join(' &nbsp;·&nbsp; ')+'</div></td></tr>':'')+
     blocks.join("")+
     '<tr><td style="padding:26px 30px;border-top:1px solid #e5eef5"><p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 10px;color:#1d2b36">Engage with MISMO to shape the future of the mortgage industry. We have a chair at the table waiting for you.</p><p style="'+F+'font-size:14px;margin:0"><a href="'+SUBSCRIBE_URL+'" style="color:#14486e">Subscribe to MISMO Matters</a></p></td></tr>'+
-    '<tr><td style="background:#f6fafd;padding:18px 30px"><p style="'+F+'font-size:12px;line-height:1.5;color:#7794aa;margin:0">Mortgage Industry Standards Maintenance Organization · 1919 M Street, NW, 5th Floor · Washington, DC 20036<br>[Higher Logic unsubscribe and preferences links go here]</p></td></tr>'+
+    '<tr><td align="center" style="background:#f6fafd;padding:18px 30px;text-align:center"><p style="'+F+'font-size:12px;line-height:1.5;color:#7794aa;margin:0;text-align:center">Mortgage Industry Standards Maintenance Organization · 1919 M Street, NW, 5th Floor · Washington, DC 20036<br>[Higher Logic unsubscribe and preferences links go here]</p></td></tr>'+
     '</table></td></tr></table>';
 }
 function buildText(ed){
@@ -2406,7 +2406,7 @@ function buildText(ed){
 function previewView(ed){
   return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
     '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed,true)+'</div></div>'+
-    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block (or hand to Claude in Chrome to build). Each section has its own link, so a reader can share one story, and every section has a way back to the top.</p></div></div>';
+    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block. Each section has its own link, so a reader can share one story, and every section has a way back to the top.</p></div></div>';
 }
 function copyText(s, what){
   const done=()=>toast(what+" copied");
@@ -2743,7 +2743,7 @@ const HELP = [
    <li><b>Send each section to Amy.</b> <b>Save &amp; Send to Amy</b> marks it "With Amy for Review" and it shows in her count.</li>
    <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
    <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
-   <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b> and paste it into the email's HTML block, or hand it to Claude in Chrome to build. <b>Copy Plain Text</b> is the text-only version.</li>
+   <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b> and paste it into the email's HTML block. <b>Copy Plain Text</b> is the text-only version.</li>
    <li><b>Work the Send Checklist</b> and tick each step: lists refreshed, unsubscribes removed, links tested, test send reviewed, and the rest.</li>
    <li><b>Mark the milestones.</b> Click a date in the strip under the band to mark it done (click again to undo).</li>
    <li><b>Record the stats</b> a week later under <b>Stats</b>, unless the daily feed is filling them in.</li>
