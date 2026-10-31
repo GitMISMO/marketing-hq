@@ -2168,7 +2168,9 @@ function show(tab){
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
   if(typeof navOpenFor==="function") navOpenFor(tab);
-  try{ if(location.hash!=="#"+tab) history.replaceState(null,"","#"+tab); }catch(e){}
+  /* the address stays clean, so a bookmark or a reopened tab starts on Home; a reload in the same tab keeps your page */
+  try{ sessionStorage.setItem("mm.tab", tab); }catch(e){}
+  try{ if(location.hash) history.replaceState(null,"",location.pathname+location.search); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
 /* What the posting flow has already put on LinkedIn (data/posted.json, written only by the flow). */
@@ -5136,7 +5138,14 @@ function openList(id){
 /* ================= start ================= */
 $("#pane-x").onclick=()=>closePane();
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TABS.includes(h) && h!==TAB) show(h); });
-show(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home");
+(function(){
+  /* Opening MISMO Media lands on Home. A link that names a page (like Amy's email, #micdup) opens that page,
+     and reloading the same browser tab keeps the page you were on. Old bookmarks ending in #overview open Home. */
+  let start="home", h=location.hash.slice(1), kept=null;
+  try{ kept=sessionStorage.getItem("mm.tab"); }catch(e){}
+  if(h && TABS.includes(h) && h!=="overview") start=h; else if(kept && TABS.includes(kept)) start=kept;
+  show(start);
+})();
 badges();
 connect();
 </script>
