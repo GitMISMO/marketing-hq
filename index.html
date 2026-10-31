@@ -2748,7 +2748,7 @@ const HELP = [
    <li><b>Mark the milestones.</b> Click a date in the strip under the band to mark it done (click again to undo).</li>
    <li><b>Record the stats</b> a week later under <b>Stats</b>, unless the daily feed is filling them in.</li>
   </ol>
-  <p>The ring in the band shows the edition at a glance: each slice is a section, colored by where it stands. Click a slice to open that section.</p>`},
+  <p>The panel at the top shows the edition at a glance: the days to send, the next step, and a picture of the newsletter with one block per section, colored by where it stands. Click a block to open that section.</p>`},
  {id:"sections", t:"Working a Section", g:"MISMO Matters", b:`
   <h3>The Thirteen Sections</h3>
   <p>President's Vieaux Point, Summit Spotlight, MISMO Highlight, Workgroup Highlight, Sponsor Highlight, Implementation Success, MISMO Mic'd Up, Member Highlight, New Member Welcome, Education, Certifications, Engagement &amp; Events, and In the News. The names match the header graphics from the October edition.</p>
@@ -2780,7 +2780,7 @@ const HELP = [
   <div class="hflow">
    <div><span>Friday · 7:30 AM</span><b>Mic'd Up</b><small>Brian sends the Google Drive link and his description in Teams</small></div>
    <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with his description and proofed captions</small></div>
-   <div><span>Monday</span><b>MISMO LinkedIn</b><small>Post written from his description, driving to YouTube</small></div>
+   <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Next Edition</span><b>MISMO Matters</b><small>Listed by itself once it's on YouTube</small></div>
   </div>
   <ol>
@@ -2788,7 +2788,7 @@ const HELP = [
    <li><b>Paste Brian's whole Teams message</b> into "Paste Brian's Teams Message." The Google Drive link, his description and the episode number are pulled out for you. Check them and press <b>Save</b>.</li>
    <li><b>Upload to YouTube Friday afternoon.</b> Title: <i>MISMO Mic'd Up Episode NN: Title with Guest, Company</i>. Use Brian's description as written. Upload the caption file and proof every name; never burn captions into the video.</li>
    <li><b>Tick "Posted to YouTube"</b> and paste the link. On resources.mismo.org this happens by itself: the page reads the YouTube list the home page keeps and marks each episode with its link as soon as it's up.</li>
-   <li><b>Write Monday's LinkedIn post.</b> Press <b>Write the LinkedIn Post from Brian's Description</b>, read it over, post it on the MISMO page Monday, then tick "Posted on LinkedIn" and paste the post's link.</li>
+   <li><b>Monday's LinkedIn Live.</b> The YouTube Kit (below) has the event name and description. Send it to Amy for approval, then set up the LinkedIn Live for Monday 1:00 PM ET and tick "Posted on LinkedIn."</li>
    <li><b>The website</b> adds each episode on YouTube to its home page list by itself. <b>MISMO Matters</b> lists it in the next edition by itself.</li>
   </ol>
   <p>The checks on The Weekly Run are Brian (file and description), Captions, YouTube, LinkedIn and Website. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
@@ -2819,7 +2819,8 @@ const HELP = [
   <p><b>Pull In a Drive Folder</b> takes any Drive folder link, for an episode posted before the chat was connected. <b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
-   <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up posts (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
+   <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
+   <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
    <li><b>Ready to Reuse from MISMO Matters</b>: any section with LinkedIn ticked under "Also Use It In." <b>Make a Post</b> starts one with its headline and copy.</li>
    <li><b>News to Share</b>: articles from In the News not yet posted. <b>Make a Post</b> starts one with the link.</li>
    <li><b>Make a Post</b> starts a draft here in MISMO Media. It does not put anything on LinkedIn by itself.</li>
@@ -2844,6 +2845,7 @@ const HELP = [
   <p>To stop a staged post, untick "Stage it" before its time.</p>`},
  {id:"youtube", t:"YouTube", g:"Channels", b:`
   <ul>
+   <li><b>The top panel</b> shows the next upload in a player, with a bar and checklist for what's done (video, thumbnail, transcript, title and description, uploaded, website). The play button opens the YouTube Kit.</li>
    <li><b>Upload Queue</b>: episodes that have aired, or air this week, and aren't on YouTube yet.</li>
    <li><b>Captions to Fix</b>: episodes on YouTube without proofed captions.</li>
    <li><b>Every Upload</b> is the checklist: title format, Brian's description, captions, the Mic'd Up playlist, the website list and MISMO Matters.</li>
@@ -2853,7 +2855,7 @@ const HELP = [
   <p>Mailchimp is the stopgap while marketing email moves into Higher Logic. Log each campaign with its subject, audience (for example the compliance list or the tech list), send date and copy. Before any send, pull Mailchimp's latest unsubscribes into the one unsubscribe list. Results come from the Mailchimp export on Results, or the daily feed once it's set up.</p>`},
  {id:"summits", t:"Summits", g:"Channels", b:`
   <ul>
-   <li>Pick the summit at the top. The band counts the days to go, what's done and what's due.</li>
+   <li>Pick the summit at the top. The clock counts down to its first day, the ring shows how much of the marketing is done, and the timeline puts every task on one line: blue before, gold at the summit, pink after, green when done, red when past due. Click a dot to open that task.</li>
    <li><b>Load the Standard Summit Plan</b> lays out about 27 posts and emails before, during and after, dated from the summit's first day: save the date, registration open, early-bird reminders, agenda highlights, speaker spotlights, sponsor thank-yous, countdown, know-before-you-go, daily posts at the summit, award winners, the thank-you and survey, the recap and the MISMO Matters Summit Spotlight. Anything already past is skipped.</li>
    <li>Tick tasks off as they're done. Click one to change its date, owner, where it goes or its copy. <b>+ New Task</b> adds your own.</li>
    <li>Summit planning (the agenda, Run of Show, hotel) stays in Summit HQ. This page is only the marketing.</li>
