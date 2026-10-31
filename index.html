@@ -1262,6 +1262,14 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .phase{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
 @media(max-width:1000px){.phase{grid-template-columns:minmax(0,1fr)}}
 .phase .card+.card{margin-top:0}
+.qrtabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.qrtabs button{background:var(--surface);border:1px solid var(--border);border-radius:5px;color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;cursor:pointer}
+.qrtabs button:hover{border-color:var(--border-strong);color:var(--ink)}
+.qrtabs button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+:root[data-theme="dark"] .qrtabs button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:#06202f}
+.qrwrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+#qr-frame{display:block;width:100%;height:max(640px,calc(100vh - 250px));border:0}
+@media(max-width:640px){#qr-frame{height:calc(100vh - 210px)}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -1618,6 +1626,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="images" title="Image Library">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
       <span>Image Library</span></button>
+    <button type="button" data-hq="qr" title="QR Codes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+      <span>QR Codes</span></button>
     <div class="navsep">Help</div>
     <button type="button" data-hq="help" title="Help">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
@@ -1655,6 +1666,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-people" hidden></section>
   <section class="page" id="page-lists" hidden></section>
   <section class="page" id="page-images" hidden></section>
+  <section class="page" id="page-qr" hidden></section>
   <section class="page" id="page-branding" hidden></section>
   <section class="page" id="page-orders" hidden></section>
   <section class="page" id="page-requests" hidden></section>
@@ -2033,7 +2045,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","requests","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","results","news","people","lists","images","help"];
+const TABS=["overview","requests","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","results","news","people","lists","images","qr","help"];
 let TAB="overview";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -2054,7 +2066,7 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
@@ -2979,6 +2991,14 @@ const HELP = [
   <ul>
    <li><b>Claude version:</b> in the page's own private image store.</li>
    <li><b>resources.mismo.org version:</b> MISMO's SharePoint. New pictures are saved to Q Drive › MISMO › Active Documents › Marketing › Marketing HQ Images, in a folder for each month. <b>Add from SharePoint</b> lists pictures that are already in SharePoint (Branding - 2026, for example) without copying them. Only people signed in with access to MISMO Media can see or add them.</li>
+  </ul>`},
+ {id:"qr", t:"QR Codes", g:"Sources", b:`
+  <p>The QR Code Manager now opens inside MISMO Media: <b>QR Codes</b> in the left menu. The tabs across the top are its sections: <b>Overview</b>, <b>All Codes</b>, <b>New Code</b>, <b>Scan Activity</b> and <b>What Scanners See</b>.</p>
+  <ul>
+   <li><b>Make a code:</b> <b>New Code</b> asks what it's for, who it's for, where it's printed and where it should go, with start and end dates. Download the code as a picture for print, slides or signs.</li>
+   <li><b>Change where it goes</b> any time by opening the code; nothing needs reprinting. Turn a code off, or let it expire, and scanners see a friendly page with who to contact.</li>
+   <li><b>Scan Activity</b> counts scans by code, device and region.</li>
+   <li>Printed codes point to resources.mismo.org/qr/, so the manager also still opens on its own there (<b>Open on Its Own</b>). Its records are the same either way.</li>
   </ul>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Sources", b:`
   <ul>
@@ -4252,6 +4272,84 @@ function wireGuestPane(b, id){
       msg.textContent="Sent to Brian."; }catch(err){ msg.textContent="Didn't send: "+(err.message||"try again"); }
     m.disabled=false; };
 }
+/* ================= QR Codes =================
+   The QR Code Manager (GitMISMO/qr, served at resources.mismo.org/qr/) inside MISMO Media.
+   It stays where it is, because every printed code points to resources.mismo.org/qr/?c=CODE,
+   and it keeps its own records and sign-in. This page shows it in a frame on the same site,
+   hides its own masthead and menu, and drives its sections from the tabs here. */
+const QR_URL = "https://resources.mismo.org/qr/";
+const QR_TABS = [["overview","Overview"],["codes","All Codes"],["new","New Code"],["scans","Scan Activity"],["scanner","What Scanners See"]];
+let QR_SUB = "overview";
+const QR_CSS =
+  ".hqtop,.hq.rail,.railscrim{display:none!important}" +
+  "body,body.railmini,body:not(.railmini){padding-left:0!important}" +
+  ".wrap{padding-block:18px 60px!important;padding-inline:4px!important}" +
+  ".panel.wide,body.railmini .panel.wide{width:min(1320px,calc(100vw - 24px))!important}" +
+  ".signwrap{padding-block:24px!important}";
+
+function qrSameSite(){ return location.hostname === "resources.mismo.org"; }
+function qrDoc(){ const f = $("#qr-frame"); try{ return f && f.contentDocument; }catch(e){ return null; } }
+
+function qrDress(){
+  const d = qrDoc(); if(!d || !d.documentElement) return;
+  if(!d.getElementById("mm-embed")){
+    const s = d.createElement("style"); s.id = "mm-embed"; s.textContent = QR_CSS;
+    (d.head || d.documentElement).appendChild(s);
+  }
+  const th = document.documentElement.getAttribute("data-theme");
+  if(th) d.documentElement.setAttribute("data-theme", th); else d.documentElement.removeAttribute("data-theme");
+  qrMark();
+}
+/* Which of its sections is showing, read from its own (hidden) menu. */
+function qrMark(){
+  const d = qrDoc(); let cur = QR_SUB;
+  if(d){ const b = d.querySelector('.hq nav button[aria-current]'); if(b && b.dataset.hq) cur = b.dataset.hq; }
+  QR_SUB = cur;
+  $$("#qr-tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.qr === cur ? "true" : "false"));
+  const ro = d && d.body && d.body.classList.contains("viewonly");
+  const nb = $('#qr-tabs button[data-qr="new"]'); if(nb) nb.hidden = !!ro;
+}
+function qrGo(sub){
+  const d = qrDoc(), b = d && d.querySelector('.hq nav button[data-hq="' + sub + '"]');
+  if(b){ b.click(); QR_SUB = sub; setTimeout(qrMark, 50); }
+  else { QR_SUB = sub; qrMark(); }
+}
+
+function renderQr(){
+  const el = $("#page-qr");
+  if(el.dataset.built){ qrDress(); return; }
+  const head = '<div class="phead"><div><div class="eyebrow">Codes for Print, Signs and Slides</div><h1>QR Codes</h1>' +
+    '<div class="sub">Make a code once and change where it goes any time, without reprinting. Every code\'s scans are counted here.</div></div>' +
+    '<div class="tools"><a class="btn" href="' + QR_URL + '" target="_blank" rel="noopener">Open on Its Own ↗</a></div></div>';
+  if(!qrSameSite()){
+    el.innerHTML = head + '<div class="band"><div class="today">QR Code Manager</div><div class="say">The QR Code Manager opens inside MISMO Media at resources.mismo.org. ' +
+      'Here, use <a href="' + QR_URL + '" target="_blank" rel="noopener" style="color:var(--sky)">resources.mismo.org/qr/</a>.</div></div>';
+    return;
+  }
+  el.dataset.built = "1";
+  el.innerHTML = head +
+    '<div class="qrtabs" id="qr-tabs" role="toolbar" aria-label="QR Code Manager sections">' +
+      QR_TABS.map(t => '<button type="button" data-qr="' + t[0] + '" aria-pressed="' + (t[0] === QR_SUB) + '">' + t[1] + '</button>').join("") +
+    '</div>' +
+    '<div class="qrwrap"><iframe id="qr-frame" title="QR Code Manager" src="' + QR_URL + '"></iframe></div>';
+  $$("#qr-tabs button").forEach(b => b.onclick = () => qrGo(b.dataset.qr));
+  const f = $("#qr-frame");
+  f.addEventListener("load", () => {
+    qrDress();
+    const d = qrDoc(); if(!d) return;
+    /* keep the tabs here in step when it changes section by itself (a card, a search hit) */
+    try{
+      const nav = d.querySelector(".hq nav");
+      if(nav) new MutationObserver(qrMark).observe(nav, {subtree:true, attributes:true, attributeFilter:["aria-current"]});
+      new MutationObserver(qrMark).observe(d.body, {attributes:true, attributeFilter:["class"]});
+    }catch(e){}
+    if(QR_SUB !== "overview") qrGo(QR_SUB);
+  });
+  /* its sign-in check can land after load; dress it again once it settles */
+  [600, 1500, 3500].forEach(ms => setTimeout(qrDress, ms));
+}
+/* Follow MISMO Media's light and dark mode. */
+try{ new MutationObserver(() => { if(TAB === "qr") qrDress(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]}); }catch(e){}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
