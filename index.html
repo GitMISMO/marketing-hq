@@ -2796,7 +2796,7 @@ const HELP = [
  {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
   <p>Everything Vanessa needs to post an episode on YouTube and on MISMO's LinkedIn is filled in for her. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>.</p>
   <ol>
-   <li><b>Brian posts the episode's Google Drive folder</b> in the MISMO MIC'D UP Teams chat. The "Mic'd Up Chat" flow sends every message in that chat to MISMO Media.</li>
+   <li><b>Pull in Brian's Google Drive folder.</b> Press <b>Pull In a Drive Folder</b> and paste the episode's folder link (Brian shares it in Teams; Teams messages themselves are never kept in MISMO Media).</li>
    <li><b>MISMO Media opens the folder by itself</b> and picks out the files:
      <ul>
        <li>The final video: the largest .mp4. Its name sometimes says Full Episode.</li>
@@ -2804,7 +2804,7 @@ const HELP = [
        <li>The transcript: untitled.txt.</li>
      </ul>
      It works out the episode from the folder name ("Ep. 51 - …").</li>
-   <li><b>Brian pastes his LinkedIn post in the same chat.</b> The "Mic'd Up Writer" prompt in Power Automate rewrites it in MISMO's voice: the YouTube title, the YouTube description and the description for MISMO's LinkedIn Live event. If his post doesn't come through the chat, paste it into step 4 of the kit.</li>
+   <li><b>Paste Brian's LinkedIn post</b> into step 4 of the kit. The "Mic'd Up Writer" prompt in Power Automate rewrites it in MISMO's voice: the YouTube title, the YouTube description and the description for MISMO's LinkedIn Live event.</li>
   </ol>
   <p>Then the kit walks through the upload:</p>
   <ol>
@@ -2816,7 +2816,7 @@ const HELP = [
    <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> the episode streams from Riverside to MISMO's LinkedIn page, so there's no YouTube link. The kit has the event name and description, written in MISMO's voice. Press <b>Send to Amy for Approval</b>: Amy gets an email with the wording and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself (the "MISMO Media - Amy Replies" flow reads replies whose subject has the [MM:…] tag). With edits, the kit shows her wording; update the description to match and press <b>Edits Made: Ready to Set Up</b>. Until she replies it shows under Waiting on Amy on the Schedule. Once it's approved, the copy buttons appear, with the steps to create the event on MISMO's page (cover image: the thumbnail from step 2). Paste the event link when it's set up, and press <b>Mark as Streamed</b> after Monday.</li>
   </ol>
   <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. Each episode has a Season, and a folder named "Ep. 1 - …" is matched to the episode whose Friday is closest, so it never lands on Season 1's Episode 1. Season 2 YouTube titles read "MISMO Mic'd Up Season 2, Episode 1: …".</p>
-  <p><b>Pull In a Drive Folder</b> takes any Drive folder link, for an episode posted before the chat was connected. <b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
+  <p><b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
@@ -3548,11 +3548,11 @@ function openRequest(id){
 }
 /* ================= Mic'd Up YouTube Kit ================= */
 /* Everything Vanessa needs to put an episode on YouTube and on MISMO's LinkedIn, filled in
-   for her. The "Mic'd Up Chat" flow sends every message in the MISMO MIC'D UP Teams chat to
-   data/chat.json. When Brian posts an episode's Google Drive folder, MISMO Media opens the
+   for her. Teams messages are never kept in MISMO Media. When someone pastes an episode's
+   Google Drive folder link (Pull In a Drive Folder), MISMO Media opens the
    folder (through the Marketing HQ Images flow), finds the final video (the largest .mp4),
    the generated-image thumbnails and the untitled.txt transcript, and files them on the
-   episode. When Brian pastes his LinkedIn post in the chat, the "Mic'd Up Writer" prompt
+   episode. When Brian's LinkedIn post is pasted into the kit, the "Mic'd Up Writer" prompt
    rewrites it in MISMO's voice: the YouTube title and description and MISMO's LinkedIn post.
    The kit for each episode lives in the "kits" collection under the episode's id. */
 const KIT = {ep:"", busy:{}, tx:{}, txIssues:{}, tried:{}};
@@ -3791,7 +3791,7 @@ function liLiveHtml(e,k,liText,thumbs){
 function kitEpisodes(){ return vals("kits").filter(k=>k.folderId && S.episodes[k.id]).map(k=>S.episodes[k.id]).sort((a,b)=>(+b.num||0)-(+a.num||0)); }
 function kitCardHtml(){
   const eps=kitEpisodes();
-  if(!eps.length) return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><span class="note">fills in on its own from the MISMO MIC\'D UP chat</span><div class="r"><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div><div class="empty">When Brian posts an episode\'s Google Drive folder in the MISMO MIC\'D UP chat, the video, thumbnail, transcript, title and description land here, ready to copy into YouTube. You can also press Pull In a Drive Folder and paste the folder link.</div></div>';
+  if(!eps.length) return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><span class="note">from Brian\'s Google Drive folder</span><div class="r"><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div><div class="empty">Press <b>Pull In a Drive Folder</b> and paste the episode\'s Google Drive folder link. The video, thumbnails and transcript land here, then the title and description are written, ready to copy into YouTube.</div></div>';
   if(!KIT.ep || !eps.find(e=>e.id===KIT.ep)) KIT.ep=eps[0].id;
   const e=S.episodes[KIT.ep], k=kitOf(KIT.ep)||{}, w=k.written||{};
   const tx=KIT.tx[KIT.ep], iss=KIT.txIssues[KIT.ep]||[];
@@ -3807,7 +3807,7 @@ function kitCardHtml(){
         '<div class="ktx">'+(iss.length ? '<div class="ktx-h"><b>'+iss.length+' thing'+(iss.length===1?"":"s")+' to fix</b><span class="hint">Untick any that are right as they are.</span></div><div class="ktx-l">'+iss.map((x,i)=>'<label class="ktx-r"><input type="checkbox" data-ktx="'+i+'" checked> <s>'+esc(x.found)+'</s> → <b>'+esc(x.fix)+'</b> <small>'+x.n+'× · '+esc(x.why)+'</small></label>').join("")+'</div>' : '<div class="ktx-ok">No misspelled names or MISMO terms found.</div>')+
         '<div class="kbtns"><button class="btn sm pri" type="button" id="kit-txdl">Download '+(iss.length?"Corrected ":"")+'Transcript (.txt)</button><button class="btn sm" type="button" id="kit-txok">'+(k.txOk?"Checked ✓":"Mark as Checked")+'</button><label class="hint ktx-add">Other names to check: <input type="text" id="kit-names" value="'+esc(k.extraNames||"")+'" placeholder="e.g. Dave Savage, Homebase"></label></div></div>'))+
     step(4,"YouTube Title and Description", !!(w.title||w.desc), (w.title||w.desc) ? copyBox("kit-title","Title",e.ytTitle||w.title)+copyBox("kit-desc","Description",w.desc,8)+'<div class="kbtns"><button class="btn sm" type="button" id="kit-rewrite">Write Again</button><span class="hint">Written in MISMO\'s voice from Brian\'s LinkedIn post.</span></div>'
-      : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Waiting for Brian to paste his LinkedIn post in the MISMO MIC\'D UP chat. Or paste it here:</div><textarea id="kit-post" rows="4" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-postgo">Write It</button></div>'))+
+      : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Paste Brian\'s LinkedIn post here:</div><textarea id="kit-post" rows="4" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-postgo">Write It</button></div>'))+
     step(5,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+
     step(6,"MISMO LinkedIn Live · "+esc(fD(liDate(e)))+" at "+esc(e.linkedinTime||"1:00 PM ET"), !!e.linkedinDone, liLiveHtml(e,k,liText,thumbs));
   return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>'+esc(epWord(x))+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||"")+'</span><div class="r"><a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div>'+
