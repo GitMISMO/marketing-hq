@@ -2321,8 +2321,7 @@ function show(tab){
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
   if(typeof navOpenFor==="function") navOpenFor(tab);
-  /* the address stays clean, so a bookmark or a reopened tab starts on Home; a reload in the same tab keeps your page */
-  try{ sessionStorage.setItem("mm.tab", tab); }catch(e){}
+  /* the address stays clean, so a bookmark, a refresh or a reopened tab starts on Home */
   try{ if(location.hash) history.replaceState(null,"",location.pathname+location.search); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
@@ -5439,12 +5438,11 @@ function openList(id){
 $("#pane-x").onclick=()=>closePane();
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TABS.includes(h) && h!==TAB) show(h); });
 (function(){
-  /* Opening MISMO Media lands on Home. A link that names a page (like Amy's email, #micdup) opens that page,
-     and reloading the same browser tab keeps the page you were on. Old bookmarks ending in #overview open Home. */
-  let start="home", h=location.hash.slice(1), kept=null;
-  try{ kept=sessionStorage.getItem("mm.tab"); }catch(e){}
-  if(h && TABS.includes(h) && h!=="overview") start=h; else if(kept && TABS.includes(kept)) start=kept;
-  show(start);
+  /* MISMO Media always opens on Home, including a refresh or a reopened tab.
+     Only a link that names a page (like Amy's email, #micdup) opens that page instead. Old #overview links open Home. */
+  const h=location.hash.slice(1);
+  try{ sessionStorage.removeItem("mm.tab"); }catch(e){}
+  show(h && TABS.includes(h) && h!=="overview" ? h : "home");
 })();
 badges();
 connect();
