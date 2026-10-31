@@ -2731,7 +2731,7 @@ const HELP = [
    <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
    <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, logs In the News, and records stats.</td></tr>
    <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
-   <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends the episode's Google Drive link and his description in Teams.</td></tr>
+   <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
    <tr><td><b>Contributors</b></td><td>Facilitators (through Kathryn), sponsors and members send copy, quotes and headshots to Kelly. They don't need to log in.</td></tr>
   </tbody></table>`},
  {id:"schedule", t:"The Schedule", g:"Pages", b:`
@@ -2810,46 +2810,48 @@ const HELP = [
   </ul>`},
  {id:"micdup", t:"The Weekly Mic'd Up Run", g:"Channels", b:`
   <div class="hflow">
+   <div><span>2–3 Weeks Ahead</span><b>Guest Form</b><small>The guest fills in bio, topics and questions</small></div>
    <div><span>1–2 Weeks Ahead</span><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>
+   <div><span>Same Day</span><b>Into SharePoint</b><small>Video, thumbnails and transcript in the episode folder</small></div>
    <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile; Spotify at 6:30 AM</small></div>
-   <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with his description and proofed captions</small></div>
+   <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with the written description and proofed captions</small></div>
    <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
-   <div><span>Next Edition</span><b>MISMO Matters</b><small>Listed by itself once it's on YouTube</small></div>
+   <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
   </div>
+  <h3>Before Recording</h3>
   <ol>
-   <li><b>Open Friday's row</b> on The Weekly Run (or press <b>+ Add Episode</b>).</li>
-   <li><b>Fill in the episode:</b> guest, company and the <b>Recorded On</b> date once Brian records it. Friday morning, tick <b>On Spotify</b> and paste its link.</li>
-   <li><b>Upload to YouTube Friday afternoon.</b> Title: <i>MISMO Mic'd Up Episode NN: Title with Guest, Company</i>. Use Brian's description as written. Upload the caption file and proof every name; never burn captions into the video.</li>
-   <li><b>Tick "Posted to YouTube"</b> and paste the link. On resources.mismo.org this happens by itself: the page reads the YouTube list the home page keeps and marks each episode with its link as soon as it's up.</li>
-   <li><b>Monday's LinkedIn Live.</b> The YouTube Kit (below) has the event name and description. Send it to Amy for approval, then set up the LinkedIn Live for Monday 1:00 PM ET and tick "Posted on LinkedIn."</li>
-   <li><b>The website</b> adds each episode on YouTube to its home page list by itself. <b>MISMO Matters</b> lists it in the next edition by itself.</li>
+   <li><b>Add the episode</b> on The Weekly Run (or open Friday's row): guest, company, guest email.</li>
+   <li><b>Send the guest form.</b> In the episode, under <b>Guest and Run of Show</b>, press <b>Copy Guest Form Link</b> and send it to the guest. It asks for name pronunciation, title, bio, LinkedIn, topics, four questions they'd like, anything to avoid, and where to send their share kit. No sign-in. Answers show in the episode by themselves.</li>
+   <li><b>Draft the Run of Show</b> from the guest's answers, edit it, then <b>Email the Run of Show to Brian</b>.</li>
   </ol>
-  <p>The checks on The Weekly Run are Recorded (the Recorded On date in the episode), Captions, Spotify, YouTube, LinkedIn and Website. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
-  <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late, missing captions, waiting for YouTube or LinkedIn, or missing from the website. Everything from Episode 51 on is tracked.</p>`},
+  <h3>The SharePoint Folder</h3>
+  <p>Each Season 2 episode gets its own folder by itself, in Q Drive › MISMO › Active Documents › Marketing › MISMO Mic'd Up › Season 2, named like <i>S2 Ep 01 - Xactus</i>. <b>Open the Folder</b> in the episode or the kit goes straight there. Brian drops in the final video, the thumbnails and the transcript (.txt). Every ten minutes MISMO Media checks folders that are still missing something and pulls the files in: the largest video is the episode, other videos are clips, pictures go to the Image Library, and the Recorded On date fills itself in.</p>
+  <h3>Release Week</h3>
+  <ol>
+   <li><b>Friday morning:</b> tick <b>On Spotify</b> and paste its link (step 6 of the kit).</li>
+   <li><b>Friday afternoon:</b> work the YouTube Kit (below) and upload. Title: <i>MISMO Mic'd Up Season 2, Episode N: Title with Guest, Company</i>. Upload the proofed captions; never burn captions into the video.</li>
+   <li><b>Monday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
+   <li><b>Clips:</b> <b>Plan the Clip Posts</b> puts four LinkedIn posts on the schedule (4, 7, 11 and 14 days later, 9:00 AM, Vanessa) with captions already written.</li>
+   <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
+   <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube. Spotify plays go in the episode's Results and add up on the Results page.</li>
+  </ol>
+  <p>The checks on The Weekly Run are Recorded, Captions, Spotify, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
+  <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late or missing anything. Everything from Episode 51 on is tracked.</p>`},
  {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
-  <p>Everything Vanessa needs to post an episode on YouTube and on MISMO's LinkedIn is filled in for her. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>.</p>
+  <p>Everything Vanessa needs to post an episode is filled in for her. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>. Once Brian's files are in the SharePoint folder, the episode's card appears by itself; <b>Check the Folder</b> looks again right away.</p>
   <ol>
-   <li><b>Pull in Brian's Google Drive folder.</b> Press <b>Pull In a Drive Folder</b> and paste the episode's folder link (Brian shares it in Teams; Teams messages themselves are never kept in MISMO Media).</li>
-   <li><b>MISMO Media opens the folder by itself</b> and picks out the files:
-     <ul>
-       <li>The final video: the largest .mp4. Its name sometimes says Full Episode.</li>
-       <li>The thumbnails: the generated-image files. They go into the Image Library, tagged Mic'd Up.</li>
-       <li>The transcript: untitled.txt.</li>
-     </ul>
-     It works out the episode from the folder name ("Ep. 51 - …").</li>
-   <li><b>Paste Brian's LinkedIn post</b> into step 4 of the kit. The "Mic'd Up Writer" prompt in Power Automate rewrites it in MISMO's voice: the YouTube title, the YouTube description and the description for MISMO's LinkedIn Live event.</li>
+   <li><b>Video:</b> <b>Download</b> the final video from SharePoint, or <b>Watch</b> it there.</li>
+   <li><b>Thumbnail:</b> when there are two, press <b>Use This One</b> on the one to use, then <b>Download</b> it.</li>
+   <li><b>Transcript:</b> <b>Check</b> lists misspelled names and MISMO terms (MISMO, Mic'd Up, Vieaux, eNote, eClose, eVault, SMART Doc, the guest's name and more). Untick anything that's right as it is, then <b>Download Corrected Transcript</b> and upload it to YouTube as the captions.</li>
+   <li><b>Titles, Descriptions and Posts:</b> press <b>Write Everything</b>. In about 20 seconds, the "MISMO Media - Writer" prompt reads the transcript and the guest's answers and writes title options, the YouTube title and description, chapters, a longer description, Brian's promo post, the LinkedIn Live event name and description, the MISMO Matters blurb, a post for the guest and clip captions. Copy what you need. <b>Write Again</b> asks for a new version; <b>Draft Article</b> writes a 600–800 word viewpoint piece in Brian's voice.</li>
+   <li><b>YouTube:</b> post it, then paste the link. The kit also notices it by itself once the channel lists it.</li>
+   <li><b>Spotify:</b> paste the Spotify link and save.</li>
+   <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Monday.</li>
+   <li><b>Clips:</b> download any clip files from the folder, with their written captions. <b>Plan the Clip Posts</b> puts four on the LinkedIn schedule.</li>
+   <li><b>Guest share kit:</b> copy the guest's post, <b>Email the Guest</b>, then <b>Mark as Sent</b>.</li>
   </ol>
-  <p>Then the kit walks through the upload:</p>
-  <ol>
-   <li><b>Download the final video</b> from Google Drive.</li>
-   <li><b>Thumbnail:</b> when there are two, press <b>Use This One</b> on the one that matches Brian's LinkedIn post, then <b>Download</b> it.</li>
-   <li><b>Check the transcript:</b> <b>Check untitled.txt</b> lists misspelled names and MISMO terms (MISMO, Mic'd Up, Vieaux, eNote, eClose, eVault, SMART Doc, the guest's name from the folder and more). Untick anything that's right as it is, then <b>Download Corrected Transcript</b> and upload it to YouTube as the captions. Add other names to watch for in the box.</li>
-   <li><b>Title and description:</b> copy each into YouTube Studio. <b>Write Again</b> asks for a new version.</li>
-   <li><b>Post on YouTube</b>, then paste the YouTube link here. The kit also notices it by itself once the channel lists it.</li>
-   <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> the episode streams from Riverside to MISMO's LinkedIn page, so there's no YouTube link. The kit has the event name and description, written in MISMO's voice. Press <b>Send to Amy for Approval</b>: Amy gets an email with the wording and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself (the "MISMO Media - Amy Replies" flow reads replies whose subject has the [MM:…] tag). With edits, the kit shows her wording; update the description to match and press <b>Edits Made: Ready to Set Up</b>. Until she replies it shows under Waiting on Amy on the Schedule. Once it's approved, the copy buttons appear, with the steps to create the event on MISMO's page (cover image: the thumbnail from step 2). Paste the event link when it's set up, and press <b>Mark as Streamed</b> after Monday.</li>
-  </ol>
-  <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. Each episode has a Season, and a folder named "Ep. 1 - …" is matched to the episode whose Friday is closest, so it never lands on Season 1's Episode 1. Season 2 YouTube titles read "MISMO Mic'd Up Season 2, Episode 1: …".</p>
-  <p><b>Pull Again</b> rereads the folder if Brian adds files.</p>`},
+  <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. YouTube titles read "MISMO Mic'd Up Season 2, Episode 1: …". Older Season 1 episodes that came through Google Drive keep their Drive buttons.</p>
+  <p>Teams messages are never kept in MISMO Media.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
