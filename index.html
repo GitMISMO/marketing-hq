@@ -1355,6 +1355,133 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .hs-steps li.on span{color:var(--ink-2)}.hs-steps li.nx span{color:var(--ink);font-weight:700}
 .hs-next{font-size:12.5px;color:var(--ink-2)}.hs-next b{color:var(--ink)}
 @media(max-width:600px){.hs-steps li span{display:none}.hm-need{grid-template-columns:58px minmax(0,1fr)}.hm-hero{padding:18px 16px}.hm-hi h1{font-size:25px}}
+/* Mailchimp hero: the next send, in an inbox */
+.hlbl.t-mc{--hc:#f2c94c}
+.wk.wk14{grid-template-columns:repeat(14,minmax(0,1fr));gap:4px;max-width:560px}
+.wk14 .wkd{min-height:56px;padding:6px 1px 7px}.wk14 .wkd b{font-size:15px}.wk14 .wkd span{font-size:9px;letter-spacing:.04em}
+.mbox{background:#fff;color:#1d2226;border-radius:10px;box-shadow:0 26px 50px -18px rgba(0,0,0,.65);overflow:hidden;width:100%;max-width:520px;justify-self:center}
+.mbox-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#f3f5f7;border-bottom:1px solid #e3e7eb}
+.mbox-h b{font-size:13px}.mbox-h small{margin-left:auto;font-size:11.5px;color:#6b7785}
+.mdots{display:inline-flex;gap:5px}.mdots i{width:9px;height:9px;border-radius:50%;background:#d6dbe0}.mdots i:first-child{background:#f2c94c}
+.mrow{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:start;padding:11px 14px;border-bottom:1px solid #eef1f4;width:100%}
+.mrow:hover{background:#f8fafb}.mrow:focus-visible{outline:2px solid var(--sky);outline-offset:-2px}
+.mrow.next{background:#fffaeb;box-shadow:inset 3px 0 0 #f2c94c}
+.mfrom b{display:block;font-size:13px}.mfrom em{display:block;font-style:normal;font-size:11px;color:#6b7785;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.msub{min-width:0}.msub b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.msub small{display:block;font-size:12px;color:#6b7785;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}
+.mwhen{font-size:11.5px;color:#6b7785;white-space:nowrap;text-align:right}
+.msched{display:block;font-style:normal;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#a2701a;background:#fdf1cf;border-radius:3px;padding:1px 6px;margin-bottom:3px}
+.mempty{padding:22px 16px;font-size:13px;color:#6b7785}
+.mlast{padding:10px 14px 12px;background:#fafbfc}.mlast>span{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;color:#6b7785;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mstats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.mstats b{display:block;font-size:18px;color:#0d314c}.mstats small{font-size:11px;color:#6b7785}
+@media(max-width:600px){.mstats{grid-template-columns:repeat(2,minmax(0,1fr))}.mrow{grid-template-columns:minmax(0,1fr) auto}.mfrom{display:none}.wk.wk14{grid-template-columns:repeat(7,minmax(0,1fr))}}
+/* ---------- Home: the Studio ---------- */
+.hm-viewbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 12px}
+.hm-viewbar .hm-h2{margin:0}
+.hm-seg{margin-left:auto;display:inline-flex;border:1px solid var(--border-strong);border-radius:6px;overflow:hidden;background:var(--surface)}
+.hm-seg button{background:none;border:0;border-right:1px solid var(--border);color:var(--ink-2);font:inherit;font-size:12.5px;font-weight:600;padding:6px 12px;cursor:pointer}
+.hm-seg button:last-child{border-right:0}
+.hm-seg button[aria-selected="true"]{background:var(--navy);color:#fff}
+:root[data-theme="dark"] .hm-seg button[aria-selected="true"]{background:var(--sky);color:#06202f}
+.studio{--st-bg:#0b2436;--st-bg2:#10324a;--st-line:rgba(116,191,235,.18)}
+.sw-week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-bottom:14px}
+.sw-day{all:unset;box-sizing:border-box;cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sw-day:hover{border-color:var(--border-strong);box-shadow:0 6px 14px rgba(13,49,76,.1)}
+.sw-day:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.sw-day span{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+.sw-day b{font-size:20px;line-height:1.1;color:var(--ink)}
+.sw-day.now{background:var(--navy);border-color:var(--navy)}.sw-day.now span{color:var(--sky)}.sw-day.now b{color:#fff}.sw-day.now small{color:rgba(255,255,255,.75)}
+.sw-pills{display:flex;gap:3px;align-items:center;min-height:8px}
+.sw-pills i{width:16px;height:5px;border-radius:3px;background:var(--k)}.sw-pills i.done{opacity:.35}
+.sw-pills em{font-style:normal;font-size:10px;color:var(--ink-3)}
+.sw-day small{font-size:11px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(150px,auto);gap:14px}
+.st-tile{all:unset;box-sizing:border-box;cursor:pointer;position:relative;overflow:hidden;min-width:0;display:flex;flex-direction:column;gap:10px;padding:16px 18px;border-radius:12px;color:#fff;
+  background:radial-gradient(120% 90% at 100% 0%,color-mix(in srgb,var(--k,#74bfeb) 26%,transparent),transparent 60%),linear-gradient(160deg,var(--st-bg2),var(--st-bg));
+  border:1px solid var(--st-line);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 24px -14px rgba(6,32,47,.6);transition:transform .18s,box-shadow .18s}
+.st-tile:hover{transform:translateY(-3px);box-shadow:0 0 0 1px color-mix(in srgb,var(--k,#74bfeb) 55%,transparent),0 18px 34px -16px rgba(6,32,47,.75)}
+.st-tile:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+.st-top{display:flex;align-items:center;gap:8px}
+.st-lab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:color-mix(in srgb,var(--k,#74bfeb) 70%,#fff)}
+.st-pill{margin-left:auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,.12);color:#fff}
+.st-pill.hot{background:#c94a3b}
+.st-big{font-size:40px;font-weight:700;line-height:1;letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
+.st-big small{font-size:13px;font-weight:600;color:var(--sky);letter-spacing:0}
+.st-big .hs-num{font-weight:700}
+.st-sub{font-size:12.5px;line-height:1.45;color:rgba(255,255,255,.78)}.st-sub b{color:#fff}
+.st-next{margin-top:auto;font-size:12.5px;color:rgba(255,255,255,.7);padding-top:10px;border-top:1px solid var(--st-line)}.st-next b{color:#fff}
+.st-meter{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.st-meter i{display:block;height:100%;background:var(--k);border-radius:3px}
+/* Mic'd Up: on air */
+.st-mic{grid-column:span 2;grid-row:span 2;padding:20px 22px}
+.st-onair{flex:0 0 auto;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;padding:4px 10px;border-radius:4px;border:1.5px solid rgba(255,107,91,.65);color:#ffb4a8}
+.st-onair.lit{background:#e5483a;border-color:#e5483a;color:#fff;box-shadow:0 0 18px rgba(229,72,58,.75);animation:air 1.4s ease-in-out infinite}
+.st-mic .st-lab{margin-left:auto}
+.wave{display:flex;align-items:center;gap:3px;height:92px;margin:4px 0}
+.st-mic .wave{flex:1 1 auto;height:auto;min-height:92px;max-height:200px}
+.wave i{flex:1 1 0;min-width:2px;height:var(--h,40%);border-radius:2px;background:linear-gradient(180deg,#ffb27a,var(--k));transform-origin:center;animation:wv 1.25s ease-in-out infinite alternate;animation-delay:calc(var(--d,0s) * -1)}
+.wave.quiet i{height:6%;animation:none;opacity:.4}
+@keyframes wv{0%{transform:scaleY(.25)}100%{transform:scaleY(1)}}
+.mic-ep b{display:block;font-size:22px;font-weight:700;line-height:1.2}
+.mic-ep span{display:block;font-size:14px;color:rgba(255,255,255,.75);margin-top:3px}
+.mic-cd{display:flex;gap:8px}
+.mic-cd span{background:rgba(0,0,0,.25);border:1px solid var(--st-line);border-radius:8px;padding:6px 10px;text-align:center;min-width:58px}
+.mic-cd b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+.mic-cd small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.cd-live{font-weight:700;color:#ffb4a8}
+.mic-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.mic-steps span{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:4px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.12)}
+.mic-steps span.on{background:color-mix(in srgb,var(--k) 35%,transparent);color:#fff;border-color:transparent}
+/* MISMO Matters: the paper */
+.st-mat{grid-row:span 2}
+.mini-paper{background:#fff;border-radius:6px;padding:8px 8px 10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;transform:rotate(-1.5deg);box-shadow:0 14px 26px -12px rgba(0,0,0,.7);transition:transform .2s}
+.st-mat:hover .mini-paper{transform:rotate(0)}
+.mp-mast{grid-column:1/-1;display:flex;align-items:center;gap:6px;background:#0d314c;border-radius:3px;padding:5px 7px;--logo-body:#fff;--logo-s:#74bfeb}
+.mp-logo{height:9px;width:auto}.mp-mast span{font-size:9px;font-weight:700;color:#fff;letter-spacing:.04em}
+.mp-b{display:block;height:15px;border-radius:2px;background:#dfe7ee}
+.mp-b:nth-child(2){grid-column:1/-1;height:26px}
+.mp-b.t-a{background:#4fc79b}.mp-b.t-r{background:#74bfeb}.mp-b.t-i{background:#a9d8f3}.mp-b.t-c{background:#f08579}.mp-b.t-u{background:#c9b8f0}.mp-b.t-w{background:#dfe7ee}
+/* Summits: the ring */
+.ring{position:relative;width:110px;height:110px;align-self:center}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle{fill:none;stroke:rgba(255,255,255,.12);stroke-width:8}
+.ring circle.rv{stroke:var(--k);stroke-linecap:round}
+.ring div{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:30px;line-height:1}.ring small{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+/* YouTube: the player */
+.mini-player{position:relative;aspect-ratio:16/9;border-radius:8px;background:linear-gradient(135deg,#1a2b3a,#06121c);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mpl-play{width:46px;height:32px;border-radius:9px;background:#ff0033;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 16px rgba(255,0,51,.45);transition:transform .15s}
+.st-yt:hover .mpl-play{transform:scale(1.1)}
+.mpl-play svg{width:18px;height:18px;fill:#fff}
+.mpl-bar{position:absolute;left:8px;right:8px;bottom:8px;height:3px;background:rgba(255,255,255,.25);border-radius:2px}.mpl-bar i{display:block;width:38%;height:100%;background:#ff0033;border-radius:2px}
+/* LinkedIn: the feed */
+.st-li{grid-column:span 2}
+.mini-feed{background:#fff;color:#1d2226;border-radius:8px;padding:10px 12px;box-shadow:0 12px 24px -14px rgba(0,0,0,.7)}
+.mf-h{display:flex;align-items:center;gap:8px}.mf-h>span:nth-child(2){flex:1;min-width:0}
+.mf-av{width:30px;height:30px;border-radius:5px;background:#0d314c;display:flex;align-items:center;padding:4px;box-sizing:border-box;--logo-body:#fff;--logo-s:#74bfeb}
+.mf-h b{display:block;font-size:12.5px}.mf-h small{display:block;font-size:11px;color:#666}
+.mini-feed .livebadge{position:static;margin-left:auto}
+.mf-b{font-size:13px;margin:8px 0;line-height:1.4}
+.mf-f{display:flex;gap:8px}.mf-f span{flex:1;height:6px;border-radius:3px;background:#eef1f4}
+/* Mailchimp: the envelope */
+.env{position:relative;width:84px;align-self:flex-start}
+.env svg{width:100%;height:auto;fill:rgba(255,255,255,.06);stroke:var(--k);stroke-width:2.2;stroke-linejoin:round}
+.env em{position:absolute;right:-8px;top:-8px;font-style:normal;font-size:12px;font-weight:800;background:#f2c94c;color:#3a2a00;border-radius:10px;padding:1px 7px}
+.st-mc:hover .env svg path{transform:translateY(3px);transition:transform .2s}
+/* In the News */
+.st-news{grid-column:span 2}
+.news-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.news-list li{padding-left:10px;border-left:2px solid rgba(255,255,255,.25)}
+.news-list b{display:block;font-size:13px;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.news-list small{font-size:11px;color:rgba(255,255,255,.6)}
+/* what MISMO Media holds */
+.st-vault{grid-column:span 2;cursor:default;--k:#74bfeb}
+.st-vault:hover{transform:none}
+.vault{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.vault-i{all:unset;box-sizing:border-box;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--st-line);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.vault-i:hover{background:rgba(255,255,255,.1)}.vault-i:focus-visible{outline:2px solid var(--sky)}
+.vault-i b{font-size:22px;line-height:1.1}.vault-i span{font-size:11px;color:rgba(255,255,255,.65);line-height:1.3}
+@media(max-width:1200px){.st-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.st-mic,.st-li,.st-news,.st-vault{grid-column:span 2}.st-mat{grid-row:span 2}}
+@media(max-width:700px){.st-grid{grid-template-columns:1fr}.st-mic,.st-li,.st-news,.st-vault{grid-column:auto}.st-mat,.st-mic{grid-row:auto}.sw-week{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto}.vault{grid-template-columns:repeat(2,minmax(0,1fr))}.wave{height:64px}.mic-cd span{min-width:0;flex:1}}
+@media (prefers-reduced-motion:reduce){.wave i,.st-onair.lit{animation:none}.st-tile,.mini-paper{transition:none}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -1677,7 +1804,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span>Results</span><b class="nbadge" id="nb-results" hidden></b></button>
     <div class="navgrp" data-grp="channels">
-      <button type="button" class="navgh" aria-expanded="true"><span>Channels</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navsep">Channels</div>
       <div class="navkids">
       <button type="button" data-hq="matters" title="MISMO Matters">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
@@ -1697,7 +1824,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       </div>
     </div>
     <div class="navgrp" data-grp="events">
-      <button type="button" class="navgh" aria-expanded="true"><span>Events &amp; Brand</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navsep">Events &amp; Brand</div>
       <div class="navkids">
       <button type="button" data-hq="summits" title="Summits">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><circle cx="17" cy="6" r="2"/></svg>
@@ -1711,7 +1838,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       </div>
     </div>
     <div class="navgrp" data-grp="people">
-      <button type="button" class="navgh" aria-expanded="true"><span>People &amp; Lists</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navsep">People &amp; Lists</div>
       <div class="navkids">
       <button type="button" data-hq="people" title="Subscribers and Downloaders">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0113 0"/><circle cx="18" cy="17" r="3"/><path d="M20.2 19.2L22 21"/></svg>
@@ -1722,7 +1849,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       </div>
     </div>
     <div class="navgrp" data-grp="library">
-      <button type="button" class="navgh" aria-expanded="true"><span>Library</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navsep">Library</div>
       <div class="navkids">
       <button type="button" data-hq="news" title="In the News">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 01-2-2z"/><path d="M17 9h3v8a2 2 0 01-2 2M8 9h5M8 13h5"/></svg>
@@ -1736,7 +1863,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       </div>
     </div>
     <div class="navgrp" data-grp="help">
-      <button type="button" class="navgh" aria-expanded="true"><span>Help &amp; Forms</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navsep">Help &amp; Forms</div>
       <div class="navkids">
       <button type="button" data-hq="help" title="Help">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
@@ -2854,13 +2981,13 @@ const HELP = [
    <li><b>Delete</b> always asks you to press it twice.</li>
    <li><b>Dates</b> can be typed the way you'd write them (11/18/26, Nov 18) or picked from the calendar button beside the box.</li>
   </ul>`},
- {id:"home", t:"Home and the Media Map", g:"Basics", b:`
-  <p><b>Home</b> is the first page. It shows how all of MISMO's media connects, live, so you can start anywhere and follow the thread.</p>
+ {id:"home", t:"Home: the Studio", g:"Basics", b:`
+  <p><b>Home</b> is the first page. It shows everything MISMO is putting out, live, as a studio of screens. Click any screen to go there.</p>
   <ul>
-   <li><b>The top band</b> says good morning, what's coming (the next Mic'd Up episode, the next MISMO Matters send, the next summit) and how many items are past due. <b>On Your Plate</b> lists what's yours in the next seven days, using your name on the schedule; click one to open it.</li>
-   <li><b>How It All Connects</b> lays everything out in four columns: what <b>Comes In</b> (requests, In the News, guests and recordings, pictures), what <b>We Make</b> (MISMO Matters, Mic'd Up, summits, rebranding and orders), where it <b>Goes Out</b> (LinkedIn, YouTube, Mailchimp, QR codes) and who it <b>Reaches</b> and how it did (subscribers, Results). Each box shows its live number and what's next.</li>
-   <li><b>The dot</b> on each box: green is on track, gold needs a look, red (pulsing) is late or blocked. Lines show where work flows; a moving line means work is waiting on that box. Point at a box to light up only its connections. Click to open the page.</li>
-   <li><b>Follow the Story</b> tracks the next Mic'd Up episode (guest form, recorded, files in, copy written, Amy approved, live, Spotify, YouTube, MISMO's LinkedIn Live, MISMO Matters) and this month's MISMO Matters, step by step. Click one to open it.</li>
+   <li><b>The top band</b> says good morning, what's coming (the next Mic'd Up episode, the next MISMO Matters send, the next summit) and how many items are past due. <b>On Your Plate</b> lists what's yours in the next seven days, from your name on the schedule.</li>
+   <li><b>The week</b> runs across the top of the studio, one day per box, with a colored bar for each thing due (the channel colors). Click a day for the full schedule.</li>
+   <li><b>The screens:</b> Mic'd Up (on air, with a live countdown to Friday 8:30 AM ET and the episode's steps), MISMO Matters (a picture of the newsletter, colored by where each section stands), Summits (the countdown ring fills as marketing tasks are done), YouTube (what's waiting to upload), LinkedIn (the next post), Mailchimp (the next send), Requests, In the News, and <b>In MISMO Media</b>, the running totals.</li>
+   <li><b>How It All Connects</b> (the switch next to the Studio heading) shows the same things as a map of how work flows from what comes in to what goes out, with Follow the Story for the next episode and edition. Your choice is remembered.</li>
   </ul>`},
  {id:"who", t:"Who Does What", g:"Basics", b:`
   <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
@@ -4191,6 +4318,36 @@ function wireSummitHero(el,s){
   SUMMIT_TICK=setInterval(()=>{ const c=$("#sm-clock"); if(!c || TAB!=="summits"){ clearInterval(SUMMIT_TICK); SUMMIT_TICK=null; return; } c.innerHTML=clockHtml(summitClock(s)); },1000);
 }
 
+/* ---------- Mailchimp: the next send, in the inbox ---------- */
+function mailchimpHero(list){
+  const t=T();
+  const ahead=list.filter(p=>p.status!=="done"&&p.date).sort((a,b)=>a.date<b.date?-1:1);
+  const p=ahead.find(x=>x.date>=t)||ahead[0]||null;
+  const sent=list.filter(x=>x.status==="done").sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
+  const last=sent.find(x=>+x.sent)||sent[0]||null;
+  const days=[...Array(14)].map((_,i)=>{ const d=add(t,i), here=list.filter(x=>x.date===d);
+    return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()].slice(0,2))+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x.status==="staged"||x.status==="ready"?"st":""))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
+  const rows=[].concat(ahead.slice(0,3), sent.slice(0,Math.max(0,3-Math.min(3,ahead.length)))).slice(0,3);
+  const row=(x,i)=>'<button type="button" class="mrow'+(x===p?" next":"")+'" data-hero-mc="'+esc(x.id)+'"><span class="mfrom"><b>MISMO</b>'+(x.audience?'<em>'+esc(x.audience)+'</em>':'')+'</span>'+
+    '<span class="msub"><b>'+esc(x.title||"Untitled campaign")+'</b><small>'+esc(String(x.copy||(x.status==="done"?(+x.sent?"Sent to "+(+x.sent).toLocaleString()+" people":"Sent"):"Open it to write the email.")).replace(/\s+/g," ").slice(0,90))+'</small></span>'+
+    '<span class="mwhen">'+(x.status==="done"?"Sent "+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date)):esc(fS(x.date)))+'</span></button>';
+  const pc=(n,d)=>d?Math.round(n/d*100)+"%":"—";
+  const stats=last&&+last.sent?'<div class="mstats"><div><b>'+(+last.sent).toLocaleString()+'</b><small>sent to</small></div><div><b>'+pc(+last.opens||0,+last.sent)+'</b><small>opened</small></div><div><b>'+pc(+last.clicks||0,+last.sent)+'</b><small>clicked</small></div><div><b>'+(+last.unsubs||0)+'</b><small>unsubscribed</small></div></div>':'';
+  return '<div class="hero">'+
+    '<div class="hero-l"><span class="hlbl t-mc"><i></i>'+(p?"Up Next in Mailchimp":"Mailchimp")+'</span>'+
+      '<div class="hbig">'+(p?esc(fS(p.date))+'<small>'+esc(rel(p.date))+'</small>':(last?"Sent<small>"+esc(fS(last.date))+"</small>":"Open<small>nothing set</small>"))+'</div>'+
+      '<div class="hline">'+(p?esc(p.title||"Untitled campaign")+(p.audience?' · '+esc(p.audience):''):last?"Last send: "+esc(last.title||""):"Event and summit email, until Higher Logic marketing takes over")+'</div>'+
+      '<div class="wk wk14" aria-label="The next two weeks">'+days+'</div>'+
+      '<div class="wklegend"><span><i></i>Campaign</span><span><i class="st"></i>Ready</span><span><i class="ok"></i>Sent</span></div>'+
+    '</div>'+
+    '<div class="mbox"><div class="mbox-h"><span class="mdots"><i></i><i></i><i></i></span><b>Inbox</b><small>'+(ahead.length?ahead.length+" coming up":"all caught up")+'</small></div>'+
+      (rows.length?rows.map(row).join(""):'<div class="mempty">No campaigns yet. Press <b>+ New Campaign</b> to plan one.</div>')+
+      (stats?'<div class="mlast"><span>'+esc("Last send · "+(last.title||""))+'</span>'+stats+'</div>':'')+
+    '</div>'+
+  '</div>';
+}
+function wireMailchimpHero(el){ $$("[data-hero-mc]",el).forEach(b=>b.onclick=()=>openPiece(b.dataset.heroMc)); }
+
 /* ================= Mic'd Up: SharePoint episode folders, the Writer, guests, clips ================= */
 /* Every episode gets its own folder in SharePoint: Q Drive > MISMO > Active Documents > Marketing >
    MISMO Mic'd Up > Season N > "S2 Ep 01 - Guest". MISMO Media makes the folder as soon as the episode
@@ -4518,44 +4675,16 @@ function renderQr(){
 try{ new MutationObserver(() => { if(TAB === "qr") qrDress(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]}); }catch(e){}
 
 /* ================= left menu groups =================
-   Channels is open; the rest fold away until needed. A group opens by itself when you go to one of its pages,
-   and a folded group shows the total of its pages' counts. Each person's open/closed choice is remembered. */
-const NAV_KEY = "mm.nav.open";
-let NAV_OPEN = {channels:true};
-try{ const v = JSON.parse(localStorage.getItem(NAV_KEY) || "null"); if(v && typeof v === "object") NAV_OPEN = v; }catch(e){}
-function navSave(){ try{ localStorage.setItem(NAV_KEY, JSON.stringify(NAV_OPEN)); }catch(e){} }
-function navSet(g, open){
-  g.classList.toggle("closed", !open);
-  const h = g.querySelector(".navgh"); if(h) h.setAttribute("aria-expanded", open ? "true" : "false");
-  NAV_OPEN[g.dataset.grp] = !!open;
-}
-function navBadges(){
-  $$(".hq nav .navgrp").forEach(g => {
-    let n = 0, hot = false;
-    $$(".navkids .nbadge", g).forEach(b => { if(!b.hidden){ n += parseInt(b.textContent, 10) || 0; if(b.classList.contains("hot")) hot = true; } });
-    const gb = g.querySelector(".gbadge"); if(!gb) return;
-    gb.hidden = !n || !g.classList.contains("closed"); gb.textContent = n || ""; gb.classList.toggle("hot", hot);
-  });
-}
-function navOpenFor(tab){
-  const b = document.querySelector('.hq nav .navgrp button[data-hq="' + tab + '"]'); if(!b) return;
-  const g = b.closest(".navgrp"); if(g && g.classList.contains("closed")){ navSet(g, true); navSave(); navBadges(); }
-}
-function navInit(){
-  $$(".hq nav .navgrp").forEach(g => {
-    navSet(g, !!NAV_OPEN[g.dataset.grp]);
-    const h = g.querySelector(".navgh");
-    if(h) h.addEventListener("click", () => { navSet(g, g.classList.contains("closed")); navSave(); navBadges(); });
-  });
-  navBadges();
-}
-navInit();
+   Every page stays in view (grouped under plain headings); nothing folds away. */
+function navBadges(){}
+function navOpenFor(tab){}
 /* ================= Home: the Media Map =================
    The first page. One look shows how everything connects: what comes in, what the team makes, where it goes out,
    who it reaches and how it did. Every box is live, says what it needs next and opens its page. Lines show how work
    flows from one to the next; hover a box (or tap it on a phone) to light up its connections. Below the map,
    "Follow the Story" tracks the next Mic'd Up episode and this month's MISMO Matters from start to finish. */
-const HM = {focus:null};
+const HM = {focus:null, view:"studio", timer:null};
+try{ const v=localStorage.getItem("mm.home.view"); if(v==="map") HM.view="map"; }catch(e){}
 const dBetween = (a,b)=>{ const x=P(a), y=P(b); return x&&y ? Math.round((y-x)/864e5) : null; };
 function hmFirst(){ return String(window.__hqWho||"").trim().split(/\s+/)[0]||""; }
 function hmHello(){ const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; }
@@ -4668,12 +4797,16 @@ function renderHome(){
         (needs.length?needs.map((e,i)=>'<button type="button" class="hm-need k-'+esc(e.k)+(isOver(e)?' over':'')+'" data-need="'+i+'"><span>'+esc(isOver(e)?"Past due":dBetween(t,e.date)===0?"Today":fS(e.date))+'</span><b>'+esc(e.label)+'</b></button>').join("")
           :'<div class="hm-clear">Nothing due for you this week.</div>')+
         '<button type="button" class="hm-all" data-hgo="overview">See the Full Schedule →</button></div></div>'+
-    '<div class="card hm-mapcard"><div class="ch"><h2>How It All Connects</h2><span class="note">Point at a box to see where its work goes. Click to open it.</span></div>'+
+    '<div class="hm-viewbar"><h2 class="hm-h2">'+(HM.view==="map"?"How It All Connects":"The Studio")+'</h2><div class="hm-seg" role="tablist" aria-label="Home view">'+
+      '<button type="button" role="tab" data-hview="studio" aria-selected="'+(HM.view!=="map")+'">Studio</button><button type="button" role="tab" data-hview="map" aria-selected="'+(HM.view==="map")+'">How It All Connects</button></div></div>'+
+    (HM.view==="map" ? '<div class="card hm-mapcard"><div class="ch"><span class="note">Point at a box to see where its work goes. Click to open it.</span></div>'+
       '<div class="hm-map" id="hm-map"><svg class="hm-lines" id="hm-lines" aria-hidden="true"></svg>'+
         HM_COLS.map((c,i)=>'<div class="hm-col"><div class="hm-ch">'+esc(c)+'</div>'+N.filter(n=>n.col===i).map(node).join("")+'</div>').join("")+
       '</div>'+
       '<div class="hm-legend"><span class="st-ok"><i></i>On track</span><span class="st-soon"><i></i>Needs a look</span><span class="st-late"><i></i>Late or blocked</span></div></div>'+
-    (stories.length?'<div class="hm-stories"><h2 class="hm-h2">Follow the Story</h2><div class="hm-sgrid">'+stories.join("")+'</div></div>':'');
+      (stories.length?'<div class="hm-stories"><h2 class="hm-h2">Follow the Story</h2><div class="hm-sgrid">'+stories.join("")+'</div></div>':'')
+    : hmStudio());
+  $$("[data-hview]",el).forEach(b=>b.addEventListener("click",()=>{ HM.view=b.dataset.hview; try{ localStorage.setItem("mm.home.view",HM.view); }catch(e){} renderHome(); }));
   $$("[data-hgo]",el).forEach(b=>b.addEventListener("click",()=>{ const v=b.dataset.hgo; if(v.startsWith("ep:")){ go("micdup"); openEpisode(v.slice(3)); } else go(v); }));
   $$("[data-need]",el).forEach(b=>b.addEventListener("click",()=>{ const e=needs[+b.dataset.need]; if(e && e.go) e.go(); }));
   const map=$("#hm-map",el);
@@ -4683,7 +4816,7 @@ function renderHome(){
     b.addEventListener("mouseleave",()=>hmFocus(null));
     b.addEventListener("blur",()=>hmFocus(null));
   });
-  hmDraw();
+  if(HM.view==="map") hmDraw(); else hmStudioLive(el);
 }
 function hmFocus(id){
   HM.focus=id; const map=$("#hm-map"); if(!map) return;
@@ -4705,7 +4838,111 @@ function hmDraw(){
     h+='<path d="'+d+'" data-a="'+a+'" data-b="'+b+'" class="'+(live.has(a)?"flow":"")+'"/>'; });
   svg.innerHTML=h; if(HM.focus) hmFocus(HM.focus);
 }
-window.addEventListener("resize",()=>{ if(TAB==="home") hmDraw(); });
+window.addEventListener("resize",()=>{ if(TAB==="home" && HM.view==="map") hmDraw(); });
+
+/* ================= The Studio =================
+   The default Home view: a control room of live monitors, one per part of MISMO's media, each showing
+   its real state in a picture you can read at a glance. Click any monitor to go there. */
+function hmCount(n){ return '<b class="hs-num" data-count="'+(+n||0)+'">'+(+n||0).toLocaleString()+'</b>'; }
+function hmStudio(){
+  const t=T(), ev=allEvents();
+  /* this week, as a strip of days */
+  const week=[...Array(7)].map((_,i)=>{ const d=add(t,i), es=ev.filter(e=>e.date===d && !e.slot).sort((a,b)=>(a.done?1:0)-(b.done?1:0));
+    return '<button type="button" class="sw-day'+(i===0?" now":"")+'" data-hgo="overview"><span>'+(i===0?"Today":esc(DOW[P(d).getDay()]))+'</span><b>'+P(d).getDate()+'</b>'+
+      '<div class="sw-pills">'+es.slice(0,3).map(e=>'<i class="k-'+esc(e.k)+(e.done?" done":"")+'" title="'+esc(e.label)+'"></i>').join("")+(es.length>3?'<em>+'+(es.length-3)+'</em>':'')+'</div>'+
+      '<small>'+(es.length?esc(es[0].label.replace(/^[^·]+·\s*/,"")):"Clear")+'</small></button>'; }).join("");
+
+  /* Mic'd Up: on air */
+  const ne=hmNextEp(); let mic;
+  if(ne){ const k=kitOf(ne.id)||{}, g=guestFor(ne), d=dBetween(t,ne.airDate), live=d===0;
+    const steps=[["Guest Form",!!g],["Recorded",!!ne.recordDate],["Files In",!!k.video],["Copy Written",!!k.written],["Amy Approved",k.liStatus==="approved"]];
+    mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="ep:'+esc(ne.id)+'">'+
+      '<div class="st-top"><span class="st-onair'+(live?" lit":"")+'">'+(live?"On Air":"Next on Air")+'</span><span class="st-lab">MISMO Mic\'d Up</span></div>'+
+      '<div class="wave" aria-hidden="true">'+[...Array(44)].map((_,i)=>'<i style="--d:'+((i*37)%17)/10+'s;--h:'+(28+((i*53)%61))+'%"></i>').join("")+'</div>'+
+      '<div class="mic-ep"><b>'+esc(epTag(ne))+(ne.title?": "+esc(ne.title):"")+'</b><span>'+esc([ne.guests,ne.company].filter(Boolean).join(" · ")||"Guest to come")+'</span></div>'+
+      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'T08:30:00"></div>'+
+      '<div class="mic-steps">'+steps.map(s=>'<span class="'+(s[1]?"on":"")+'">'+(s[1]?"✓ ":"")+esc(s[0])+'</span>').join("")+'</div>'+
+    '</button>'; }
+  else mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="micdup"><div class="st-top"><span class="st-onair">Off Air</span><span class="st-lab">MISMO Mic\'d Up</span></div><div class="wave quiet" aria-hidden="true">'+[...Array(44)].map(()=>'<i></i>').join("")+'</div><div class="mic-ep"><b>No episode booked</b><span>Add the next Friday</span></div></button>';
+
+  /* MISMO Matters: the paper */
+  const ed=curEdition(); let mat='';
+  if(ed && ed.dates){ const secs=edSections(ed).filter(s=>s.on), ok=secs.filter(s=>s.doc.status==="approved").length, d=dBetween(t,ed.dates.publish), nm=MILES.find(([k])=>ed.dates[k] && !(ed.done&&ed.done[k]));
+    mat='<button type="button" class="st-tile st-mat k-matters" data-hgo="matters"><div class="st-top"><span class="st-lab">MISMO Matters</span><span class="st-pill">'+esc(MONL[+ed.month.slice(5)-1])+'</span></div>'+
+      '<div class="mini-paper"><div class="mp-mast">'+LOGO_SVG("mp-logo")+'<span>MISMO Matters</span></div>'+
+        secs.map(s=>{ const st=s.meta.auto?"auto":(s.doc.status||"waiting"); return '<i class="mp-b t-'+(PB_TONE[st]||"w")+'" title="'+esc((s.doc.name||s.meta.name)+" · "+(s.meta.auto?"Fills itself":SSTAT[st]?SSTAT[st][0]:st))+'"></i>'; }).join("")+'</div>'+
+      '<div class="st-big">'+(d<0?"Sent":d)+'<small>'+(d<0?"":d===1?"day to send":"days to send")+'</small></div>'+
+      '<div class="st-meter"><i style="width:'+(secs.length?Math.round(ok/secs.length*100):0)+'%"></i></div><div class="st-sub">'+ok+' of '+secs.length+' sections approved · goes out '+esc(fS(ed.dates.publish))+'</div>'+(nm?'<div class="st-next">Next: <b>'+esc(nm[1])+'</b> · '+esc(fS(ed.dates[nm[0]]))+'</div>':'')+'</button>'; }
+
+  /* Summits: the ring */
+  const sm=hmNextSummit(); let sum='';
+  if(sm){ const tasks=vals("pieces").filter(p=>p.channel==="summit" && p.summit===sm.id), done=tasks.filter(p=>p.status==="done").length, d=dBetween(t,sm.start), pc=tasks.length?done/tasks.length:0, C=2*Math.PI*42;
+    sum='<button type="button" class="st-tile st-sum k-summit" data-hgo="summits"><div class="st-top"><span class="st-lab">Summits</span></div>'+
+      '<div class="ring"><svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42"/><circle class="rv" cx="50" cy="50" r="42" stroke-dasharray="'+(C*pc).toFixed(1)+' '+C.toFixed(1)+'"/></svg><div><b>'+d+'</b><small>days</small></div></div>'+
+      '<div class="st-sub"><b>'+esc(sm.name)+'</b><br>'+esc((sm.where||"").split(" · ")[0])+'<br>'+(tasks.length?done+' of '+tasks.length+' marketing tasks done':'Plan not loaded yet')+'</div></button>'; }
+
+  /* YouTube: the player */
+  const yq=vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=t && !e.youtubeDone);
+  const ylast=epsSorted().find(e=>e.youtubeDone);
+  const yt='<button type="button" class="st-tile st-yt k-youtube" data-hgo="youtube"><div class="st-top"><span class="st-lab">YouTube</span>'+(yq.length?'<span class="st-pill hot">'+yq.length+' to upload</span>':'<span class="st-pill">Caught up</span>')+'</div>'+
+    '<div class="mini-player"><span class="mpl-play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span><span class="mpl-bar"><i></i></span></div>'+
+    '<div class="st-sub">'+(yq.length?"Next up: <b>"+esc(epTag(yq[0])+(yq[0].guests?" · "+yq[0].guests:""))+"</b>":ylast?"Latest: <b>"+esc(epTag(ylast)+(ylast.title?": "+ylast.title:""))+"</b>":"@MISMOStandards")+'</div></button>';
+
+  /* LinkedIn: the feed */
+  const lw=ev.filter(e=>e.k==="linkedin" && !e.done && e.date>=t && e.date<=add(t,7));
+  const lnext=lw.sort((a,b)=>a.date<b.date?-1:1)[0];
+  const li='<button type="button" class="st-tile st-li k-linkedin" data-hgo="linkedin"><div class="st-top"><span class="st-lab">LinkedIn</span><span class="st-pill">'+lw.length+' this week</span></div>'+
+    '<div class="mini-feed"><div class="mf-h"><span class="mf-av">'+LOGO_SVG("avlogo")+'</span><span><b>MISMO</b><small>'+(lnext?esc(fD(lnext.date)):"Nothing lined up")+'</small></span>'+(lnext&&/Mic'd Up/.test(lnext.label)?'<span class="livebadge"><i></i>LIVE</span>':'')+'</div>'+
+    '<div class="mf-b">'+(lnext?esc(lnext.label.replace(/^LinkedIn\s*·\s*/,"")):"Add a post or a Mic'd Up episode and it shows here.")+'</div><div class="mf-f"><span></span><span></span><span></span></div></div></button>';
+
+  /* Mailchimp: the envelope */
+  const mcs=vals("pieces").filter(p=>p.channel==="mailchimp" && p.status!=="done" && p.date && p.date>=t).sort((a,b)=>a.date<b.date?-1:1);
+  const mc='<button type="button" class="st-tile st-mc k-mailchimp" data-hgo="mailchimp"><div class="st-top"><span class="st-lab">Mailchimp</span></div>'+
+    '<div class="env" aria-hidden="true"><svg viewBox="0 0 64 44"><rect x="2" y="2" width="60" height="40" rx="4"/><path d="M3 4l29 21L61 4"/></svg>'+(mcs.length?'<em>'+mcs.length+'</em>':'')+'</div>'+
+    '<div class="st-sub">'+(mcs.length?"Next send <b>"+esc(fS(mcs[0].date))+"</b><br>"+esc(mcs[0].title||""):"No sends scheduled")+'</div></button>';
+
+  /* Requests */
+  const rq=typeof requests==="function"?requests():[], rqNew=rq.filter(r=>r.status==="new"), rqOpen=rq.filter(r=>!["done","declined"].includes(r.status));
+  const req='<button type="button" class="st-tile st-rq k-request" data-hgo="requests"><div class="st-top"><span class="st-lab">Requests</span>'+(rqNew.length?'<span class="st-pill hot">'+rqNew.length+' new</span>':'')+'</div>'+
+    '<div class="st-big">'+hmCount(rqOpen.length)+'<small>open</small></div><div class="st-sub">'+(rqOpen[0]?"Latest: "+esc(rqOpen[0].title||"Untitled"):"Nothing waiting. Share the request form.")+'</div></button>';
+
+  /* In the News */
+  const nws=vals("news").filter(n=>n.date).sort((a,b)=>a.date<b.date?1:-1).slice(0,3);
+  const news='<button type="button" class="st-tile st-news k-news" data-hgo="news"><div class="st-top"><span class="st-lab">In the News</span></div>'+
+    (nws.length?'<ul class="news-list">'+nws.map(n=>'<li><b>'+esc(n.headline||"")+'</b><small>'+esc([n.outlet,fS(n.date)].filter(Boolean).join(" · "))+'</small></li>').join("")+'</ul>':'<div class="st-sub">Log a story and it feeds MISMO Matters and LinkedIn.</div>')+'</button>';
+
+  /* what MISMO Media holds */
+  const ppl=new Set(); try{ vals("audience").forEach(d=>(d.rows||[]).forEach(r=>{ const e=String(r.email||r.Email||r.e||"").toLowerCase(); if(e) ppl.add(e); })); }catch(e){}
+  const stat=(n,l,g)=>'<button type="button" class="vault-i" data-hgo="'+g+'">'+hmCount(n)+'<span>'+esc(l)+'</span></button>';
+  const vault='<div class="st-tile st-vault"><div class="st-top"><span class="st-lab">In MISMO Media</span></div><div class="vault">'+
+    stat(vals("episodes").filter(e=>e.youtubeDone).length,"Episodes on YouTube","micdup")+
+    stat(editionsSorted().filter(e=>e.done&&e.done.publish).length,"Editions Sent","matters")+
+    stat(vals("images").filter(i=>!i.archived).length,"Pictures","images")+
+    stat(ppl.size,"Subscribers and Downloaders","people")+
+    stat(vals("news").length,"News Stories","news")+
+    stat(vals("pieces").filter(p=>p.channel==="linkedin" && p.status==="done").length,"LinkedIn Posts","linkedin")+
+  '</div></div>';
+
+  return '<div class="studio">'+
+    '<div class="sw-week">'+week+'</div>'+
+    '<div class="st-grid">'+mic+mat+sum+yt+li+mc+req+news+vault+'</div></div>';
+}
+/* the moving parts: the countdown ticks and the numbers count up */
+function hmStudioLive(el){
+  if(HM.timer){ clearInterval(HM.timer); HM.timer=null; }
+  const cd=$("#hm-cd",el);
+  const tick=()=>{ if(!cd || !document.body.contains(cd)){ clearInterval(HM.timer); HM.timer=null; return; }
+    const at=new Date(cd.dataset.at), ms=at-new Date();
+    if(ms<=0){ cd.innerHTML='<span class="cd-live">Live now · Friday 8:30 AM ET</span>'; return; }
+    const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4), s=Math.floor(ms%6e4/1e3);
+    cd.innerHTML=[[d,"days"],[h,"hrs"],[m,"min"],[s,"sec"]].map(([v,l])=>'<span><b>'+String(v).padStart(2,"0")+'</b><small>'+l+'</small></span>').join("");
+  };
+  if(cd){ tick(); HM.timer=setInterval(tick,1000); }
+  const still=window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(!still) $$("[data-count]",el).forEach(b=>{ const n=+b.dataset.count; if(!n) return; const t0=performance.now(), dur=900;
+    const step=now=>{ const p=Math.min(1,(now-t0)/dur), v=Math.round(n*(1-Math.pow(1-p,3))); b.textContent=v.toLocaleString(); if(p<1) requestAnimationFrame(step); };
+    requestAnimationFrame(step); });
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -4931,7 +5168,7 @@ function renderMailchimp(){
   const month=list.filter(p=>p.date&&p.date.slice(0,7)===t.slice(0,7)).length;
   const sent=done.filter(p=>+p.sent); const avgOpen = sent.length ? sent.reduce((n,p)=>n+(+p.opens||0)/(+p.sent),0)/sent.length : 0;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Marketing Email</div><h1>Mailchimp</h1><div class="sub">Campaign sends while marketing email moves into Higher Logic. Unsubscribes from here go into the one unsubscribe list.</div></div><div class="tools"><button class="btn pri" type="button" id="mc-new">+ New Campaign</button></div></div>'+
-    '<div class="band"><div class="today">Mailchimp · stopgap until Higher Logic marketing takes over</div><div class="say">'+(up.length?'<em>'+up.length+' campaign'+(up.length>1?"s":"")+'</em> in the works. ':'No campaigns in the works. ')+'Before any send, pull the latest unsubscribes so the unified list stays whole.</div><div class="tiles">'+
+    '<div class="band">'+mailchimpHero(list)+'<div class="say">'+(up.length?'<em>'+up.length+' campaign'+(up.length>1?"s":"")+'</em> in the works. ':'No campaigns in the works. ')+'Before any send, pull the latest unsubscribes so the unified list stays whole.</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+up.length+'</div><div class="k">In the Works</div><div class="s">not sent yet</div></div>'+
       '<div class="tile"><div class="v">'+month+'</div><div class="k">This Month</div><div class="s">'+esc(MONL[today().getMonth()])+'</div></div>'+
       '<div class="tile"><div class="v">'+done.length+'</div><div class="k">Sent</div><div class="s">logged here</div></div>'+
@@ -4939,6 +5176,7 @@ function renderMailchimp(){
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>Campaigns</h2><span class="cnt">'+list.length+'</span></div>'+(list.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Campaign</th><th>Audience</th><th>Owner</th><th>Status</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+pieceRows(up.concat(done),["aud","stats"])+'</tbody></table></div>':'<div class="empty">No campaigns logged. Mailchimp audiences built so far include the compliance list and the tech list.</div>')+'</div>';
   $("#mc-new",el).onclick=()=>newPiece("mailchimp");
+  wireMailchimpHero(el);
   wirePieceRows(el);
 }
 
