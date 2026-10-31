@@ -1270,6 +1270,22 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .qrwrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
 #qr-frame{display:block;width:100%;height:max(640px,calc(100vh - 250px));border:0}
 @media(max-width:640px){#qr-frame{height:calc(100vh - 210px)}}
+/* left menu: collapsible groups, so only what you use is open */
+.hq nav .navgrp{display:flex;flex-direction:column;gap:1px;margin-top:4px}
+.hq nav .navkids{display:flex;flex-direction:column;gap:1px}
+.hq nav .navgrp.closed .navkids{display:none}
+.hq nav button.navgh{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,.5);padding:9px 10px 6px;gap:8px;border-top:1px solid rgba(80,164,219,.14);border-radius:0}
+.hq nav button.navgh:hover{color:#fff;background:transparent}
+.hq nav button.navgh .chev{width:13px;height:13px;margin-left:auto;stroke-width:2.2;opacity:.7;transition:transform .15s}
+.hq nav button.navgh[aria-expanded="false"] .chev{transform:rotate(-90deg)}
+.hq nav .gbadge{font-size:10px;font-weight:700;letter-spacing:0;min-width:18px;text-align:center;padding:0 5px;border-radius:4px;background:rgba(255,255,255,.14);color:#fff;text-transform:none}
+.hq nav .gbadge.hot{background:#c25a4f}
+.hq nav button.navgh .gbadge:not([hidden]) + .chev{margin-left:4px}
+.hq nav button.navgh .gbadge{margin-left:auto}
+body.railmini .hq nav button.navgh{display:none}
+body.railmini .hq nav .navgrp, body.railmini .hq nav .navgrp.closed .navkids{display:flex;align-items:center;gap:4px;margin-top:0}
+body.railmini .hq nav .navkids{align-items:center;gap:4px}
+@media (prefers-reduced-motion:reduce){ .hq nav button.navgh .chev{transition:none} }
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -1588,62 +1604,82 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <button type="button" data-hq="results" title="Results">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
       <span>Results</span><b class="nbadge" id="nb-results" hidden></b></button>
-    <div class="navsep">Channels</div>
-    <button type="button" data-hq="matters" title="MISMO Matters">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-      <span>MISMO Matters</span><b class="nbadge" id="nb-matters" hidden></b></button>
-    <button type="button" data-hq="micdup" title="MISMO Mic'd Up">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg>
-      <span>MISMO Mic'd Up</span><b class="nbadge" id="nb-micdup" hidden></b></button>
-    <button type="button" data-hq="linkedin" title="LinkedIn">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></svg>
-      <span>LinkedIn</span><b class="nbadge" id="nb-linkedin" hidden></b></button>
-    <button type="button" data-hq="youtube" title="YouTube">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5v5l4.5-2.5z"/></svg>
-      <span>YouTube</span><b class="nbadge" id="nb-youtube" hidden></b></button>
-    <button type="button" data-hq="mailchimp" title="Mailchimp">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
-      <span>Mailchimp</span><b class="nbadge" id="nb-mailchimp" hidden></b></button>
-    <div class="navsep">Events &amp; Brand</div>
-    <button type="button" data-hq="summits" title="Summits">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><circle cx="17" cy="6" r="2"/></svg>
-      <span>Summits</span><b class="nbadge" id="nb-summits" hidden></b></button>
-    <button type="button" data-hq="branding" title="Rebranding">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.5L12 15.3 7 18.1l1.2-5.5L4 8.8l5.6-.6z"/></svg>
-      <span>Rebranding</span><b class="nbadge" id="nb-branding" hidden></b></button>
-    <button type="button" data-hq="orders" title="Orders: Pins, Swag, Banners">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>
-      <span>Orders</span><b class="nbadge" id="nb-orders" hidden></b></button>
-    <div class="navsep">Audience</div>
-    <button type="button" data-hq="people" title="Subscribers and Downloaders">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0113 0"/><circle cx="18" cy="17" r="3"/><path d="M20.2 19.2L22 21"/></svg>
-      <span>Subscribers</span><b class="nbadge" id="nb-people" hidden></b></button>
-    <button type="button" data-hq="lists" title="Lists and Unsubscribes">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.6M18 14a5 5 0 013 6"/></svg>
-      <span>Lists &amp; Unsubscribes</span><b class="nbadge" id="nb-lists" hidden></b></button>
-    <div class="navsep">Library</div>
-    <button type="button" data-hq="news" title="In the News">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 01-2-2z"/><path d="M17 9h3v8a2 2 0 01-2 2M8 9h5M8 13h5"/></svg>
-      <span>In the News</span><b class="nbadge" id="nb-news" hidden></b></button>
-    <button type="button" data-hq="images" title="Image Library">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
-      <span>Image Library</span></button>
-    <button type="button" data-hq="qr" title="QR Codes">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
-      <span>QR Codes</span></button>
-    <div class="navsep">Help &amp; Forms</div>
-    <button type="button" data-hq="help" title="Help">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
-      <span>Help &amp; How-To</span></button>
-    <a class="navlink" href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener" title="Open the public Request form (new tab)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
-      <span>Request Form</span><i class="ext" aria-hidden="true">↗</i></a>
-    <a class="navlink" href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener" title="Open the public Subscribe form (new tab)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M16 2.5h5.5V8M21.5 2.5l-6 6" style="stroke-width:1.5"/></svg>
-      <span>Subscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
-    <a class="navlink" href="https://resources.mismo.org/forms/micdup-guest/" target="_blank" rel="noopener" title="Open the Mic'd Up guest form (new tab)">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg>
-      <span>Guest Form</span><i class="ext" aria-hidden="true">↗</i></a>
+    <div class="navgrp" data-grp="channels">
+      <button type="button" class="navgh" aria-expanded="true"><span>Channels</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navkids">
+      <button type="button" data-hq="matters" title="MISMO Matters">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        <span>MISMO Matters</span><b class="nbadge" id="nb-matters" hidden></b></button>
+      <button type="button" data-hq="micdup" title="MISMO Mic'd Up">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg>
+        <span>MISMO Mic'd Up</span><b class="nbadge" id="nb-micdup" hidden></b></button>
+      <button type="button" data-hq="linkedin" title="LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></svg>
+        <span>LinkedIn</span><b class="nbadge" id="nb-linkedin" hidden></b></button>
+      <button type="button" data-hq="youtube" title="YouTube">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5"/><path d="M10 9.5v5l4.5-2.5z"/></svg>
+        <span>YouTube</span><b class="nbadge" id="nb-youtube" hidden></b></button>
+      <button type="button" data-hq="mailchimp" title="Mailchimp">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
+        <span>Mailchimp</span><b class="nbadge" id="nb-mailchimp" hidden></b></button>
+      </div>
+    </div>
+    <div class="navgrp" data-grp="events">
+      <button type="button" class="navgh" aria-expanded="true"><span>Events &amp; Brand</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navkids">
+      <button type="button" data-hq="summits" title="Summits">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20l6-11 4 6 3-4 5 9z"/><circle cx="17" cy="6" r="2"/></svg>
+        <span>Summits</span><b class="nbadge" id="nb-summits" hidden></b></button>
+      <button type="button" data-hq="branding" title="Rebranding">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.6-4.2 3.8 1.2 5.5L12 15.3 7 18.1l1.2-5.5L4 8.8l5.6-.6z"/></svg>
+        <span>Rebranding</span><b class="nbadge" id="nb-branding" hidden></b></button>
+      <button type="button" data-hq="orders" title="Orders: Pins, Swag, Banners">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>
+        <span>Orders</span><b class="nbadge" id="nb-orders" hidden></b></button>
+      </div>
+    </div>
+    <div class="navgrp" data-grp="people">
+      <button type="button" class="navgh" aria-expanded="true"><span>People &amp; Lists</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navkids">
+      <button type="button" data-hq="people" title="Subscribers and Downloaders">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20a6.5 6.5 0 0113 0"/><circle cx="18" cy="17" r="3"/><path d="M20.2 19.2L22 21"/></svg>
+        <span>Subscribers</span><b class="nbadge" id="nb-people" hidden></b></button>
+      <button type="button" data-hq="lists" title="Lists and Unsubscribes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20a6 6 0 0112 0M16 5.5a3 3 0 010 5.6M18 14a5 5 0 013 6"/></svg>
+        <span>Lists &amp; Unsubscribes</span><b class="nbadge" id="nb-lists" hidden></b></button>
+      </div>
+    </div>
+    <div class="navgrp" data-grp="library">
+      <button type="button" class="navgh" aria-expanded="true"><span>Library</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navkids">
+      <button type="button" data-hq="news" title="In the News">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h13v14H6a2 2 0 01-2-2z"/><path d="M17 9h3v8a2 2 0 01-2 2M8 9h5M8 13h5"/></svg>
+        <span>In the News</span><b class="nbadge" id="nb-news" hidden></b></button>
+      <button type="button" data-hq="images" title="Image Library">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg>
+        <span>Image Library</span></button>
+      <button type="button" data-hq="qr" title="QR Codes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></svg>
+        <span>QR Codes</span></button>
+      </div>
+    </div>
+    <div class="navgrp" data-grp="help">
+      <button type="button" class="navgh" aria-expanded="true"><span>Help &amp; Forms</span><b class="gbadge" hidden></b><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="navkids">
+      <button type="button" data-hq="help" title="Help">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
+        <span>Help &amp; How-To</span></button>
+      <a class="navlink" href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener" title="Open the public Request form (new tab)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
+        <span>Request Form</span><i class="ext" aria-hidden="true">↗</i></a>
+      <a class="navlink" href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener" title="Open the public Subscribe form (new tab)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M16 2.5h5.5V8M21.5 2.5l-6 6" style="stroke-width:1.5"/></svg>
+        <span>Subscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
+      <a class="navlink" href="https://resources.mismo.org/forms/micdup-guest/" target="_blank" rel="noopener" title="Open the Mic'd Up guest form (new tab)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg>
+        <span>Guest Form</span><i class="ext" aria-hidden="true">↗</i></a>
+      </div>
+    </div>
   </nav>
   <div class="mast-right">
     <div class="railnote" id="rail-save"><b>Saving</b><span>Connecting…</span></div>
@@ -2058,6 +2094,7 @@ function show(tab){
   TAB=tab;
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
+  if(typeof navOpenFor==="function") navOpenFor(tab);
   try{ if(location.hash!=="#"+tab) history.replaceState(null,"","#"+tab); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
@@ -2074,7 +2111,7 @@ function renderTab(t){
     ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
-function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); }
+function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
 function badges(){
   const ev=allEvents(); const over=ev.filter(isOver).length;
   badge("overview", over, true);
@@ -4396,6 +4433,40 @@ function renderQr(){
 }
 /* Follow MISMO Media's light and dark mode. */
 try{ new MutationObserver(() => { if(TAB === "qr") qrDress(); }).observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]}); }catch(e){}
+
+/* ================= left menu groups =================
+   Channels is open; the rest fold away until needed. A group opens by itself when you go to one of its pages,
+   and a folded group shows the total of its pages' counts. Each person's open/closed choice is remembered. */
+const NAV_KEY = "mm.nav.open";
+let NAV_OPEN = {channels:true};
+try{ const v = JSON.parse(localStorage.getItem(NAV_KEY) || "null"); if(v && typeof v === "object") NAV_OPEN = v; }catch(e){}
+function navSave(){ try{ localStorage.setItem(NAV_KEY, JSON.stringify(NAV_OPEN)); }catch(e){} }
+function navSet(g, open){
+  g.classList.toggle("closed", !open);
+  const h = g.querySelector(".navgh"); if(h) h.setAttribute("aria-expanded", open ? "true" : "false");
+  NAV_OPEN[g.dataset.grp] = !!open;
+}
+function navBadges(){
+  $$(".hq nav .navgrp").forEach(g => {
+    let n = 0, hot = false;
+    $$(".navkids .nbadge", g).forEach(b => { if(!b.hidden){ n += parseInt(b.textContent, 10) || 0; if(b.classList.contains("hot")) hot = true; } });
+    const gb = g.querySelector(".gbadge"); if(!gb) return;
+    gb.hidden = !n || !g.classList.contains("closed"); gb.textContent = n || ""; gb.classList.toggle("hot", hot);
+  });
+}
+function navOpenFor(tab){
+  const b = document.querySelector('.hq nav .navgrp button[data-hq="' + tab + '"]'); if(!b) return;
+  const g = b.closest(".navgrp"); if(g && g.classList.contains("closed")){ navSet(g, true); navSave(); navBadges(); }
+}
+function navInit(){
+  $$(".hq nav .navgrp").forEach(g => {
+    navSet(g, !!NAV_OPEN[g.dataset.grp]);
+    const h = g.querySelector(".navgh");
+    if(h) h.addEventListener("click", () => { navSet(g, g.classList.contains("closed")); navSave(); navBadges(); });
+  });
+  navBadges();
+}
+navInit();
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
