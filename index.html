@@ -942,6 +942,7 @@ table.t tr:last-child td{border-bottom:0}
 table.t tbody tr.click{cursor:pointer}
 table.t tbody tr.click:hover td{background:var(--accent-soft)}
 table.t td.n,table.t th.n{text-align:right}
+table.t td.ck,table.t th.ck{text-align:center;width:1%;white-space:nowrap}
 table.t td .t2{display:block;color:var(--ink-3);font-size:11.5px;margin-top:1px}
 table.t tr.past td{color:var(--ink-3)}
 table.t tr.slot td{color:var(--ink-3);font-style:normal}
@@ -1903,7 +1904,16 @@ function epNewId(n){ const top=Math.max(1,...vals("episodes").map(e=>+e.season||
 function epNewSeason(){ return String(Math.max(1,...vals("episodes").map(e=>+e.season||1))); }
 function epsInWindow(ed){ const a=prevPublish(ed), b=ed.dates.draft||ed.dates.publish; return vals("episodes").filter(e=>e.airDate && e.airDate>a && e.airDate<=ed.dates.publish).sort((x,y)=>(+x.num||0)-(+y.num||0)); }
 function newsEdition(n){ if(n.edition) return S.editions[n.edition]||null; return n.date ? editionFor(n.date) : null; }
-function newsInWindow(ed){ return vals("news").filter(n=>{ const e=newsEdition(n); return e && e.id===ed.id; }).sort((x,y)=>(x.date||"")<(y.date||"")?1:-1); }
+function newsInWindow(ed){
+  const logged=vals("news").filter(n=>{ const e=newsEdition(n); return e && e.id===ed.id; });
+  // "In the News" posts on MISMO's LinkedIn page count too, unless the story is already logged on the In the News page
+  const seen=new Set(vals("news").map(n=>normUrl(n.url)).filter(Boolean));
+  const fromLi=vals("pieces").filter(p=>p.channel==="linkedin" && p.kind==="In the News" && p.status!=="idea" && !/^news:/.test(String(p.notes||"")) && p.date && (p.link||p.postedUrl))
+    .filter(p=>{ const e=editionFor(p.date); return e && e.id===ed.id && !seen.has(normUrl(p.link||p.postedUrl)); })
+    .map(p=>({id:"li-"+p.id, headline:String(p.title||""), outlet:"", date:p.date, url:p.link||p.postedUrl, kind:/press release/i.test((p.title||"")+" "+(p.copy||""))?"press":"mention", fromLinkedIn:true}));
+  return logged.concat(fromLi).sort((x,y)=>(x.date||"")<(y.date||"")?1:-1);
+}
+function normUrl(u){ return String(u||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
 function fridays(from, n){ const out=[]; let d=nextDow(from,5); for(let i=0;i<n;i++){ out.push(d); d=add(d,7); } return out; }
 function epOn(fri){ return vals("episodes").find(e=>e.airDate===fri); }
 function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,3) : ""); }
@@ -2863,7 +2873,8 @@ const HELP = [
  {id:"news", t:"In the News", g:"Sources", b:`
   <ul>
    <li>Log each MISMO press release and each article that mentions MISMO with <b>+ Add an Article</b>: headline, outlet, date, link, and whether it's a press release or a mention.</li>
-   <li>Each item lands in the In the News section of the edition its date falls in. If an older item was missed, set <b>Goes in MISMO Matters</b> to the edition it should run in.</li>
+   <li>Each item lands in the In the News section of the edition its date falls in. <b>In the News</b> posts on MISMO's LinkedIn page land there too (any post with Kind of Post set to In the News and a link), unless the same story is already logged here.</li>
+   <li>If an older item was missed, set <b>Goes in MISMO Matters</b> to the edition it should run in.</li>
    <li>Items marked <b>Found Automatically</b> came from the weekly search (once it's switched on). Check each one, then untick "Found automatically · needs a look."</li>
    <li>Outlets to check: HousingWire, National Mortgage News, Mortgage News Daily and Chrisman Commentary, Inside Mortgage Finance, Scotsman Guide, National Mortgage Professional, The Mortgage Point, Commercial Observer and MBA NewsLink.</li>
   </ul>`},
@@ -3998,9 +4009,9 @@ function renderMicdup(){
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
     const ed=editionFor(f);
     return '<tr class="click'+(past&&e.youtubeDone&&e.linkedinDone?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
-      '<td>'+(e.fileUrl?'<a href="'+esc(e.fileUrl)+'" target="_blank" rel="noopener" class="tk on" title="Open Brian\'s file" onclick="event.stopPropagation()">↗</a>':tk(e.fileIn&&e.bvDescription, past, "File link and description from Brian"))+'</td><td>'+tk(e.captions, past, "Captions proofed and uploaded")+'</td><td>'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td>'+tk(e.linkedinDone, liDate(e)<t, "LinkedIn post Monday "+fS(liDate(e)))+'</td><td>'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
+      '<td>'+(e.fileUrl?'<a href="'+esc(e.fileUrl)+'" target="_blank" rel="noopener" class="tk on" title="Open Brian\'s file" onclick="event.stopPropagation()">↗</a>':tk(e.fileIn&&e.bvDescription, past, "File link and description from Brian"))+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "LinkedIn post Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
-  const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(e.notes)+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td>'+tk(e.youtubeDone,false,"YouTube")+' '+tk(e.linkedinDone,false,"LinkedIn")+' '+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
+  const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(e.notes)+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Every Friday at 7:30 AM. On YouTube that afternoon, on the MISMO LinkedIn page Monday, and in the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
     '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 7:30 AM</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 7:30 AM</div></button>'+
@@ -4014,8 +4025,8 @@ function renderMicdup(){
       '<div class="st"><div class="when">Monday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
       '<div class="st"><div class="when">Next MISMO Matters</div><b>Mic\'d Up Section</b><small>Listed automatically once it\'s on YouTube</small></div></div>'+
     kitCardHtml()+
-    '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Brian · Captions · YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th title="File and description from Brian">Brian</th><th>Captions</th><th>YouTube</th><th>LinkedIn</th><th>Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
-    '<div class="card"><div class="ch"><h2>All Episodes</h2><span class="cnt">'+eps.length+'</span></div>'+(all?'<div class="tw"><table class="t"><thead><tr><th class="n">Ep</th><th>Title</th><th>Guest</th><th>Friday</th><th>YouTube · LinkedIn · Website</th></tr></thead><tbody>'+all+'</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("episodes")?"Loading episodes…":"No episodes logged yet. Add the first one above.")+'</div>')+'</div>';
+    '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Brian · Captions · YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck" title="File and description from Brian">Brian</th><th class="ck">Captions</th><th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
+    '<div class="card"><div class="ch"><h2>All Episodes</h2><span class="cnt">'+eps.length+'</span></div>'+(all?'<div class="tw"><table class="t"><thead><tr><th class="n">Ep</th><th>Title</th><th>Guest</th><th>Friday</th><th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th></tr></thead><tbody>'+all+'</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("episodes")?"Loading episodes…":"No episodes logged yet. Add the first one above.")+'</div>')+'</div>';
   $("#mu-new",el).onclick=()=>newEpisode(epOn(fri)?add(fri,7):fri);
   $$("[data-ep]",el).forEach(r=>r.onclick=()=>openEpisode(r.dataset.ep));
   $$("[data-new]",el).forEach(r=>r.onclick=()=>newEpisode(r.dataset.new));
@@ -4175,7 +4186,7 @@ function renderYoutube(){
       '<div class="tile"><div class="v">'+onYT+'</div><div class="k">Mic\'d Up on YouTube</div><div class="s">logged here</div></div>'+
       '<div class="tile"><div class="v">'+vids.length+'</div><div class="k">Other Videos</div><div class="s">FRAME, series, recordings</div></div>'+
     '</div></div>'+
-    '<div class="grid2"><div class="card"><div class="ch"><h2>Upload Queue</h2><span class="cnt">'+queue.length+'</span></div>'+(queue.length?'<div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Description</th><th>Captions</th></tr></thead><tbody>'+queue.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(e.airDate))+'</b></td><td>Ep '+esc(e.num||"?")+' '+esc(e.title||"")+'</td><td>'+tk(!!e.bvDescription, e.airDate<=t, "Brian's description")+'</td><td>'+tk(e.captions, e.airDate<=t, "Captions")+'</td></tr>').join("")+'</tbody></table></div>':'<div class="empty">Nothing to upload.</div>')+'</div>'+
+    '<div class="grid2"><div class="card"><div class="ch"><h2>Upload Queue</h2><span class="cnt">'+queue.length+'</span></div>'+(queue.length?'<div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th class="ck">Description</th><th class="ck">Captions</th></tr></thead><tbody>'+queue.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(e.airDate))+'</b></td><td>Ep '+esc(e.num||"?")+' '+esc(e.title||"")+'</td><td class="ck">'+tk(!!e.bvDescription, e.airDate<=t, "Brian's description")+'</td><td class="ck">'+tk(e.captions, e.airDate<=t, "Captions")+'</td></tr>').join("")+'</tbody></table></div>':'<div class="empty">Nothing to upload.</div>')+'</div>'+
     '<div class="card"><div class="ch"><h2>Every Upload</h2></div><div class="checks">'+
       [["Title","MISMO Mic'd Up Episode NN: Title with Guest, Company"],["Description","Brian's description, as he wrote it"],["Captions","Upload the caption file and proof every name. MISMO spelled right. Never burned into the video."],["Playlist","Add to the Mic'd Up playlist"],["Website","Add to the Mic'd Up list on the website home page"],["MISMO Matters","Lists itself in the next edition once marked on YouTube"]].map(([a,b])=>'<div class="chk"><span class="ct"><b>'+esc(a)+'</b><small>'+esc(b)+'</small></span></div>').join("")+
     '</div></div></div>'+
