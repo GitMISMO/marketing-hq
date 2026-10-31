@@ -1411,20 +1411,21 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .st-next{margin-top:auto;font-size:12.5px;color:rgba(255,255,255,.7);padding-top:10px;border-top:1px solid var(--st-line)}.st-next b{color:#fff}
 .st-meter{height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.st-meter i{display:block;height:100%;background:var(--k);border-radius:3px}
 /* Mic'd Up: on air */
-.st-mic{grid-column:span 2;grid-row:span 2;padding:20px 22px}
+.st-mic{grid-column:span 2;padding:18px 20px}
 .st-onair{flex:0 0 auto;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:800;padding:4px 10px;border-radius:4px;border:1.5px solid rgba(255,107,91,.65);color:#ffb4a8}
 .st-onair.lit{background:#e5483a;border-color:#e5483a;color:#fff;box-shadow:0 0 18px rgba(229,72,58,.75);animation:air 1.4s ease-in-out infinite}
 .st-mic .st-lab{margin-left:auto}
 .wave{display:flex;align-items:center;gap:3px;height:92px;margin:4px 0}
-.st-mic .wave{flex:1 1 auto;height:auto;min-height:92px;max-height:200px}
+.st-mic .wave{height:52px;margin:2px 0}
 .wave i{flex:1 1 0;min-width:2px;height:var(--h,40%);border-radius:2px;background:linear-gradient(180deg,#ffb27a,var(--k));transform-origin:center;animation:wv 1.25s ease-in-out infinite alternate;animation-delay:calc(var(--d,0s) * -1)}
 .wave.quiet i{height:6%;animation:none;opacity:.4}
 @keyframes wv{0%{transform:scaleY(.25)}100%{transform:scaleY(1)}}
-.mic-ep b{display:block;font-size:22px;font-weight:700;line-height:1.2}
+.mic-ep b{display:block;font-size:19px;font-weight:700;line-height:1.2}
 .mic-ep span{display:block;font-size:14px;color:rgba(255,255,255,.75);margin-top:3px}
-.mic-cd{display:flex;gap:8px}
-.mic-cd span{background:rgba(0,0,0,.25);border:1px solid var(--st-line);border-radius:8px;padding:6px 10px;text-align:center;min-width:58px}
-.mic-cd b{display:block;font-size:24px;font-variant-numeric:tabular-nums;line-height:1.1}
+.mic-row{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}.mic-row .mic-ep{flex:1 1 220px;min-width:0}
+.mic-cd{display:flex;gap:6px}
+.mic-cd span{background:rgba(0,0,0,.25);border:1px solid var(--st-line);border-radius:8px;padding:5px 8px;text-align:center;min-width:50px}
+.mic-cd b{display:block;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1}
 .mic-cd small{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.6)}
 .cd-live{font-weight:700;color:#ffb4a8}
 .mic-steps{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
@@ -1453,7 +1454,6 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .mpl-play svg{width:18px;height:18px;fill:#fff}
 .mpl-bar{position:absolute;left:8px;right:8px;bottom:8px;height:3px;background:rgba(255,255,255,.25);border-radius:2px}.mpl-bar i{display:block;width:38%;height:100%;background:#ff0033;border-radius:2px}
 /* LinkedIn: the feed */
-.st-li{grid-column:span 2}
 .mini-feed{background:#fff;color:#1d2226;border-radius:8px;padding:10px 12px;box-shadow:0 12px 24px -14px rgba(0,0,0,.7)}
 .mf-h{display:flex;align-items:center;gap:8px}.mf-h>span:nth-child(2){flex:1;min-width:0}
 .mf-av{width:30px;height:30px;border-radius:5px;background:#0d314c;display:flex;align-items:center;padding:4px;box-sizing:border-box;--logo-body:#fff;--logo-s:#74bfeb}
@@ -1479,9 +1479,35 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .vault-i{all:unset;box-sizing:border-box;cursor:pointer;background:rgba(255,255,255,.05);border:1px solid var(--st-line);border-radius:8px;padding:9px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .vault-i:hover{background:rgba(255,255,255,.1)}.vault-i:focus-visible{outline:2px solid var(--sky)}
 .vault-i b{font-size:22px;line-height:1.1}.vault-i span{font-size:11px;color:rgba(255,255,255,.65);line-height:1.3}
-@media(max-width:1200px){.st-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.st-mic,.st-li,.st-news,.st-vault{grid-column:span 2}.st-mat{grid-row:span 2}}
-@media(max-width:700px){.st-grid{grid-template-columns:1fr}.st-mic,.st-li,.st-news,.st-vault{grid-column:auto}.st-mat,.st-mic{grid-row:auto}.sw-week{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto}.vault{grid-template-columns:repeat(2,minmax(0,1fr))}.wave{height:64px}.mic-cd span{min-width:0;flex:1}}
+@media(max-width:1200px){.st-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.st-mic,.st-news,.st-vault{grid-column:span 2}.st-mat{grid-row:span 2}}
+@media(max-width:700px){.st-grid{grid-template-columns:1fr}.st-mic,.st-news,.st-vault{grid-column:auto}.st-mat,.st-mic{grid-row:auto}.sw-week{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto}.vault{grid-template-columns:repeat(2,minmax(0,1fr))}.wave{height:64px}.mic-cd span{min-width:0;flex:1}}
 @media (prefers-reduced-motion:reduce){.wave i,.st-onair.lit{animation:none}.st-tile,.mini-paper{transition:none}}
+.st-grid{grid-auto-flow:row dense}
+/* Orders: the pipeline */
+.st-ord{--k:#e0a83c}
+.pipe{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));position:relative;margin:4px 0}
+.pipe::before{content:"";position:absolute;left:12%;right:12%;top:19px;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.35) 0 6px,transparent 6px 11px)}
+.pp{display:flex;flex-direction:column;align-items:center;gap:5px;position:relative}
+.pp-box{width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,.07);border:1px solid var(--st-line);display:flex;align-items:center;justify-content:center;position:relative}
+.pp.has .pp-box{background:color-mix(in srgb,var(--k) 30%,#0b2436);border-color:var(--k)}
+.pp-box svg{width:20px;height:20px;fill:none;stroke:#fff;stroke-width:1.6;stroke-linejoin:round}
+.pp-box em{position:absolute;right:-7px;top:-7px;font-style:normal;font-size:10.5px;font-weight:800;min-width:18px;height:18px;border-radius:9px;background:#fff;color:#0b2436;display:flex;align-items:center;justify-content:center;padding:0 4px}
+.pp:not(.has) .pp-box em{background:rgba(255,255,255,.18);color:rgba(255,255,255,.7)}
+.pp small{font-size:10.5px;color:rgba(255,255,255,.7);text-align:center}
+.st-ord:hover .pp.has .pp-box{animation:bob .6s ease-in-out}
+@keyframes bob{50%{transform:translateY(-4px)}}
+/* QR codes: a live code */
+.st-qr{--k:#74bfeb}
+.qr-row{display:flex;align-items:center;gap:16px}
+.qr-art{position:relative;width:84px;height:84px;flex:0 0 auto;background:#fff;border-radius:8px;padding:6px;box-sizing:border-box;overflow:hidden;box-shadow:0 10px 22px -10px rgba(0,0,0,.7)}
+.qr-art svg{width:100%;height:100%;display:block;fill:#0d314c}
+.qr-scan{position:absolute;left:0;right:0;height:3px;top:10%;background:linear-gradient(90deg,transparent,#74bfeb,transparent);box-shadow:0 0 10px #74bfeb;animation:qrscan 2.4s ease-in-out infinite}
+@keyframes qrscan{0%,100%{top:8%}50%{top:88%}}
+/* Rebranding: old to new */
+.st-brand{--k:#9b8cf0}
+.brbar{height:14px;border-radius:7px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.12) 0 6px,rgba(255,255,255,.04) 6px 12px);overflow:hidden}
+.brbar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#0d314c,#50a4db,#74bfeb)}
+@media (prefers-reduced-motion:reduce){.qr-scan{animation:none;display:none}.st-ord:hover .pp.has .pp-box{animation:none}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -4816,7 +4842,7 @@ function renderHome(){
     b.addEventListener("mouseleave",()=>hmFocus(null));
     b.addEventListener("blur",()=>hmFocus(null));
   });
-  if(HM.view==="map") hmDraw(); else hmStudioLive(el);
+  if(HM.view==="map") hmDraw(); else { hmStudioLive(el); hmLoadQr(); }
 }
 function hmFocus(id){
   HM.focus=id; const map=$("#hm-map"); if(!map) return;
@@ -4858,9 +4884,9 @@ function hmStudio(){
     const steps=[["Guest Form",!!g],["Recorded",!!ne.recordDate],["Files In",!!k.video],["Copy Written",!!k.written],["Amy Approved",k.liStatus==="approved"]];
     mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="ep:'+esc(ne.id)+'">'+
       '<div class="st-top"><span class="st-onair'+(live?" lit":"")+'">'+(live?"On Air":"Next on Air")+'</span><span class="st-lab">MISMO Mic\'d Up</span></div>'+
-      '<div class="wave" aria-hidden="true">'+[...Array(44)].map((_,i)=>'<i style="--d:'+((i*37)%17)/10+'s;--h:'+(28+((i*53)%61))+'%"></i>').join("")+'</div>'+
-      '<div class="mic-ep"><b>'+esc(epTag(ne))+(ne.title?": "+esc(ne.title):"")+'</b><span>'+esc([ne.guests,ne.company].filter(Boolean).join(" · ")||"Guest to come")+'</span></div>'+
-      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'T08:30:00"></div>'+
+      '<div class="wave" aria-hidden="true">'+[...Array(64)].map((_,i)=>'<i style="--d:'+((i*37)%17)/10+'s;--h:'+(28+((i*53)%61))+'%"></i>').join("")+'</div>'+
+      '<div class="mic-row"><div class="mic-ep"><b>'+esc(epTag(ne))+(ne.title?": "+esc(ne.title):"")+'</b><span>'+esc([ne.guests,ne.company].filter(Boolean).join(" · ")||"Guest to come")+'</span></div>'+
+      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'T08:30:00"></div></div>'+
       '<div class="mic-steps">'+steps.map(s=>'<span class="'+(s[1]?"on":"")+'">'+(s[1]?"✓ ":"")+esc(s[0])+'</span>').join("")+'</div>'+
     '</button>'; }
   else mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="micdup"><div class="st-top"><span class="st-onair">Off Air</span><span class="st-lab">MISMO Mic\'d Up</span></div><div class="wave quiet" aria-hidden="true">'+[...Array(44)].map(()=>'<i></i>').join("")+'</div><div class="mic-ep"><b>No episode booked</b><span>Add the next Friday</span></div></button>';
@@ -4923,9 +4949,32 @@ function hmStudio(){
     stat(vals("pieces").filter(p=>p.channel==="linkedin" && p.status==="done").length,"LinkedIn Posts","linkedin")+
   '</div></div>';
 
+  /* Orders: the pipeline */
+  const ors=vals("orders").filter(o=>!o.archived && o.status!=="cancelled");
+  const stage=[["To Order",o=>["toorder","quote"].includes(o.status||"toorder")],["Ordered",o=>o.status==="ordered"],["Shipped",o=>o.status==="shipped"],["Received",o=>o.status==="received"]];
+  const risk=ors.filter(o=>orRisk(o)).length;
+  const nextNeed=ors.filter(o=>o.status!=="received" && (o.neededBy||orEventDate(o))).sort((a,b)=>(a.neededBy||orEventDate(a))<(b.neededBy||orEventDate(b))?-1:1)[0];
+  const ord='<button type="button" class="st-tile st-ord k-orders" data-hgo="orders"><div class="st-top"><span class="st-lab">Orders</span>'+(risk?'<span class="st-pill hot">'+risk+' at risk</span>':'')+'</div>'+
+    '<div class="pipe">'+stage.map(([l,f],i)=>{ const n=ors.filter(f).length; return '<div class="pp'+(n?" has":"")+'"><span class="pp-box">'+(n?'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5L12 12l8.5-4.5M12 12v9"/></svg>':'')+'<em>'+n+'</em></span><small>'+l+'</small></div>'; }).join("")+'</div>'+
+    '<div class="st-sub">'+(nextNeed?"Next needed: <b>"+esc(nextNeed.name||"Order")+"</b> · "+esc(fS(nextNeed.neededBy||orEventDate(nextNeed))):ors.length?"Everything's in":"Pins, swag, banners and print")+'</div></button>';
+
+  /* QR codes: a live code */
+  const qrc=HM.qr; let qLive=0,qSoon=0,qAll=0;
+  if(qrc){ Object.values(qrc).forEach(c=>{ qAll++; if((!c.s||c.s<=t) && (!c.e||c.e>=t)){ qLive++; if(c.e && c.e<=add(t,30)) qSoon++; } }); }
+  const qr='<button type="button" class="st-tile st-qr" data-hgo="qr"><div class="st-top"><span class="st-lab">QR Codes</span>'+(qSoon?'<span class="st-pill">'+qSoon+' expiring soon</span>':'')+'</div>'+
+    '<div class="qr-row"><div class="qr-art">'+hmQrArt()+'<i class="qr-scan"></i></div><div class="st-big">'+(qrc?hmCount(qLive):"—")+'<small>live</small></div></div>'+
+    '<div class="st-sub">'+(qrc?(qAll===qLive?"Every code is working":hmPl(qAll-qLive,"code")+" scheduled or ended"):"Change where a code goes without reprinting")+'</div></button>';
+
+  /* Rebranding: old to new */
+  const brs=vals("branding").filter(b=>!b.archived && b.status!=="retire"), bDone=brs.filter(b=>b.status==="done").length, bOld=brs.filter(b=>b.status==="old").length, bPct=brs.length?Math.round(bDone/brs.length*100):0;
+  const brand='<button type="button" class="st-tile st-brand" data-hgo="branding"><div class="st-top"><span class="st-lab">Rebranding</span></div>'+
+    '<div class="st-big">'+bPct+'%<small>on the new brand</small></div>'+
+    '<div class="brbar"><i style="width:'+bPct+'%"></i></div>'+
+    '<div class="st-sub">'+(brs.length?bDone+" of "+brs.length+" updated"+(bOld?" · <b>"+bOld+" still old</b>":""):"Track what still needs the new look")+'</div></button>';
+
   return '<div class="studio">'+
     '<div class="sw-week">'+week+'</div>'+
-    '<div class="st-grid">'+mic+mat+sum+yt+li+mc+req+news+vault+'</div></div>';
+    '<div class="st-grid">'+mic+mat+sum+yt+li+mc+ord+qr+brand+req+news+vault+'</div></div>';
 }
 /* the moving parts: the countdown ticks and the numbers count up */
 function hmStudioLive(el){
@@ -4942,6 +4991,19 @@ function hmStudioLive(el){
   if(!still) $$("[data-count]",el).forEach(b=>{ const n=+b.dataset.count; if(!n) return; const t0=performance.now(), dur=900;
     const step=now=>{ const p=Math.min(1,(now-t0)/dur), v=Math.round(n*(1-Math.pow(1-p,3))); b.textContent=v.toLocaleString(); if(p<1) requestAnimationFrame(step); };
     requestAnimationFrame(step); });
+}
+
+/* a real-looking QR code to decorate the QR screen (finder squares plus a fixed pattern) */
+function hmQrArt(){
+  const n=21, on=(x,y)=>{ const f=(a,b)=>x>=a&&x<a+7&&y>=b&&y<b+7; for(const [a,b] of [[0,0],[14,0],[0,14]]) if(f(a,b)){ const dx=x-a, dy=y-b; return dx===0||dx===6||dy===0||dy===6||(dx>=2&&dx<=4&&dy>=2&&dy<=4); }
+    if((x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12)) return false; return ((x*7+y*13+x*y*3)%5)<2; };
+  let r=''; for(let y=0;y<n;y++) for(let x=0;x<n;x++) if(on(x,y)) r+='<rect x="'+x+'" y="'+y+'" width="1" height="1"/>';
+  return '<svg viewBox="-1 -1 23 23" aria-hidden="true">'+r+'</svg>';
+}
+/* the QR codes live in their own place; read how many are live (resources.mismo.org only) */
+function hmLoadQr(){
+  if(HM.qr || HM.qrAsked || location.hostname!=="resources.mismo.org") return; HM.qrAsked=true;
+  fetch("/qr/data/routes.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{ if(j && j.codes){ HM.qr=j.codes; if(TAB==="home" && HM.view!=="map") renderHome(); } }).catch(()=>{});
 }
 
 /* ================= MISMO Mic'd Up ================= */
