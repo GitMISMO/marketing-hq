@@ -1286,6 +1286,75 @@ body.railmini .hq nav button.navgh{display:none}
 body.railmini .hq nav .navgrp, body.railmini .hq nav .navgrp.closed .navkids{display:flex;align-items:center;gap:4px;margin-top:0}
 body.railmini .hq nav .navkids{align-items:center;gap:4px}
 @media (prefers-reduced-motion:reduce){ .hq nav button.navgh .chev{transition:none} }
+/* ---------- Home: the Media Map ---------- */
+.hm-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;background:var(--navy);color:#fff;border-radius:10px;padding:22px 24px;margin-bottom:22px;position:relative;overflow:hidden}
+.hm-hero::after{content:"";position:absolute;right:-60px;top:-80px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(116,191,235,.22),rgba(116,191,235,0) 70%);pointer-events:none}
+.hm-eyebrow{font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--sky)}
+.hm-hi h1{font-size:30px;font-weight:700;line-height:1.15;margin:6px 0 10px;color:#fff}
+.hm-hi p{font-size:15px;line-height:1.6;color:rgba(255,255,255,.86);margin:0;max-width:62ch}
+.hm-hi p em{font-style:normal;color:var(--sky);font-weight:600}
+.hm-hi p em.hm-late{color:#ffb4a8}
+.hm-needs{background:rgba(255,255,255,.07);border:1px solid rgba(116,191,235,.25);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:6px;position:relative;z-index:1;min-width:0}
+.hm-nh{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:rgba(255,255,255,.7);display:flex;gap:8px;align-items:baseline}
+.hm-nh span{letter-spacing:0;text-transform:none;font-weight:500;color:rgba(255,255,255,.5)}
+.hm-need{display:grid;grid-template-columns:76px minmax(0,1fr);gap:10px;align-items:baseline;text-align:left;background:rgba(255,255,255,.06);border:0;border-left:3px solid var(--k,var(--sky));border-radius:5px;padding:7px 10px;color:#fff;font:inherit;cursor:pointer}
+.hm-need:hover{background:rgba(255,255,255,.13)}
+.hm-need span{font-size:11.5px;color:rgba(255,255,255,.65);white-space:nowrap}
+.hm-need b{font-size:13px;font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-need.over span{color:#ffb4a8;font-weight:700}
+.hm-clear{font-size:13px;color:rgba(255,255,255,.7);padding:6px 2px}
+.hm-all{margin-top:auto;align-self:flex-start;background:none;border:0;color:var(--sky);font:inherit;font-size:12.5px;font-weight:600;padding:4px 2px;cursor:pointer}
+.hm-all:hover{text-decoration:underline}
+@media(max-width:900px){.hm-hero{grid-template-columns:1fr}}
+.hm-map{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 46px;padding:18px 18px 8px}
+.hm-lines{position:absolute;left:0;top:0;pointer-events:none;overflow:visible}
+.hm-lines path{fill:none;stroke:var(--border-strong);stroke-width:1.5;opacity:.75;transition:opacity .15s,stroke .15s}
+.hm-lines path.flow{stroke:var(--sky);stroke-dasharray:4 6;animation:hmflow 1.4s linear infinite;opacity:.9}
+.hm-lines path.lit{stroke:var(--navy-mid);stroke-width:2.4;opacity:1}
+:root[data-theme="dark"] .hm-lines path.lit{stroke:var(--sky)}
+.hm-map.focusing .hm-lines path:not(.lit){opacity:.12}
+@keyframes hmflow{to{stroke-dashoffset:-20}}
+@media (prefers-reduced-motion:reduce){.hm-lines path.flow{animation:none}}
+.hm-col{display:flex;flex-direction:column;gap:12px;position:relative;z-index:1;min-width:0}
+.hm-ch{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--ink-3);padding-bottom:2px}
+.hm-node{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--k,var(--ink-3));border-radius:8px;padding:10px 12px 11px;color:var(--ink);font:inherit;cursor:pointer;position:relative;box-shadow:0 1px 2px rgba(13,49,76,.06);transition:transform .15s,box-shadow .15s,opacity .15s;min-width:0}
+.hm-node:hover,.hm-node:focus-visible{transform:translateY(-2px);box-shadow:0 8px 20px rgba(13,49,76,.14);outline:none}
+.hm-map.focusing .hm-node:not(.lit){opacity:.35}
+.hn-dot{position:absolute;right:10px;top:11px;width:9px;height:9px;border-radius:50%;background:var(--ink-3);opacity:.5}
+.st-ok .hn-dot{background:#2a9d6f;opacity:1} .st-soon .hn-dot{background:#d8a02a;opacity:1} .st-late .hn-dot{background:#c94a3b;opacity:1;box-shadow:0 0 0 0 rgba(201,74,59,.5);animation:hmpulse 1.8s infinite}
+@keyframes hmpulse{70%{box-shadow:0 0 0 7px rgba(201,74,59,0)}100%{box-shadow:0 0 0 0 rgba(201,74,59,0)}}
+@media (prefers-reduced-motion:reduce){.st-late .hn-dot{animation:none}}
+.hn-t{font-size:12.5px;font-weight:700;padding-right:14px}
+.hn-big{font-size:24px;font-weight:700;line-height:1.1;color:var(--ink);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.hn-big small{font-size:11.5px;font-weight:500;color:var(--ink-3)}
+.hn-bar{display:block;height:4px;border-radius:2px;background:var(--surface-3,var(--rule));overflow:hidden;margin:2px 0}
+.hn-bar i{display:block;height:100%;background:var(--k,var(--sky));border-radius:2px}
+.hn-next{font-size:12px;color:var(--ink-2);line-height:1.35}
+.hm-legend{display:flex;gap:16px;flex-wrap:wrap;padding:6px 18px 14px;font-size:11.5px;color:var(--ink-3)}
+.hm-legend span{display:inline-flex;align-items:center;gap:6px}
+.hm-legend i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.hm-legend .st-ok i{background:#2a9d6f}.hm-legend .st-soon i{background:#d8a02a}.hm-legend .st-late i{background:#c94a3b}
+@media(max-width:1100px){.hm-map{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}.hm-lines{display:none}}
+@media(max-width:600px){.hm-map{grid-template-columns:1fr;padding:14px}}
+.hm-stories{margin-top:22px}
+.hm-h2{font-size:17px;font-weight:700;margin:0 0 10px;color:var(--ink)}
+.hm-sgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(320px,100%),1fr));gap:16px}
+.hm-story{display:flex;flex-direction:column;gap:12px;text-align:left;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--k);border-radius:8px;padding:14px 16px;color:var(--ink);font:inherit;cursor:pointer;min-width:0}
+.hm-story:hover{box-shadow:0 8px 20px rgba(13,49,76,.12)}
+.hs-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.hs-h b{font-size:15px}.hs-h span{font-size:12.5px;color:var(--ink-3)}.hs-h em{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;color:var(--ink-2)}
+.hs-steps{list-style:none;margin:0;padding:0;display:flex;align-items:flex-start}
+.hs-steps li{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;text-align:center}
+.hs-steps li::before{content:"";position:absolute;top:6px;left:-50%;width:100%;height:2px;background:var(--border)}
+.hs-steps li:first-child::before{display:none}
+.hs-steps li.on::before,.hs-steps li.nx::before{background:var(--k)}
+.hs-steps li i{width:14px;height:14px;border-radius:50%;border:2px solid var(--border-strong);background:var(--surface);position:relative;z-index:1}
+.hs-steps li.on i{background:var(--k);border-color:var(--k)}
+.hs-steps li.nx i{border-color:var(--k);box-shadow:0 0 0 4px color-mix(in srgb,var(--k) 22%,transparent)}
+.hs-steps li span{font-size:10.5px;line-height:1.25;color:var(--ink-3)}
+.hs-steps li.on span{color:var(--ink-2)}.hs-steps li.nx span{color:var(--ink);font-weight:700}
+.hs-next{font-size:12.5px;color:var(--ink-2)}.hs-next b{color:var(--ink)}
+@media(max-width:600px){.hs-steps li span{display:none}.hm-need{grid-template-columns:58px minmax(0,1fr)}.hm-hero{padding:18px 16px}.hm-hi h1{font-size:25px}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -1595,7 +1664,10 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <div class="railhits" id="rail-hits" hidden></div>
   </div>
   <nav aria-label="MISMO Media">
-    <button type="button" data-hq="overview" aria-current="page" title="Schedule">
+    <button type="button" data-hq="home" title="Home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
+      <span>Home</span></button>
+    <button type="button" data-hq="overview" title="Schedule">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
       <span>Schedule</span><b class="nbadge" id="nb-overview" hidden></b></button>
     <button type="button" data-hq="requests" title="Requests">
@@ -1706,6 +1778,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-news" hidden></section>
   <section class="page" id="page-people" hidden></section>
   <section class="page" id="page-lists" hidden></section>
+  <section class="page" id="page-home" hidden></section>
   <section class="page" id="page-images" hidden></section>
   <section class="page" id="page-qr" hidden></section>
   <section class="page" id="page-branding" hidden></section>
@@ -2086,11 +2159,11 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
-let TAB="overview";
+const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
+let TAB="home";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
-  if(!TABS.includes(tab)) tab="overview";
+  if(!TABS.includes(tab)) tab="home";
   TAB=tab;
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
@@ -2108,7 +2181,7 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
 function renderTab(t){
   try{
-    ({overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
@@ -2778,6 +2851,14 @@ const HELP = [
    <li><b>Close</b> without saving and the panel asks once before throwing your changes away. <kbd>Esc</kbd> also closes it.</li>
    <li><b>Delete</b> always asks you to press it twice.</li>
    <li><b>Dates</b> can be typed the way you'd write them (11/18/26, Nov 18) or picked from the calendar button beside the box.</li>
+  </ul>`},
+ {id:"home", t:"Home and the Media Map", g:"Basics", b:`
+  <p><b>Home</b> is the first page. It shows how all of MISMO's media connects, live, so you can start anywhere and follow the thread.</p>
+  <ul>
+   <li><b>The top band</b> says good morning, what's coming (the next Mic'd Up episode, the next MISMO Matters send, the next summit) and how many items are past due. <b>On Your Plate</b> lists what's yours in the next seven days, using your name on the schedule; click one to open it.</li>
+   <li><b>How It All Connects</b> lays everything out in four columns: what <b>Comes In</b> (requests, In the News, guests and recordings, pictures), what <b>We Make</b> (MISMO Matters, Mic'd Up, summits, rebranding and orders), where it <b>Goes Out</b> (LinkedIn, YouTube, Mailchimp, QR codes) and who it <b>Reaches</b> and how it did (subscribers, Results). Each box shows its live number and what's next.</li>
+   <li><b>The dot</b> on each box: green is on track, gold needs a look, red (pulsing) is late or blocked. Lines show where work flows; a moving line means work is waiting on that box. Point at a box to light up only its connections. Click to open the page.</li>
+   <li><b>Follow the Story</b> tracks the next Mic'd Up episode (guest form, recorded, files in, copy written, Amy approved, live, Spotify, YouTube, MISMO's LinkedIn Live, MISMO Matters) and this month's MISMO Matters, step by step. Click one to open it.</li>
   </ul>`},
  {id:"who", t:"Who Does What", g:"Basics", b:`
   <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
@@ -4467,6 +4548,162 @@ function navInit(){
   navBadges();
 }
 navInit();
+/* ================= Home: the Media Map =================
+   The first page. One look shows how everything connects: what comes in, what the team makes, where it goes out,
+   who it reaches and how it did. Every box is live, says what it needs next and opens its page. Lines show how work
+   flows from one to the next; hover a box (or tap it on a phone) to light up its connections. Below the map,
+   "Follow the Story" tracks the next Mic'd Up episode and this month's MISMO Matters from start to finish. */
+const HM = {focus:null};
+const dBetween = (a,b)=>{ const x=P(a), y=P(b); return x&&y ? Math.round((y-x)/864e5) : null; };
+function hmFirst(){ return String(window.__hqWho||"").trim().split(/\s+/)[0]||""; }
+function hmHello(){ const h=new Date().getHours(); return h<12?"Good morning":h<17?"Good afternoon":"Good evening"; }
+function hmNextEp(){ return vals("episodes").filter(e=>e.airDate && e.airDate>=T()).sort((a,b)=>a.airDate<b.airDate?-1:1)[0]||null; }
+function hmNextSummit(){ return SUMMITS.filter(s=>s.end>=T()).sort((a,b)=>a.start<b.start?-1:1)[0]||null; }
+function hmPl(n,w){ return n+" "+(n===1?w:/y$/.test(w)?w.slice(0,-1)+"ies":w+"s"); }
+
+/* each box: id, column, page, title, the live line, a small "next" line, and a state (ok / soon / late / quiet) */
+function hmNodes(){
+  const t=T(), wk=add(t,7), ev=allEvents(), N=[];
+  const late=k=>ev.filter(e=>e.k===k && isOver(e)).length;
+  /* comes in */
+  const rq=typeof requests==="function"?requests():[], rqNew=rq.filter(r=>r.status==="new").length, rqOpen=rq.filter(r=>!["done","declined"].includes(r.status)).length;
+  N.push({id:"requests", col:0, go:"requests", k:"request", t:"Requests", big:rqNew||rqOpen, unit:rqNew?"new":"open", next:rqNew?"Review the new "+(rqNew===1?"one":"ones"):"Staff and facilitators ask here", st:rqNew?"soon":"ok"});
+  const news=vals("news"), share=news.filter(n=>!n.linkedinDone && n.date>=add(t,-30)).length;
+  N.push({id:"news", col:0, go:"news", k:"news", t:"In the News", big:news.filter(n=>n.date>=add(t,-30)).length, unit:"this month", next:share?hmPl(share,"story")+" to share on LinkedIn":"Logged once, used everywhere", st:share?"soon":"ok"});
+  const ne=hmNextEp(), g=ne&&typeof guestFor==="function"?guestFor(ne):null;
+  const guests=vals("episodes").filter(e=>e.airDate && e.airDate>=t && e.airDate<=add(t,28));
+  const gIn=guests.filter(e=>typeof guestFor==="function" && guestFor(e)).length;
+  N.push({id:"guests", col:0, go:"micdup", k:"micdup", t:"Guests & Recordings", big:gIn+"/"+guests.length, unit:"guest forms in", next:ne?(ne.recordDate?"Next one recorded":"Next: record "+(ne.guests||ne.company||"the guest")):"No episode booked", st:ne && !ne.recordDate && dBetween(t,ne.airDate)<=7?"late":"ok"});
+  const imgs=vals("images").filter(i=>!i.archived).length;
+  N.push({id:"images", col:0, go:"images", k:"other", t:"Image Library", big:imgs, unit:"pictures", next:"Shared by every channel", st:"quiet"});
+  /* we make */
+  const ed=curEdition();
+  if(ed && ed.dates){ const secs=edSections(ed).filter(s=>s.on), ok=secs.filter(s=>s.doc.status==="approved").length, d=dBetween(t,ed.dates.publish);
+    const rv=secs.filter(s=>s.doc.status==="review").length;
+    N.push({id:"matters", col:1, go:"matters", k:"matters", t:"MISMO Matters", big:d==null?"—":d, unit:d===1?"day to send":"days to send", next:monthName(ed.month)+": "+ok+"/"+secs.length+" sections approved"+(rv?", "+rv+" with Amy":""), st:late("matters")?"late":d!=null&&d<=7&&ok<secs.length?"soon":"ok", pct:secs.length?ok/secs.length:0}); }
+  else N.push({id:"matters", col:1, go:"matters", k:"matters", t:"MISMO Matters", big:"—", unit:"", next:"Start the next edition", st:"soon"});
+  if(ne){ const k=typeof kitOf==="function"?kitOf(ne.id)||{}:{}, d=dBetween(t,ne.airDate);
+    const step=!ne.recordDate?"Waiting on the recording":!k.video?"Waiting on the files":!k.written?"Writing the copy":k.liStatus==="review"?"With Amy":k.liStatus==="approved"?"Ready to post":"Ready for the kit";
+    N.push({id:"micdup", col:1, go:"micdup", k:"micdup", t:"MISMO Mic'd Up", big:d===0?"Today":d, unit:d===0?"":d===1?"day to "+epTag(ne):"days to "+epTag(ne), next:step, st:late("micdup")?"late":kitsWithAmy().length?"soon":"ok"}); }
+  else N.push({id:"micdup", col:1, go:"micdup", k:"micdup", t:"MISMO Mic'd Up", big:"—", unit:"", next:"Book the next episode", st:"late"});
+  const sm=hmNextSummit(); if(sm){ const tasks=vals("pieces").filter(p=>p.channel==="summit" && p.summit===sm.id), done=tasks.filter(p=>p.status==="done").length, d=dBetween(t,sm.start);
+    N.push({id:"summits", col:1, go:"summits", k:"summit", t:"Summits", big:d, unit:"days to "+sm.name.replace(/^\d{4}\s+/,""), next:tasks.length?done+"/"+tasks.length+" marketing tasks done":"Load the standard summit plan", st:late("summit")?"late":tasks.length?"ok":"soon", pct:tasks.length?done/tasks.length:0}); }
+  const br=vals("branding").filter(b=>!b.archived), old=br.filter(b=>b.status==="old").length, ords=vals("orders").filter(o=>!o.archived && typeof orRisk==="function" && orRisk(o)).length;
+  N.push({id:"brand", col:1, go:"branding", k:"other", t:"Rebranding & Orders", big:old, unit:"still old branding", next:ords?hmPl(ords,"order")+" at risk":br.length?(br.length-old)+" of "+br.length+" updated":"Track what still needs the new look", st:ords?"late":old?"soon":"ok", pct:br.length?(br.length-old)/br.length:0});
+  /* goes out */
+  const li=ev.filter(e=>e.k==="linkedin" && !e.done && e.date>=t && e.date<=wk).length;
+  N.push({id:"linkedin", col:2, go:"linkedin", k:"linkedin", t:"LinkedIn", big:li, unit:"this week", next:late("linkedin")?hmPl(late("linkedin"),"post")+" past due":"Posts and Monday LinkedIn Live", st:late("linkedin")?"late":"ok"});
+  const yt=vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=t && !e.youtubeDone).length;
+  N.push({id:"youtube", col:2, go:"youtube", k:"youtube", t:"YouTube", big:yt, unit:"to upload", next:yt?"Open the YouTube Kit":"All caught up", st:yt?"late":"ok"});
+  const mc=vals("pieces").filter(p=>p.channel==="mailchimp" && p.status!=="done" && p.date && p.date>=t && p.date<=add(t,14)).length;
+  N.push({id:"mailchimp", col:2, go:"mailchimp", k:"mailchimp", t:"Mailchimp", big:mc, unit:"sends, 2 weeks", next:"Event and summit emails", st:late("mailchimp")?"late":"quiet"});
+  N.push({id:"qr", col:2, go:"qr", k:"other", t:"QR Codes", big:"", unit:"", next:"Print, signs and slides", st:"quiet"});
+  /* reaches + measures */
+  const ppl=new Set(); try{ vals("audience").forEach(d=>(d.rows||[]).forEach(r=>{ const e=String(r.email||r.Email||r.e||"").toLowerCase(); if(e) ppl.add(e); })); }catch(e){}
+  N.push({id:"people", col:3, go:"people", k:"other", t:"Subscribers & Lists", big:ppl.size?ppl.size.toLocaleString():"", unit:ppl.size?"people":"", next:"Who gets MISMO Matters and what they download", st:"quiet"});
+  N.push({id:"results", col:3, go:"results", k:"other", t:"Results", big:"", unit:"", next:"Opens, views and reach, side by side", st:"quiet"});
+  return N;
+}
+/* how work flows between the boxes */
+const HM_LINKS = [
+  ["requests","matters"],["requests","linkedin"],["requests","mailchimp"],["requests","brand"],
+  ["news","matters"],["news","linkedin"],
+  ["guests","micdup"],["images","matters"],["images","linkedin"],
+  ["micdup","youtube"],["micdup","linkedin"],["micdup","matters"],
+  ["summits","linkedin"],["summits","mailchimp"],["brand","qr"],
+  ["matters","people"],["mailchimp","people"],
+  ["matters","results"],["linkedin","results"],["youtube","results"],["mailchimp","results"]
+];
+const HM_COLS = ["Comes In","We Make","Goes Out","Reaches & Results"];
+
+/* what needs the person signed in (or the team), from the schedule */
+function hmNeeds(){
+  const me=hmFirst(), ev=allEvents(), t=T();
+  const mine=e=>!me || String(e.who||"").split(/\s*(?:,|and)\s*/).some(w=>w.toLowerCase()===me.toLowerCase());
+  const open=ev.filter(e=>!e.done && !e.slot && !e.big && e.date<=add(t,7)).sort((a,b)=>a.date<b.date?-1:1);
+  const list=open.filter(mine);
+  const amy=kitsWithAmy().map(k=>({date:t, k:"micdup", label:"Approve the Mic'd Up "+epTag(S.episodes[k.id])+" LinkedIn Live wording", who:"Amy", go:()=>{ go("micdup"); }}));
+  return (me.toLowerCase()==="amy"?amy:[]).concat(list.length?list:(me?[]:open)).slice(0,6);
+}
+
+/* the story of one piece of work, from start to finish */
+function hmEpJourney(e){
+  const k=(typeof kitOf==="function"&&kitOf(e.id))||{}, g=typeof guestFor==="function"?guestFor(e):null;
+  return [
+    ["Guest Form", !!g], ["Recorded", !!e.recordDate], ["Files In", !!k.video], ["Copy Written", !!k.written],
+    ["Amy Approved", k.liStatus==="approved"], ["Live Friday", e.airDate<=T()], ["On Spotify", !!e.spotifyDone], ["On YouTube", !!e.youtubeDone],
+    ["MISMO LinkedIn Live", !!e.linkedinDone], ["In MISMO Matters", !!(e.youtubeDone && curEdition() && e.airDate<=(curEdition().dates||{}).publish)]
+  ];
+}
+function hmEdJourney(ed){ return MILES.map(([k,l])=>[l, !!(ed.done&&ed.done[k])]); }
+function hmTrack(title, sub, steps, goFn, k){
+  const nx=steps.findIndex(s=>!s[1]), done=steps.filter(s=>s[1]).length;
+  return '<button type="button" class="hm-story k-'+k+'" data-hgo="'+goFn+'"><div class="hs-h"><b>'+esc(title)+'</b><span>'+esc(sub)+'</span><em>'+done+'/'+steps.length+'</em></div>'+
+    '<ol class="hs-steps">'+steps.map((s,i)=>'<li class="'+(s[1]?"on":i===nx?"nx":"")+'"><i></i><span>'+esc(s[0])+'</span></li>').join("")+'</ol>'+
+    '<div class="hs-next">'+(nx<0?"Done, start to finish.":"Next: <b>"+esc(steps[nx][0])+"</b>")+'</div></button>';
+}
+
+function renderHome(){
+  const el=$("#page-home"); if(!el) return;
+  const N=hmNodes(), me=hmFirst(), needs=hmNeeds(), t=T();
+  const ne=hmNextEp(), ed=curEdition(), late=allEvents().filter(isOver).length;
+  const say=[];
+  if(ne) say.push("Mic'd Up <em>"+esc(epTag(ne))+"</em>"+(ne.guests?" with "+esc(ne.guests):"")+" goes live "+esc(dBetween(t,ne.airDate)===0?"today":fD(ne.airDate)));
+  if(ed && ed.dates) say.push("the <em>"+esc(MONL[+ed.month.slice(5)-1])+"</em> MISMO Matters goes out "+esc(fD(ed.dates.publish)));
+  const sm=hmNextSummit(); if(sm) say.push("the "+esc(sm.name)+" is <em>"+dBetween(t,sm.start)+" days</em> away");
+  const node=n=>'<button type="button" class="hm-node k-'+n.k+' st-'+n.st+'" data-node="'+n.id+'" data-hgo="'+n.go+'">'+
+    '<span class="hn-dot" aria-hidden="true"></span><span class="hn-t">'+esc(n.t)+'</span>'+
+    (n.big!==""&&n.big!=null?'<span class="hn-big">'+esc(String(n.big))+'<small>'+esc(n.unit||"")+'</small></span>':'')+
+    (n.pct!=null?'<span class="hn-bar"><i style="width:'+Math.round(n.pct*100)+'%"></i></span>':'')+
+    '<span class="hn-next">'+esc(n.next||"")+'</span></button>';
+  const stories=[];
+  if(ne) stories.push(hmTrack("MISMO Mic'd Up "+epTag(ne), (ne.guests||ne.company||"Guest to come")+" · "+fD(ne.airDate), hmEpJourney(ne), "ep:"+ne.id, "micdup"));
+  if(ed && ed.dates) stories.push(hmTrack(monthName(ed.month)+" MISMO Matters", "Goes out "+fD(ed.dates.publish), hmEdJourney(ed), "matters", "matters"));
+  el.innerHTML=
+    '<div class="hm-hero"><div class="hm-hi"><div class="hm-eyebrow">'+esc(fD(t))+'</div><h1>'+esc(hmHello())+(me?", "+esc(me):"")+'</h1>'+
+      '<p>'+(say.length?say.join("; ").replace(/^./,c=>c.toUpperCase())+".":"Here's everything MISMO is putting out, on one page.")+(late?' <em class="hm-late">'+hmPl(late,"item")+' past due.</em>':'')+'</p></div>'+
+      '<div class="hm-needs"><div class="hm-nh">'+(me?"On Your Plate":"Coming Up")+' <span>next 7 days</span></div>'+
+        (needs.length?needs.map((e,i)=>'<button type="button" class="hm-need k-'+esc(e.k)+(isOver(e)?' over':'')+'" data-need="'+i+'"><span>'+esc(isOver(e)?"Past due":dBetween(t,e.date)===0?"Today":fS(e.date))+'</span><b>'+esc(e.label)+'</b></button>').join("")
+          :'<div class="hm-clear">Nothing due for you this week.</div>')+
+        '<button type="button" class="hm-all" data-hgo="overview">See the Full Schedule →</button></div></div>'+
+    '<div class="card hm-mapcard"><div class="ch"><h2>How It All Connects</h2><span class="note">Point at a box to see where its work goes. Click to open it.</span></div>'+
+      '<div class="hm-map" id="hm-map"><svg class="hm-lines" id="hm-lines" aria-hidden="true"></svg>'+
+        HM_COLS.map((c,i)=>'<div class="hm-col"><div class="hm-ch">'+esc(c)+'</div>'+N.filter(n=>n.col===i).map(node).join("")+'</div>').join("")+
+      '</div>'+
+      '<div class="hm-legend"><span class="st-ok"><i></i>On track</span><span class="st-soon"><i></i>Needs a look</span><span class="st-late"><i></i>Late or blocked</span></div></div>'+
+    (stories.length?'<div class="hm-stories"><h2 class="hm-h2">Follow the Story</h2><div class="hm-sgrid">'+stories.join("")+'</div></div>':'');
+  $$("[data-hgo]",el).forEach(b=>b.addEventListener("click",()=>{ const v=b.dataset.hgo; if(v.startsWith("ep:")){ go("micdup"); openEpisode(v.slice(3)); } else go(v); }));
+  $$("[data-need]",el).forEach(b=>b.addEventListener("click",()=>{ const e=needs[+b.dataset.need]; if(e && e.go) e.go(); }));
+  const map=$("#hm-map",el);
+  $$(".hm-node",el).forEach(b=>{
+    b.addEventListener("mouseenter",()=>hmFocus(b.dataset.node));
+    b.addEventListener("focus",()=>hmFocus(b.dataset.node));
+    b.addEventListener("mouseleave",()=>hmFocus(null));
+    b.addEventListener("blur",()=>hmFocus(null));
+  });
+  hmDraw();
+}
+function hmFocus(id){
+  HM.focus=id; const map=$("#hm-map"); if(!map) return;
+  const linked=new Set(id?[id]:[]); if(id) HM_LINKS.forEach(([a,b])=>{ if(a===id) linked.add(b); if(b===id) linked.add(a); });
+  map.classList.toggle("focusing", !!id);
+  $$(".hm-node",map).forEach(n=>n.classList.toggle("lit", linked.has(n.dataset.node)));
+  $$("#hm-lines path",map).forEach(p=>p.classList.toggle("lit", !!id && (p.dataset.a===id || p.dataset.b===id)));
+}
+/* draw the connecting lines between box edges; redrawn when the page changes size */
+function hmDraw(){
+  const map=$("#hm-map"), svg=$("#hm-lines"); if(!map||!svg) return;
+  const R=map.getBoundingClientRect(); svg.setAttribute("width",R.width); svg.setAttribute("height",R.height); svg.setAttribute("viewBox","0 0 "+R.width+" "+R.height);
+  const box=id=>{ const n=map.querySelector('.hm-node[data-node="'+id+'"]'); if(!n) return null; const r=n.getBoundingClientRect(); return {l:r.left-R.left, r:r.right-R.left, y:r.top-R.top+r.height/2, t:r.top-R.top, b:r.bottom-R.top, cx:r.left-R.left+r.width/2}; };
+  const live=new Set(hmNodes().filter(n=>n.st==="soon"||n.st==="late").map(n=>n.id));
+  let h="";
+  HM_LINKS.forEach(([a,b])=>{ const A=box(a), B=box(b); if(!A||!B) return; let d;
+    if(Math.abs(A.cx-B.cx)<20){ const y1=A.b, y2=B.t; d="M"+A.cx+","+y1+" C"+A.cx+","+(y1+18)+" "+B.cx+","+(y2-18)+" "+B.cx+","+y2; }
+    else { const x1=A.r, x2=B.l, mx=(x1+x2)/2; d="M"+x1+","+A.y+" C"+mx+","+A.y+" "+mx+","+B.y+" "+x2+","+B.y; }
+    h+='<path d="'+d+'" data-a="'+a+'" data-b="'+b+'" class="'+(live.has(a)?"flow":"")+'"/>'; });
+  svg.innerHTML=h; if(HM.focus) hmFocus(HM.focus);
+}
+window.addEventListener("resize",()=>{ if(TAB==="home") hmDraw(); });
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -4899,7 +5136,7 @@ function openList(id){
 /* ================= start ================= */
 $("#pane-x").onclick=()=>closePane();
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TABS.includes(h) && h!==TAB) show(h); });
-show(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "overview");
+show(TABS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "home");
 badges();
 connect();
 </script>
