@@ -1354,6 +1354,134 @@ input[type=file]::file-selector-button:hover{background:var(--surface-3)}
 /* device toggle for the email preview */
 .mailwrap.phone .mail{max-width:390px;border-radius:22px;overflow:hidden;border:10px solid #0d314c}
 .mailwrap .mail{transition:max-width .3s}
+/* ---------- heroes: MISMO Matters, LinkedIn, YouTube, Summits ---------- */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:26px;align-items:center;margin-bottom:18px}
+@media(max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}}
+.hlbl{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#fff;padding:3px 9px;border-radius:4px;border:1px solid;--hc:#74bfeb;background:color-mix(in srgb,var(--hc) 22%,transparent);border-color:color-mix(in srgb,var(--hc) 65%,transparent)}
+.hlbl i{width:8px;height:8px;border-radius:50%;background:var(--hc);animation:air 1.4s ease-in-out infinite}
+.hlbl.t-ok{--hc:#4fc79b}.hlbl.t-li{--hc:#74bfeb}.hlbl.t-yt{--hc:#eb6834}.hlbl.t-sum{--hc:#e0a83c}
+.hbig{font-size:52px;font-weight:700;line-height:1;margin-top:12px;letter-spacing:-.025em}
+.hbig small{font-size:16px;color:var(--sky);font-weight:600;margin-left:10px;letter-spacing:0}
+.hline{font-size:14.5px;font-weight:600;margin-top:8px;color:rgba(255,255,255,.86);line-height:1.4}
+.hnext{margin-top:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:1px 12px;align-items:baseline;background:var(--band-tile);border:1px solid var(--band-line);border-left:3px solid var(--sky);border-radius:6px;padding:10px 12px;max-width:440px}
+.hnext span{grid-row:span 3;font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--sky)}
+.hnext b{font-size:15px}.hnext em{font-style:normal;font-size:12.5px;color:var(--sky);font-weight:600}.hnext small{font-size:12px;color:rgba(255,255,255,.62)}
+.hbtn{margin-top:16px;background:transparent;color:#fff;border-color:rgba(255,255,255,.5)}
+.hbtn:hover{background:rgba(255,255,255,.1)}
+/* MISMO Matters: the paper */
+.paperwrap{display:flex;justify-content:center;padding:6px 0}
+.paper{position:relative;width:100%;max-width:450px;background:#fbfdff;color:#0d314c;border-radius:6px;box-shadow:0 26px 50px -18px rgba(0,0,0,.65);transform:rotate(-1.6deg);padding:14px;overflow:hidden;transition:transform .35s ease}
+.paper:hover{transform:rotate(0) translateY(-3px)}
+.pmast{display:flex;align-items:center;gap:12px;background:#0d314c;color:#fff;border-radius:4px;padding:10px 12px;margin-bottom:10px;--logo-body:#fff;--logo-s:#74bfeb}
+.pmlogo{height:15px;width:auto;flex:0 0 auto}
+.pmast b{display:block;font-size:19px;letter-spacing:-.01em;line-height:1.15}.pmast b span{color:#74bfeb}
+.pmast small{font-size:10px;color:#a9d8f3;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pb{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:5px;padding:7px 8px 8px;border-radius:4px;border:1px solid #dbe7f0;border-left:4px solid var(--pc);background:#fff;position:relative;min-width:0;transition:transform .15s,box-shadow .15s}
+.pb:hover,.pb:focus-visible{transform:translateY(-1px);box-shadow:0 6px 14px -8px rgba(13,49,76,.55)}
+.pb:focus-visible{outline:2px solid #1a8fe3;outline-offset:1px}
+.pb.lead{grid-column:1/-1}
+.pbh{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#0d314c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:14px}
+.pbt{font-size:13px;font-weight:700;line-height:1.25;color:#0d314c}
+.pbl{display:flex;flex-direction:column;gap:3px}
+.pbl i{display:block;height:4px;border-radius:2px;background:var(--pc);opacity:.6}
+.pbl i:last-child{width:58%}
+.pb.t-w{--pc:#c3d2de;border-left-style:dashed;background:#f5f8fb}
+.pb.t-w .pbl i{background:repeating-linear-gradient(90deg,#c3d2de 0 6px,transparent 6px 10px);opacity:1}
+.pb.t-w .pbh{color:#7794aa}
+.pb.t-i{--pc:#74bfeb}.pb.t-r{--pc:#e0a83c}.pb.t-c{--pc:#f08579}.pb.t-a{--pc:#4fc79b}.pb.t-u{--pc:#3987e5}
+.pbk{position:absolute;top:5px;right:7px;font-size:11px;color:#0f7b5c;font-weight:700}
+.pscan{position:absolute;left:0;right:0;height:70px;top:-70px;background:linear-gradient(180deg,transparent,rgba(116,191,235,.24),transparent);animation:pscan 5s ease-in-out infinite;pointer-events:none}
+@keyframes pscan{0%{top:-70px}55%,100%{top:100%}}
+/* LinkedIn: the week and the post */
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:18px;max-width:460px}
+.wkd{background:var(--band-tile);border:1px solid var(--band-line);border-radius:6px;padding:7px 3px 8px;text-align:center;min-height:64px;min-width:0}
+.wkd span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.6);font-weight:700}
+.wkd b{display:block;font-size:18px;line-height:1.2}
+.wkd.now{background:var(--sky);color:#06202f;border-color:var(--sky)}.wkd.now span{color:#06202f}
+.wkd.past{opacity:.5}
+.wkdots{display:flex;justify-content:center;gap:3px;margin-top:4px;flex-wrap:wrap}
+.wkdots i,.wklegend i{width:8px;height:8px;border-radius:50%;background:#fff;display:inline-block}
+.wkdots i.live,.wklegend i.live{background:#ff6b5b}.wkdots i.st,.wklegend i.st{background:#e0a83c}.wkdots i.ok,.wklegend i.ok{background:#4fc79b}
+.wkd.now .wkdots i{box-shadow:0 0 0 1.5px #06202f}
+.wklegend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;font-size:11.5px;color:rgba(255,255,255,.7)}
+.wklegend span{display:inline-flex;align-items:center;gap:5px}
+.lipwrap{display:flex;justify-content:center}
+.lipost{all:unset;box-sizing:border-box;cursor:pointer;width:100%;max-width:460px;background:#fff;color:#1d2226;border-radius:10px;box-shadow:0 26px 50px -18px rgba(0,0,0,.65);overflow:hidden;display:block;transition:transform .2s}
+.lipost:hover{transform:translateY(-3px)}
+.lipost:focus-visible{outline:2px solid var(--sky);outline-offset:3px}
+.lipost.empty-post{cursor:default}.lipost.empty-post:hover{transform:none}
+.lip-h{display:flex;align-items:center;gap:10px;padding:12px 14px 8px}
+.lip-h>span:nth-child(2){flex:1;min-width:0}
+.lip-h b{display:block;font-size:14px;color:#1d2226}.lip-h small{display:block;font-size:11.5px;color:#666}
+.lip-av{width:40px;height:40px;border-radius:6px;background:#0d314c;display:flex;align-items:center;justify-content:center;padding:6px;box-sizing:border-box;--logo-body:#fff;--logo-s:#74bfeb;flex:0 0 auto}
+.avlogo{width:100%;height:auto}
+.lip-b{margin:2px 14px 12px;font-size:13.5px;line-height:1.45;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lip-b i{color:#666}
+.lip-m{position:relative;aspect-ratio:16/9;background:#0d314c;overflow:hidden}
+.lip-m img{width:100%;height:100%;object-fit:cover;display:block}
+.lip-ph,.pl-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:radial-gradient(circle at 30% 20%,#14486e,#06202f);--logo-body:#fff;--logo-s:#74bfeb;color:#a9d8f3;font-weight:700;letter-spacing:.16em;text-transform:uppercase;font-size:12px}
+.phlogo{width:44%;height:auto}
+.livebadge{position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:6px;background:#cc1016;color:#fff;font-size:11px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:3px}
+.livebadge i{width:7px;height:7px;border-radius:50%;background:#fff;animation:air 1.4s ease-in-out infinite}
+.lip-ev{padding:10px 14px 12px;background:#f3f6f8;color:#1d2226;border-bottom:1px solid #e8e8e8}
+.lip-ev small{display:block;font-size:10.5px;color:#b3372c;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.lip-ev b{display:block;font-size:14px;line-height:1.3;margin-top:2px}
+.lip-link{margin:0 14px 12px;border:1px solid #e0e0e0;border-radius:6px;padding:10px 12px;background:#f3f6f8}
+.lip-link b{display:block;font-size:13px}.lip-link small{color:#666;font-size:11.5px}
+.lip-f{display:flex;justify-content:space-around;border-top:1px solid #e8e8e8;padding:9px 6px;font-size:12px;font-weight:600;color:#666}
+/* YouTube: the player */
+.player{background:#0b0f13;border-radius:10px;overflow:hidden;box-shadow:0 26px 50px -18px rgba(0,0,0,.7)}
+.pl-v{position:relative;aspect-ratio:16/9;background:#000}
+.pl-v img{width:100%;height:100%;object-fit:cover;display:block}
+.pl-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:50px;border-radius:14px;border:0;background:rgba(235,104,52,.95);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.45);transition:transform .2s}
+.pl-play:hover,.pl-play:focus-visible{transform:translate(-50%,-50%) scale(1.08);outline:none}
+.pl-play svg{width:28px;height:28px;fill:#fff}
+.pl-tag{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.78);color:#fff;font-size:11.5px;font-weight:700;padding:3px 7px;border-radius:4px}
+.player.live .pl-tag{background:#0f7b5c}
+.pl-bar{display:flex;gap:3px;height:5px;background:#000}
+.pl-bar i{flex:1;background:rgba(255,255,255,.2)}.pl-bar i.on{background:#eb6834}
+.pl-t{padding:10px 14px 12px;color:#fff}
+.pl-t b{display:block;font-size:14.5px;line-height:1.3}.pl-t small{font-size:12px;color:rgba(255,255,255,.6)}
+.ytsteps{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:16px}
+.yts{display:grid;grid-template-columns:20px minmax(0,1fr);gap:0 8px;align-items:center;background:var(--band-tile);border:1px solid var(--band-line);border-radius:6px;padding:7px 9px}
+.yts span{grid-row:span 2;width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:1.5px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.yts.on span{background:#4fc79b;border-color:#4fc79b;color:#06202f}
+.yts b{font-size:12.5px}.yts small{font-size:11px;color:rgba(255,255,255,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* Summits: countdown, progress, and the run on one line */
+.hero.summit{grid-template-columns:minmax(0,1fr) auto}
+.hero.summit .tl{grid-column:1/-1}
+.clock{display:flex;gap:8px;margin-top:14px}
+.cl{background:linear-gradient(180deg,#14486e 0 50%,#103f60 50% 100%);border:1px solid var(--band-line);border-radius:8px;min-width:76px;padding:11px 8px 9px;text-align:center;position:relative;box-shadow:0 12px 22px -12px rgba(0,0,0,.7)}
+.cl::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.4)}
+.cl b{display:block;font-size:42px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.cl span{display:block;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--sky);font-weight:700;margin-top:7px}
+.clock.live b,.clock b{font-size:42px}.clock.live b{color:#4fc79b}
+.sring{width:150px;height:150px;border-radius:50%;background:conic-gradient(#e0a83c calc(var(--p)*1%),rgba(255,255,255,.12) 0);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;text-align:center}
+.sring::before{content:"";position:absolute;inset:14px;border-radius:50%;background:var(--band)}
+.sring b,.sring span{position:relative}
+.sring b{font-size:32px;line-height:1}
+.sring span{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--sky);font-weight:700;max-width:88px;margin-top:5px;line-height:1.3}
+@media(max-width:900px){.hero.summit{grid-template-columns:minmax(0,1fr)}.sumstat{display:none}}
+.tl-track{position:relative;height:42px;background:var(--band-tile);border:1px solid var(--band-line);border-radius:21px;margin:30px 8px 0}
+.tl-ev{position:absolute;top:-6px;bottom:-6px;background:linear-gradient(180deg,#e0a83c,#c98500);border-radius:6px;box-shadow:0 0 0 4px rgba(224,168,60,.22);min-width:8px}
+.tl-ev span,.tl-now span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:5px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.tl-ev span{color:#e0a83c}
+.tl-now{position:absolute;top:-9px;bottom:-9px;width:2px;background:#fff;margin-left:-1px}
+.tl-now span{color:#fff}
+.tm{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid var(--band);padding:0;cursor:pointer;transition:transform .15s}
+.tm:hover,.tm:focus-visible{transform:scale(1.6);z-index:2;outline:none}
+.ph-before{background:#74bfeb}.ph-at{background:#e0a83c}.ph-after{background:#e87ba4}
+.tm.ok,.tl-key i.ok{background:#4fc79b}.tm.late,.tl-key i.late{background:#f08579}
+.tm.late{animation:tmlate 1.6s ease-in-out infinite}
+@keyframes tmlate{50%{box-shadow:0 0 0 6px rgba(240,133,121,.28)}}
+.tl-mo{position:relative;height:18px;margin:6px 8px 0}
+.tlm{position:absolute;transform:translateX(-50%);font-size:10.5px;color:rgba(255,255,255,.55);font-weight:600}
+.tl-key{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:rgba(255,255,255,.7);margin-top:6px}
+.tl-key span{display:inline-flex;gap:5px;align-items:center}
+.tl-key i{width:9px;height:9px;border-radius:50%;display:inline-block}
+@media(max-width:600px){.hbig{font-size:40px}.ytsteps{grid-template-columns:1fr}.cl{min-width:0;flex:1;padding:9px 4px 7px}.cl b,.clock b{font-size:28px}.paper{transform:none}.wk{gap:4px}}
+@media (prefers-reduced-motion:reduce){.pscan,.hlbl i,.livebadge i,.tm.late{animation:none}.paper,.lipost,.pb{transition:none}}
 </style>
 
 <style>
@@ -2058,9 +2186,8 @@ function renderMatters(){
   const inN=on.filter(s=>s.meta.auto||s.doc.status!=="waiting").length;
   const totalWords = on.reduce((n,s)=>n+words(s.doc.body)+words(s.doc.quote),0);
   const nx = MILES.find(([k])=>!(ed.done&&ed.done[k]));
-  const band = '<div class="band"><div class="today">'+esc(monthName(ed.month))+' · '+(nx?'next: '+esc(nx[1])+' '+esc(fS(ed.dates[nx[0]]))+' ('+esc(rel(ed.dates[nx[0]]))+')':'sent')+'</div>'+
-    '<div class="bandsplit"><div>'+ringHtml(on)+'</div><div><div class="say">'+mattersSay(ed,on)+'</div><div class="tiles">'+
-    '<div class="tile"><div class="v sky">'+Math.max(0,diff(ed.dates.publish,t))+'</div><div class="k">Days to Send</div><div class="s">'+esc(fD(ed.dates.publish))+'</div></div>'+
+  const band = '<div class="band">'+mattersHero(ed,on)+
+    '<div><div><div class="say">'+mattersSay(ed,on)+'</div><div class="tiles">'+
     '<div class="tile"><div class="v">'+inN+' of '+on.length+'</div><div class="k">Sections In</div><div class="s">'+(on.length-inN)+' still waiting on content</div></div>'+
     '<div class="tile"><div class="v">'+cnt("review")+'</div><div class="k">With Amy</div><div class="s">ready for her review</div></div>'+
     '<div class="tile"><div class="v'+(cnt("changes")?" hot":"")+'">'+cnt("changes")+'</div><div class="k">Changes Requested</div><div class="s">back with Kelly</div></div>'+
@@ -3725,6 +3852,135 @@ function wireKit(el){
   $$("[data-kcover]",el).forEach(b=>b.onclick=()=>downloadImage(S.images[b.dataset.kcover]));
 }
 
+/* ================= Heroes: the big picture at the top of MISMO Matters, LinkedIn, YouTube and Summits ================= */
+const LOGO_SVG = (cls)=>'<svg class="'+(cls||"")+'" viewBox="0 0 708 108" aria-hidden="true"><use href="#mismo-logo"/></svg>';
+function heroImg(imgId){ const im=imgId&&S.images?S.images[imgId]:null; if(!im) return ""; return '<img data-himg="'+esc(im.id)+'" src="'+esc(imgSrc(im))+'" alt="">'; }
+function wireHeroImgs(el){ $$("[data-himg]",el).forEach(img=>{ const im=S.images[img.dataset.himg]; if(!im) return; if(!img.getAttribute("src")) img.style.visibility="hidden"; imgEnsure(im).then(()=>{ const s=imgSrc(im); if(s){ img.src=s; img.style.visibility=""; } }); }); }
+
+/* ---------- MISMO Matters: the edition on the press ---------- */
+const PB_TONE={waiting:"w",in:"i",review:"r",changes:"c",approved:"a",auto:"u"};
+function mattersHero(ed,on){
+  const t=T(), sent=ed.done&&ed.done.publish, days=diff(ed.dates.publish,t);
+  const nx=MILES.find(([k])=>!(ed.done&&ed.done[k]));
+  const blocks=on.map((s,i)=>{ const st=s.meta.auto?"auto":(s.doc.status||"waiting"); const lines=2+((i*7)%3);
+    return '<button type="button" class="pb t-'+PB_TONE[st]+(i===0?" lead":"")+'" data-rk="'+esc(s.k)+'" title="'+esc((s.doc.name||s.meta.name)+" · "+(s.meta.auto?"Fills itself":SSTAT[st][0]))+'"><span class="pbh">'+esc(s.doc.name||s.meta.name)+'</span>'+(s.doc.headline&&i===0?'<span class="pbt">'+esc(s.doc.headline)+'</span>':'')+'<span class="pbl">'+'<i></i>'.repeat(lines)+'</span>'+(st==="approved"?'<span class="pbk">✓</span>':'')+'</button>'; }).join("");
+  return '<div class="hero">'+
+    '<div class="hero-l"><span class="hlbl '+(sent?"t-ok":"t-press")+'"><i></i>'+(sent?"Sent":"On the Press")+' · '+esc(monthName(ed.month))+'</span>'+
+      '<div class="hbig">'+(sent?"Delivered":(days>0?days+'<small>day'+(days===1?"":"s")+' to send</small>':(days===0?'Today<small>it goes out</small>':'Overdue<small>'+(-days)+' days past</small>')))+'</div>'+
+      '<div class="hline">'+esc(fD(ed.dates.publish))+' · Higher Logic → the MISMO Matters group</div>'+
+      (nx&&!sent?'<div class="hnext"><span>Next up</span><b>'+esc(nx[1])+'</b><em>'+esc(fS(ed.dates[nx[0]]))+' · '+esc(rel(ed.dates[nx[0]]))+'</em><small>'+esc(nx[2])+'</small></div>':'')+
+    '</div>'+
+    '<div class="paperwrap"><div class="paper" aria-label="The '+esc(monthName(ed.month))+' edition, section by section">'+
+      '<div class="pmast">'+LOGO_SVG("pmlogo")+'<div><b><span>Matters</span></b><small>'+esc(monthName(ed.month))+' · '+esc(fS(ed.dates.publish))+'</small></div></div>'+
+      '<div class="pgrid">'+blocks+'</div><div class="pscan" aria-hidden="true"></div></div></div>'+
+  '</div>';
+}
+
+/* ---------- LinkedIn: the next post, as it will look in the feed ---------- */
+function liPostText(p){
+  if(p._ep){ const e=S.episodes[p._ep]||{}, k=kitOf(p._ep)||{}; return e.linkedinCopy || ((k.written||{}).li) || e.bvDescription || ""; }
+  return p.copy || "";
+}
+function linkedinHero(all){
+  const t=T();
+  const ahead=all.filter(p=>p.status!=="done"&&p.date).sort((a,b)=>a.date<b.date?-1:1);
+  const p=ahead.find(x=>x.date>=t) || ahead[0] || null;
+  const days=[0,1,2,3,4,5,6].map(i=>{ const d=add(t,i); const here=all.filter(x=>x.date===d);
+    return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()])+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x._ep?"live":(x.status==="staged"?"st":"")))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
+  let card;
+  if(!p) card='<div class="lipost empty-post"><div class="lip-b">Nothing is lined up yet. Press <b>+ New Post</b>, or add a Mic\'d Up episode and its Monday LinkedIn Live appears here by itself.</div></div>';
+  else{
+    const e=p._ep?S.episodes[p._ep]:null, k=p._ep?kitOf(p._ep)||{}:null;
+    const text=liPostText(p); const st=k?(k.liStatus||"draft"):null;
+    const media = e ? '<div class="lip-m live">'+(k&&k.thumbPick?heroImg(k.thumbPick):'<div class="lip-ph">'+LOGO_SVG("phlogo")+'</div>')+'<span class="livebadge"><i></i>LIVE</span></div><div class="lip-ev"><small>'+esc(fD(p.date))+' · '+esc(e.linkedinTime||"1:00 PM ET")+' · LinkedIn Live</small><b>'+esc(e.liEventName||liEventName((k&&k.written||{}).title||e.title||"",e))+'</b></div>' : (p.link?'<div class="lip-link"><b>'+esc(p.title||"")+'</b><small>'+esc(String(p.link).replace(/^https?:\/\//,"").split("/")[0])+'</small></div>':'');
+    card='<button type="button" class="lipost" data-hero-li="'+esc(p._ep||p.id||"")+'" data-hero-ep="'+(p._ep?1:0)+'">'+
+      '<div class="lip-h"><span class="lip-av">'+LOGO_SVG("avlogo")+'</span><span><b>MISMO</b><small>'+esc(fD(p.date))+(p.postTime?' · '+esc(p.postTime):'')+' · '+esc(p.kind||"Post")+'</small></span>'+(st?chip(LI_STAT,st):chip(PSTAT,p.status||"idea"))+'</div>'+
+      '<div class="lip-b">'+(text?esc(text):'<i>The copy isn\'t written yet. '+(p._ep?'It\'s written from Brian\'s LinkedIn post once the kit pulls it in.':'Open it to write the post.')+'</i>')+'</div>'+media+
+      '<div class="lip-f"><span>👍 Like</span><span>💬 Comment</span><span>🔁 Repost</span><span>➤ Send</span></div></button>';
+  }
+  return '<div class="hero">'+
+    '<div class="hero-l"><span class="hlbl t-li"><i></i>Up Next on LinkedIn</span>'+
+      '<div class="hbig">'+(p?esc(fS(p.date))+'<small>'+esc(rel(p.date))+'</small>':'Open<small>nothing set</small>')+'</div>'+
+      '<div class="hline">'+(p?esc(p.title||"Untitled"):"The MISMO company page")+'</div>'+
+      '<div class="wk" aria-label="The next seven days">'+days+'</div>'+
+      '<div class="wklegend"><span><i class="live"></i>Mic\'d Up Live</span><span><i></i>Post</span><span><i class="st"></i>Staged</span><span><i class="ok"></i>Posted</span></div>'+
+    '</div>'+
+    '<div class="lipwrap">'+card+'</div>'+
+  '</div>';
+}
+function wireLinkedinHero(el){
+  const b=$("[data-hero-li]",el); if(b) b.onclick=()=>{ const id=b.dataset.heroLi; if(!id) return; if(b.dataset.heroEp==="1") show("micdup"); else openPiece(id); };
+  wireHeroImgs(el);
+}
+
+/* ---------- YouTube: the next upload, in the player ---------- */
+function ytSteps(e){
+  const k=kitOf(e.id)||{};
+  return [["Video",!!k.video,"the final cut, from Brian's folder"],["Thumbnail",!!k.thumbPick,"the one on Brian's LinkedIn post"],["Transcript",!!k.txOk||!!e.captions,"names and spelling checked"],["Title & Description",!!(k.written&&k.written.title)||!!e.bvDescription,"in MISMO's voice"],["Uploaded",!!e.youtubeDone,"Friday afternoon"],["Website",!!e.websiteDone,"the Mic'd Up list"]];
+}
+function youtubeHero(queue){
+  const t=T();
+  const e = queue[0] || epsSorted().find(x=>x.youtubeDone) || null;
+  if(!e) return '<div class="hero"><div class="hero-l"><span class="hlbl t-yt"><i></i>Up Next on YouTube</span><div class="hbig">Clear<small>nothing waiting</small></div></div></div>';
+  const k=kitOf(e.id)||{}, steps=ytSteps(e), n=steps.filter(s=>s[1]).length, live=!!e.youtubeDone;
+  const title=(k.written&&k.written.title)||("MISMO Mic'd Up "+epWord(e)+(e.title?": "+e.title:""));
+  return '<div class="hero">'+
+    '<div class="player'+(live?" live":"")+'"><div class="pl-v">'+(k.thumbPick?heroImg(k.thumbPick):'<div class="pl-ph">'+LOGO_SVG("phlogo")+'<span>Mic\'d Up</span></div>')+
+      '<button type="button" class="pl-play" data-hero-yt="'+esc(e.id)+'" aria-label="Open the YouTube Kit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></button>'+
+      '<span class="pl-tag">'+(live?"On the Channel":(e.airDate&&e.airDate<=t?"Ready to Upload":"Coming "+esc(fS(e.airDate))))+'</span></div>'+
+      '<div class="pl-bar" aria-label="'+n+' of '+steps.length+' steps done">'+steps.map(s=>'<i class="'+(s[1]?"on":"")+'" title="'+esc(s[0]+(s[1]?" ✓":""))+'"></i>').join("")+'</div>'+
+      '<div class="pl-t"><b>'+esc(title)+'</b><small>@MISMOStandards · '+esc(epTag(e))+(e.guests?' · '+esc(e.guests):'')+'</small></div></div>'+
+    '<div class="hero-l"><span class="hlbl t-yt"><i></i>'+(live?"Latest Upload":"Up Next on YouTube")+'</span>'+
+      '<div class="hbig">'+n+'<small>of '+steps.length+' steps done</small></div>'+
+      '<div class="ytsteps">'+steps.map(s=>'<div class="yts'+(s[1]?" on":"")+'"><span>'+(s[1]?"✓":"")+'</span><b>'+esc(s[0])+'</b><small>'+esc(s[2])+'</small></div>').join("")+'</div>'+
+      '<button class="btn hbtn" type="button" data-hero-yt="'+esc(e.id)+'">Open the YouTube Kit →</button>'+
+    '</div>'+
+  '</div>';
+}
+function wireYoutubeHero(el){ $$("[data-hero-yt]",el).forEach(b=>b.onclick=()=>show("micdup")); wireHeroImgs(el); }
+
+/* ---------- Summits: the countdown and the whole marketing run on one line ---------- */
+let SUMMIT_TICK=null;
+function summitClock(s){
+  const start=P(s.start); start.setHours(8,0,0,0); const end=P(s.end); end.setHours(18,0,0,0);
+  const now=new Date(); if(now>=start && now<=end) return {live:true};
+  if(now>end) return {over:true};
+  const ms=start-now; return {d:Math.floor(ms/864e5), h:Math.floor(ms/36e5)%24, m:Math.floor(ms/6e4)%60, s:Math.floor(ms/1e3)%60};
+}
+function clockHtml(c){
+  if(c.live) return '<div class="clock live"><b>Live Now</b></div>';
+  if(c.over) return '<div class="clock"><b>Wrapped</b></div>';
+  const cell=(v,l)=>'<div class="cl"><b>'+String(v).padStart(2,"0")+'</b><span>'+l+'</span></div>';
+  return '<div class="clock">'+cell(c.d,"Days")+cell(c.h,"Hours")+cell(c.m,"Minutes")+cell(c.s,"Seconds")+'</div>';
+}
+function summitHero(s,tasks){
+  const t=T();
+  const first=tasks.reduce((m,p)=>p.date&&p.date<m?p.date:m, add(s.start,-150)), last=tasks.reduce((m,p)=>p.date&&p.date>m?p.date:m, add(s.end,21));
+  const span=Math.max(1,diff(last,first)), pos=d=>Math.min(100,Math.max(0,diff(d,first)/span*100));
+  const marks=tasks.filter(p=>p.date).map(p=>{ const late=p.status!=="done"&&p.date<t; return '<button type="button" class="tm ph-'+esc(p.phase||"before")+(p.status==="done"?" ok":"")+(late?" late":"")+'" style="left:'+pos(p.date).toFixed(2)+'%" data-tl="'+esc(p.id)+'" title="'+esc(fS(p.date)+" · "+p.title+(p.via?" · "+p.via:""))+'"></button>'; }).join("");
+  const months=[]; { const m=P(first); m.setDate(1); m.setMonth(m.getMonth()+1); while(iso(m)<=last){ months.push('<span class="tlm" style="left:'+pos(iso(m)).toFixed(2)+'%">'+esc(MON[m.getMonth()])+'</span>'); m.setMonth(m.getMonth()+1); } }
+  const done=tasks.filter(p=>p.status==="done").length;
+  return '<div class="hero summit">'+
+    '<div class="hero-l"><span class="hlbl t-sum"><i></i>'+esc(s.name)+'</span>'+
+      '<div id="sm-clock">'+clockHtml(summitClock(s))+'</div>'+
+      '<div class="hline">'+esc(fD(s.start))+' – '+esc(fD(s.end))+' · '+esc(s.where)+'</div>'+
+    '</div>'+
+    '<div class="sumstat"><div class="sring" style="--p:'+(tasks.length?Math.round(done/tasks.length*100):0)+'"><b>'+(tasks.length?Math.round(done/tasks.length*100):0)+'%</b><span>of the marketing done</span></div></div>'+
+    '<div class="tl" aria-label="The marketing run, before, at and after the summit">'+
+      '<div class="tl-track"><div class="tl-ev" style="left:'+pos(s.start).toFixed(2)+'%;width:'+Math.max(1.2,pos(s.end)-pos(s.start)).toFixed(2)+'%"><span>Summit</span></div>'+
+        (t>=first&&t<=last?'<div class="tl-now" style="left:'+pos(t).toFixed(2)+'%"><span>Today</span></div>':'')+marks+'</div>'+
+      '<div class="tl-mo">'+months.join("")+'</div>'+
+      '<div class="tl-key"><span><i class="ph-before"></i>Before</span><span><i class="ph-at"></i>At the summit</span><span><i class="ph-after"></i>After</span><span><i class="ok"></i>Done</span><span><i class="late"></i>Past due</span></div>'+
+    '</div>'+
+  '</div>';
+}
+function wireSummitHero(el,s){
+  $$("[data-tl]",el).forEach(b=>b.onclick=()=>openPiece(b.dataset.tl));
+  if(SUMMIT_TICK) clearInterval(SUMMIT_TICK);
+  if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  SUMMIT_TICK=setInterval(()=>{ const c=$("#sm-clock"); if(!c || TAB!=="summits"){ clearInterval(SUMMIT_TICK); SUMMIT_TICK=null; return; } c.innerHTML=clockHtml(summitClock(s)); },1000);
+}
+
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
 function renderMicdup(){
@@ -3886,7 +4142,7 @@ function renderLinkedin(){
   const ed=curEdition(); const reuse = ed ? edSections(ed).filter(s=>s.on && s.doc.reuse && s.doc.reuse.linkedin) : [];
   const newsTodo = vals("news").filter(n=>!n.linkedinDone && n.date>=add(t,-30)).sort((a,b)=>a.date<b.date?1:-1);
   el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Monday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+
-    '<div class="band"><div class="today">LinkedIn · week of '+esc(fS(nextDow(add(t,-6),1)))+'</div><div class="say">'+(thisWeek?'<em>'+thisWeek+' post'+(thisWeek>1?"s":"")+'</em> going up this week. ':'Nothing is set for this week yet. ')+(newsTodo.length?newsTodo.length+' news mention'+(newsTodo.length>1?"s haven't":" hasn't")+' been shared yet.':'')+'</div><div class="tiles">'+
+    '<div class="band">'+linkedinHero(all)+'<div class="say">'+(thisWeek?'<em>'+thisWeek+' post'+(thisWeek>1?"s":"")+'</em> going up this week. ':'Nothing is set for this week yet. ')+(newsTodo.length?newsTodo.length+' news mention'+(newsTodo.length>1?"s haven't":" hasn't")+' been shared yet.':'')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+thisWeek+'</div><div class="k">Posting This Week</div><div class="s">through '+esc(fS(wk))+'</div></div>'+
       '<div class="tile"><div class="v">'+upcoming.length+'</div><div class="k">Coming Up</div><div class="s">next six weeks</div></div>'+
       '<div class="tile"><div class="v'+(noCopy?" hot":"")+'">'+noCopy+'</div><div class="k">Waiting on Copy</div><div class="s">still at the idea stage</div></div>'+
@@ -3897,6 +4153,7 @@ function renderLinkedin(){
     '<div class="card"><div class="ch"><h2>News to Share</h2><span class="cnt">'+newsTodo.length+'</span></div>'+(newsTodo.length?'<div class="checks">'+newsTodo.map(n=>'<div class="chk"><span class="ct"><b>'+esc(n.headline||"")+'</b><small>'+esc((n.outlet||"")+" · "+fS(n.date))+'</small></span><button class="btn sm" type="button" data-nw="'+esc(n.id)+'">Make a Post</button></div>').join("")+'</div>':'<div class="empty">Articles added on the In the News page that haven\'t been shared show up here.</div>')+'</div></div>'+
     '<div class="card" style="margin-top:22px"><div class="ch"><h2>Posted</h2><span class="cnt">'+posted.length+'</span></div>'+(posted.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Post</th><th>Kind</th><th>Owner</th><th>Status</th></tr></thead><tbody>'+pieceRows(posted,["kind"])+'</tbody></table></div>':'<div class="empty">Nothing marked posted yet.</div>')+'</div>';
   $("#li-new",el).onclick=()=>newPiece("linkedin");
+  wireLinkedinHero(el);
   wirePieceRows(el);
   $$("[data-mk]",el).forEach(b=>b.onclick=()=>{ const sd=S.sections[b.dataset.mk]||{}; newPiece("linkedin",{title:sd.headline||"", copy:sd.body?sd.body.slice(0,600):"", kind:(SEC[sd.key]||{}).name||"MISMO Matters", imageNote:sd.imageNote||"", date:add(T(),1), touch:{matters:true}}); });
   $$("[data-nw]",el).forEach(b=>b.onclick=()=>{ const n=S.news[b.dataset.nw]; newPiece("linkedin",{title:(n.outlet?n.outlet+": ":"")+(n.headline||""), link:n.url||"", kind:"In the News", date:add(T(),1), touch:{matters:true}, notes:"news:"+n.id}); });
@@ -3910,7 +4167,7 @@ function renderYoutube(){
   const vids=vals("pieces").filter(p=>p.channel==="youtube").sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
   const onYT=vals("episodes").filter(e=>e.youtubeDone).length;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">@MISMOStandards</div><h1>YouTube</h1><div class="sub">Mic\'d Up goes up Friday afternoon with Brian\'s description. FRAME videos, the initiatives series and recordings live here too.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="yt-new">+ Other Video</button></div></div>'+
-    '<div class="band"><div class="today">YouTube</div><div class="say">'+(queue.length?'<em>'+queue.length+' upload'+(queue.length>1?"s":"")+'</em> in the queue, next on '+esc(fD(queue[0].airDate))+'. ':'Nothing waiting to upload. ')+(caps.length?caps.length+' episode'+(caps.length>1?"s are":" is")+' up without proofed captions.':'')+'</div><div class="tiles">'+
+    '<div class="band">'+youtubeHero(queue)+'<div class="say">'+(queue.length?'<em>'+queue.length+' upload'+(queue.length>1?"s":"")+'</em> in the queue, next on '+esc(fD(queue[0].airDate))+'. ':'Nothing waiting to upload. ')+(caps.length?caps.length+' episode'+(caps.length>1?"s are":" is")+' up without proofed captions.':'')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v'+(queue.filter(e=>e.airDate<=t).length?" hot":" sky")+'">'+queue.length+'</div><div class="k">Upload Queue</div><div class="s">aired or airing this week</div></div>'+
       '<div class="tile"><div class="v'+(caps.length?" hot":"")+'">'+caps.length+'</div><div class="k">Captions to Fix</div><div class="s">on YouTube without proofed captions</div></div>'+
       '<div class="tile"><div class="v">'+onYT+'</div><div class="k">Mic\'d Up on YouTube</div><div class="s">logged here</div></div>'+
@@ -3922,6 +4179,7 @@ function renderYoutube(){
     '</div></div></div>'+
     '<div class="card" style="margin-top:22px"><div class="ch"><h2>Other Videos</h2><span class="cnt">'+vids.length+'</span></div>'+(vids.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Video</th><th>Kind</th><th>Owner</th><th>Status</th></tr></thead><tbody>'+pieceRows(vids,["kind"])+'</tbody></table></div>':'<div class="empty">FRAME videos, the 18 MISMO Initiatives series and webinar recordings can be logged here.</div>')+'</div>';
   $("#yt-new",el).onclick=()=>newPiece("youtube");
+  wireYoutubeHero(el);
   $$("[data-ep]",el).forEach(r=>r.onclick=()=>openEpisode(r.dataset.ep));
   wirePieceRows(el);
 }
@@ -3956,8 +4214,7 @@ function renderSummits(){
   const col=(ph,label,sub)=>{ const l=tasks.filter(p=>(p.phase||"before")===ph); return '<div class="card"><div class="ch"><h2>'+label+'</h2><span class="cnt">'+l.filter(p=>p.status!=="done").length+' open</span></div>'+(l.length?'<div class="checks">'+l.map(p=>'<div class="chk'+(p.status==="done"?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(p.status==="done"?" checked":"")+' aria-label="Done"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title)+'</b><small>'+esc(p.via||"")+(p.owner?" · "+esc(p.owner):"")+'</small></button><div class="meta'+(p.status!=="done"&&p.date&&p.date<t?" late":"")+'">'+esc(fS(p.date))+'</div></div>').join("")+'</div>':'<div class="empty">'+esc(sub)+'</div>')+'</div>'; };
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Summit Marketing</div><h1>'+esc(s.name)+'</h1><div class="sub">'+esc(s.where)+' · '+esc(fS(s.start))+'–'+esc(fS(s.end))+', '+esc(s.start.slice(0,4))+'</div></div><div class="tools"><div class="field"><label for="sm-pick">Summit</label><select id="sm-pick">'+SUMMITS.map(x=>'<option value="'+x.id+'"'+(x.id===s.id?" selected":"")+'>'+esc(x.name)+'</option>').join("")+'</select></div>'+
     (tasks.length?'':'<button class="btn" type="button" id="sm-plan">Load the Standard Summit Plan</button>')+'<button class="btn pri" type="button" id="sm-new">+ New Task</button></div></div>'+
-    '<div class="band"><div class="today">'+esc(s.name)+' · '+esc(fL(s.start))+'</div><div class="say">'+(diff(s.start,t)>0?'<em>'+diff(s.start,t)+' days</em> to the summit. ':'')+(tasks.length?(over?'<span class="hot">'+over+' marketing task'+(over>1?"s are":" is")+' past due.</span> ':'')+due14+' due in the next two weeks.':'No marketing plan yet. Load the standard plan to lay out the posts and emails before, during and after.')+'</div><div class="tiles">'+
-      '<div class="tile"><div class="v sky">'+Math.max(0,diff(s.start,t))+'</div><div class="k">Days to Go</div><div class="s">'+esc(fD(s.start))+'</div></div>'+
+    '<div class="band">'+summitHero(s,tasks)+'<div class="say">'+(diff(s.start,t)>0?'<em>'+diff(s.start,t)+' days</em> to the summit. ':'')+(tasks.length?(over?'<span class="hot">'+over+' marketing task'+(over>1?"s are":" is")+' past due.</span> ':'')+due14+' due in the next two weeks.':'No marketing plan yet. Load the standard plan to lay out the posts and emails before, during and after.')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v">'+tasks.length+'</div><div class="k">Marketing Tasks</div><div class="s">before, at and after</div></div>'+
       '<div class="tile"><div class="v">'+(tasks.length?Math.round(done/tasks.length*100):0)+'%</div><div class="k">Done</div><div class="s">'+done+' of '+tasks.length+'</div></div>'+
       '<div class="tile"><div class="v">'+due14+'</div><div class="k">Due Next 14 Days</div><div class="s">open tasks</div></div>'+
@@ -3968,6 +4225,7 @@ function renderSummits(){
     '<p class="foot">Planning, the agenda and the Run of Show stay in Summit HQ. This page is only the marketing: what gets posted and sent, and when.</p>';
   $("#sm-pick",el).onchange=e=>{ SM.id=e.target.value; renderSummits(); };
   wireSummitOrders(el,s);
+  wireSummitHero(el,s);
   $("#sm-new",el).onclick=()=>newPiece("summit",{summit:s.id, phase:"before", via:"LinkedIn", date:T()});
   const pl=$("#sm-plan",el); if(pl) pl.onclick=async()=>{ let n=0, skipped=0; for(const [off,ph,via,title] of SUMMIT_PLAN){ const date=add(s.start,off); if(date<T()){ skipped++; continue; } await put("pieces",uid("p"),{channel:"summit",summit:s.id,phase:ph,via,title,date,status:"idea",owner:via==="Onsite"?"Amy":"Kelly"}); n++; } toast(n+" tasks added"+(skipped?" · "+skipped+" already past were skipped":""),4000); };
   wireChecks(el);
