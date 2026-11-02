@@ -1508,6 +1508,10 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .brbar{height:14px;border-radius:7px;background:repeating-linear-gradient(135deg,rgba(255,255,255,.12) 0 6px,rgba(255,255,255,.04) 6px 12px);overflow:hidden}
 .brbar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#0d314c,#50a4db,#74bfeb)}
 @media (prefers-reduced-motion:reduce){.qr-scan{animation:none;display:none}.st-ord:hover .pp.has .pp-box{animation:none}}
+.revlink{display:inline-block;margin-left:8px;font-size:11.5px;font-weight:700;color:var(--link);text-decoration:none;border:1px solid var(--border-strong);border-radius:4px;padding:1px 7px;white-space:nowrap}
+.revlink:hover{background:var(--sky-wash)}
+.mrev{display:block;margin-bottom:4px;font-size:11px;font-weight:700;color:#14486e;text-decoration:none;border:1px solid #c9d6e2;border-radius:4px;padding:1px 6px;text-align:center}
+.mrev:hover{background:#eef5fb}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -4353,9 +4357,9 @@ function mailchimpHero(list){
   const days=[...Array(14)].map((_,i)=>{ const d=add(t,i), here=list.filter(x=>x.date===d);
     return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()].slice(0,2))+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x.status==="staged"||x.status==="ready"?"st":""))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
   const rows=[].concat(ahead.slice(0,3), sent.slice(0,Math.max(0,3-Math.min(3,ahead.length)))).slice(0,3);
-  const row=(x,i)=>'<button type="button" class="mrow'+(x===p?" next":"")+'" data-hero-mc="'+esc(x.id)+'"><span class="mfrom"><b>MISMO</b>'+(x.audience?'<em>'+esc(x.audience)+'</em>':'')+'</span>'+
+  const row=(x,i)=>'<div role="button" tabindex="0" class="mrow'+(x===p?" next":"")+'" data-hero-mc="'+esc(x.id)+'"><span class="mfrom"><b>MISMO</b>'+(x.audience?'<em>'+esc(x.audience)+'</em>':'')+'</span>'+
     '<span class="msub"><b>'+esc(x.title||"Untitled campaign")+'</b><small>'+esc(String(x.copy||(x.status==="done"?(+x.sent?"Sent to "+(+x.sent).toLocaleString()+" people":"Sent"):"Open it to write the email.")).replace(/\s+/g," ").slice(0,90))+'</small></span>'+
-    '<span class="mwhen">'+(x.status==="done"?"Sent "+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date)):esc(fS(x.date)))+'</span></button>';
+    '<span class="mwhen">'+(x.reviewLink&&x.status!=="done"?'<a class="mrev" href="'+esc(x.reviewLink)+'" target="_blank" rel="noopener">Review ↗</a>':'')+(x.status==="done"?"Sent "+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date)):esc(fS(x.date)))+'</span></div>';
   const pc=(n,d)=>d?Math.round(n/d*100)+"%":"—";
   const stats=last&&+last.sent?'<div class="mstats"><div><b>'+(+last.sent).toLocaleString()+'</b><small>sent to</small></div><div><b>'+pc(+last.opens||0,+last.sent)+'</b><small>opened</small></div><div><b>'+pc(+last.clicks||0,+last.sent)+'</b><small>clicked</small></div><div><b>'+(+last.unsubs||0)+'</b><small>unsubscribed</small></div></div>':'';
   return '<div class="hero">'+
@@ -4371,7 +4375,7 @@ function mailchimpHero(list){
     '</div>'+
   '</div>';
 }
-function wireMailchimpHero(el){ $$("[data-hero-mc]",el).forEach(b=>b.onclick=()=>openPiece(b.dataset.heroMc)); }
+function wireMailchimpHero(el){ $$(".mrev",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation())); $$("[data-hero-mc]",el).forEach(b=>{ b.onclick=()=>openPiece(b.dataset.heroMc); b.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openPiece(b.dataset.heroMc); } }; }); }
 
 /* ================= Mic'd Up: SharePoint episode folders, the Writer, guests, clips ================= */
 /* Every episode gets its own folder in SharePoint: Q Drive > MISMO > Active Documents > Marketing >
@@ -5137,7 +5141,7 @@ function pieceFields(ch){
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
   if(ch==="mailchimp") base.push({k:"audience",label:"Audience",ph:"e.g. Compliance list, Tech list"});
   if(ch==="youtube") base.push({k:"kind",label:"Kind of Video",type:"select",opts:["FRAME","MISMO Initiatives Series","Webinar Recording","Summit","Special Content","Other"]});
-  if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:"textarea",rows:7},{k:"link",label:"Link It Points To",type:"url"},{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
+  if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:"textarea",rows:7},(ch==="mailchimp"?{k:"reviewLink",label:"Review Link",type:"url",ph:"Paste the Mailchimp preview or share link",hint:"Where the reviewer can open the campaign and look it over before it sends. It shows as a Review button on the Mailchimp page."}:{k:"link",label:"Link It Points To",type:"url"}),{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":ch==="mailchimp"?"Link to the Sent Campaign":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
   if(ch==="youtube") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"watchHours",label:"Watch Time (Hours)",type:"number"});
   if(ch==="community") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"replies",label:"Replies",type:"number"});
@@ -5155,12 +5159,13 @@ function openPiece(id, seed){
     del: id ? async()=>remove("pieces",id) : null });
 }
 function pieceRows(list, cols){
-  return list.map(p=>'<tr class="click'+(p.status==="done"?" past":"")+'" data-pc="'+esc(p.id||"")+'"'+(p._ep?' data-epi="'+esc(p._ep)+'"':'')+(p._sec?' data-sec="'+esc(p._sec)+'"':'')+'><td><b>'+esc(fD(p.date))+'</b>'+(p.date&&p.status!=="done"&&p.date<T()?'<span class="t2" style="color:var(--bad)">past due</span>':'')+'</td><td>'+esc(p.title||"Untitled")+(p.notes?'<span class="t2">'+esc(p.notes.slice(0,90))+'</span>':'')+'</td>'+
+  return list.map(p=>'<tr class="click'+(p.status==="done"?" past":"")+'" data-pc="'+esc(p.id||"")+'"'+(p._ep?' data-epi="'+esc(p._ep)+'"':'')+(p._sec?' data-sec="'+esc(p._sec)+'"':'')+'><td><b>'+esc(fD(p.date))+'</b>'+(p.date&&p.status!=="done"&&p.date<T()?'<span class="t2" style="color:var(--bad)">past due</span>':'')+'</td><td>'+esc(p.title||"Untitled")+(cols.includes("review")&&p.reviewLink?' <a class="revlink" href="'+esc(p.reviewLink)+'" target="_blank" rel="noopener" data-stop="1">Review ↗</a>':'')+(p.notes?'<span class="t2">'+esc(p.notes.slice(0,90))+'</span>':'')+'</td>'+
     (cols.includes("kind")?'<td>'+esc(p.kind||p.via||"")+'</td>':'')+(cols.includes("aud")?'<td>'+esc(p.audience||"")+'</td>':'')+
     '<td>'+esc(p.owner||"")+'</td><td>'+chip(PSTAT,p.status||"idea")+'</td>'+
     (cols.includes("stats")?'<td class="n">'+(p.sent?pct((+p.opens||0)/p.sent):"—")+'</td><td class="n">'+(p.sent?pct((+p.clicks||0)/p.sent):"—")+'</td>':'')+'</tr>').join("");
 }
 function wirePieceRows(el){
+  $$("a[data-stop]",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
   $$("tr[data-pc]",el).forEach(r=>r.onclick=()=>{ if(r.dataset.epi) openEpisode(r.dataset.epi); else if(r.dataset.sec){ const [m,k]=r.dataset.sec.split("__"); openSection(S.editions[m],k); } else openPiece(r.dataset.pc); });
 }
 
@@ -5235,7 +5240,7 @@ function renderMailchimp(){
       '<div class="tile"><div class="v">'+done.length+'</div><div class="k">Sent</div><div class="s">logged here</div></div>'+
       '<div class="tile"><div class="v">'+(sent.length?pct(avgOpen):"—")+'</div><div class="k">Average Open Rate</div><div class="s">across sends with results</div></div>'+
     '</div></div>'+
-    '<div class="card"><div class="ch"><h2>Campaigns</h2><span class="cnt">'+list.length+'</span></div>'+(list.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Campaign</th><th>Audience</th><th>Owner</th><th>Status</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+pieceRows(up.concat(done),["aud","stats"])+'</tbody></table></div>':'<div class="empty">No campaigns logged. Mailchimp audiences built so far include the compliance list and the tech list.</div>')+'</div>';
+    '<div class="card"><div class="ch"><h2>Campaigns</h2><span class="cnt">'+list.length+'</span></div>'+(list.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Campaign</th><th>Audience</th><th>Owner</th><th>Status</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+pieceRows(up.concat(done),["aud","stats","review"])+'</tbody></table></div>':'<div class="empty">No campaigns logged. Mailchimp audiences built so far include the compliance list and the tech list.</div>')+'</div>';
   $("#mc-new",el).onclick=()=>newPiece("mailchimp");
   wireMailchimpHero(el);
   wirePieceRows(el);
