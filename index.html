@@ -4132,7 +4132,10 @@ function kitEpisodes(){ const ids=new Set(vals("kits").filter(k=>(k.folderId||k.
 function kitCardHtml(){
   const eps=kitEpisodes();
   if(!eps.length) return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><span class="note">from each episode\'s SharePoint folder</span><div class="r"><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div><div class="empty">Each Season 2 episode gets its own folder in SharePoint (Marketing › MISMO Mic\'d Up) as soon as it has a number. Once Brian\'s files are in it, the video, thumbnails, transcript and clips land here, and the copy is written from the transcript.</div></div>';
-  if(!KIT.ep || !eps.find(e=>e.id===KIT.ep)) KIT.ep=eps[0].id;
+  /* open on the episode being worked now: the earliest one from the last week that still has YouTube or MISMO's LinkedIn Live to do, else the next to air */
+  if(!KIT.ep || !eps.find(e=>e.id===KIT.ep)){ const t=T();
+    const now=eps.filter(e=>e.airDate && e.airDate>=add(t,-7) && (!e.youtubeDone || !e.linkedinDone)).sort((a,b)=>a.airDate<b.airDate?-1:1);
+    KIT.ep=(now[0]||eps[0]).id; }
   const e=S.episodes[KIT.ep], k=kitOf(KIT.ep)||{}, w=k.written||{};
   const tx=KIT.tx[KIT.ep], iss=KIT.txIssues[KIT.ep]||[];
   const thumbs=(k.thumbs||[]).filter(t=>S.images[t.img]);
