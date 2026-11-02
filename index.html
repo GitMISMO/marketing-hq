@@ -1512,6 +1512,11 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .revlink:hover{background:var(--sky-wash)}
 .mrev{display:block;margin-bottom:4px;font-size:11px;font-weight:700;color:#14486e;text-decoration:none;border:1px solid #c9d6e2;border-radius:4px;padding:1px 6px;text-align:center}
 .mrev:hover{background:#eef5fb}
+.amy-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(13,49,76,.12)}
+.amy-tools .hint{font-size:11.5px;color:var(--ink-3)}
+.amy-fix{margin-top:8px;font-size:12px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.amy-fix b{color:var(--ink);font-weight:600}
+.amy-fix s{color:var(--bad)}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -4109,6 +4114,33 @@ async function liSendAmy(e, k, name, desc, to){
   try{ await n(to||LI_APPROVER.email, "Approval needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording [MM:"+e.id+"]", liAmyEmail(e,k,name,desc,who)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
 }
 function kitsWithAmy(){ return vals("kits").filter(k=>k.liStatus==="review" && S.episodes[k.id]); }
+/* Amy's emailed reply, made ready to paste: email line-wraps joined back into paragraphs, then proofread
+   (spelling, typos and MISMO terms only; her wording is kept). The result is kept on the kit, so it runs once per reply. */
+function amyUnwrap(t){
+  return String(t||"").replace(/\r/g,"").split(/\n\s*\n/).map(p=>p.split("\n").map(l=>l.trim()).filter(Boolean).join(" ").replace(/\s{2,}/g," ")).filter(Boolean).join("\n\n");
+}
+function amyFixHtml(k){
+  if(!k.amyClean || k.amyFrom!==k.liReplyId) return '<div class="amy-fix" id="kit-amyfix" hidden></div>';
+  const f=k.amyFixes||[];
+  return '<div class="amy-fix" id="kit-amyfix">'+(f.length?'<b>Spelling fixed:</b> '+f.map(x=>'<span><s>'+esc(x.from)+'</s> → '+esc(x.to)+'</span>').join(""):'<b>No spelling mistakes found.</b>')+'</div>';
+}
+async function amyCleanVersion(eid){
+  const k=kitOf(eid)||{}; if(!k.liNote) return "";
+  if(k.amyClean && k.amyFrom===k.liReplyId) return k.amyClean;
+  const plain=amyUnwrap(k.liNote);
+  let text=plain, fixes=[];
+  const iss=txCheck(plain, eid); if(iss.length){ text=txFixed(plain, iss); fixes=iss.map(x=>({from:x.found,to:x.fix})); }
+  try{
+    toast("Checking Amy's wording for spelling…", 30000);
+    const raw=await writer("You are a careful copy editor. Proofread this LinkedIn event description. Fix ONLY spelling mistakes, typos, doubled words and clear punctuation errors. Do not change word choices, tone, sentences or paragraph breaks. Use American spelling and these exact terms: MISMO, MISMO Mic'd Up, FRAME, eNote, eClose, eVault, SMART Doc, Fannie Mae, Freddie Mac, Ginnie Mae. Return ONLY a JSON object: {\"text\": the corrected text with paragraphs separated by one blank line, \"fixes\": [{\"from\": \"misspelled word\", \"to\": \"correction\"}]}.", text);
+    const o=parseJson(raw);
+    if(o && typeof o.text==="string" && o.text.trim()){ const t2=o.text.trim();
+      /* keep her words: only accept a proofread that stays within a few percent of her length */
+      if(Math.abs(t2.length-text.length) <= Math.max(12, text.length*0.04)){ text=t2; fixes=fixes.concat((o.fixes||[]).filter(x=>x&&x.from&&x.to&&x.from!==x.to).map(x=>({from:String(x.from),to:String(x.to)}))); } }
+  }catch(e){}
+  await put("kits", eid, Object.assign({}, kitOf(eid), {amyClean:text, amyFixes:fixes, amyFrom:k.liReplyId||""}));
+  return text;
+}
 function liLiveHtml(e,k,liText,thumbs){
   if(!liText) return '<div class="hint">Written in MISMO\'s voice from Brian\'s LinkedIn post, then reviewed by Amy.</div>';
   const st=k.liStatus||"draft", locked=st==="review"||st==="approved";
@@ -4116,8 +4148,9 @@ function liLiveHtml(e,k,liText,thumbs){
   const box=(id,label,val,rows)=>'<div class="kcopy"><div class="kcopy-h"><span>'+label+'</span>'+(st==="approved"?'<button class="btn sm" type="button" data-kcopy="'+id+'">Copy</button>':'')+'</div>'+(rows?'<textarea id="'+id+'" rows="'+rows+'"'+(locked?' readonly':'')+'>'+esc(val||"")+'</textarea>':'<input type="text" id="'+id+'" maxlength="75" value="'+esc(val||"")+'"'+(locked?' readonly':'')+'>')+'</div>';
   let h='<div class="kli-h">'+chip(LI_STAT,st)+'<span class="hint">Streamed from Riverside to MISMO\'s LinkedIn page. No YouTube link.</span></div>'+
     box("kit-liname","Event Name (75 characters at most)",e.liEventName||liEventName((k.written||{}).title,e))+box("kit-li","Event Description"+(st==="edits"?" (put Amy\'s edits in here)":""),liText,6);
-  if((st==="changes"||st==="edits") && k.liNote) h+='<div class="kli-note'+(st==="edits"?' kli-edits':'')+'"><b>'+(st==="edits"?"Amy\'s edits (from her email reply). Use her wording:":"Amy:")+'</b><br>'+esc(k.liNote).replace(/\n/g,"<br>")+'</div>';
-  if(st==="approved" && k.liNote && k.liReplyId) h+='<div class="kli-note kli-ok"><b>Amy replied:</b> '+esc(k.liNote).replace(/\n/g,"<br>")+'</div>';
+  const amyTools=(use)=>'<div class="amy-tools"><button class="btn sm" type="button" id="kit-amycopy">Copy Amy\'s Version</button>'+(use?'<button class="btn sm" type="button" id="kit-amyuse">Put It in the Description</button>':'')+'<span class="hint">Cleaned up from her email and checked for spelling.</span></div>'+amyFixHtml(k);
+  if((st==="changes"||st==="edits") && k.liNote) h+='<div class="kli-note'+(st==="edits"?' kli-edits':'')+'"><b>'+(st==="edits"?"Amy\'s edits (from her email reply). Use her wording:":"Amy:")+'</b><br>'+esc(k.liNote).replace(/\n/g,"<br>")+(st==="edits"?amyTools(true):'')+'</div>';
+  if(st==="approved" && k.liNote && k.liReplyId) h+='<div class="kli-note kli-ok"><b>Amy replied:</b> '+esc(k.liNote).replace(/\n/g,"<br>")+amyTools(false)+'</div>';
   if(st==="draft"||st==="changes") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liamy">Send to Amy for Approval</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button></div>';
   else if(st==="edits") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liedits">Edits Made: Ready to Set Up</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button></div>';
   else if(st==="review") h+='<div class="kli-amy"><div class="hint">Emailed to Amy. Her reply (Approved, or her edits) lands here by itself. She can also approve here:</div><textarea id="kit-linote" rows="2" placeholder="What to change (only needed for Request Changes)"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-liok">Approve</button><button class="btn sm" type="button" id="kit-lichg">Request Changes</button><button class="btn sm" type="button" id="kit-liresend">Resend to Amy</button></div>'+(k.liSentAt?'<div class="hint">Last sent '+esc(new Date(k.liSentAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'.</div>':'')+'</div>';
@@ -4213,6 +4246,8 @@ function wireKit(el){
   const ls=$("#kit-lisave",el); if(ls) ls.onclick=async()=>{ await patch("episodes", eid, liVals()); toast("Saved"); };
   const la=$("#kit-liamy",el); if(la) la.onclick=async()=>{ la.disabled=true; const v=liVals(); await patch("episodes", eid, v); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"review", liSentAt:new Date().toISOString(), liNote:""}));
     const ok=await liSendAmy(S.episodes[eid], kitOf(eid), v.liEventName, v.linkedinCopy); toast(ok?"Sent to Amy by email. It also shows under Waiting on Amy.":"Marked as with Amy.", 4000); renderMicdup(); };
+  const amc=$("#kit-amycopy",el); if(amc) amc.onclick=async()=>{ amc.disabled=true; const t=await amyCleanVersion(eid); if(t){ copyText(t,"Amy's version"); } amc.disabled=false; renderMicdup(); };
+  const amu=$("#kit-amyuse",el); if(amu) amu.onclick=async()=>{ amu.disabled=true; const t=await amyCleanVersion(eid); if(t){ await patch("episodes", eid, {linkedinCopy:t}); toast("Amy's version is in the description. Press Edits Made when it looks right.", 5000); } renderMicdup(); };
   const lrs=$("#kit-liresend",el); if(lrs) lrs.onclick=async()=>{ lrs.disabled=true; const ep=S.episodes[eid], kk=kitOf(eid)||{};
     const name=ep.liEventName||liEventName((kk.written||{}).title||ep.title||"",ep), desc=ep.linkedinCopy||((kk.written||{}).li)||"";
     if(!desc){ toast("There's no LinkedIn Live description to send yet."); lrs.disabled=false; return; }
