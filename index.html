@@ -1517,6 +1517,31 @@ body.railmini .hq nav .navkids{align-items:center;gap:4px}
 .amy-fix{margin-top:8px;font-size:12px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .amy-fix b{color:var(--ink);font-weight:600}
 .amy-fix s{color:var(--bad)}
+
+/* formatted text boxes (Body Copy, Notes, Details): a small Word-style toolbar */
+.rt{border:1px solid var(--border-strong);border-radius:5px;background:var(--surface);min-width:0}
+.rt:focus-within{outline:2px solid var(--sky);outline-offset:0}
+.rt-bar{display:flex;align-items:center;gap:2px;padding:4px 6px;border-bottom:1px solid var(--border);background:var(--surface-2);border-radius:5px 5px 0 0;flex-wrap:wrap}
+.rt-b{display:inline-flex;align-items:center;justify-content:center;width:30px;height:28px;border:1px solid transparent;border-radius:4px;background:none;color:var(--ink-2);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.rt-b svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rt-b svg circle{fill:currentColor;stroke:none}
+.rt-b:hover{background:var(--surface-3);color:var(--ink)}
+.rt-b[aria-pressed=true]{background:var(--sky-wash);border-color:var(--sky);color:var(--navy)}
+:root[data-theme=dark] .rt-b[aria-pressed=true]{background:var(--surface-3);color:var(--ink)}
+.rt-sep{width:1px;height:18px;background:var(--border);margin:0 4px}
+.rt-linkbar{display:flex;gap:6px;align-items:center;padding:6px;border-bottom:1px solid var(--border);background:var(--surface-2);flex-wrap:wrap}
+.rt-linkbar input{flex:1 1 220px}
+.rt [hidden]{display:none!important}
+.rt-linkbar input.bad{outline:2px solid var(--bad)}
+.rt-ed{padding:8px 10px;font-size:13.5px;line-height:1.55;color:var(--ink);outline:none;overflow-wrap:anywhere;max-height:60vh;overflow-y:auto;cursor:text}
+.rt-ed.is-empty::before{content:attr(data-ph);color:var(--ink-3);pointer-events:none;position:absolute}
+.rt-ed p,.rt-view p{margin:0 0 .7em}
+.rt-ed p:last-child,.rt-view p:last-child{margin-bottom:0}
+.rt-ed ul,.rt-ed ol,.rt-view ul,.rt-view ol{margin:0 0 .7em;padding-left:1.4em}
+.rt-ed li,.rt-view li{margin:0 0 .2em}
+.rt-ed a,.rt-view a{color:var(--navy-mid);text-decoration:underline}
+:root[data-theme=dark] .rt-ed a,:root[data-theme=dark] .rt-view a{color:var(--sky)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .rt-ed a,:root:not([data-theme="light"]) .rt-view a{color:var(--sky)}:root:not([data-theme="light"]) .rt-b[aria-pressed=true]{background:var(--surface-3);color:var(--ink)}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -2096,7 +2121,7 @@ function parseDateIn(v){
 const uid = p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const chip = (map,k)=>{ const v=map[k]||map[Object.keys(map)[0]]; return '<span class="chip '+v[1]+'">'+esc(v[0])+'</span>'; };
 function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast._t); toast._t=setTimeout(()=>{t.hidden=true;}, ms||2400); }
-const words = s=>String(s||"").trim().split(/\s+/).filter(Boolean).length;
+const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
 const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}};
@@ -2266,7 +2291,7 @@ function openPane(cfg){
   if(cfg.after) cfg.after(b);
   const p=$("#pane"); p.classList.add("open"); p.setAttribute("aria-hidden","false");
   b.scrollTop=0;
-  setTimeout(()=>{ const first=b.querySelector("input,textarea,select"); if(first && !cfg.noFocus) try{ first.focus({preventScroll:true}); }catch(e){} },230);
+  setTimeout(()=>{ const first=b.querySelector("input:not([type=url]),textarea,select,.rt-ed"); if(first && !cfg.noFocus) try{ first.focus({preventScroll:true}); }catch(e){} },230);
 }
 function closePane(force){
   if(PANE && PANE.dirty && !force){ const m=$("#pf-msg"); if(m && !m.dataset.warned){ m.dataset.warned="1"; m.textContent="You have changes that aren't saved. Press Close again to leave without saving."; return; } }
@@ -2280,10 +2305,11 @@ function buildFields(fields, d){
     if(f.sec){ close(); h+='<div class="fsec">'+esc(f.sec)+'</div>'; return; }
     if(!open){ h+='<div class="fgrid">'; open=true; }
     const id="f-"+f.k, v = f.get? f.get(d) : d[f.k];
-    const cls = 'field'+(f.wide||f.type==="textarea"||f.type==="checks"||f.type==="html"?" wide":"");
+    const cls = 'field'+(f.wide||f.type==="textarea"||f.type==="rich"||f.type==="checks"||f.type==="html"?" wide":"");
     h+='<div class="'+cls+'">';
-    if(f.label && f.type!=="cb") h+='<label for="'+id+'">'+esc(f.label)+'</label>';
-    if(f.type==="textarea") h+='<textarea id="'+id+'" rows="'+(f.rows||4)+'" placeholder="'+esc(f.ph||"")+'">'+esc(v||"")+'</textarea>';
+    if(f.label && f.type!=="cb") h+='<label for="'+id+'"'+(f.type==="rich"?' onclick="document.getElementById(this.htmlFor).focus()"':'')+'>'+esc(f.label)+'</label>';
+    if(f.type==="rich") h+=rtField(id, v, f.ph, f.rows);
+    else if(f.type==="textarea") h+='<textarea id="'+id+'" rows="'+(f.rows||4)+'" placeholder="'+esc(f.ph||"")+'">'+esc(v||"")+'</textarea>';
     else if(f.type==="select") h+='<select id="'+id+'">'+(f.blank?'<option value=""></option>':'')+f.opts.map(o=>{ const [ov,ol]=Array.isArray(o)?o:[o,o]; return '<option value="'+esc(ov)+'"'+(String(v||"")===String(ov)?" selected":"")+'>'+esc(ol)+'</option>'; }).join("")+'</select>';
     else if(f.type==="date") h+='<div class="datef"><input type="text" id="'+id+'" value="'+esc(fMD(v))+'" placeholder="e.g. 11/18/26" autocomplete="off"><button class="btn calb" type="button" data-cal="'+id+'" aria-label="Pick from a calendar" title="Pick from a calendar">'+CAL_SVG+'</button><input type="date" tabindex="-1" aria-hidden="true" data-for="'+id+'" value="'+esc(v||"")+'"></div>';
     else if(f.type==="checks") h+='<div class="cbs" id="'+id+'">'+f.opts.map(([ov,ol])=>'<label><input type="checkbox" value="'+esc(ov)+'"'+(v&&v[ov]?" checked":"")+'> '+esc(ol)+'</label>').join("")+'</div>';
@@ -2297,6 +2323,7 @@ function buildFields(fields, d){
   close(); return h;
 }
 function wireFields(root){
+  rtWire(root);
   $$("[data-cal]",root).forEach(b=>{
     const id=b.dataset.cal, txt=$("#"+id,root), di=root.querySelector('input[data-for="'+id+'"]');
     b.onclick=()=>{ const cur=parseDateIn(txt.value); if(cur) di.value=cur; try{ di.showPicker(); }catch(e){ di.style.pointerEvents="auto"; di.focus(); di.click(); } };
@@ -2425,7 +2452,7 @@ function renderOverview(){
   const sPct = setup.length ? Math.round(sDone.length/setup.length*100) : 0;
   const sGroups = [["Past Due", sOpen.filter(p=>p.date&&p.date<t), "late"], ["This Week", sOpen.filter(p=>p.date&&p.date>=t&&p.date<=add(thisWk,6)), "soon"], ["Coming Up", sOpen.filter(p=>p.date&&p.date>add(thisWk,6)), ""], ["No Date Yet", sOpen.filter(p=>!p.date), ""]].filter(g=>g[1].length);
   const sRow = p=>{ const dn=p.status==="done", late=!dn&&p.date&&p.date<t, soon=!dn&&!late&&p.date&&p.date<=add(thisWk,6);
-    return '<div class="chk'+(dn?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(dn?" checked":"")+' aria-label="Mark done: '+esc(p.title||"")+'"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title||"Untitled")+'</b>'+(p.notes?'<small>'+esc(p.notes)+'</small>':'')+'</button><div class="meta">'+(p.date?'<span class="due'+(late?" late":soon?" soon":"")+'">'+esc(dn&&p.doneOn?fS(p.doneOn):fS(p.date))+'</span>':'')+whoHtml(p.owner)+'</div></div>'; };
+    return '<div class="chk'+(dn?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(dn?" checked":"")+' aria-label="Mark done: '+esc(p.title||"")+'"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title||"Untitled")+'</b>'+(p.notes?'<small>'+esc(mdPlain(p.notes))+'</small>':'')+'</button><div class="meta">'+(p.date?'<span class="due'+(late?" late":soon?" soon":"")+'">'+esc(dn&&p.doneOn?fS(p.doneOn):fS(p.date))+'</span>':'')+whoHtml(p.owner)+'</div></div>'; };
   const setupHtml = '<div class="sprog"><div class="sprog-t"><b>'+sDone.length+' of '+setup.length+' done</b><span>'+sPct+'%</span></div><div class="sbar"><i style="width:'+sPct+'%"></i></div></div>'+
     (sGroups.map(g=>{ const cap = g[0]==="Coming Up" && !OV.showLater && g[1].length>5 ? 4 : g[1].length;
       return '<div class="sgrp '+g[2]+'"><div class="agwh">'+esc(g[0])+'<span>'+g[1].length+'</span></div><div class="checks">'+g[1].slice(0,cap).map(sRow).join("")+'</div>'+
@@ -2545,7 +2572,7 @@ function sectionsView(ed,secs){
   const rows = secs.map(s=>{
     const d=s.doc; let snip='';
     if(s.meta.auto){ const n = s.k==="micdup" ? epsInWindow(ed).length : newsInWindow(ed).length; snip='<i>'+n+(s.k==="micdup"?" episode":" item")+(n===1?"":"s")+' so far · fills itself</i>'; }
-    else snip = d.headline ? esc(d.headline) : (d.body ? esc(d.body.slice(0,120)) : '<i>Nothing in yet</i>');
+    else snip = d.headline ? esc(d.headline) : (d.body ? esc(mdPlain(d.body).slice(0,120)) : '<i>Nothing in yet</i>');
     const reuse = REUSE.map(([k,l,a])=>'<span class="rz k-'+(k==="website"?"other":k)+(d.reuse&&d.reuse[k]?" on":"")+'" title="'+esc(l)+'">'+a+'</span>').join("");
     const st = s.meta.auto ? '<span class="chip in">Automatic</span>' : chip(SSTAT, d.status||"waiting");
     return '<div class="secrow'+(s.on?"":" off")+'" draggable="true" data-k="'+esc(s.k)+'"><span class="grip" title="Drag to reorder">'+GRIP+'</span><input type="checkbox" data-inc="'+esc(s.k)+'"'+(s.on?" checked":"")+' aria-label="Include '+esc(s.meta.name)+' this month" title="Running this month"><div class="sn"><b>'+esc(d.name||s.meta.name)+'</b><small>'+esc(d.owner||s.meta.owner)+' · '+esc(s.meta.from||"")+(d.imageId||d.imageNote||d.imageUrl?" · image ✓":"")+'</small></div><div class="sx">'+snip+'</div><div class="reuse">'+reuse+'</div><div>'+st+'</div></div>';
@@ -2576,12 +2603,12 @@ function openSection(ed,k,isNew){
   if(auto){
     const list = k==="micdup" ? epsInWindow(ed).map(e=>epWord(e)+": "+(e.title||"")+(e.youtubeDone?"":" (not on YouTube yet)")) : newsInWindow(ed).map(n=>(n.kind==="press"?"Press release · ":"")+(n.outlet?n.outlet+" – ":"")+(n.headline||""));
     fields.push({sec:"What Goes In"},{k:"_auto",type:"html",html:()=>'<div class="ro">'+(list.length?esc(list.join("\n")).replace(/\n/g,"<br>"):"Nothing yet for this window ("+esc(fS(add(prevPublish(ed),1)))+" to "+esc(fS(ed.dates.publish))+"). Add it on the "+(k==="micdup"?"Mic'd Up":"In the News")+" page and it shows up here.")+'</div>'},
-      {k:"intro",label:"Intro Line",type:"textarea",rows:3,ph:k==="micdup"?"MISMO Mic'd Up spotlights the voices shaping the future of real estate finance…":"MISMO regularly shares key updates…"});
+      {k:"intro",label:"Intro Line",type:"rich",rows:3,ph:k==="micdup"?"MISMO Mic'd Up spotlights the voices shaping the future of real estate finance…":"MISMO regularly shares key updates…"});
   } else {
     fields.push({sec:"Copy"},
       {k:"headline",label:"Headline",wide:true,ph:"e.g. Before Mortgage Can Be AI-Ready, We Need to Be Data-Ready"},
-      {k:"body",label:"Body Copy",type:"textarea",rows:12,ph:"Paste the copy as it should run. Leave a blank line between paragraphs."},
-      {k:"quote",label:"Quote",type:"textarea",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
+      {k:"body",label:"Body Copy",type:"rich",rows:12,ph:"Type or paste the copy as it should run. Pasting from Word keeps bold, links and bullets."},
+      {k:"quote",label:"Quote",type:"rich",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
       {k:"quoteBy",label:"Quote Attribution",ph:"Name, Title, Company"},
       {k:"ctaText",label:"Link Text",ph:"e.g. Register for the Winter Summit"},
       {k:"ctaUrl",label:"Link",type:"url",ph:"https://"});
@@ -2596,7 +2623,7 @@ function openSection(ed,k,isNew){
     {k:"owner",label:"Collecting It",type:"select",opts:PEOPLE},
     {k:"from",label:"Comes From"},
     {k:"status",label:"Status",type:"select",opts:Object.entries(SSTAT).map(([v,[l]])=>[v,l])},
-    {k:"amyNotes",label:"Amy's Notes",type:"textarea",rows:3,ph:"Edits, questions or a request for a different graphic"});
+    {k:"amyNotes",label:"Amy's Notes",type:"rich",rows:3,ph:"Edits, questions or a request for a different graphic"});
   fields.push({sec:"Also Use It In"},{k:"reuse",label:"Where else this copy and image go",type:"checks",opts:REUSE.map(([v,l])=>[v,l])});
   const save = async v=>{ if(isNew){ const order=edSections(ed).map(s=>s.k); if(!order.includes(k)){ order.push(k); await patch("editions",ed.id,{order}); } } await put("sections",id,Object.assign({},doc,v,{month:ed.month,key:k})); };
   openPane({eye:monthName(ed.month)+" · MISMO Matters", title:doc.name||meta.name, fields, data:doc, save,
@@ -2630,7 +2657,7 @@ function wireImage(b, doc, setId){
 }
 function openEdition(ed){
   const fields=[{sec:"Dates"}].concat(MILES.map(([k,l,w])=>({k:"d_"+k,label:l,type:"date",get:d=>d.dates&&d.dates[k],hint:w})))
-    .concat([{sec:"Notes"},{k:"notes",label:"Notes for This Edition",type:"textarea",rows:4,ph:"Anything the team should know: who's out, special sections, sponsor banner"}]);
+    .concat([{sec:"Notes"},{k:"notes",label:"Notes for This Edition",type:"rich",rows:4,ph:"Anything the team should know: who's out, special sections, sponsor banner"}]);
   openPane({eye:"MISMO Matters", title:monthName(ed.month)+" Edition", fields, data:ed,
     save:async v=>{ const old=ed.dates||{}, dates=Object.assign({},old); MILES.forEach(([k])=>{ if(v["d_"+k]) dates[k]=v["d_"+k]; });
       const np=dates.publish, moved = np && old.publish && np!==old.publish && MILES.every(([k])=>k==="publish" || dates[k]===old[k]);
@@ -2668,7 +2695,7 @@ function buildEmail(ed, preview){
     const d=s.doc, name=d.name||s.meta.name, anchor="mm-"+s.k;
     let inner='';
     if(s.meta.auto){
-      if(d.intro) inner+='<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 12px">'+linkify(d.intro)+'</p>';
+      if(d.intro) inner+=mdEmail(d.intro, F+'font-size:15px;line-height:1.55;margin:0 0 12px', 'color:#14486e');
       if(s.k==="micdup"){
         const eps=epsInWindow(ed); if(!eps.length) return;
         inner+='<p style="'+F+'font-size:15px;margin:0 0 8px">Check out the latest episodes of MISMO Mic\'d Up on MISMO\'s YouTube Channel:</p>';
@@ -2687,8 +2714,8 @@ function buildEmail(ed, preview){
       if(hl) inner+='<img src="'+esc(hl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
       else if(preview && local) inner+='<img src="'+esc(local)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0;outline:2px dashed #e0a440;outline-offset:-2px"><span style="display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</span>';
       else if(d.imageId||d.imageLib||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' — upload to Higher Logic and paste its link</div>';
-      inner+=paras(d.body).map(p=>'<p style="'+F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36">'+linkify(p)+'</p>').join("");
-      if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+esc(d.quote)+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
+      inner+=mdEmail(d.body, F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36', 'color:#14486e');
+      if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+mdInline(d.quote,'color:#14486e').replace(/\n/g,"<br>")+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
       if(d.ctaUrl) inner+='<p style="margin:4px 0 12px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:4px">'+esc(d.ctaText||"Learn more")+' &rarr;</a></p>';
     }
     toc.push('<a href="#'+anchor+'" style="color:'+navy+';text-decoration:none;font-size:13px;font-weight:bold;'+F+'">'+esc(name)+'</a>');
@@ -2715,9 +2742,9 @@ function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
   on.forEach(s=>{ const d=s.doc, name=(d.name||s.meta.name).toUpperCase();
     let body=[];
-    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(d.intro); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
+    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(d.body).forEach(p=>body.push(p)); if(d.quote) body.push("“"+d.quote+"”"+(d.quoteBy?" — "+d.quoteBy:"")); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");
@@ -2771,7 +2798,7 @@ function archiveView(ed){
   const ran=ed.sectionsRun||[];
   return '<div class="grid2"><div class="card"><div class="ch"><h2>Sections That Ran</h2><span class="cnt">'+ran.length+' of 13</span></div><div class="checks">'+
     SECTIONS.map(s=>'<div class="chk'+(ran.includes(s.key)?"":" done")+'"><span class="mx'+(ran.includes(s.key)?" on":"")+'" style="margin-top:2px"></span><span class="ct"><b>'+esc(s.name)+'</b>'+(ran.includes(s.key)?'':'<small>Did not run</small>')+'</span></div>').join("")+
-    '</div></div><div class="card"><div class="ch"><h2>About This Edition</h2></div><div class="cb"><dl class="kv"><dt>Sent</dt><dd>'+esc(fL(ed.dates.publish))+'</dd><dt>Byline</dt><dd>'+esc(ed.byline||"Amy Moses")+'</dd><dt>Length</dt><dd>'+(ed.words?(+ed.words).toLocaleString()+" words":"—")+'</dd><dt>Lead Story</dt><dd>'+esc(ed.lead||"—")+'</dd><dt>Read It</dt><dd>'+(ed.url?'<a href="'+esc(ed.url)+'" target="_blank" rel="noopener">Open in Axios</a>':"—")+'</dd></dl>'+(ed.notes?'<p class="note" style="margin-top:12px">'+esc(ed.notes)+'</p>':'')+'</div></div></div>';
+    '</div></div><div class="card"><div class="ch"><h2>About This Edition</h2></div><div class="cb"><dl class="kv"><dt>Sent</dt><dd>'+esc(fL(ed.dates.publish))+'</dd><dt>Byline</dt><dd>'+esc(ed.byline||"Amy Moses")+'</dd><dt>Length</dt><dd>'+(ed.words?(+ed.words).toLocaleString()+" words":"—")+'</dd><dt>Lead Story</dt><dd>'+esc(ed.lead||"—")+'</dd><dt>Read It</dt><dd>'+(ed.url?'<a href="'+esc(ed.url)+'" target="_blank" rel="noopener">Open in Axios</a>':"—")+'</dd></dl>'+(ed.notes?'<div class="note rt-view" style="margin-top:12px">'+mdHtml(ed.notes)+'</div>':'')+'</div></div></div>';
 }
 
 /* ================= the wow layer ================= */
@@ -3084,7 +3111,7 @@ const HELP = [
   <p>President's Vieaux Point, Summit Spotlight, MISMO Highlight, Workgroup Highlight, Sponsor Highlight, Implementation Success, MISMO Mic'd Up, Member Highlight, New Member Welcome, Education, Certifications, Engagement &amp; Events, and In the News. The names match the header graphics from the October edition.</p>
   <h3>Inside a Section</h3>
   <ul>
-   <li><b>Headline, Body Copy, Quote, Quote Attribution, Link Text and Link</b> each have their own box. Leave a blank line between paragraphs in the body.</li>
+   <li><b>Headline, Body Copy, Quote, Quote Attribution, Link Text and Link</b> each have their own box. The Body Copy box works like Word: use the toolbar (or Ctrl+B, Ctrl+I, Ctrl+K) for <b>bold</b>, <i>italics</i> and links, and the list buttons for bullets or numbers. Typing “- ” at the start of a line starts bullets. Pasting from Word or Outlook keeps bold, links and bullets and drops the rest. Notes and Details boxes everywhere work the same way.</li>
    <li><b>Image.</b> Upload it here so it can be reused for LinkedIn and Mailchimp, or say where it is (the Q drive path). Once it's uploaded to Higher Logic, paste that link in <b>Image Link in Higher Logic</b> so the email shows it.</li>
    <li><b>Section Header Graphic</b> is filled in from the October edition. Leave it blank to keep it, or paste a new graphic's link.</li>
    <li><b>Collecting It, Comes From and Status</b> say who's chasing it, where it comes from and where it stands.</li>
@@ -3531,7 +3558,7 @@ async function openImage(id){
     {k:"alt",label:"Alt Text",wide:true,ph:"What the picture shows, for screen readers and email clients that block images"},
     {k:"hlUrl",label:"Link in Higher Logic's Image Library",type:"url",wide:true,ph:"Paste once it's uploaded to Higher Logic; MISMO Matters sections then use it automatically"},
     {k:"credit",label:"Credit or Source",ph:"Photographer, partner or where it came from"},
-    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"Where it has been used, rights or size limits"},
+    {k:"notes",label:"Notes",type:"rich",rows:3,ph:"Where it has been used, rights or size limits"},
     {k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}
   ];
   openPane({eye:"Image Library", title:im.name||im.file||"Image", fields, data:im, noFocus:true,
@@ -3616,7 +3643,7 @@ function openBrand(id){
     {k:"newUrl",label:"Link to the Rebranded Version",type:"url",ph:"https://"},
     {k:"doneOn",label:"Rebranded On",type:"date"},
     {k:"found",label:"How We Found It",ph:"e.g. the new website, a team member, research"},
-    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"What needs changing: logo, colors, fonts, tagline, the MISMO Connect name"}
+    {k:"notes",label:"Notes",type:"rich",rows:3,ph:"What needs changing: logo, colors, fonts, tagline, the MISMO Connect name"}
   ];
   openPane({eye:"Rebranding", title:id?(b.name||"Item"):"New Rebranding Item", fields, data:b,
     save:async v=>{ if(!v.name){ toast("Give the item a name."); throw new Error("name"); }
@@ -3709,7 +3736,7 @@ function openOrder(id, preset){
     {k:"link",label:"Order or Tracking Link",type:"url",wide:true,ph:"https://"},
     {sec:"Rebranding"},
     {k:"brandItem",label:"Replaces This Rebranding Item",type:"select",blank:true,opts:brs.map(b=>[b.id,b.name||"Item"])},
-    {k:"notes",label:"Notes",type:"textarea",rows:3,ph:"Artwork file, colors, sizes, proof approval"}
+    {k:"notes",label:"Notes",type:"rich",rows:3,ph:"Artwork file, colors, sizes, proof approval"}
   ];
   openPane({eye:"Orders", title:id?(o.name||"Order"):"New Order", fields, data:o,
     save:async v=>{ if(!v.name){ toast("Say what's being ordered."); throw new Error("name"); }
@@ -3794,7 +3821,7 @@ function renderRequests(){
     return '<button type="button" class="rqc'+(r.status==="new"?" fresh":"")+'" data-rq="'+esc(r.id)+'">'+
       '<span class="rqc-top"><span class="rqt">'+esc(rqTypeName(r))+'</span>'+(r.status==="info"?'<span class="chip wait">Need Info</span>':'')+(r.priority==="high"?'<span class="chip changes">High</span>':'')+'</span>'+
       '<b class="rqc-t">'+esc(r.title||"Untitled request")+'</b>'+
-      (r.details?'<span class="rqc-d">'+esc(String(r.details).slice(0,120))+(String(r.details).length>120?"…":"")+'</span>':'')+
+      (r.details?'<span class="rqc-d">'+esc(mdPlain(r.details).slice(0,120))+(mdPlain(r.details).length>120?"…":"")+'</span>':'')+
       '<span class="rqc-by">'+esc(r.n||"Someone")+(r.role?' · '+esc(r.role):'')+(r.group?' · '+esc(r.group):'')+'</span>'+
       '<span class="rqc-foot">'+(r.neededBy?'<span class="due'+(due?" "+due:"")+'">Needed '+esc(fS(r.neededBy))+'</span>':'<span class="due">No date</span>')+(ln?'<span class="rqc-ln">'+ln+' on the schedule</span>':'')+whoHtml(r.owner)+'</span></button>'; };
   const sortRq=(a,b)=>((a.neededBy||"9")<(b.neededBy||"9")?-1:(a.neededBy||"9")>(b.neededBy||"9")?1:String(b.at||"").localeCompare(String(a.at||"")));
@@ -3829,7 +3856,7 @@ function rqAsked(r){
   const row=(l,v)=>v?'<div class="rqa-r"><span>'+esc(l)+'</span><div>'+v+'</div></div>':'';
   const links=String(r.links||"").split(/\s+/).filter(x=>/^https?:\/\//i.test(x)).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.length>60?u.slice(0,58)+"…":u)+'</a>').join("<br>");
   return '<div class="rqasked"><div class="rqa-h"><span class="rqt">'+esc(rqTypeName(r))+'</span><span class="rqa-when">Sent '+esc(r.at?fD(String(r.at).slice(0,10)):"")+'</span></div>'+
-    '<h3>'+esc(r.title||"Untitled request")+'</h3>'+(r.details?'<p>'+esc(r.details).replace(/\n/g,"<br>")+'</p>':'')+
+    '<h3>'+esc(r.title||"Untitled request")+'</h3>'+(r.details?'<div class="rt-view">'+mdHtml(r.details)+'</div>':'')+
     row("From", esc(r.n||"")+(r.e?' · <a href="mailto:'+esc(r.e)+'?subject='+encodeURIComponent("Your request: "+(r.title||""))+'">'+esc(r.e)+'</a>':''))+
     row("Role", esc([r.role,r.group].filter(Boolean).join(" · ")))+
     row("Needed By", r.neededBy?esc(fD(r.neededBy))+(r.firm?' <b>(firm date)</b>':''):"")+
@@ -3845,7 +3872,7 @@ function openRequest(id){
     {k:"title",label:"What's Needed",wide:true,ph:"e.g. LinkedIn post for the eNote webinar"},
     {k:"type",label:"Type",type:"select",opts:typeOpts},
     {k:"neededBy",label:"Needed By",type:"date"},
-    {k:"details",label:"Details",type:"textarea",rows:4,ph:"What it is, the key message, anything that must be included"},
+    {k:"details",label:"Details",type:"rich",rows:4,ph:"What it is, the key message, anything that must be included"},
     {k:"n",label:"Requested By"},{k:"e",label:"Their Email",ph:"name@mismo.org"},
     {k:"role",label:"Role",type:"select",opts:RQ_ROLES},{k:"group",label:"Team or Workgroup"},
     {k:"audience",label:"Audience"},{k:"event",label:"Related Event"},
@@ -3856,7 +3883,7 @@ function openRequest(id){
     {k:"priority",label:"Priority",type:"select",opts:[["normal","Normal"],["high","High"],["low","Low"]]},
     {k:"target",label:"Our Target Date",type:"date"},
     {k:"reply",label:"Note to the Requester (sent with Email the Requester)",wide:true,ph:"e.g. Scheduled for LinkedIn on Nov 12; need the speaker's headshot"},
-    {k:"notes",label:"Team Notes",type:"textarea",rows:3,ph:"Only the team sees these"}]);
+    {k:"notes",label:"Team Notes",type:"rich",rows:3,ph:"Only the team sees these"}]);
   const linked = id ? rqLinked(id) : [];
   const t=RQ_TYPE[r.type]||RQ_TYPE.other, dest=t[2];
   const makeLabel = dest.order ? "Create an Order" : "Add to the Schedule";
@@ -3880,7 +3907,7 @@ function openRequest(id){
       closePane(true);
       const when = v.target || r.neededBy || T();
       if(dest.order) openOrder(null,{name:r.title||"", kind:dest.order, neededBy:r.neededBy||"", eventName:r.event||"", event:r.event?"other":"", notes:seedNote, owner:v.owner||"", request:rid});
-      else newPiece(dest.piece, {title:(t[0]==="matters"?"MISMO Matters: ":"")+(r.title||""), date:when, owner:v.owner||"", copy:r.details||"", notes:seedNote, request:rid, touch:dest.touch?{[dest.touch]:true}:undefined});
+      else newPiece(dest.piece, {title:(t[0]==="matters"?"MISMO Matters: ":"")+(r.title||""), date:when, owner:v.owner||"", copy:(dest.piece==="linkedin"||dest.piece==="youtube")?mdPlain(r.details):(r.details||""), notes:seedNote, request:rid, touch:dest.touch?{[dest.touch]:true}:undefined});
     }}]) : [],
     after:b=>{
       if(fromForm){ const box=document.createElement("div"); box.innerHTML=rqAsked(r); b.insertBefore(box.firstChild, b.firstChild); }
@@ -4403,7 +4430,7 @@ function mailchimpHero(list){
     return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()].slice(0,2))+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x.status==="staged"||x.status==="ready"?"st":""))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
   const rows=[].concat(ahead.slice(0,3), sent.slice(0,Math.max(0,3-Math.min(3,ahead.length)))).slice(0,3);
   const row=(x,i)=>'<div role="button" tabindex="0" class="mrow'+(x===p?" next":"")+'" data-hero-mc="'+esc(x.id)+'"><span class="mfrom"><b>MISMO</b>'+(x.audience?'<em>'+esc(x.audience)+'</em>':'')+'</span>'+
-    '<span class="msub"><b>'+esc(x.title||"Untitled campaign")+'</b><small>'+esc(String(x.copy||(x.status==="done"?(+x.sent?"Sent to "+(+x.sent).toLocaleString()+" people":"Sent"):"Open it to write the email.")).replace(/\s+/g," ").slice(0,90))+'</small></span>'+
+    '<span class="msub"><b>'+esc(x.title||"Untitled campaign")+'</b><small>'+esc(mdPlain(x.copy||(x.status==="done"?(+x.sent?"Sent to "+(+x.sent).toLocaleString()+" people":"Sent"):"Open it to write the email.")).replace(/\s+/g," ").slice(0,90))+'</small></span>'+
     '<span class="mwhen">'+(x.reviewLink&&x.status!=="done"?'<a class="mrev" href="'+esc(x.reviewLink)+'" target="_blank" rel="noopener">Review ↗</a>':'')+(x.status==="done"?"Sent "+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date)):esc(fS(x.date)))+'</span></div>';
   const pc=(n,d)=>d?Math.round(n/d*100)+"%":"—";
   const stats=last&&+last.sent?'<div class="mstats"><div><b>'+(+last.sent).toLocaleString()+'</b><small>sent to</small></div><div><b>'+pc(+last.opens||0,+last.sent)+'</b><small>opened</small></div><div><b>'+pc(+last.clicks||0,+last.sent)+'</b><small>clicked</small></div><div><b>'+(+last.unsubs||0)+'</b><small>unsubscribed</small></div></div>':'';
@@ -4665,7 +4692,7 @@ function wireGuestPane(b, id){
   const m=$("#ep-ros-mail",b); if(m) m.onclick=async()=>{ const t=($("#f-runOfShow",b).value||"").trim(); if(!t){ msg.textContent="Draft or write the run of show first."; return; }
     const n=window.__hqImages && window.__hqImages.notify; if(!n){ msg.textContent="Email works on resources.mismo.org."; return; }
     const e=S.episodes[id]||{}; m.disabled=true; msg.textContent="Sending…";
-    try{ await n(BRIAN_EMAIL, "Run of show: Mic'd Up "+epWord(e)+(e.guests?" with "+e.guests:""), '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0d314c"><p>Hi Brian, here is the run of show for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+', drafted from the guest\'s answers.</p><div style="border-left:4px solid #74bfeb;background:#f6fafd;padding:12px 16px">'+esc(t).replace(/\n/g,"<br>")+'</div><p style="font-size:12px;color:#7794aa">Sent from MISMO Media.</p></div>');
+    try{ await n(BRIAN_EMAIL, "Run of show: Mic'd Up "+epWord(e)+(e.guests?" with "+e.guests:""), '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0d314c"><p>Hi Brian, here is the run of show for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+', drafted from the guest\'s answers.</p><div style="border-left:4px solid #74bfeb;background:#f6fafd;padding:12px 16px">'+mdEmail(t,'margin:0 0 10px','color:#14486e')+'</div><p style="font-size:12px;color:#7794aa">Sent from MISMO Media.</p></div>');
       msg.textContent="Sent to Brian."; }catch(err){ msg.textContent="Didn't send: "+(err.message||"try again"); }
     m.disabled=false; };
 }
@@ -5053,6 +5080,229 @@ function hmLoadQr(){
   if(HM.qr || HM.qrAsked || location.hostname!=="resources.mismo.org") return; HM.qrAsked=true;
   fetch("/qr/data/routes.json",{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{ if(j && j.codes){ HM.qr=j.codes; if(TAB==="home" && HM.view!=="map") renderHome(); } }).catch(()=>{});
 }
+/* ================= formatted text boxes =================
+   Body copy, notes and details boxes work like a small Word document: Bold, Italic, Links,
+   bulleted and numbered lists. What is saved stays readable plain text (a light markdown):
+     **bold**   *italic*   [link text](https://…)   "- " bullets   "1. " numbered
+   so search, word counts, the AI writers and every plain-text copy keep working, and the
+   Mailchimp/newsletter HTML shows the real formatting. */
+
+const RT_SAFE_URL = /^(https?:|mailto:|tel:)/i;
+function rtUrl(u){ u=String(u||"").trim(); if(!u) return ""; if(/^www\./i.test(u)) u="https://"+u; if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) u="mailto:"+u; return RT_SAFE_URL.test(u)?u:""; }
+
+/* inline: **bold**, *italic*, [text](url), bare links. `aStyle` adds inline styles for email. */
+function mdInline(s, aStyle){
+  const links=[];
+  let t=String(s||"").replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g,(m,txt,u)=>{ const url=rtUrl(u); if(!url) return m; links.push([txt,url]); return "\u0000"+(links.length-1)+"\u0000"; });
+  t=esc(t);
+  t=t.replace(/\*\*([^*\n](?:[^*\n]|\*(?!\*))*?)\*\*/g,"<b>$1</b>")
+     .replace(/(^|[^*\w])\*([^\s*](?:[^*\n]*?[^\s*])?)\*(?!\w)/g,"$1<i>$2</i>")
+     .replace(/(^|[\s(>])((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)])/g,(m,pre,u)=>pre+'<a href="'+esc(rtUrl(u.replace(/&amp;/g,"&")))+'"'+(aStyle?' style="'+aStyle+'"':' target="_blank" rel="noopener"')+'>'+u+'</a>');
+  t=t.replace(/\u0000(\d+)\u0000/g,(m,i)=>{ const [txt,url]=links[+i]; return '<a href="'+esc(url)+'"'+(aStyle?' style="'+aStyle+'"':' target="_blank" rel="noopener"')+'>'+mdInline(txt).replace(/<\/?a[^>]*>/g,"")+'</a>'; });
+  return t;
+}
+const RT_UL=/^\s*(?:[-*•–])\s+/, RT_OL=/^\s*\d+[.)]\s+/;
+/* blocks: paragraphs (blank line apart), single line breaks, bullet and numbered lists */
+function mdBlocks(s){
+  const out=[]; let para=[], list=null;
+  const flushP=()=>{ if(para.length){ out.push({t:"p",lines:para}); para=[]; } };
+  const flushL=()=>{ if(list){ out.push(list); list=null; } };
+  String(s||"").replace(/\r/g,"").split("\n").forEach(line=>{
+    if(!line.trim()){ flushP(); flushL(); return; }
+    const ul=RT_UL.test(line), ol=!ul && RT_OL.test(line);
+    if(ul||ol){ flushP(); const t=ul?"ul":"ol"; if(!list||list.t!==t){ flushL(); list={t,items:[]}; } list.items.push(line.replace(ul?RT_UL:RT_OL,"")); return; }
+    if(list && /^\s{2,}/.test(line)){ list.items[list.items.length-1]+="\n"+line.trim(); return; }
+    flushL(); para.push(line);
+  });
+  flushP(); flushL(); return out;
+}
+/* For the page itself (cards, notes, request details). */
+function mdHtml(s){
+  return mdBlocks(s).map(b=>b.t==="p" ? '<p>'+b.lines.map(l=>mdInline(l)).join("<br>")+'</p>'
+    : '<'+b.t+'>'+b.items.map(i=>'<li>'+mdInline(i).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>').join("");
+}
+/* For email HTML: every tag carries its own inline style. */
+function mdEmail(s, pStyle, aStyle){
+  return mdBlocks(s).map(b=>b.t==="p" ? '<p style="'+pStyle+'">'+b.lines.map(l=>mdInline(l,aStyle)).join("<br>")+'</p>'
+    : '<'+b.t+' style="'+pStyle+';padding-left:22px">'+b.items.map(i=>'<li style="margin:0 0 6px">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>').join("");
+}
+/* Plain text, for places that can't show formatting (LinkedIn, text copies, short snippets). */
+function mdPlain(s){
+  let n=0;
+  return String(s||"").replace(/\r/g,"").split("\n").map(line=>{
+    if(RT_UL.test(line)){ n=0; line="• "+line.replace(RT_UL,""); }
+    else if(RT_OL.test(line)){ n++; line=n+". "+line.replace(RT_OL,""); }
+    else if(line.trim()) n=0;
+    return line.replace(/\[([^\]\n]+)\]\(([^)\s]+)\)/g,(m,t,u)=>t===u?u:t+" ("+u+")").replace(/\*\*([^*\n]+?)\*\*/g,"$1").replace(/(^|[^*\w])\*([^\s*](?:[^*\n]*?[^\s*])?)\*(?!\w)/g,"$1$2");
+  }).join("\n");
+}
+
+/* ---- the editor: what you see in the box, read back to the light markdown ---- */
+function rtFromDom(root){
+  const isBlock=n=>n.nodeType===1 && /^(P|DIV|UL|OL|LI|H[1-6]|BLOCKQUOTE|PRE|TABLE|TR)$/.test(n.nodeName);
+  function inline(n, st){
+    if(n.nodeType===3) return n.nodeValue.replace(/ /g," ").replace(/[\r\n]+/g," ");
+    if(n.nodeType!==1) return "";
+    const tag=n.nodeName, css=(n.getAttribute("style")||"").toLowerCase();
+    if(tag==="BR") return "\n";
+    if(/^(STYLE|SCRIPT|META|TITLE|O:P)$/.test(tag)) return "";
+    if(isBlock(n)) return "\n"+kids(n,st)+"\n";
+    const bold=!st.b && (tag==="B"||tag==="STRONG"||/font-weight\s*:\s*(bold|[6-9]00)/.test(css));
+    const ital=!st.i && (tag==="I"||tag==="EM"||/font-style\s*:\s*italic/.test(css));
+    let t=kids(n,{b:st.b||bold,i:st.i||ital,a:st.a||tag==="A"});
+    if(tag==="A" && !st.a){ const u=rtUrl(n.getAttribute("href")); const txt=t.trim(); if(u && txt) t=(txt===u||txt===u.replace(/^mailto:/,"")) ? txt : "["+txt.replace(/[[\]]/g,"")+"]("+u+")"; }
+    const wrap=(t,m)=>{ const a=t.match(/^\s*/)[0], z=t.match(/\s*$/)[0], c=t.trim(); return c? a+m+c+m+z : t; };
+    if(ital) t=wrap(t,"*");
+    if(bold) t=wrap(t,"**");
+    return t;
+  }
+  function kids(n,st){ return [...n.childNodes].map(c=>inline(c,st)).join(""); }
+  const lines=[];
+  function block(n){
+    if(n.nodeType===3){ const t=n.nodeValue.replace(/ /g," "); if(t.trim()) pushText(t); return; }
+    if(n.nodeType!==1) return;
+    const tag=n.nodeName;
+    if(tag==="UL"||tag==="OL"){ endPara(); let i=0; [...n.children].forEach(li=>{ if(li.nodeName!=="LI") return; i++;
+        const sub=[...li.childNodes].filter(c=>!(c.nodeType===1&&/^(UL|OL)$/.test(c.nodeName)));
+        const txt=sub.map(c=>inline(c,{})).join("").replace(/\n+/g," ").replace(/\s+/g," ").trim();
+        if(txt) lines.push((tag==="UL"?"- ":i+". ")+txt);
+        [...li.children].filter(c=>/^(UL|OL)$/.test(c.nodeName)).forEach(c=>{ block(c); }); });
+      lines.push(""); return; }
+    if(tag==="BR"){ lines.push(cur); cur=""; return; }
+    if(isBlock(n) && ![...n.childNodes].some(isBlock)){
+      endPara(); const t=kids(n,{}).replace(/[ \t]+\n/g,"\n").replace(/\n{2,}/g,"\n").trim(); if(t) lines.push(t, ""); else if(lines.length && lines[lines.length-1]!=="") lines.push(""); return; }
+    if(isBlock(n)){ endPara(); [...n.childNodes].forEach(block); endPara(); return; }
+    pushText(inline(n,{}));
+  }
+  let cur="";
+  function pushText(t){ const parts=t.split("\n"); cur+=parts.shift(); parts.forEach(p=>{ lines.push(cur); cur=p; }); }
+  function endPara(){ if(cur.trim()){ lines.push(cur.trim(),""); } cur=""; }
+  [...root.childNodes].forEach(block); endPara();
+  return lines.join("\n").replace(/\u200b/g,"").replace(/[ \t]+$/gm,"").replace(/\n{3,}/g,"\n\n").trim();
+}
+function rtToDom(s){
+  const h=mdBlocks(s).map(b=>b.t==="p" ? '<p>'+b.lines.map(l=>mdInline(l)).join("<br>")+'</p>'
+    : '<'+b.t+'>'+b.items.map(i=>'<li>'+mdInline(i).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>').join("");
+  return h.replace(/ target="_blank" rel="noopener"/g,"") || "<p><br></p>";
+}
+
+const RT_ICONS={
+  b:'<b>B</b>', i:'<i style="font-family:Georgia,serif">I</i>',
+  link:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
+  ul:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="7" r="1.3"/><circle cx="5" cy="12" r="1.3"/><circle cx="5" cy="17" r="1.3"/><path d="M9.5 7H20M9.5 12H20M9.5 17H20"/></svg>',
+  ol:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 7H20M9.5 12H20M9.5 17H20"/><text x="2.6" y="9" font-size="6.5" stroke="none" fill="currentColor">1</text><text x="2.6" y="14" font-size="6.5" stroke="none" fill="currentColor">2</text><text x="2.6" y="19" font-size="6.5" stroke="none" fill="currentColor">3</text></svg>',
+  clear:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h12M12 5l-3 14"/><path d="M15 15l5 5M20 15l-5 5"/></svg>'
+};
+/* The HTML for one box: toolbar + editable area. Used by buildFields for type "rich". */
+function rtField(id, v, ph, rows){
+  const btn=(c,t,k)=>'<button type="button" class="rt-b" data-rt="'+c+'" title="'+t+(k?' ('+k+')':'')+'" aria-label="'+t+'">'+RT_ICONS[c]+'</button>';
+  const mod=/Mac|iPhone|iPad/.test(navigator.platform||"")?"⌘":"Ctrl+";
+  return '<div class="rt" data-rtwrap="'+id+'">'+
+    '<div class="rt-bar" role="toolbar" aria-label="Formatting">'+btn("b","Bold",mod+"B")+btn("i","Italic",mod+"I")+btn("link","Add a link",mod+"K")+'<span class="rt-sep"></span>'+btn("ul","Bulleted list")+btn("ol","Numbered list")+'<span class="rt-sep"></span>'+btn("clear","Clear formatting")+'</div>'+
+    '<div class="rt-linkbar" hidden><input type="url" placeholder="Paste or type the link, e.g. https://www.mismo.org/…" aria-label="Link address" autocomplete="off"><button type="button" class="btn sm pri" data-rtl="ok">Add Link</button><button type="button" class="btn sm" data-rtl="rm" hidden>Remove Link</button><button type="button" class="btn sm" data-rtl="x">Cancel</button></div>'+
+    '<div class="rt-ed" id="'+id+'" contenteditable="true" role="textbox" aria-multiline="true" data-ph="'+esc(ph||"")+'" style="min-height:'+Math.max(3,rows||4)*1.5+'em">'+rtToDom(v||"")+'</div></div>';
+}
+function rtWire(root){
+  $$(".rt",root).forEach(w=>{
+    if(w.dataset.wired) return; w.dataset.wired="1";
+    const ed=$(".rt-ed",w), bar=$(".rt-bar",w), lb=$(".rt-linkbar",w), li=$("input",lb);
+    /* .value reads and writes the saved form, so code written for <textarea> keeps working */
+    Object.defineProperty(ed,"value",{configurable:true, get(){ return rtFromDom(ed); }, set(v){ ed.innerHTML=rtToDom(v||""); rtEmpty(ed); }});
+    try{ document.execCommand("defaultParagraphSeparator",false,"p"); }catch(e){}
+    let saved=null, editA=null;
+    const inEd=n=>n && ed.contains(n.nodeType===1?n:n.parentNode);
+    const keep=()=>{ const s=getSelection(); if(s.rangeCount && inEd(s.anchorNode)) saved=s.getRangeAt(0).cloneRange(); };
+    const back=()=>{ ed.focus(); if(saved){ const s=getSelection(); s.removeAllRanges(); s.addRange(saved); } };
+    const changed=()=>{ ed.dispatchEvent(new Event("input",{bubbles:true})); rtState(w); rtEmpty(ed); };
+    const anchorAt=()=>{ const s=getSelection(); let n=s.anchorNode; while(n && n!==ed){ if(n.nodeName==="A") return n; n=n.parentNode; } return null; };
+    const openLink=()=>{ keep(); editA=anchorAt(); li.value=editA?editA.getAttribute("href").replace(/^mailto:/,""):""; $('[data-rtl="rm"]',lb).hidden=!editA; lb.hidden=false; setTimeout(()=>li.focus(),0); };
+    const doLink=()=>{
+      const url=rtUrl(li.value); if(!url){ li.focus(); li.select(); li.classList.add("bad"); return; } li.classList.remove("bad");
+      back();
+      if(editA){ editA.setAttribute("href",url); }
+      else{ const s=getSelection();
+        if(s.isCollapsed){ const a=document.createElement("a"); a.href=url; a.textContent=li.value.trim(); const r=s.getRangeAt(0); r.insertNode(a); r.setStartAfter(a); r.collapse(true); s.removeAllRanges(); s.addRange(r); }
+        else document.execCommand("createLink",false,url); }
+      lb.hidden=true; editA=null; changed();
+    };
+    bar.addEventListener("mousedown",e=>{ if(e.target.closest("[data-rt]")) e.preventDefault(); });
+    bar.addEventListener("click",e=>{
+      const b=e.target.closest("[data-rt]"); if(!b) return; const c=b.dataset.rt;
+      if(c==="link") return openLink();
+      ed.focus();
+      if(c==="b") document.execCommand("bold"); else if(c==="i") document.execCommand("italic");
+      else if(c==="ul") document.execCommand("insertUnorderedList"); else if(c==="ol") document.execCommand("insertOrderedList");
+      else if(c==="clear"){ document.execCommand("removeFormat"); document.execCommand("unlink"); }
+      changed();
+    });
+    lb.addEventListener("click",e=>{ const k=(e.target.closest("[data-rtl]")||{}).dataset; if(!k||!k.rtl) return;
+      if(k.rtl==="ok") doLink();
+      else if(k.rtl==="rm"){ back(); if(editA){ const r=document.createRange(); r.selectNodeContents(editA); const s=getSelection(); s.removeAllRanges(); s.addRange(r); } document.execCommand("unlink"); lb.hidden=true; editA=null; changed(); }
+      else { lb.hidden=true; editA=null; back(); } });
+    li.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); doLink(); } if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); lb.hidden=true; back(); } });
+    ed.addEventListener("keydown",e=>{
+      const m=e.ctrlKey||e.metaKey;
+      if(m && (e.key==="k"||e.key==="K")){ e.preventDefault(); openLink(); return; }
+      if(m && /^[bi]$/i.test(e.key)) setTimeout(()=>rtState(w),0);
+      /* Word-style shortcuts: "- " or "* " starts bullets, "1. " starts a numbered list */
+      if(e.key===" " && !m){
+        const s=getSelection(); if(!s.isCollapsed) return; const n=s.anchorNode; if(!n||n.nodeType!==3) return;
+        const before=n.nodeValue.slice(0,s.anchorOffset);
+        let blk=n.parentNode; while(blk && blk!==ed && !/^(P|DIV|LI)$/.test(blk.nodeName)) blk=blk.parentNode;
+        if(blk && blk.nodeName==="LI") return;
+        const first=blk && blk!==ed ? blk.firstChild : (()=>{ let p=n; while(p.previousSibling && p.previousSibling.nodeName!=="BR" && !/^(P|DIV|UL|OL)$/.test(p.previousSibling.nodeName)) p=p.previousSibling; return p; })();
+        if(first!==n) return;
+        if(/^[-*•]$/.test(before)||/^1[.)]$/.test(before)){
+          e.preventDefault(); const rest=n.nodeValue.slice(s.anchorOffset); const r=document.createRange();
+          if(!rest && blk && blk!==ed && blk.childNodes.length===1){ blk.innerHTML="<br>"; r.setStart(blk,0); }
+          else { n.nodeValue=rest||"\u200b"; r.setStart(n,0); }
+          r.collapse(true); s.removeAllRanges(); s.addRange(r);
+          document.execCommand(before.startsWith("1")?"insertOrderedList":"insertUnorderedList"); changed();
+        }
+      }
+    });
+    /* Pasting from Word, Outlook or a web page keeps bold, italics, links and lists, and drops the rest */
+    ed.addEventListener("paste",e=>{
+      const cd=e.clipboardData; if(!cd) return; e.preventDefault();
+      const html=cd.getData("text/html"), txt=cd.getData("text/plain");
+      let md;
+      if(html){ const d=new DOMParser().parseFromString(html,"text/html"); rtWordLists(d); md=rtFromDom(d.body); }
+      else md=txt||"";
+      const one=!/\n/.test(md) && !RT_UL.test(md) && !RT_OL.test(md);
+      const h=one ? mdInline(md).replace(/ target="_blank" rel="noopener"/g,"") : rtToDom(md);
+      document.execCommand("insertHTML",false,h||"");
+      changed();
+    });
+    ed.addEventListener("click",e=>{ const a=e.target.closest("a"); if(a && (e.ctrlKey||e.metaKey)){ window.open(a.href,"_blank","noopener"); e.preventDefault(); } });
+    ed.addEventListener("input",()=>{ if(!ed.firstChild || (ed.childNodes.length===1 && ed.firstChild.nodeName==="BR")){ ed.innerHTML="<p><br></p>"; const r=document.createRange(); r.setStart(ed.firstChild,0); r.collapse(true); const s=getSelection(); s.removeAllRanges(); s.addRange(r); } rtEmpty(ed); });
+    ed.addEventListener("keyup",()=>rtState(w)); ed.addEventListener("mouseup",()=>rtState(w));
+    document.addEventListener("selectionchange",()=>{ if(document.activeElement===ed) rtState(w); });
+    rtEmpty(ed);
+  });
+}
+/* Word's pasted bullets are paragraphs with class MsoListParagraph and a "·" or "1." in front */
+function rtWordLists(d){
+  $$("p",d.body).forEach(p=>{
+    const cls=p.className||"", st=p.getAttribute("style")||"";
+    if(!/MsoListParagraph/i.test(cls) && !/mso-list/i.test(st)) return;
+    $$("span",p).forEach(s=>{ if(/mso-list\s*:\s*Ignore/i.test(s.getAttribute("style")||"")) s.remove(); });
+    const raw=p.textContent.replace(/ /g," ").trim();
+    const ordered=/^\d+[.)]/.test(raw)||/l\d+ level\d+ lfo\d+/.test(st)&&/^\d/.test(raw);
+    p.innerHTML=p.innerHTML.replace(/^(\s|&nbsp;)*([·•oØ§▪–-]|\d+[.)])(\s|&nbsp;)+/,"");
+    const li=d.createElement("li"); li.innerHTML=p.innerHTML;
+    const prev=p.previousElementSibling, t=ordered?"OL":"UL";
+    if(prev && prev.nodeName===t && prev.dataset.word){ prev.appendChild(li); p.remove(); }
+    else { const l=d.createElement(t); l.dataset.word="1"; l.appendChild(li); p.replaceWith(l); }
+  });
+}
+function rtEmpty(ed){ ed.classList.toggle("is-empty", !ed.textContent.trim() && !ed.querySelector("li,img")); }
+function rtState(w){
+  const ed=$(".rt-ed",w); const s=getSelection(); if(!s.rangeCount || !ed.contains(s.anchorNode)) return;
+  const q=c=>{ try{ return document.queryCommandState(c); }catch(e){ return false; } };
+  let n=s.anchorNode, a=false; while(n && n!==ed){ if(n.nodeName==="A") a=true; n=n.parentNode; }
+  [["b","bold"],["i","italic"],["ul","insertUnorderedList"],["ol","insertOrderedList"]].forEach(([c,k])=>{ const b=$('[data-rt="'+c+'"]',w); if(b) b.setAttribute("aria-pressed",q(k)?"true":"false"); });
+  const lb=$('[data-rt="link"]',w); if(lb) lb.setAttribute("aria-pressed",a?"true":"false");
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -5072,7 +5322,7 @@ function renderMicdup(){
     return '<tr class="click'+(past&&e.youtubeDone&&e.linkedinDone?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
       '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td><td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
-  const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(e.notes)+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
+  const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(mdPlain(e.notes))+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn and Spotify (6:30 AM), on YouTube that afternoon, MISMO\'s LinkedIn Live Monday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
     '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 8:30 AM ET</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 8:30 AM ET</div></button>'+
@@ -5117,7 +5367,7 @@ function openEpisode(id, seed){
     {sec:"Guest and Run of Show"},
     {k:"guestEmail",label:"Guest's Email",ph:"For the guest form and the share kit"},
     {k:"_guest",type:"html",html:()=>guestPaneHtml(id?S.episodes[id]:e, id)},
-    {k:"runOfShow",label:"Run of Show",type:"textarea",rows:9,ph:"Drafted from the guest's answers, for Brian to use as his guide"},
+    {k:"runOfShow",label:"Run of Show",type:"rich",rows:9,ph:"Drafted from the guest's answers, for Brian to use as his guide"},
     {k:"_folder",type:"html",html:()=>e.spFolder?'<div class="ro">Episode folder in SharePoint: <a href="'+esc(spFolderUrl(e.spFolder))+'" target="_blank" rel="noopener">'+esc(e.spFolder.split("/").pop())+' ↗</a></div>':'<div class="ro">The SharePoint folder is made automatically once the episode has a number.</div>'},
     {sec:"From Brian (Older Episodes)"},
     {k:"_paste",type:"html",html:()=>'<label class="flabel" for="ep-paste">Paste Brian\'s Message</label><textarea id="ep-paste" rows="3" placeholder="Paste the whole message from Teams. The Google Drive link and his description are pulled out for you."></textarea><span class="hint" id="ep-paste-msg"></span>'},
@@ -5145,7 +5395,7 @@ function openEpisode(id, seed){
     {sec:"Website and MISMO Matters"},
     {k:"websiteDone",label:"On the website's Mic'd Up list",type:"cb"},
     {k:"_ed",type:"html",html:()=>'<div class="ro">'+(ed?"Lands in the "+esc(monthName(ed.month))+" MISMO Matters (goes out "+esc(fS(ed.dates.publish))+")":"No MISMO Matters edition covers this date yet.")+'</div>'},
-    {k:"notes",label:"Notes",type:"textarea",rows:2}
+    {k:"notes",label:"Notes",type:"rich",rows:2}
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
@@ -5186,13 +5436,13 @@ function pieceFields(ch){
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
   if(ch==="mailchimp") base.push({k:"audience",label:"Audience",ph:"e.g. Compliance list, Tech list"});
   if(ch==="youtube") base.push({k:"kind",label:"Kind of Video",type:"select",opts:["FRAME","MISMO Initiatives Series","Webinar Recording","Summit","Special Content","Other"]});
-  if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:"textarea",rows:7},(ch==="mailchimp"?{k:"reviewLink",label:"Review Link",type:"url",ph:"Paste the Mailchimp preview or share link",hint:"Where the reviewer can open the campaign and look it over before it sends. It shows as a Review button on the Mailchimp page."}:{k:"link",label:"Link It Points To",type:"url"}),{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":ch==="mailchimp"?"Link to the Sent Campaign":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
+  if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:(ch==="linkedin"||ch==="youtube")?"textarea":"rich",rows:7},(ch==="mailchimp"?{k:"reviewLink",label:"Review Link",type:"url",ph:"Paste the Mailchimp preview or share link",hint:"Where the reviewer can open the campaign and look it over before it sends. It shows as a Review button on the Mailchimp page."}:{k:"link",label:"Link It Points To",type:"url"}),{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":ch==="mailchimp"?"Link to the Sent Campaign":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
   if(ch==="youtube") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"watchHours",label:"Watch Time (Hours)",type:"number"});
   if(ch==="community") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"replies",label:"Replies",type:"number"});
   if(ch==="mailchimp") base.push({sec:"Results"},{k:"sent",label:"Sent To",type:"number"},{k:"opens",label:"Unique Opens",type:"number"},{k:"clicks",label:"Unique Clicks",type:"number"},{k:"unsubs",label:"Unsubscribes",type:"number"});
   base.push({sec:"Also Use It In"},{k:"touch",label:"Other places this goes",type:"checks",opts:[["matters","MISMO Matters"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["website","Website"]]});
-  base.push({k:"notes",label:"Notes",type:"textarea",rows:3});
+  base.push({k:"notes",label:"Notes",type:"rich",rows:3});
   return base;
 }
 function newPiece(ch, seed){ openPiece(null, Object.assign({channel:ch, status:ch==="setup"?"draft":"idea", date:T()}, seed||{})); }
@@ -5204,7 +5454,7 @@ function openPiece(id, seed){
     del: id ? async()=>remove("pieces",id) : null });
 }
 function pieceRows(list, cols){
-  return list.map(p=>'<tr class="click'+(p.status==="done"?" past":"")+'" data-pc="'+esc(p.id||"")+'"'+(p._ep?' data-epi="'+esc(p._ep)+'"':'')+(p._sec?' data-sec="'+esc(p._sec)+'"':'')+'><td><b>'+esc(fD(p.date))+'</b>'+(p.date&&p.status!=="done"&&p.date<T()?'<span class="t2" style="color:var(--bad)">past due</span>':'')+'</td><td>'+esc(p.title||"Untitled")+(cols.includes("review")&&p.reviewLink?' <a class="revlink" href="'+esc(p.reviewLink)+'" target="_blank" rel="noopener" data-stop="1">Review ↗</a>':'')+(p.notes?'<span class="t2">'+esc(p.notes.slice(0,90))+'</span>':'')+'</td>'+
+  return list.map(p=>'<tr class="click'+(p.status==="done"?" past":"")+'" data-pc="'+esc(p.id||"")+'"'+(p._ep?' data-epi="'+esc(p._ep)+'"':'')+(p._sec?' data-sec="'+esc(p._sec)+'"':'')+'><td><b>'+esc(fD(p.date))+'</b>'+(p.date&&p.status!=="done"&&p.date<T()?'<span class="t2" style="color:var(--bad)">past due</span>':'')+'</td><td>'+esc(p.title||"Untitled")+(cols.includes("review")&&p.reviewLink?' <a class="revlink" href="'+esc(p.reviewLink)+'" target="_blank" rel="noopener" data-stop="1">Review ↗</a>':'')+(p.notes?'<span class="t2">'+esc(mdPlain(p.notes).slice(0,90))+'</span>':'')+'</td>'+
     (cols.includes("kind")?'<td>'+esc(p.kind||p.via||"")+'</td>':'')+(cols.includes("aud")?'<td>'+esc(p.audience||"")+'</td>':'')+
     '<td>'+esc(p.owner||"")+'</td><td>'+chip(PSTAT,p.status||"idea")+'</td>'+
     (cols.includes("stats")?'<td class="n">'+(p.sent?pct((+p.opens||0)/p.sent):"—")+'</td><td class="n">'+(p.sent?pct((+p.clicks||0)/p.sent):"—")+'</td>':'')+'</tr>').join("");
@@ -5242,7 +5492,7 @@ function renderLinkedin(){
   $("#li-new",el).onclick=()=>newPiece("linkedin");
   wireLinkedinHero(el);
   wirePieceRows(el);
-  $$("[data-mk]",el).forEach(b=>b.onclick=()=>{ const sd=S.sections[b.dataset.mk]||{}; newPiece("linkedin",{title:sd.headline||"", copy:sd.body?sd.body.slice(0,600):"", kind:(SEC[sd.key]||{}).name||"MISMO Matters", imageNote:sd.imageNote||"", date:add(T(),1), touch:{matters:true}}); });
+  $$("[data-mk]",el).forEach(b=>b.onclick=()=>{ const sd=S.sections[b.dataset.mk]||{}; newPiece("linkedin",{title:sd.headline||"", copy:sd.body?mdPlain(sd.body).slice(0,600):"", kind:(SEC[sd.key]||{}).name||"MISMO Matters", imageNote:sd.imageNote||"", date:add(T(),1), touch:{matters:true}}); });
   $$("[data-nw]",el).forEach(b=>b.onclick=()=>{ const n=S.news[b.dataset.nw]; newPiece("linkedin",{title:(n.outlet?n.outlet+": ":"")+(n.headline||""), link:n.url||"", kind:"In the News", date:add(T(),1), touch:{matters:true}, notes:"news:"+n.id}); });
 }
 
@@ -5344,7 +5594,7 @@ function openNews(id){
     {sec:"The Article"},{k:"headline",label:"Headline",wide:true},{k:"outlet",label:"Outlet",ph:"e.g. HousingWire"},{k:"date",label:"Date",type:"date"},
     {k:"kind",label:"Kind",type:"select",opts:[["mention","MISMO in the News"],["press","MISMO Press Release"]]},{k:"url",label:"Link",type:"url",wide:true},
     {k:"edition",label:"Goes in MISMO Matters",type:"select",opts:[["","By date (automatic)"]].concat(editionsSorted().slice().reverse().map(e=>[e.id,monthName(e.month)+(e.archived?" (sent)":"")]))},
-    {k:"auto",label:"Found automatically · needs a look",type:"cb"},{sec:"Shared"},{k:"linkedinDone",label:"Shared on the MISMO LinkedIn page",type:"cb"},{k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},{k:"notes",label:"Notes",type:"textarea",rows:2}],
+    {k:"auto",label:"Found automatically · needs a look",type:"cb"},{sec:"Shared"},{k:"linkedinDone",label:"Shared on the MISMO LinkedIn page",type:"cb"},{k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},{k:"notes",label:"Notes",type:"rich",rows:2}],
     save:async v=>{ await put("news",nid,Object.assign({},n,v)); }, del:id?async()=>remove("news",id):null });
 }
 
@@ -5362,7 +5612,7 @@ function renderLists(){
       '<div class="tile"><div class="v">Nov</div><div class="k">Next Refresh</div><div class="s">Ciara Durkan, MBA</div></div>'+
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>The Compound</h2><span class="cnt">'+lists.length+'</span></div>'+(lists.length?'<div class="tw"><table class="t"><thead><tr><th>List</th><th>From</th><th class="n">Rows</th><th class="n">Unique Emails</th><th>Covers</th><th>Notes</th></tr></thead><tbody>'+
-      lists.map(l=>'<tr class="click" data-ls="'+esc(l.id)+'"><td><b>'+esc(l.name)+'</b></td><td>'+esc(l.source||"")+'</td><td class="n">'+(+l.rows?(+l.rows).toLocaleString():"—")+'</td><td class="n">'+(+l.unique?(+l.unique).toLocaleString():'<span class="chip changes">Not received</span>')+'</td><td>'+esc(l.covers||"")+'</td><td class="note">'+esc(l.notes||"")+'</td></tr>').join("")+
+      lists.map(l=>'<tr class="click" data-ls="'+esc(l.id)+'"><td><b>'+esc(l.name)+'</b></td><td>'+esc(l.source||"")+'</td><td class="n">'+(+l.rows?(+l.rows).toLocaleString():"—")+'</td><td class="n">'+(+l.unique?(+l.unique).toLocaleString():'<span class="chip changes">Not received</span>')+'</td><td>'+esc(l.covers||"")+'</td><td class="note">'+esc(mdPlain(l.notes))+'</td></tr>').join("")+
       '</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("lists")?"Loading…":"No lists logged.")+'</div>')+'</div>'+
     '<div class="grid2" style="margin-top:22px"><div class="card"><div class="ch"><h2>The Unsubscribe Rule</h2></div><div class="checks">'+
       '<div class="chk"><span class="ct"><b>One list, every platform</b><small>Anyone who unsubscribed in Mailchimp, Axios or Higher Logic is left off every MISMO send. Agreed by Amy and Kelly.</small></span></div>'+
@@ -5381,7 +5631,7 @@ function renderLists(){
 }
 function openList(id){
   const l=id?Object.assign({},S.lists[id]):{}; const nid=id||uid("l");
-  openPane({eye:"Lists", title:l.name||"New List", data:l, fields:[{k:"name",label:"List",wide:true},{k:"source",label:"From"},{k:"covers",label:"Covers"},{k:"rows",label:"Rows",type:"number"},{k:"unique",label:"Unique Emails",type:"number"},{k:"refreshed",label:"Refreshed",type:"date"},{k:"notes",label:"Notes",type:"textarea",rows:3}],
+  openPane({eye:"Lists", title:l.name||"New List", data:l, fields:[{k:"name",label:"List",wide:true},{k:"source",label:"From"},{k:"covers",label:"Covers"},{k:"rows",label:"Rows",type:"number"},{k:"unique",label:"Unique Emails",type:"number"},{k:"refreshed",label:"Refreshed",type:"date"},{k:"notes",label:"Notes",type:"rich",rows:3}],
     save:async v=>{ await put("lists",nid,Object.assign({},l,v)); }, del:id?async()=>remove("lists",id):null });
 }
 
