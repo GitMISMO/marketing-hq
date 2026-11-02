@@ -4133,9 +4133,10 @@ function kitCardHtml(){
   const eps=kitEpisodes();
   if(!eps.length) return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><span class="note">from each episode\'s SharePoint folder</span><div class="r"><button class="btn sm" type="button" id="kit-add">Pull In a Drive Folder</button></div></div><div class="empty">Each Season 2 episode gets its own folder in SharePoint (Marketing › MISMO Mic\'d Up) as soon as it has a number. Once Brian\'s files are in it, the video, thumbnails, transcript and clips land here, and the copy is written from the transcript.</div></div>';
   /* open on the episode being worked now: the earliest one from the last week that still has YouTube or MISMO's LinkedIn Live to do, else the next to air */
-  if(!KIT.ep || !eps.find(e=>e.id===KIT.ep)){ const t=T();
+  /* re-picked on every draw until someone chooses from the list, so it settles once all the records have loaded */
+  if(KIT.auto || !KIT.ep || !eps.find(e=>e.id===KIT.ep)){ const t=T();
     const now=eps.filter(e=>e.airDate && e.airDate>=add(t,-7) && (!e.youtubeDone || !e.linkedinDone)).sort((a,b)=>a.airDate<b.airDate?-1:1);
-    KIT.ep=(now[0]||eps[0]).id; }
+    KIT.ep=(now[0]||eps[0]).id; KIT.auto=true; }
   const e=S.episodes[KIT.ep], k=kitOf(KIT.ep)||{}, w=k.written||{};
   const tx=KIT.tx[KIT.ep], iss=KIT.txIssues[KIT.ep]||[];
   const thumbs=(k.thumbs||[]).filter(t=>S.images[t.img]);
@@ -4177,13 +4178,13 @@ function kitCardHtml(){
 }
 function wireKit(el){
   const eid=KIT.ep, k=kitOf(eid)||{}, e=S.episodes[eid]||{};
-  const sel=$("#kit-ep",el); if(sel) sel.onchange=()=>{ KIT.ep=sel.value; renderMicdup(); };
+  const sel=$("#kit-ep",el); if(sel) sel.onchange=()=>{ KIT.ep=sel.value; KIT.auto=false; renderMicdup(); };
   const add=$("#kit-add",el); if(add) add.onclick=()=>openPane({eye:"YouTube Kit", title:"Pull In a Drive Folder", data:{}, fields:[{k:"url",label:"Brian's Google Drive Folder Link",type:"url",wide:true,ph:"https://drive.google.com/drive/folders/…"}],
     buttons:[{label:"Pull It In", run:async v=>{ const m=String(v.url||"").match(FOLDER_RX); if(!m){ toast("That isn't a Google Drive folder link."); return; } closePane(true);
       let info; try{ info=await DRIVE().list(m[1]); }catch(err){ toast("Couldn't open that folder: "+(err.message||"try again"),5000); return; }
       const n=parseFolder(info.name).num; let ep=n?epByNum(n, T()):null;
       if(!ep){ const id=n?epNewId(n):uid("ep"); await put("episodes", id, {num:n||"", season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
-      KIT.ep=ep.id; await kitPullFolder(ep.id, m[1], ""); renderMicdup(); }}]});
+      KIT.ep=ep.id; KIT.auto=false; await kitPullFolder(ep.id, m[1], ""); renderMicdup(); }}]});
   if(!eid) return;
   const rp=$("#kit-repull",el); if(rp) rp.onclick=async()=>{ await kitPullFolder(eid, k.folderId, k.chatId); delete KIT.tx[eid]; renderMicdup(); };
   $$("[data-kcopy]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.kcopy,el); copyText(t.value, b.closest(".kcopy").querySelector("span").textContent); });
