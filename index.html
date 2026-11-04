@@ -2687,55 +2687,79 @@ function checksView(ed){
 function paras(s){ return String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean); }
 function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" style="color:#14486e">$1</a>').replace(/\n/g,"<br>"); }
 function buildEmail(ed, preview){
-  const F='font-family:Arial,Helvetica,sans-serif;';
+  /* Laid out like the hand-built November edition: a 600px column, full-width section header
+     images edge to edge, roomy 16px type, and every block in tables so Outlook keeps it. */
+  const F="font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#7794aa", soft="#f6fafd", line="#dde9f2";
+  const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
+  const A='color:'+link+';font-weight:600;text-decoration:underline';
+  const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700';
+  const body=(md)=>mdEmail(md, P, A, {h3:H3, li:F+'font-size:16px;line-height:1.65;color:'+ink+';margin:0 0 8px'});
+  const card=(top,main,sub,href)=>'<tr><td bgcolor="'+soft+'" style="background:'+soft+';border:1px solid '+line+';padding:14px 18px">'+
+    (top?'<div style="'+M+'font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:'+mute+';font-weight:600;margin:0 0 6px">'+top+'</div>':'')+
+    (href?'<a href="'+esc(href)+'" style="'+F+'font-size:16px;line-height:1.45;color:'+link+';font-weight:700;text-decoration:none">'+main+'</a>':'<div style="'+F+'font-size:16px;line-height:1.45;color:'+navy+';font-weight:700">'+main+'</div>')+
+    (sub?'<div style="'+F+'font-size:14.5px;line-height:1.5;color:#456179;margin:5px 0 0">'+sub+'</div>':'')+'</td></tr>';
+  const cards=list=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px">'+list.join('<tr><td height="8" style="font-size:0;line-height:0;height:8px">&nbsp;</td></tr>')+'</table>';
+  const imgBox=t=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px"><tr><td bgcolor="'+soft+'" style="background:'+soft+';border:1px dashed #9db6c9;color:#456179;'+F+'font-size:12px;padding:20px;text-align:center">'+t+'</td></tr></table>';
   const on=edSections(ed).filter(s=>s.on);
-  const navy="#0d314c", bar="#cfe0f3";
   const blocks=[], toc=[];
   on.forEach(s=>{
     const d=s.doc, name=d.name||s.meta.name, anchor="mm-"+s.k;
     let inner='';
     if(s.meta.auto){
-      if(d.intro) inner+=mdEmail(d.intro, F+'font-size:15px;line-height:1.55;margin:0 0 12px', 'color:#14486e');
+      if(d.intro) inner+=body(d.intro);
       if(s.k==="micdup"){
         const eps=epsInWindow(ed); if(!eps.length) return;
-        inner+='<p style="'+F+'font-size:15px;margin:0 0 8px">Check out the latest episodes of MISMO Mic\'d Up on MISMO\'s YouTube Channel:</p>';
-        inner+=eps.map(e=>'<p style="'+F+'font-size:15px;line-height:1.5;margin:0 0 8px"><a href="'+esc(e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos")+'" style="color:#14486e;font-weight:bold">MISMO Mic\'d Up '+esc(epWord(e))+': '+esc(e.title||"")+'</a>'+(e.guests?' with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'')+'</p>').join("");
+        inner+='<p style="'+P+';margin-bottom:16px">Check out the latest episodes of MISMO Mic&rsquo;d Up on MISMO&rsquo;s YouTube Channel:</p>';
+        inner+=cards(eps.map(e=>{ const lab=((+e.season||1)>1?"Season "+esc(e.season)+" &middot; ":"")+"Episode "+esc(e.num||"?");
+          return card(lab, esc(e.title||("MISMO Mic’d Up "+epWord(e))), e.guests?'with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'', e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos"); }));
       } else {
         const ns=newsInWindow(ed); if(!ns.length) return;
         const pr=ns.filter(n=>n.kind==="press"), mn=ns.filter(n=>n.kind!=="press");
-        if(pr.length) inner+='<p style="'+F+'font-size:15px;font-weight:bold;margin:0 0 6px">Press Releases:</p>'+pr.map(n=>'<p style="'+F+'font-size:15px;line-height:1.5;margin:0 0 6px">'+esc(fS(n.date))+': <a href="'+esc(n.url||"#")+'" style="color:#14486e">'+esc(n.headline||"")+'</a></p>').join("");
-        if(mn.length) inner+='<p style="'+F+'font-size:15px;font-weight:bold;margin:12px 0 6px">MISMO in the News:</p>'+mn.map(n=>'<p style="'+F+'font-size:15px;line-height:1.5;margin:0 0 6px"><a href="'+esc(n.url||"#")+'" style="color:#14486e">'+esc((n.outlet?n.outlet+" – ":"")+(n.headline||""))+'</a></p>').join("");
+        const head=(t,first)=>'<h3 style="'+H3+(first?';margin-top:0':'')+';margin-bottom:12px">'+t+'</h3>';
+        if(pr.length) inner+=head("Press Releases",true)+cards(pr.map(n=>card(esc(fS(n.date)), esc(n.headline||""), '', n.url||"#")));
+        if(mn.length) inner+=head("MISMO in the News",!pr.length)+cards(mn.map(n=>card(esc(n.outlet||""), esc(n.headline||""), '', n.url||"#")));
       }
     } else {
       if(!d.headline && !d.body && !d.quote) return;
-      if(d.headline) inner+='<h2 style="'+F+'font-size:21px;line-height:1.3;color:'+navy+';margin:0 0 12px">'+esc(d.headline)+'</h2>';
+      if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
-      if(hl) inner+='<img src="'+esc(hl)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0">';
-      else if(preview && local) inner+='<img src="'+esc(local)+'" alt="'+esc(d.imageAlt||"")+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;margin:0 0 14px;border:0;outline:2px dashed #e0a440;outline-offset:-2px"><span style="display:block;font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-10px 0 14px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</span>';
-      else if(d.imageId||d.imageLib||d.imageNote) inner+='<div style="'+F+'background:#eef4f9;border:1px dashed #9db6c9;color:#456179;font-size:12px;padding:16px;text-align:center;margin:0 0 14px">IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' — upload to Higher Logic and paste its link</div>';
-      inner+=mdEmail(d.body, F+'font-size:15px;line-height:1.6;margin:0 0 12px;color:#1d2b36', 'color:#14486e');
-      if(d.quote) inner+='<blockquote style="'+F+'margin:6px 0 14px;padding:10px 16px;border-left:4px solid #74bfeb;background:#f4f9fd;font-size:15px;line-height:1.55;color:#1d2b36">“'+mdInline(d.quote,'color:#14486e').replace(/\n/g,"<br>")+'”'+(d.quoteBy?'<br><span style="font-style:normal;font-weight:bold;font-size:13px;color:'+navy+'">— '+esc(d.quoteBy)+'</span>':'')+'</blockquote>';
-      if(d.ctaUrl) inner+='<p style="margin:4px 0 12px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:bold;font-size:14px;padding:10px 18px;border-radius:4px">'+esc(d.ctaText||"Learn more")+' &rarr;</a></p>';
+      const img=src=>'<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
+      if(hl) inner+=img(hl);
+      else if(preview && local) inner+=img(local).replace('border:0"','border:0;outline:2px dashed #e0a440;outline-offset:-2px"')+'<div style="font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-12px 0 18px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</div>';
+      else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
+      inner+=body(d.body);
+      if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">&ldquo;'+mdInline(d.quote,A).replace(/\n/g,"<br>")+'&rdquo;</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
+      if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
     }
-    toc.push('<a href="#'+anchor+'" style="color:'+navy+';text-decoration:none;font-size:13px;font-weight:bold;'+F+'">'+esc(name)+'</a>');
-    blocks.push('<tr><td style="padding:26px 30px 6px"><a name="'+anchor+'" id="'+anchor+'"></a>'+((d.hdrUrl||s.meta.hdr)?'<img src="'+esc(d.hdrUrl||s.meta.hdr)+'" alt="'+esc(name)+'" width="390" style="display:block;width:100%;max-width:390px;height:auto;margin:0 0 14px;border:0">':'<div style="'+F+'display:inline-block;background:'+bar+';color:'+navy+';font-size:12px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;padding:7px 14px;margin:0 0 14px">'+esc(name)+'</div>')+inner+
-      '<p style="'+F+'font-size:12px;margin:6px 0 0"><a href="#mm-top" style="color:#7794aa">Back to top &uarr;</a></p></td></tr>');
+    const hdr=d.hdrUrl||s.meta.hdr;
+    toc.push([anchor,name]);
+    blocks.push(
+      (hdr ? '<tr><td style="padding:0;line-height:0"><a name="'+anchor+'" id="'+anchor+'"></a><img src="'+esc(hdr)+'" alt="'+esc(name)+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'
+           : '<tr><td bgcolor="#e4f2fb" style="background:#e4f2fb;padding:38px 28px;border-top:1px solid #cfe1ef;border-bottom:1px solid #cfe1ef"><a name="'+anchor+'" id="'+anchor+'"></a><div style="'+F+'font-size:27px;font-weight:700;letter-spacing:-.012em;color:'+navy+';line-height:1.2">'+esc(name)+'</div></td></tr>')+
+      '<tr><td style="padding:28px 28px 4px">'+inner+'</td></tr>'+
+      '<tr><td align="right" style="padding:14px 28px 22px;border-top:1px solid #e5eef5;text-align:right"><a href="#mm-top" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap">Back to Top&nbsp;&uarr;</a></td></tr>');
   });
-  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa"><tr><td align="center" style="padding:20px 10px">'+
-    '<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;background:#ffffff">'+
-    '<tr><td style="background:'+navy+';padding:22px 30px"><a name="mm-top" id="mm-top"></a><img src="'+MAST_IMG+'" alt="MISMO Matters" width="300" style="display:block;width:300px;max-width:100%;height:auto;border:0"><div style="'+F+'color:#a9d8f3;font-size:14px;margin-top:8px">'+esc(monthName(ed.month))+'</div></td></tr>'+
-    (toc.length?'<tr><td style="padding:16px 30px;border-bottom:1px solid #e5eef5"><div style="'+F+'font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#7794aa;font-weight:bold;margin-bottom:6px">In This Issue</div><div style="line-height:1.9">'+toc.join(' &nbsp;·&nbsp; ')+'</div></td></tr>':'')+
+  /* In This Issue: two columns, numbered down the left column first */
+  const half=Math.ceil(toc.length/2), tl=(i)=>{ const t=toc[i]; if(!t) return ''; return '<a href="#'+t[0]+'" style="text-decoration:none;color:'+navy+';'+F+'font-size:14px;font-weight:600"><span style="'+M+'color:#2477b8;font-size:12px;font-weight:500">'+String(i+1).padStart(2,"0")+'</span>&nbsp;&nbsp;'+esc(t[1])+'</a>'; };
+  let tocRows=''; for(let r=0;r<half;r++){ const last=r===half-1; tocRows+='<tr><td width="50%" valign="top" style="padding:0 10px '+(last?0:9)+'px 0">'+tl(r)+'</td><td width="50%" valign="top" style="padding:0 0 '+(last?0:9)+'px 10px">'+tl(r+half)+'</td></tr>'; }
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8e5ef">'+
+    '<tr><td style="padding:0;line-height:0"><a name="mm-top" id="mm-top"></a><img src="'+MAST_IMG+'" alt="MISMO Matters" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'+
+    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:13px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="left" style="'+M+'font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9d8f3;white-space:nowrap">'+esc(monthName(ed.month))+'</td><td align="right" style="'+F+'font-size:12.5px;line-height:1.4;color:#9fc0d6">Where Our Industry Builds What&rsquo;s Next</td></tr></table></td></tr>'+
+    '<tr><td bgcolor="#74bfeb" style="background:#74bfeb;font-size:0;line-height:0;height:4px">&nbsp;</td></tr>'+
+    (toc.length?'<tr><td bgcolor="'+soft+'" style="background:'+soft+';padding:20px 28px 16px;border-bottom:1px solid '+line+'"><div style="'+F+'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:'+mute+';font-weight:700;margin:0 0 13px">In This Issue</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+tocRows+'</table></td></tr>':'')+
     blocks.join("")+
-    '<tr><td style="padding:26px 30px;border-top:1px solid #e5eef5"><p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 10px;color:#1d2b36">Engage with MISMO to shape the future of the mortgage industry. We have a chair at the table waiting for you.</p><p style="'+F+'font-size:14px;margin:0"><a href="'+SUBSCRIBE_URL+'" style="color:#14486e">Subscribe to MISMO Matters</a></p></td></tr>'+
-    '<tr><td style="background:#f4f7f9;padding:20px 20px 8px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-      '<td valign="middle" style="width:116px;padding:6px 0"><a href="https://collaborate.mismo.org/mismowebsite/home" style="text-decoration:none"><img src="'+FOOT_LOGO+'" alt="MISMO" width="116" height="18" style="display:block;width:116px;max-width:116px;height:auto;border:0"></a></td>'+
-      '<td valign="middle" align="center" style="padding:6px 12px;text-align:center;'+F+'font-size:12.5px;line-height:20px;color:#5b7183">1919 M Street NW, 5th Floor, Washington, DC 20036<br>&#9993;&nbsp;<a href="mailto:info@mismo.org" style="color:#0d314c;text-decoration:none">info@mismo.org</a></td>'+
-      '<td valign="middle" align="right" style="width:72px;padding:6px 0;white-space:nowrap">'+
-        '<a href="https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization" style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:16px;background:#50a4db;color:#0d314c;text-align:center;text-decoration:none;'+F+'font-size:15px;font-weight:bold" title="MISMO on LinkedIn">in</a>&nbsp;'+
-        '<a href="https://www.youtube.com/@MISMOStandards" style="display:inline-block;width:32px;height:32px;line-height:32px;border-radius:16px;background:#50a4db;color:#0d314c;text-align:center;text-decoration:none;'+F+'font-size:13px" title="MISMO on YouTube">&#9654;</a>'+
+    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:30px 28px"><div style="'+F+'font-size:19px;line-height:1.45;color:#ffffff;font-weight:700;margin:0 0 8px;letter-spacing:-.008em">Engage With MISMO to Shape the Future of the Mortgage Industry</div><div style="'+F+'font-size:15.5px;line-height:1.6;color:#a9d8f3;margin:0 0 20px">We have a chair at the table waiting for you.</div><a href="'+SUBSCRIBE_URL+'" style="'+F+'display:inline-block;background:#74bfeb;color:'+navy+';text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Subscribe to MISMO Matters&nbsp;&rarr;</a></td></tr>'+
+    '<tr><td bgcolor="#f4f7f9" style="background:#f4f7f9;padding:22px 24px 10px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+      '<td valign="middle" width="116" style="width:116px;padding:6px 0"><a href="https://collaborate.mismo.org/mismowebsite/home" style="text-decoration:none"><img src="'+FOOT_LOGO+'" alt="MISMO" width="116" height="18" style="display:block;width:116px;max-width:116px;height:auto;border:0" border="0"></a></td>'+
+      '<td valign="middle" align="center" style="padding:6px 12px;text-align:center;'+F+'font-size:12.5px;line-height:20px;color:#5b7183">1919 M Street NW, 5th Floor, Washington, DC 20036<br>&#9993;&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></td>'+
+      '<td valign="middle" align="right" width="72" style="width:72px;padding:6px 0;white-space:nowrap">'+
+        '<a href="https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization" style="display:inline-block;width:30px;height:30px;line-height:30px;border-radius:4px;background:'+navy+';color:#ffffff;text-align:center;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold" title="MISMO on LinkedIn">in</a>&nbsp;'+
+        '<a href="https://www.youtube.com/@MISMOStandards" style="display:inline-block;width:30px;height:30px;line-height:30px;border-radius:4px;background:'+navy+';color:#ffffff;text-align:center;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:12px" title="MISMO on YouTube">&#9654;</a>'+
       '</td></tr></table></td></tr>'+
-    '<tr><td align="center" style="background:#f4f7f9;padding:4px 30px 18px;text-align:center"><p style="'+F+'font-size:11.5px;line-height:1.5;color:#7794aa;margin:0;text-align:center">[Higher Logic unsubscribe and preferences links go here]</p></td></tr>'+
+    '<tr><td align="center" bgcolor="#f4f7f9" style="background:#f4f7f9;padding:4px 28px 20px;text-align:center"><p style="'+F+'font-size:11.5px;line-height:1.5;color:'+mute+';margin:0;text-align:center">[Higher Logic unsubscribe and preferences links go here]</p></td></tr>'+
     '</table></td></tr></table>';
 }
 function buildText(ed){
@@ -3111,7 +3135,7 @@ const HELP = [
   <p>President's Vieaux Point, Summit Spotlight, MISMO Highlight, Workgroup Highlight, Sponsor Highlight, Implementation Success, MISMO Mic'd Up, Member Highlight, New Member Welcome, Education, Certifications, Engagement &amp; Events, and In the News. The names match the header graphics from the October edition.</p>
   <h3>Inside a Section</h3>
   <ul>
-   <li><b>Headline, Body Copy, Quote, Quote Attribution, Link Text and Link</b> each have their own box. The Body Copy box works like Word: use the toolbar (or Ctrl+B, Ctrl+I, Ctrl+K) for <b>bold</b>, <i>italics</i> and links, and the list buttons for bullets or numbers. Typing “- ” at the start of a line starts bullets. Pasting from Word or Outlook keeps bold, links and bullets and drops the rest. Notes and Details boxes everywhere work the same way.</li>
+   <li><b>Headline, Body Copy, Quote, Quote Attribution, Link Text and Link</b> each have their own box. The Body Copy box works like Word: use the toolbar (or Ctrl+B, Ctrl+I, Ctrl+K) for <b>bold</b>, <i>italics</i> and links, and the list buttons for bullets or numbers. Typing “- ” at the start of a line starts bullets. Pasting from Word or Outlook keeps bold, links and bullets and drops the rest. To make a subheading in the email, put a short line on its own and make the whole line bold. Notes and Details boxes everywhere work the same way.</li>
    <li><b>Image.</b> Upload it here so it can be reused for LinkedIn and Mailchimp, or say where it is (the Q drive path). Once it's uploaded to Higher Logic, paste that link in <b>Image Link in Higher Logic</b> so the email shows it.</li>
    <li><b>Section Header Graphic</b> is filled in from the October edition. Leave it blank to keep it, or paste a new graphic's link.</li>
    <li><b>Collecting It, Comes From and Status</b> say who's chasing it, where it comes from and where it stands.</li>
@@ -5122,9 +5146,17 @@ function mdHtml(s){
     : '<'+b.t+'>'+b.items.map(i=>'<li>'+mdInline(i).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>').join("");
 }
 /* For email HTML: every tag carries its own inline style. */
-function mdEmail(s, pStyle, aStyle){
-  return mdBlocks(s).map(b=>b.t==="p" ? '<p style="'+pStyle+'">'+b.lines.map(l=>mdInline(l,aStyle)).join("<br>")+'</p>'
-    : '<'+b.t+' style="'+pStyle+';padding-left:22px">'+b.items.map(i=>'<li style="margin:0 0 6px">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>').join("");
+/* A paragraph that is one bold line on its own becomes a subheading (opt.h3 = its style). */
+const RT_HEAD=/^\*\*([^*\n]{1,140})\*\*:?$/;
+function mdEmail(s, pStyle, aStyle, opt){
+  opt=opt||{};
+  return mdBlocks(s).map(b=>{
+    if(b.t==="p"){
+      if(opt.h3 && b.lines.length===1 && RT_HEAD.test(b.lines[0].trim())) return '<h3 style="'+opt.h3+'">'+mdInline(b.lines[0].trim().replace(RT_HEAD,"$1"),aStyle)+'</h3>';
+      return '<p style="'+pStyle+'">'+b.lines.map(l=>mdInline(l,aStyle)).join("<br>")+'</p>';
+    }
+    return '<'+b.t+' style="'+pStyle+';padding-left:24px">'+b.items.map(i=>'<li style="'+(opt.li||"margin:0 0 6px")+'">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>';
+  }).join("");
 }
 /* Plain text, for places that can't show formatting (LinkedIn, text copies, short snippets). */
 function mdPlain(s){
