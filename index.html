@@ -2686,7 +2686,13 @@ function checksView(ed){
 /* ---- the newsletter itself: email-safe HTML for Higher Logic ---- */
 function paras(s){ return String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean); }
 function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" style="color:#14486e">$1</a>').replace(/\n/g,"<br>"); }
-function buildEmail(ed, preview){
+/* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org (GitMISMO/marketing-hq, mm-headers/).
+   The drawing source is mm-headers/source.html. Mic'd Up is a short animated GIF; Outlook shows its first frame. */
+const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
+const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","education","cert","events","news"];
+function hdrOpt(ed){ return (ed && ed.hdrStyle==="2") ? "2" : "1"; }
+function buildEmail(ed, preview, opt){
+  opt = opt || hdrOpt(ed);
   /* Laid out like the hand-built November edition: a 600px column, full-width section header
      images edge to edge, roomy 16px type, and every block in tables so Outlook keeps it. */
   const F="font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
@@ -2733,7 +2739,7 @@ function buildEmail(ed, preview){
       if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
       if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
     }
-    const hdr=d.hdrUrl||s.meta.hdr;
+    const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
     toc.push([anchor,name]);
     blocks.push(
       (hdr ? '<tr><td style="padding:0;line-height:0"><a name="'+anchor+'" id="'+anchor+'"></a><img src="'+esc(hdr)+'" alt="'+esc(name)+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'
@@ -2751,16 +2757,23 @@ function buildEmail(ed, preview){
     '<tr><td bgcolor="#74bfeb" style="background:#74bfeb;font-size:0;line-height:0;height:4px">&nbsp;</td></tr>'+
     (toc.length?'<tr><td bgcolor="'+soft+'" style="background:'+soft+';padding:20px 28px 16px;border-bottom:1px solid '+line+'"><div style="'+F+'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:'+mute+';font-weight:700;margin:0 0 13px">In This Issue</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+tocRows+'</table></td></tr>':'')+
     blocks.join("")+
-    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:30px 28px"><div style="'+F+'font-size:19px;line-height:1.45;color:#ffffff;font-weight:700;margin:0 0 8px;letter-spacing:-.008em">Engage With MISMO to Shape the Future of the Mortgage Industry</div><div style="'+F+'font-size:15.5px;line-height:1.6;color:#a9d8f3;margin:0 0 20px">We have a chair at the table waiting for you.</div><a href="'+SUBSCRIBE_URL+'" style="'+F+'display:inline-block;background:#74bfeb;color:'+navy+';text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Subscribe to MISMO Matters&nbsp;&rarr;</a></td></tr>'+
-    '<tr><td bgcolor="#f4f7f9" style="background:#f4f7f9;padding:22px 24px 10px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-      '<td valign="middle" width="116" style="width:116px;padding:6px 0"><a href="https://collaborate.mismo.org/mismowebsite/home" style="text-decoration:none"><img src="'+FOOT_LOGO+'" alt="MISMO" width="116" height="18" style="display:block;width:116px;max-width:116px;height:auto;border:0" border="0"></a></td>'+
-      '<td valign="middle" align="center" style="padding:6px 12px;text-align:center;'+F+'font-size:12.5px;line-height:20px;color:#5b7183">1919 M Street NW, 5th Floor, Washington, DC 20036<br>&#9993;&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></td>'+
-      '<td valign="middle" align="right" width="72" style="width:72px;padding:6px 0;white-space:nowrap">'+
-        '<a href="https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization" style="display:inline-block;width:30px;height:30px;line-height:30px;border-radius:4px;background:'+navy+';color:#ffffff;text-align:center;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold" title="MISMO on LinkedIn">in</a>&nbsp;'+
-        '<a href="https://www.youtube.com/@MISMOStandards" style="display:inline-block;width:30px;height:30px;line-height:30px;border-radius:4px;background:'+navy+';color:#ffffff;text-align:center;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:12px" title="MISMO on YouTube">&#9654;</a>'+
-      '</td></tr></table></td></tr>'+
-    '<tr><td align="center" bgcolor="#f4f7f9" style="background:#f4f7f9;padding:4px 28px 20px;text-align:center"><p style="'+F+'font-size:11.5px;line-height:1.5;color:'+mute+';margin:0;text-align:center">[Higher Logic unsubscribe and preferences links go here]</p></td></tr>'+
+    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:30px 28px"><div style="'+F+'font-size:19px;line-height:1.45;color:#ffffff;font-weight:700;margin:0 0 8px;letter-spacing:-.008em">Engage With MISMO to Shape the Future of the Mortgage Industry</div><div style="'+F+'font-size:15.5px;line-height:1.6;color:#a9d8f3;margin:0 0 20px">We have a chair at the table waiting for you.</div><a href="'+SUBSCRIBE_URL+'" style="'+F+'display:inline-block;'+(opt==="2"?'background:#1a8fe3;color:#ffffff;border:1px solid #2e9dee;':'background:#74bfeb;color:'+navy+';')+'text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Subscribe to MISMO Matters&nbsp;&rarr;</a></td></tr>'+
+    emailFooter(F)+
     '</table></td></tr></table>';
+}
+/* Footer: the website's footer, nice and tight. Two halves sit side by side on a computer and stack on a phone. */
+function emailFooter(F){
+  const navy="#0d314c", I=HDR2_BASE;
+  const half=(inner,align)=>'<div style="display:inline-block;vertical-align:middle;width:100%;max-width:272px;text-align:'+align+'">'+inner+'</div>';
+  const left='<a href="https://collaborate.mismo.org/mismowebsite/home" style="text-decoration:none;display:inline-block"><img src="'+FOOT_LOGO+'" alt="MISMO" width="124" height="19" style="display:block;width:124px;height:auto;border:0" border="0"></a>'+
+    '<div style="margin:9px 0 0;'+F+'font-size:13px;line-height:1.4;font-weight:600"><a href="https://collaborate.mismo.org/mismowebsite/privacy-policy" style="color:'+navy+';text-decoration:none;white-space:nowrap">Privacy Policy</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://collaborate.mismo.org/mismowebsite/terms-of-use" style="color:'+navy+';text-decoration:none;white-space:nowrap">Terms of Use</a></div>';
+  const right='<div style="'+F+'font-size:12.5px;line-height:1.55;color:#456179">1919 M Street NW, 5th Floor<br>Washington, DC 20036<br><img src="'+I+'ic-mail.png" alt="" width="12" height="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></div>'+
+    '<div style="margin:8px 0 0;line-height:0"><a href="https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization" style="display:inline-block;text-decoration:none"><img src="'+I+'ic-li.png" alt="MISMO on LinkedIn" width="30" height="30" style="display:block;width:30px;height:30px;border:0" border="0"></a><a href="https://www.youtube.com/@MISMOStandards" style="display:inline-block;text-decoration:none;padding-left:8px"><img src="'+I+'ic-yt.png" alt="MISMO on YouTube" width="30" height="30" style="display:block;width:30px;height:30px;border:0" border="0"></a></div>';
+  return '<tr><td bgcolor="#f4f7f9" style="background:#f4f7f9;padding:18px 24px 12px;border-top:1px solid #e5eef5;font-size:0">'+
+    '<!--[if mso]><table role="presentation" width="552" cellpadding="0" cellspacing="0" border="0"><tr><td width="276" valign="middle"><![endif]-->'+half(left,"left")+
+    '<!--[if mso]></td><td width="276" valign="middle" align="right"><![endif]-->'+half('<div style="padding:10px 0 0">'+right+'</div>',"right")+
+    '<!--[if mso]></td></tr></table><![endif]-->'+
+    '<div style="border-top:1px solid #e3ebf1;margin:14px 0 0;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#7794aa">[Higher Logic unsubscribe and preferences links go here]</div></td></tr>';
 }
 function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
@@ -2775,7 +2788,7 @@ function buildText(ed){
   return out.join("\n");
 }
 function previewView(ed){
-  return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
+  return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Section header style"><button type="button" data-hs="1" aria-pressed="'+(hdrOpt(ed)==="1")+'">Option 1 · Original</button><button type="button" data-hs="2" aria-pressed="'+(hdrOpt(ed)==="2")+'">Option 2 · New</button></div><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
     '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed,true)+'</div></div>'+
     '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block. Each section has its own link, so a reader can share one story, and every section has a way back to the top.</p></div></div>';
 }
@@ -2787,6 +2800,9 @@ function fallbackCopy(s,what){
   openPane({eye:"Copy", title:what, fields:[{k:"cp",label:"Select all and copy",type:"textarea",rows:18}], data:{cp:s}, noFocus:false, after:b=>{ const t=$("#f-cp",b); t.focus(); t.select(); }});
 }
 function wirePreview(el,ed){
+  $$("[data-hs]",el).forEach(b=>b.onclick=async()=>{ const v=b.dataset.hs; if(hdrOpt(ed)===v) return;
+    ed.hdrStyle=v; $$("[data-hs]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $("#pv-mail",el).innerHTML=buildEmail(ed,true);
+    try{ await patch("editions",ed.id,{hdrStyle:v}); toast("Option "+v+" is what Copy HTML gives you now"); }catch(e){} });
   $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length; if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
   $$("[data-dev]",el).forEach(b=>b.onclick=()=>{ $$("[data-dev]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $(".mailwrap",el).classList.toggle("phone",b.dataset.dev==="phone"); });
