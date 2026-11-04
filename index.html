@@ -1582,6 +1582,29 @@ tr.cxrow td .t2{display:inline-block;width:100%}
 .nw-mail{border-left:3px solid var(--sky);background:var(--surface-2);padding:10px 12px;border-radius:4px;font-size:13px;line-height:1.5}
 .nw-mail div{margin-top:4px;color:var(--ink-2)}
 .nw-mail .nw-sum{color:var(--ink);max-height:9em;overflow:auto}
+
+/* monthly numbers */
+.card.mn.mn-due{border-color:var(--sky);box-shadow:0 0 0 1px var(--sky) inset}
+.card.mn{margin-bottom:22px}
+.mn .cb{padding-top:4px}
+.mn-row{display:grid;grid-template-columns:26px minmax(0,1fr) 290px;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--rule)}
+.mn-row:first-child{border-top:0}
+.mn-tick{width:22px;height:22px;border-radius:50%;border:2px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;margin-top:1px}
+.mn-row.done .mn-tick{background:var(--good);border-color:var(--good)}
+.mn-b>b{font-size:14px}
+.mn-b small{display:block;color:var(--ink-3);font-size:12px;margin-top:3px}
+.mn-how{font-size:13px;color:var(--ink-2);line-height:1.5;margin-top:3px}
+.mn-row.done .mn-b>b{color:var(--ink-2)}
+.mn-acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-content:flex-start}
+.mn-how b{font-weight:600;color:var(--ink)}
+@media (max-width:900px){ .mn-row{grid-template-columns:26px minmax(0,1fr)} .mn-acts{grid-column:2;justify-content:flex-start} }
+.mn-pop{position:fixed;inset:0;z-index:300;background:rgba(6,32,47,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.mn-pop-card{background:var(--surface);color:var(--ink);border-radius:10px;max-width:560px;width:100%;padding:24px 26px;box-shadow:0 20px 60px rgba(0,0,0,.35);border-top:5px solid var(--sky);max-height:90vh;overflow:auto}
+.mn-pop-eye{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
+.mn-pop-card h2{margin:6px 0 10px;font-size:21px;letter-spacing:-.012em}
+.mn-pop-card p{font-size:14px;color:var(--ink-2);margin:0 0 10px;line-height:1.55}
+.mn-pop-card ul{margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.55}
+.mn-pop-card li{margin-bottom:8px}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -2164,7 +2187,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2317,6 +2340,10 @@ function allEvents(){
     const need=o.neededBy||orEventDate(o); if(need) ev.push({date:need, k:"orders", label:"Needed · "+(o.name||"Order")+(orEventName(o)?" for "+orEventName(o):""), done:o.status==="received", who:o.owner||"", go:()=>{ go("orders"); openOrder(o.id); }});
   });
   if(typeof requests==="function") requests().forEach(r=>{ if(!r.neededBy || ["done","declined"].includes(r.status) || rqLinked(r.id).length) return; ev.push({date:r.target||r.neededBy, k:"request", label:"Request · "+(r.title||"Untitled"), done:false, who:r.owner||"", go:()=>{ go("requests"); openRequest(r.id); }}); });
+  /* monthly numbers: due the 1st, for the month before */
+  if(typeof mnPeriod==="function"){ const per=mnPeriod(), first=T().slice(0,8)+"01", next=add(first,40).slice(0,8)+"01";
+    ev.push({date:first, k:"results", label:"Results · Bring In "+mnName(per)+" Numbers", done:(LOADED.has("monthly")||!LIVE) && !mnOpen(per).length, who:"", go:()=>go("results")});
+    ev.push({date:next, k:"results", label:"Results · Bring In "+mnName(first.slice(0,7))+" Numbers", done:false, who:"", go:()=>go("results")}); }
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
 }
@@ -2439,6 +2466,7 @@ function badges(){
   badge("branding", vals("branding").filter(b=>!b.archived && b.status==="old").length);
   badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && pOpen(p) && p.date && p.date<=wk).length);
   badge("summits", vals("pieces").filter(p=>p.channel==="summit" && pOpen(p) && p.date && p.date<=add(T(),14)).length);
+  if(typeof mnOpen==="function" && (LOADED.has("monthly") || !LIVE)) badge("results", mnOpen(mnPeriod()).length, true);
   badge("news", newsAll().filter(n=>!n.linkedinDone && n.date>=add(T(),-30)).length);
 }
 
@@ -3066,7 +3094,7 @@ function renderResults(){
   const ppl=peopleIndex(); const dls=ppl.filter(p=>p.lists.downloaders);
   const what={}; dls.forEach(p=>p.x.forEach(x=>what[x]=(what[x]||0)+1));
   const topWhat=Object.entries(what).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([l,v])=>({l,v,c:"--c6"}));
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1><div class="sub">Opens, clicks, views and impressions for every channel in one place. Drop in each platform\'s export and the numbers fill themselves in.</div></div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1><div class="sub">Opens, clicks, views and impressions for every channel in one place. Drop in each platform\'s export and the numbers fill themselves in.</div></div></div>'+mnCard()+
     '<div class="band"><div class="today">Results · everything logged so far</div><div class="say">'+(eds.length||li.length||yt.length||mc.length?'Here is how each channel is doing from the numbers brought in so far.':'No results brought in yet. Start with the YouTube and LinkedIn exports below; MISMO Matters stats start with the November send.')+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(eds.length?pct(avgOpen):"—")+'</div><div class="k">MISMO Matters Open Rate</div><div class="s">'+(eds.length?"average of "+eds.length+" edition"+(eds.length>1?"s":""):"from November on")+'</div></button>'+
       '<div class="tile"><div class="v">'+liAll.reduce((n,i)=>n+i.v,0).toLocaleString()+'</div><div class="k">LinkedIn Impressions</div><div class="s">'+liAll.length+' posts logged</div></div>'+
@@ -3086,11 +3114,13 @@ function renderResults(){
     '<div class="grid2" style="margin-top:22px"><div class="card"><div class="ch"><h2>What People Download</h2><span class="cnt">'+dls.length.toLocaleString()+' people</span></div>'+(topWhat.length?hbars(topWhat):'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>')+'</div>'+
       '<div class="card"><div class="ch"><h2>MISMO Matters by Edition</h2></div>'+(eds.length?'<div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent To</th><th class="n">Opens</th><th class="n">Clicks</th></tr></thead><tbody>'+eds.slice().reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td></tr>'; }).join("")+'</tbody></table></div>':'<div class="empty">Axios never shared numbers, so the first edition here will be November. Record its stats on the MISMO Matters page a week after it goes out.</div>')+'</div></div>';
   $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
+  mnWire(el); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="results") mnPopup("results"); },400);
   const msg=$("#rs-msg",el);
   $("#rs-yt",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, miss=[];
     for(const r of rows){ const title=col(r,/title|content|video/i); const m=title.match(/ep(?:isode)?\.?\s*(\d{1,3})/i); if(!m) continue; const ep=vals("episodes").find(x=>+x.num===+m[1]); if(!ep){ miss.push(m[1]); continue; }
       const views=num(col(r,/^views$/i)), hrs=num(col(r,/watch time/i)), likes=num(col(r,/likes/i));
       await patch("episodes",ep.id,{views, watchHours:hrs, likes, youtubeDone:true}); n++; }
+    if(n) await mnMarkFile("yt");
     msg.textContent=n+" episode"+(n===1?"":"s")+" updated from YouTube."+(miss.length?" Not logged here yet: Ep "+miss.join(", "):""); }catch(err){ msg.textContent=err.message; } };
   $("#rs-li",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, added=0;
     for(const r of rows){ const link=col(r,/post link|link|url/i), text=col(r,/post title|title|update|commentary|content/i), d=isoFrom(col(r,/created|date|posted/i));
@@ -3101,12 +3131,14 @@ function renderResults(){
       const p=vals("pieces").find(x=>x.channel==="linkedin" && ((x.postedUrl&&x.postedUrl===link) || (d && x.date===d && text && x.title && text.toLowerCase().includes(x.title.toLowerCase().slice(0,25)))));
       if(p){ await patch("pieces",p.id,Object.assign({status:"done"},st)); n++; }
       else { await put("pieces",uid("p"),Object.assign({channel:"linkedin",title:text.slice(0,90)||"LinkedIn post",copy:text,date:d,status:"done",postedUrl:link,kind:/\bin the news\b|#inthenews\b/i.test(text)?"In the News":"Other",owner:""},st)); added++; } }
+    if(n+added) await mnMarkFile("li");
     msg.textContent=n+" matched and "+added+" new LinkedIn posts brought in."; }catch(err){ msg.textContent=err.message; } };
   $("#rs-mc",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, added=0;
     for(const r of rows){ const subj=col(r,/subject|title|campaign/i), d=isoFrom(col(r,/send date|sent|date/i)); if(!subj) continue;
       const st={sent:num(col(r,/total recipients|recipients|emails sent|sent to/i)), opens:num(col(r,/unique opens|opens/i)), clicks:num(col(r,/unique clicks|clicks/i)), unsubs:num(col(r,/unsub/i)), audience:col(r,/list|audience/i)};
       const p=vals("pieces").find(x=>x.channel==="mailchimp" && x.title && x.title.toLowerCase()===subj.toLowerCase());
       if(p){ await patch("pieces",p.id,Object.assign({status:"done"},st)); n++; } else { await put("pieces",uid("p"),Object.assign({channel:"mailchimp",title:subj,date:d,status:"done"},st)); added++; } }
+    if(n+added) await mnMarkFile("mc");
     msg.textContent=n+" matched and "+added+" new Mailchimp sends brought in."; }catch(err){ msg.textContent=err.message; } };
 }
 
@@ -3339,7 +3371,9 @@ const HELP = [
    <tr><td>Mailchimp</td><td>Campaigns › Reports › Export</td><td>By subject; unmatched campaigns are added</td></tr>
    <tr><td>MISMO Matters</td><td>Higher Logic's report for the mailing</td><td>Typed into Record Stats on the edition</td></tr>
   </tbody></table>
-  <p>Once the daily feed is running (see <b>Daily Stats from Power Automate</b>), YouTube, MISMO Matters and Mailchimp numbers fill themselves in every morning and these exports are only needed for LinkedIn.</p>`},
+  <p>Once the daily feed is running (see <b>Daily Stats from Power Automate</b>), YouTube, MISMO Matters and Mailchimp numbers fill themselves in every morning and these exports are only needed for LinkedIn.</p>
+  <h3>The Monthly Reminder</h3>
+  <p>On the 1st of each month, the previous month's numbers come due. A checklist sits at the top of Results (LinkedIn's line also shows on the LinkedIn page), a pop-up appears on those pages until everything is in, Results shows a count in the menu, and the date is on the Schedule. Each line ticks itself off when its file is dropped in (or the MISMO Matters stats are typed in), and channels the daily feed already covers tick themselves off. <b>Mark Done</b> ticks one off by hand; <b>Remind Me Tomorrow</b> hides the pop-up for the day.</p>`},
  {id:"people", t:"Subscribers and Downloaders", g:"Audience", b:`
   <ul>
    <li><b>Look someone up</b> by typing any part of a name, email, organization or title. Pick a list to narrow it. Click a person for their details and everything they've downloaded.</li>
@@ -5533,6 +5567,100 @@ function wireCx(root, after){
     });
   });
 }
+/* ================= Monthly numbers =================
+   Some results can't be fetched automatically (LinkedIn won't let outside tools read the
+   page's analytics, and the daily feed isn't running for every channel yet). On the 1st of
+   each month the previous month's numbers come due: a checklist at the top of Results, a
+   pop-up on Results and LinkedIn until they're in, a count on the Results menu item, and a
+   date on the Schedule. Each one is ticked off by itself when its file is dropped in (or its
+   stats are typed in), or by hand. Kept in data/monthly.json: "monthly/<YYYY-MM>" is the
+   month being reported. */
+const MN = {closed:{}};
+function mnPeriod(d){ const t=d?P(d):today(); const p=new Date(t.getFullYear(), t.getMonth()-1, 1); return p.getFullYear()+"-"+String(p.getMonth()+1).padStart(2,"0"); }
+function mnName(per){ return MONL[+per.slice(5)-1]+" "+per.slice(0,4); }
+function mnFeedLive(k){ const f=feed(k); if(!f||!f.updated) return false; const d=new Date(f.updated); return !isNaN(d) && (Date.now()-d.getTime()) < 4*864e5; }
+function mnSentEdition(per){ return editionsSorted().find(e=>e.dates && e.dates.publish && e.dates.publish.slice(0,7)===per) || null; }
+function mnTasks(per){
+  const m=MONL[+per.slice(5)-1], ed=mnSentEdition(per);
+  return [
+    {k:"li", t:"LinkedIn", page:"linkedin",
+      how:'On the MISMO LinkedIn page, open <b>Analytics › Content</b>, set the dates to <b>'+m+'</b>, and press <b>Export</b>. Drop the file into <b>LinkedIn Page Analytics Export</b> below.',
+      why:'Brings in impressions, clicks and reactions for every post and Mic\'d Up Live, and any post that says "In the News" goes into MISMO Matters.',
+      link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-li"},
+    {k:"yt", t:"YouTube", feed:"youtube",
+      how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
+      why:'Views, watch time and likes for each Mic\'d Up episode.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
+    {k:"mc", t:"Mailchimp", feed:"mailchimp",
+      how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
+      why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mc"},
+    {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,
+      how: ed ? 'Open Higher Logic\'s report for the <b>'+esc(monthName(ed.month))+'</b> mailing and type Sent To, Delivered, Opens, Clicks, Unsubscribes and the most-clicked links into <b>Record Stats</b>.' : 'No MISMO Matters went out in '+m+'.',
+      why:'The open rate and clicks for the edition.', auto: ed && +edStats(ed).recipients, act: ed ? ["Record Stats", ()=>openStats(ed)] : null},
+    {k:"sp", t:"Spotify",
+      how:'In <b>Spotify for Creators › Analytics</b>, look up each Mic\'d Up episode\'s plays and type them into <b>Spotify Plays</b> on the episode (MISMO Mic\'d Up › the episode › Results).',
+      why:'Plays for each episode on Spotify.', link:["Open Spotify for Creators","https://creators.spotify.com/"], act:["Open Mic'd Up", ()=>go("micdup")]}
+  ].filter(x=>!x.skip);
+}
+function mnDoc(per){ return (S.monthly||{})[per] || {}; }
+function mnState(per, x){
+  const d=mnDoc(per)[x.k];
+  if(d && d.on) return {done:true, how:"by hand", when:d.on, who:d.by||""};
+  if(d && d.file) return {done:true, how:"file", when:d.file};
+  if(x.auto) return {done:true, how:"typed in"};
+  if(x.feed && mnFeedLive(x.feed)) return {done:true, how:"feed"};
+  return {done:false};
+}
+function mnOpen(per, only){ return mnTasks(per).filter(x=>(!only||x.k===only) && !mnState(per,x).done); }
+/* called by the Results drops when a file goes in */
+async function mnMarkFile(k){ const per=mnPeriod(); if(!LOADED.has("monthly") && LIVE) return; const doc=Object.assign({}, mnDoc(per)); doc[k]=Object.assign({}, doc[k]||{}, {file:T()}); await put("monthly", per, doc); }
+async function mnMark(k, on){ const per=mnPeriod(); const doc=Object.assign({}, mnDoc(per)); doc[k]= on ? {on:T()} : {}; await put("monthly", per, doc); }
+
+/* the checklist card: full at the top of Results, one line on LinkedIn */
+function mnCard(only){
+  const per=mnPeriod(), all=mnTasks(per).filter(x=>!only||x.k===only), open=all.filter(x=>!mnState(per,x).done);
+  if(only && !open.length) return '';
+  const row=x=>{ const s=mnState(per,x);
+    return '<div class="mn-row'+(s.done?" done":"")+'"><span class="mn-tick" aria-hidden="true">'+(s.done?"✓":"")+'</span><div class="mn-b"><b>'+esc(x.t)+'</b>'+
+      (s.done ? '<small>'+(s.how==="feed"?"Filled in by the daily feed":s.how==="typed in"?"Stats are in":s.how==="file"?"File brought in "+esc(fS(s.when)):"Marked done "+esc(fS(s.when)))+'</small>'
+              : '<div class="mn-how">'+(only?x.how.replace(/ below\./," on Results."):x.how)+'</div><small>'+esc(x.why)+'</small>')+'</div>'+
+      '<div class="mn-acts">'+(s.done ? (s.how==="by hand"?'<button class="btn sm" type="button" data-mn-undo="'+x.k+'">Undo</button>':'') :
+        (x.link?'<a class="btn sm" href="'+esc(x.link[1])+'" target="_blank" rel="noopener">'+esc(x.link[0])+' ↗</a>':'')+
+        (x.drop?'<button class="btn sm pri" type="button" data-mn-drop="'+x.drop+'">Drop the File</button>':'')+
+        (x.act?'<button class="btn sm pri" type="button" data-mn-act="'+x.k+'">'+esc(x.act[0])+'</button>':'')+
+        '<button class="btn sm" type="button" data-mn-done="'+x.k+'">Mark Done</button>')+'</div></div>'; };
+  const n=all.length-open.length;
+  return '<div class="card mn'+(open.length?" mn-due":" mn-ok")+'" id="mn-card"><div class="ch"><h2>'+(open.length?esc(mnName(per))+' Numbers Are Due':esc(mnName(per))+' Numbers Are In')+'</h2><span class="cnt">'+n+' of '+all.length+'</span>'+
+    (only?'<span class="sp"></span><button class="btn sm" type="button" data-go-results>Go to Results</button>':'<span class="note">due the 1st of each month, for the month before</span>')+'</div>'+
+    '<div class="cb">'+(open.length||!only? all.map(row).join("") : '')+'</div></div>';
+}
+function mnWire(el, only){
+  $$("[data-mn-done]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnDone,true); toast("Marked done"); mnRedraw(); });
+  $$("[data-mn-undo]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnUndo,false); mnRedraw(); });
+  $$("[data-mn-drop]",el).forEach(b=>b.onclick=()=>{ if(only){ go("results"); setTimeout(()=>{ const i=$("#"+b.dataset.mnDrop); if(i){ i.scrollIntoView({block:"center"}); i.click(); } },150); return; } const i=$("#"+b.dataset.mnDrop,el); if(i){ i.scrollIntoView({block:"center"}); i.click(); } });
+  $$("[data-mn-act]",el).forEach(b=>b.onclick=()=>{ const x=mnTasks(mnPeriod()).find(t=>t.k===b.dataset.mnAct); if(x&&x.act) x.act[1](); });
+  $$("[data-go-results]",el).forEach(b=>b.onclick=()=>go("results"));
+}
+function mnRedraw(){ if(TAB==="results"||TAB==="linkedin") renderTab(TAB); badges(); }
+
+/* the pop-up: once a day per person while anything is open, on Results and LinkedIn */
+function mnPopup(tab){
+  const per=mnPeriod(), only=tab==="linkedin"?"li":null, open=mnOpen(per, only);
+  if(!open.length || $("#mn-pop") || MN.closed[tab]) return;
+  let snooze=""; try{ snooze=localStorage.getItem("mm.monthly.snooze."+tab)||""; }catch(e){}
+  if(snooze===T()) return;
+  const d=document.createElement("div"); d.id="mn-pop"; d.className="mn-pop"; d.setAttribute("role","dialog"); d.setAttribute("aria-modal","true"); d.setAttribute("aria-labelledby","mn-pop-h");
+  d.innerHTML='<div class="mn-pop-card"><div class="mn-pop-eye">Monthly Reminder</div><h2 id="mn-pop-h">Time to bring in '+esc(mnName(per))+'\'s numbers</h2>'+
+    '<p>'+(only?'LinkedIn can\'t be read automatically, so its numbers come in from an export once a month.':'These channels can\'t be filled in automatically yet, so once a month their numbers come in by hand.')+' It takes a few minutes:</p>'+
+    '<ul>'+open.map(x=>'<li><b>'+esc(x.t)+':</b> '+x.how.replace(/ below\./," on Results.")+'</li>').join("")+'</ul>'+
+    '<div class="kbtns"><button class="btn pri" type="button" data-pop="go">'+(only?"Do It on Results":"Show Me the Checklist")+'</button><button class="btn" type="button" data-pop="later">Remind Me Tomorrow</button></div></div>';
+  document.body.appendChild(d);
+  const close=()=>{ MN.closed[tab]=true; d.remove(); };
+  d.addEventListener("click",e=>{ const b=e.target.closest("[data-pop]"); if(e.target===d) return close();
+    if(!b) return; if(b.dataset.pop==="later"){ try{ localStorage.setItem("mm.monthly.snooze."+tab, T()); }catch(err){} close(); }
+    else { close(); if(only) go("results"); const c=$("#mn-card"); if(c) c.scrollIntoView({block:"start", behavior:"smooth"}); } });
+  d.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+  setTimeout(()=>{ const b=$('[data-pop="go"]',d); if(b) b.focus(); },50);
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -5711,7 +5839,7 @@ function renderLinkedin(){
   const postedMonth=all.filter(p=>p.status==="done"&&p.date&&p.date.slice(0,7)===t.slice(0,7)).length;
   const ed=curEdition(); const reuse = ed ? edSections(ed).filter(s=>s.on && s.doc.reuse && s.doc.reuse.linkedin) : [];
   const newsTodo = newsAll().filter(n=>!n.linkedinDone && n.date>=add(t,-30)).sort((a,b)=>a.date<b.date?1:-1);
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Monday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Monday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+mnCard("li")+
     '<div class="band">'+linkedinHero(all)+'<div class="say">'+(thisWeek?'<em>'+thisWeek+' post'+(thisWeek>1?"s":"")+'</em> going up this week. ':'Nothing is set for this week yet. ')+(newsTodo.length?newsTodo.length+' news mention'+(newsTodo.length>1?"s haven't":" hasn't")+' been shared yet.':'')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+thisWeek+'</div><div class="k">Posting This Week</div><div class="s">through '+esc(fS(wk))+'</div></div>'+
       '<div class="tile"><div class="v">'+upcoming.length+'</div><div class="k">Coming Up</div><div class="s">next six weeks</div></div>'+
@@ -5723,6 +5851,7 @@ function renderLinkedin(){
     '<div class="card"><div class="ch"><h2>News to Share</h2><span class="cnt">'+newsTodo.length+'</span></div>'+(newsTodo.length?'<div class="checks">'+newsTodo.map(n=>'<div class="chk"><span class="ct"><b>'+esc(n.headline||"")+'</b><small>'+esc((n.outlet||"")+" · "+fS(n.date))+'</small></span><button class="btn sm" type="button" data-nw="'+esc(n.id)+'">Make a Post</button></div>').join("")+'</div>':'<div class="empty">Articles added on the In the News page that haven\'t been shared show up here.</div>')+'</div></div>'+
     '<div class="card" style="margin-top:22px"><div class="ch"><h2>'+(posted.some(p=>p.status==="canceled")?"Posted and Canceled":"Posted")+'</h2><span class="cnt">'+posted.length+'</span></div>'+(posted.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Post</th><th>Kind</th><th>Owner</th><th>Status</th></tr></thead><tbody>'+pieceRows(posted,["kind"])+'</tbody></table></div>':'<div class="empty">Nothing marked posted yet.</div>')+'</div>';
   $("#li-new",el).onclick=()=>newPiece("linkedin");
+  mnWire(el,"li"); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="linkedin") mnPopup("linkedin"); },400);
   wireLinkedinHero(el);
   wirePieceRows(el);
   $$("[data-mk]",el).forEach(b=>b.onclick=()=>{ const sd=S.sections[b.dataset.mk]||{}; newPiece("linkedin",{title:sd.headline||"", copy:sd.body?mdPlain(sd.body).slice(0,600):"", kind:(SEC[sd.key]||{}).name||"MISMO Matters", imageNote:sd.imageNote||"", date:add(T(),1), touch:{matters:true}}); });
