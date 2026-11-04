@@ -2689,6 +2689,7 @@ function openSection(ed,k,isNew){
       {k:"body",label:"Body Copy",type:"rich",rows:12,img:ed.month,ph:"Type or paste the copy as it should run. Pasting from Word keeps bold, links and bullets. Add pictures anywhere with the picture button."},
       {k:"quote",label:"Quote",type:"rich",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
       {k:"quoteBy",label:"Quote Attribution",ph:"Name, Title, Company"},
+      ...(FULL_ARTICLE[k] ? [{k:"_full",type:"html",html:()=>'<div class="ro">Read the Full Article goes to <a href="'+esc(fullArticleUrl(ed,k))+'" target="_blank" rel="noopener">'+esc(fullArticleUrl(ed,k).replace(/^https:\/\//,""))+' ↗</a>, the '+esc(monthName(ed.month))+' article on the website.</div>'},{k:"noFull",label:"Leave out the Read the Full Article button",type:"cb"}] : []),
       {k:"ctaText",label:"Link Text",ph:"e.g. Register for the Winter Summit"},
       {k:"ctaUrl",label:"Link",type:"url",ph:"https://"});
   }
@@ -2769,6 +2770,10 @@ function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1"
    The drawing source is mm-headers/source.html. Mic'd Up is a short animated GIF; Outlook shows its first frame. */
 const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
 const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","education","cert","events","news"];
+/* Vieaux Point and Workgroup Highlights each have a page on the website with every month's
+   article; #vp-YYYY-MM / #wg-YYYY-MM opens straight to that month. */
+const FULL_ARTICLE = {vieaux:["https://collaborate.mismo.org/mismowebsite/about-mismo/vieaux-point","vp"], workgroup:["https://collaborate.mismo.org/mismowebsite/about-mismo/workgroup-highlights","wg"]};
+function fullArticleUrl(ed, k){ const f=FULL_ARTICLE[k]; return f && ed && ed.month ? f[0]+"#"+f[1]+"-"+ed.month : ""; }
 function hdrOpt(ed){ return (ed && ed.hdrStyle==="2") ? "2" : "1"; }
 function buildEmail(ed, preview, opt){
   opt = opt || hdrOpt(ed);
@@ -2822,6 +2827,8 @@ function buildEmail(ed, preview, opt){
       else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
       inner+=body(d.body);
       if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
+      const full = !d.noFull && fullArticleUrl(ed, s.k);
+      if(full) inner+='<p style="margin:0 0 18px"><a href="'+esc(full)+'" style="'+F+'display:inline-block;background:'+(opt==="2"?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Read the Full Article&nbsp;&rarr;</a></p>';
       if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
     }
     const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
@@ -2866,7 +2873,7 @@ function buildText(ed){
     let body=[];
     if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k); if(full) body.push("Read the full article: "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");
