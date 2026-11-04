@@ -5183,6 +5183,7 @@ function mdInline(s, aStyle){
   t=t.replace(/\*\*([^*\n](?:[^*\n]|\*(?!\*))*?)\*\*/g,"<b>$1</b>")
      .replace(/(^|[^*\w])\*([^\s*](?:[^*\n]*?[^\s*])?)\*(?!\w)/g,"$1<i>$2</i>")
      .replace(/(^|[\s(>])((?:https?:\/\/|www\.)[^\s<]+[^\s<.,;:!?)])/g,(m,pre,u)=>pre+'<a href="'+esc(rtUrl(u.replace(/&amp;/g,"&")))+'"'+(aStyle?' style="'+aStyle+'"':' target="_blank" rel="noopener"')+'>'+u+'</a>');
+  t=t.replace(/(^|[\s(>;])([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})(?=$|[\s).,;:!?<&])/g,(m,pre,e)=>pre+'<a href="mailto:'+e+'"'+(aStyle?' style="'+aStyle+'"':'')+'>'+e+'</a>');
   t=t.replace(/\u0000(\d+)\u0000/g,(m,i)=>{ const [txt,url]=links[+i]; return '<a href="'+esc(url)+'"'+(aStyle?' style="'+aStyle+'"':' target="_blank" rel="noopener"')+'>'+mdInline(txt).replace(/<\/?a[^>]*>/g,"")+'</a>'; });
   return t;
 }
@@ -5258,7 +5259,7 @@ function rtFromDom(root){
     const bold=!st.b && (tag==="B"||tag==="STRONG"||/font-weight\s*:\s*(bold|[6-9]00)/.test(css));
     const ital=!st.i && (tag==="I"||tag==="EM"||/font-style\s*:\s*italic/.test(css));
     let t=kids(n,{b:st.b||bold,i:st.i||ital,a:st.a||tag==="A"});
-    if(tag==="A" && !st.a){ const u=rtUrl(n.getAttribute("href")); const txt=t.trim(); if(u && txt) t=(txt===u||txt===u.replace(/^mailto:/,"")) ? txt : "["+txt.replace(/[[\]]/g,"")+"]("+u+")"; }
+    if(tag==="A" && !st.a){ const u=rtUrl(n.getAttribute("href")); const txt=t.trim(); if(u && txt) t=(txt===u && /^https?:/i.test(u)) ? txt : "["+txt.replace(/[[\]]/g,"")+"]("+u+")"; }
     const wrap=(t,m)=>{ const a=t.match(/^\s*/)[0], z=t.match(/\s*$/)[0], c=t.trim(); return c? a+m+c+m+z : t; };
     if(ital) t=wrap(t,"*");
     if(bold) t=wrap(t,"**");
