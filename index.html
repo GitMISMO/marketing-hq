@@ -5173,7 +5173,7 @@ function hmLoadQr(){
    Mailchimp/newsletter HTML shows the real formatting. */
 
 const RT_SAFE_URL = /^(https?:|mailto:|tel:)/i;
-function rtUrl(u){ u=String(u||"").trim(); if(!u) return ""; if(/^www\./i.test(u)) u="https://"+u; if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) u="mailto:"+u; return RT_SAFE_URL.test(u)?u:""; }
+function rtUrl(u){ u=String(u||"").trim(); if(!u) return ""; if(/^www\./i.test(u)) u="https://"+u; u=u.replace(/^(mailto:)+/i,"mailto:"); if(!/^[a-z][a-z0-9+.-]*:/i.test(u) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) u="mailto:"+u; return RT_SAFE_URL.test(u)?u:""; }
 
 /* inline: **bold**, *italic*, [text](url), bare links. `aStyle` adds inline styles for email. */
 function mdInline(s, aStyle){
