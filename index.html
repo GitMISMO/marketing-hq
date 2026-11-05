@@ -2853,7 +2853,8 @@ function buildEmail(ed, preview, opt){
   const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#7794aa", soft="#f6fafd", line="#dde9f2";
   const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
   const A='color:'+link+';font-weight:600;text-decoration:underline';
-  const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700';
+  /* subheads always start below a small picture beside the text, never beside it */
+  const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700;clear:both;padding-top:6px';
   const pic=b=>{ const r=rtImgInfo(b.ref), half=b.size==="half", w=half?272:544;
     const tag=(src,extra)=>'<img src="'+esc(src)+'" alt="'+esc(b.alt||"")+'" width="'+w+'"'+(extra||'')+' style="display:block;width:'+(half?'50%':'100%')+';max-width:'+w+'px;height:auto;margin:'+(half?'4px auto 18px':'4px 0 18px')+';border:0'+(r.hl?'':';outline:2px dashed #e0a440;outline-offset:-2px')+'" border="0">';
     const wrap=x=>half?'<div style="text-align:center">'+x+'</div>':x;
@@ -2894,7 +2895,7 @@ function buildEmail(ed, preview, opt){
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       const isz=leadSize(d, lib);
-      const img=src=> isz==="small" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" style="float:left;width:140px;max-width:38%;height:auto;margin:4px 22px 12px 0;border:0;border-radius:4px" border="0">'
+      const img=src=> isz==="small" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" style="float:left;width:140px;max-width:38%;height:auto;margin:4px 22px 16px 0;border:0;border-radius:4px" border="0">'
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
