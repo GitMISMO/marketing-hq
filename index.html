@@ -2736,6 +2736,7 @@ function openSection(ed,k,isNew){
     {k:"imageNote",label:"Where the Image Is",ph:"e.g. Q drive › MISMO Matters › 2026-11 › citizens.png"},
     {k:"imageUrl",label:"Image Link in Higher Logic",type:"url",ph:"https://"},
     {k:"imageAlt",label:"Image Description",ph:"For screen readers, e.g. Deborah Jones headshot"},
+    {k:"imageSize",label:"Picture Size",type:"select",opts:[["","Automatic (headshots go small)"],["full","Full Width"],["half","Half Width, Centered"],["small","Small, Beside the Text"]],hint:"Small puts the picture at the left with the text running beside it. Good for headshots."},
     {k:"hdrUrl",label:"Section Header Graphic",type:"url",ph:meta.hdr?"Using the October header graphic":"Plain text header",hint:meta.hdr?"Leave blank to use the header graphic from the October edition":"Paste a header graphic link, or leave blank for a text header"});
   fields.push({sec:"Who and Status"},
     {k:"owner",label:"Collecting It",type:"select",opts:PEOPLE},
@@ -2755,6 +2756,8 @@ function openSection(ed,k,isNew){
   });
   PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||""; };
 }
+/* lead picture size: what the section says, else headshot-shaped pictures (taller than wide) go small */
+function leadSize(d, lib){ if(d.imageSize) return d.imageSize; return lib && +lib.w && +lib.h > +lib.w*1.1 ? "small" : "full"; }
 function imageField(d){
   const lib = d.imageLib && S.images[d.imageLib];
   const src = lib ? imgSrc(lib) : (d.imageId ? "/_blob/"+d.imageId : "");
@@ -2859,11 +2862,15 @@ function buildEmail(ed, preview, opt){
       if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
-      const img=src=>'<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
+      const isz=leadSize(d, lib);
+      const img=src=> isz==="small" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" style="float:left;width:140px;max-width:38%;height:auto;margin:4px 22px 12px 0;border:0;border-radius:4px" border="0">'
+        : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
+        : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
       else if(preview && local) inner+=img(local).replace('border:0"','border:0;outline:2px dashed #e0a440;outline-offset:-2px"')+'<div style="font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-12px 0 18px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</div>';
       else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
       inner+=body(d.body);
+      if(isz==="small" && (hl||(preview&&local))) inner+='<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>';
       if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
       const full = !d.noFull && fullArticleUrl(ed, s.k);
       if(full) inner+='<p style="margin:0 0 18px"><a href="'+esc(full)+'" style="'+F+'display:inline-block;background:'+(opt==="2"?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Read the Full Article&nbsp;&rarr;</a></p>';
