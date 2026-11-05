@@ -2845,11 +2845,14 @@ const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","mic
 const FULL_ARTICLE = {vieaux:["https://collaborate.mismo.org/mismowebsite/about-mismo/vieaux-point","vp"], workgroup:["https://collaborate.mismo.org/mismowebsite/about-mismo/workgroup-highlights","wg"]};
 function fullArticleUrl(ed, k){ const f=FULL_ARTICLE[k]; return f && ed && ed.month ? f[0]+"#"+f[1]+"-"+ed.month : ""; }
 function hdrOpt(ed){ return (ed && ed.hdrStyle==="2") ? "2" : "1"; }
+/* IBM Plex for the email apps that load web fonts (Apple Mail on iPhone, iPad and Mac, Outlook for Mac, Samsung Mail).
+   Hidden from Outlook on Windows, which would otherwise drop to Times New Roman; it and Gmail use Segoe UI or Arial instead. */
+const EMAIL_FONTS='<!--[if !mso]><!--><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&amp;family=IBM+Plex+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"><style type="text/css">@import url(\'https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap\');</style><!--<![endif]-->';
 function buildEmail(ed, preview, opt){
   opt = opt || hdrOpt(ed);
   /* Laid out like the hand-built November edition: a 600px column, full-width section header
      images edge to edge, roomy 16px type, and every block in tables so Outlook keeps it. */
-  const F="font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
   const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#7794aa", soft="#f6fafd", line="#dde9f2";
   const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
   const A='color:'+link+';font-weight:600;text-decoration:underline';
@@ -2919,7 +2922,7 @@ function buildEmail(ed, preview, opt){
   /* In This Issue: two columns, numbered down the left column first */
   const half=Math.ceil(toc.length/2), tl=(i)=>{ const t=toc[i]; if(!t) return ''; return '<a href="#'+t[0]+'" style="text-decoration:none;color:'+navy+';'+F+'font-size:14px;font-weight:600"><span style="'+M+'color:#2477b8;font-size:12px;font-weight:500">'+String(i+1).padStart(2,"0")+'</span>&nbsp;&nbsp;'+esc(t[1])+'</a>'; };
   let tocRows=''; for(let r=0;r<half;r++){ const last=r===half-1; tocRows+='<tr><td width="50%" valign="top" style="padding:0 10px '+(last?0:9)+'px 0">'+tl(r)+'</td><td width="50%" valign="top" style="padding:0 0 '+(last?0:9)+'px 10px">'+tl(r+half)+'</td></tr>'; }
-  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
+  return EMAIL_FONTS+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
     '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8e5ef">'+
     '<tr><td style="padding:0;line-height:0"><a name="mm-top" id="mm-top"></a><img src="'+MAST_IMG+'" alt="MISMO Matters" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'+
     '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:13px 28px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="left" style="'+M+'font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9d8f3;white-space:nowrap">'+esc(monthName(ed.month))+'</td><td align="right" style="'+F+'font-size:12.5px;line-height:1.4;color:#9fc0d6">Where Our Industry Builds What&rsquo;s Next</td></tr></table></td></tr>'+
@@ -5801,7 +5804,7 @@ function logoGroups(list){ const g=[]; list.forEach(l=>{ const k=(l.group||"").t
 /* ---------- the email ---------- */
 function logoWall(ed, s, preview){
   const cfg=LOGO_SECS[s.k], d=s.doc, list=logoPicks(ed,s.k);
-  const F="font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
   const navy="#0d314c", ink="#1d2b36", dark=s.k==="welcome";
   const eyeC=dark?"#74bfeb":"#2477b8", headC=dark?"#ffffff":navy, txtC=dark?"#cfe6f6":ink, grpC=dark?"#a9d8f3":"#5d7d95", cardB=dark?"#ffffff":"#dde9f2";
   const intro=d.body ? mdEmail(d.body, F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC, 'color:'+(dark?"#ffffff":"#14486e")+';font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
