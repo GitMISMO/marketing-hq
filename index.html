@@ -2040,6 +2040,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       <a class="navlink" href="https://resources.mismo.org/forms/subscribe/" target="_blank" rel="noopener" title="Open the public Subscribe form (new tab)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M16 2.5h5.5V8M21.5 2.5l-6 6" style="stroke-width:1.5"/></svg>
         <span>Subscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
+      <a class="navlink" href="https://resources.mismo.org/forms/unsubscribe/" target="_blank" rel="noopener" title="Open the public Unsubscribe form (new tab)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/><path d="M15.5 2.5l5 5M20.5 2.5l-5 5" style="stroke-width:1.5"/></svg>
+        <span>Unsubscribe Form</span><i class="ext" aria-hidden="true">↗</i></a>
       <a class="navlink" href="https://resources.mismo.org/forms/micdup-guest/" target="_blank" rel="noopener" title="Open the Mic'd Up guest form (new tab)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3M8 21h8"/></svg>
         <span>Guest Form</span><i class="ext" aria-hidden="true">↗</i></a>
@@ -3506,8 +3509,7 @@ const HELP = [
    <li>If Higher Logic refused someone, or the automatic step isn't on yet, <b>Copy for Higher Logic</b> copies those people as a CSV to import into the MISMO Matters list by hand.</li>
    <li>The interests people pick (AI and FRAME, eMortgage, Servicing and so on) are kept with each sign-up, ready for targeted sends later.</li>
    <li>Robots are turned away quietly: a hidden field and a speed check stop automated sign-ups without bothering real people.</li>
-   <li><b>Unsubscribes:</b> every MISMO Matters footer links to resources.mismo.org/forms/unsubscribe/. Each unsubscribe comes through the same flow, shows under Unsubscribes on the Subscribers page with any reason given, and takes the person off the subscriber list straight away. If they sign up again later, they're back on.</li>
-   <li>Until Higher Logic's marketing API is connected, opt new unsubscribes out in Informz before each send: press Copy for Higher Logic under Unsubscribes, import them into Informz as unsubscribes, then press Mark Removed in Higher Logic.</li>
+   <li>Leaving works the same way in reverse: see <b>The Unsubscribe Form</b>.</li>
   </ul>
   <h3>How It's Wired</h3>
   <ol>
@@ -3563,11 +3565,34 @@ const HELP = [
    <li><b>Scan Activity</b> counts scans by code, device and region.</li>
    <li>Printed codes point to resources.mismo.org/qr/, so the manager also still opens on its own there (<b>Open on Its Own</b>). Its records are the same either way.</li>
   </ul>`},
+ {id:"unsubscribe", t:"The Unsubscribe Form", g:"Audience", b:`
+  <p>Every MISMO Matters footer ends with an <b>Unsubscribe</b> link to MISMO's own page at <a href="https://resources.mismo.org/forms/unsubscribe/" target="_blank" rel="noopener"><b>resources.mismo.org/forms/unsubscribe/</b></a>, in the website's look. MISMO keeps the unsubscribe list here, alongside the subscribe list.</p>
+  <p>To get there fast: <b>Unsubscribe Form</b> under Help &amp; Forms in the left menu, or <b>Open Unsubscribe Page</b> on the Unsubscribes card under Subscribers.</p>
+  <div class="hflow">
+   <div><span>From the Email</span><b>Someone Unsubscribes</b><small>Their email, and a reason if they want to give one</small></div>
+   <div><span>Seconds Later</span><b>MISMO Media</b><small>Off the subscriber list and onto Unsubscribes, automatically</small></div>
+   <div><span>Before the Next Send</span><b>Higher Logic</b><small>Opted out in Informz (by CSV until Higher Logic gives us an API user)</small></div>
+  </div>
+  <ul>
+   <li><b>What they see:</b> one email box, optional reasons (too many emails, not relevant, changed jobs, didn't sign up, something else) and a confirmation. The page says one more edition may still arrive if it's already on its way, and that it stops MISMO Matters only, not other MISMO or MBA email.</li>
+   <li><b>Taken off automatically:</b> the person comes off the subscriber list in MISMO Media straight away. Nothing is deleted; their sign-up stays on file marked unsubscribed. If they subscribe again later, they're back on.</li>
+   <li><b>Unsubscribes</b> on the Subscribers page lists the newest first, with the reason and whether they've been opted out in Higher Logic yet. The <b>Unsubscribed</b> tile at the top counts them.</li>
+   <li><b>Before each send</b> (the Send Checklist's "unsubscribes removed" step): press <b>Copy for Higher Logic</b> under Unsubscribes, import the list into Informz as unsubscribes, then press <b>Mark Removed in Higher Logic</b>.</li>
+   <li>Robots are turned away quietly, the same way as on the subscribe form. Search engines don't list the page.</li>
+  </ul>
+  <h3>How It's Wired</h3>
+  <ol>
+   <li>The page sends each unsubscribe to the same <b>MISMO Matters Sign-Ups</b> flow as the subscribe form, marked as an unsubscribe.</li>
+   <li>The flow fires the same "signup" event at the private marketing-hq-data repository. The GitHub workflow files it in <code>data/unsubs.json</code> and marks the person's sign-up in <code>data/signups.json</code> as unsubscribed.</li>
+   <li>MISMO Media reads both files. The Mark Removed presses are kept in <code>data/unsubhl.json</code>.</li>
+   <li>Once Higher Logic provides a marketing API user, a step can opt people out in Informz automatically too.</li>
+  </ol>`},
  {id:"lists", t:"Lists and Unsubscribes", g:"Audience", b:`
   <ul>
    <li><b>The Compound</b> is the set of lists behind the MISMO Matters group: the MBA Annual/IMB/LIRC list, active community members, event attendees, associate contacts, ResTech, website subscribers and downloaders, plus the member contacts, VIPs and current Axios audience still to come. Ciara Durkan at MBA refreshes it quarterly; the next refresh is November.</li>
    <li>Counts only live here. No names are kept on this page.</li>
    <li><b>The unsubscribe rule:</b> one list across every platform. Anyone who unsubscribed in Mailchimp, Axios or Higher Logic is left off every MISMO send, and MISMO's sends stay separate from MBA's Aptify unsubscribes.</li>
+   <li><b>MISMO's own unsubscribe page</b> is where the MISMO Matters footer sends people. See <b>The Unsubscribe Form</b>.</li>
   </ul>`},
  {id:"saving", t:"Saving, Access and Where Things Live", g:"Behind the Scenes", b:`
   <ul>
