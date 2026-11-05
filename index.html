@@ -3119,6 +3119,7 @@ function renderPeople(){
       '<div class="tile"><div class="v">'+both.length+'</div><div class="k">On Both</div><div class="s">subscribed and downloaded</div></div>'+
       '<div class="tile"><div class="v" style="font-size:19px;line-height:1.25">'+esc(topOrg?topOrg[0]:"—")+'</div><div class="k">Most People From</div><div class="s">'+(topOrg?topOrg[1]+" people":"")+'</div></div>'+
       '<div class="tile"><div class="v">'+esc(lastDl?fS(lastDl):"—")+'</div><div class="k">Latest Download</div><div class="s">in the lists loaded</div></div>'+
+      (()=>{ const un=all.filter(p=>p.lists.unsubscribed), mo=un.filter(p=>p.unsub && String(p.unsub.at||"").slice(0,7)===T().slice(0,7)).length; return '<button class="tile" type="button" data-pl="unsubscribed"><div class="v">'+un.length.toLocaleString()+'</div><div class="k">Unsubscribed</div><div class="s">'+mo+' this month from the unsubscribe page</div></button>'; })()+
     '</div></div>'+
     signupsCard()+unsubsCard()+
     '<div class="card"><div class="ch"><h2>Look Someone Up</h2><span class="cnt">'+rows.length.toLocaleString()+'</span><div class="r" style="align-items:center"><input type="search" class="plain" id="pp-q" placeholder="Name, email, organization or title" value="'+esc(PL.q)+'" style="width:300px" autocomplete="off"><select id="pp-list" style="width:auto"><option value="all">Everyone</option>'+Object.entries(PEOPLE_LISTS).map(([k,l])=>'<option value="'+k+'"'+(PL.list===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select></div></div>'+
