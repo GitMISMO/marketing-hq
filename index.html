@@ -1605,6 +1605,15 @@ tr.cxrow td .t2{display:inline-block;width:100%}
 .mn-pop-card p{font-size:14px;color:var(--ink-2);margin:0 0 10px;line-height:1.55}
 .mn-pop-card ul{margin:0 0 16px;padding-left:20px;font-size:13.5px;line-height:1.55}
 .mn-pop-card li{margin-bottom:8px}
+
+/* Studio: MISMO Matters section list */
+.mp-list{display:flex;flex-direction:column;gap:1px;margin-top:12px;font-size:12px;line-height:1.35}
+.mpl{display:grid;grid-template-columns:9px minmax(0,1fr) auto;gap:8px;align-items:center;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.08)}
+.mpl i{width:9px;height:9px;border-radius:2px;background:#dfe7ee}
+.mpl i.t-a{background:#4fc79b}.mpl i.t-r{background:#74bfeb}.mpl i.t-i{background:#a9d8f3}.mpl i.t-c{background:#f08579}.mpl i.t-u{background:#c9b8f0}
+.mpl b{font-weight:500;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mpl em{font-style:normal;color:rgba(255,255,255,.55);font-size:11px;white-space:nowrap}
+.mpl.ok b{color:#fff}.mpl.ok em{color:#4fc79b;font-weight:600}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -5116,7 +5125,10 @@ function hmStudio(){
       '<div class="mini-paper"><div class="mp-mast">'+LOGO_SVG("mp-logo")+'<span>MISMO Matters</span></div>'+
         secs.map(s=>{ const st=s.meta.auto?"auto":(s.doc.status||"waiting"); return '<i class="mp-b t-'+(PB_TONE[st]||"w")+'" title="'+esc((s.doc.name||s.meta.name)+" · "+(s.meta.auto?"Fills itself":SSTAT[st]?SSTAT[st][0]:st))+'"></i>'; }).join("")+'</div>'+
       '<div class="st-big">'+(d<0?"Sent":d)+'<small>'+(d<0?"":d===1?"day to send":"days to send")+'</small></div>'+
-      '<div class="st-meter"><i style="width:'+(secs.length?Math.round(ok/secs.length*100):0)+'%"></i></div><div class="st-sub">'+ok+' of '+secs.length+' sections approved · goes out '+esc(fS(ed.dates.publish))+'</div>'+(nm?'<div class="st-next">Next: <b>'+esc(nm[1])+'</b> · '+esc(fS(ed.dates[nm[0]]))+'</div>':'')+'</button>'; }
+      '<div class="st-meter"><i style="width:'+(secs.length?Math.round(ok/secs.length*100):0)+'%"></i></div><div class="st-sub">'+ok+' of '+secs.length+' sections approved · goes out '+esc(fS(ed.dates.publish))+'</div>'+
+      /* every section and where it stands, in the order it runs */
+      '<div class="mp-list">'+secs.map(s=>{ const st=s.meta.auto?"auto":(s.doc.status||"waiting"); const lab={auto:"Fills itself",waiting:"Waiting",in:"Content in",review:"With Amy",changes:"Changes",approved:"Approved"}[st]||st;
+        return '<span class="mpl'+(st==="approved"?" ok":"")+'"><i class="t-'+(PB_TONE[st]||"w")+'"></i><b>'+esc(s.doc.name||s.meta.name)+'</b><em>'+esc(lab)+'</em></span>'; }).join("")+'</div>'+(nm?'<div class="st-next">Next: <b>'+esc(nm[1])+'</b> · '+esc(fS(ed.dates[nm[0]]))+'</div>':'')+'</button>'; }
 
   /* Summits: the ring */
   const sm=hmNextSummit(); let sum='';
