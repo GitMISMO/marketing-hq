@@ -892,6 +892,20 @@ em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .imact{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
 .impv{background:repeating-conic-gradient(var(--rule) 0 25%,transparent 0 50%) 0 0/16px 16px;border:1px solid var(--border);border-radius:8px;display:flex;justify-content:center;max-height:340px;overflow:hidden}
 .impv img{max-width:100%;max-height:340px;object-fit:contain;display:block}
+.lg-list{display:flex;flex-direction:column;gap:8px;margin:0 0 10px}
+.lg-row{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--border);border-radius:6px;padding:10px;background:var(--surface)}
+.lg-thumb{width:96px;height:60px;border-radius:4px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.lg-thumb img{max-width:88px;max-height:52px;object-fit:contain;display:block}
+.lg-f{display:grid;grid-template-columns:1fr 1fr;gap:6px;min-width:0}
+.lg-f input{min-width:0;width:100%}
+.lg-f input[data-f="url"]{grid-column:1/-1}
+.lg-warn{grid-column:1/-1;color:#9a5b00;font-size:12px}
+.lg-mv{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.lg-acts{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
+#lg-pick{margin-top:10px}
+#lg-pick input[type=search]{width:100%}
+.lgpick img{object-fit:contain!important;background:#fff;padding:6px}
+@media (max-width:640px){.lg-row{grid-template-columns:72px minmax(0,1fr)}.lg-thumb{width:72px}.lg-mv{grid-column:1/-1}.lg-f{grid-template-columns:1fr}}
 .imstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:8px;margin-top:10px;width:100%}
 .impick{aspect-ratio:1;border:1px solid var(--border);border-radius:6px;padding:0;background:var(--surface-2,#f4f7fa);overflow:hidden;cursor:pointer}
 .impick:hover,.impick:focus-visible{border-color:var(--sky);outline:2px solid var(--sky);outline-offset:1px}
@@ -2087,6 +2101,7 @@ const SECTIONS = [
   {"key": "micdup", "name": "MISMO Mic'd Up", "ab": "MU", "owner": "Vanessa", "from": "Fills itself from the Mic'd Up page", "auto": true},
   {"key": "member", "name": "Member Highlight", "ab": "ME", "owner": "Kelly", "from": "The member (quote and headshot)", "hdr": "https://images.axiosplus.com/fiIFTW8iF2lq4AIuGCnxu0_IxTE=/0x0:779x157/779x157/2026/10/19/184009-1792435209346.png"},
   {"key": "welcome", "name": "New Member Welcome", "ab": "NM", "owner": "Kelly", "from": "Member 360 new members", "hdr": "https://images.axiosplus.com/Pmi6FFhtav-af2cnxLaHuxIuZUw=/0x0:779x175/779x175/2026/10/19/184053-1792435253598.png"},
+  {"key": "thanks", "name": "Thank You to Our Sponsors", "ab": "TY", "owner": "Kelly", "from": "Sponsor logos from the Image Library"},
   {"key": "education", "name": "Education", "ab": "ED", "owner": "Kelly", "from": "Webinars, Boot Camp, MBA/MISMO series", "hdr": "https://images.axiosplus.com/mSMEcFd40n9ayzLucxjpsbYUrCA=/0x0:780x177/780x177/2026/10/19/184530-1792435530313.png"},
   {"key": "cert", "name": "Certifications", "ab": "CH", "owner": "Kelly", "from": "Jonathan Kearns and Perry Williams", "hdr": "https://images.axiosplus.com/5TpRg7bAfi95_AD5WwjRncH69dk=/0x0:780x174/780x174/2026/10/19/184616-1792435576775.png"},
   {"key": "events", "name": "Engagement & Events", "ab": "EE", "owner": "Amy", "from": "MISMO on the Move", "hdr": "https://images.axiosplus.com/H8rNjLwxjJSqo0cCtFUPuDXoj5U=/0x0:748x151/748x151/2026/10/19/184702-1792435622906.png"},
@@ -2293,11 +2308,14 @@ function prevPublish(ed){
   return p && p.dates && p.dates.publish ? p.dates.publish : add(ed.dates.publish,-35);
 }
 function edSections(ed){
-  const order = (ed.order && ed.order.length) ? ed.order : SECTIONS.map(s=>s.key);
+  const saved = (ed.order && ed.order.length) ? ed.order : null;
+  const order = saved ? saved.slice() : SECTIONS.map(s=>s.key);
+  /* a standard section added after this edition's order was saved: slot it in after its neighbor, switched off until ticked */
+  if(saved) SECTIONS.forEach((s,i)=>{ if(order.includes(s.key)) return; const before=SECTIONS.slice(0,i).reverse().find(x=>order.includes(x.key)); order.splice(before?order.indexOf(before.key)+1:order.length,0,s.key); });
   return order.map(k=>{
     const id = ed.month+"__"+k; const doc = S.sections[id] || {id, month:ed.month, key:k, status:"waiting"};
     const meta = SEC[k] || {key:k, name: doc.name || "One-Off Section", ab:"+", owner:"Kelly", from:""};
-    const on = !(ed.excluded && ed.excluded[k]);
+    const on = !(ed.excluded && ed.excluded[k]) && (!saved || saved.includes(k) || !!S.sections[id]);
     return {id, k, doc, meta, on};
   });
 }
@@ -2689,6 +2707,7 @@ function sectionsView(ed,secs){
   const rows = secs.map(s=>{
     const d=s.doc; let snip='';
     if(s.meta.auto){ const n = s.k==="micdup" ? epsInWindow(ed).length : newsInWindow(ed).length; snip='<i>'+n+(s.k==="micdup"?" episode":" item")+(n===1?"":"s")+' so far · fills itself</i>'; }
+    else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ const L=logoPicks(ed,s.k); snip=L.length+' logo'+(L.length===1?'':'s')+': '+esc(L.map(l=>l.name||(S.images[l.id]||{}).name||"").join(", ")); }
     else snip = d.headline ? esc(d.headline) : (d.body ? esc(mdPlain(d.body).slice(0,120)) : '<i>Nothing in yet</i>');
     const reuse = REUSE.map(([k,l,a])=>'<span class="rz k-'+(k==="website"?"other":k)+(d.reuse&&d.reuse[k]?" on":"")+'" title="'+esc(l)+'">'+a+'</span>').join("");
     const st = s.meta.auto ? '<span class="chip in">Automatic</span>' : chip(SSTAT, d.status||"waiting");
@@ -2708,7 +2727,8 @@ function wireSections(el,ed){
       const order=edSections(ed).map(s=>s.k).filter(k=>k!==from); order.splice(order.indexOf(to),0,from);
       await patch("editions",ed.id,{order}); toast("Order saved"); });
   });
-  $$("[data-inc]",el).forEach(c=>c.onchange=async()=>{ const ex=Object.assign({},ed.excluded||{}); if(c.checked) delete ex[c.dataset.inc]; else ex[c.dataset.inc]=true; await patch("editions",ed.id,{excluded:ex}); toast(c.checked?"Running this month":"Left out this month"); });
+  $$("[data-inc]",el).forEach(c=>c.onchange=async()=>{ const ex=Object.assign({},ed.excluded||{}); if(c.checked) delete ex[c.dataset.inc]; else ex[c.dataset.inc]=true;
+    const v={excluded:ex}; if(c.checked && ed.order && ed.order.length && !ed.order.includes(c.dataset.inc)) v.order=edSections(ed).map(s=>s.k); await patch("editions",ed.id,v); toast(c.checked?"Running this month":"Left out this month"); });
   $("#ms-oneoff",el).onclick=()=>{ const k="x"+Date.now().toString(36); openSection(ed,k,true); };
 }
 function openSection(ed,k,isNew){
@@ -2721,6 +2741,14 @@ function openSection(ed,k,isNew){
     const list = k==="micdup" ? epsInWindow(ed).map(e=>epWord(e)+": "+(e.title||"")+(e.youtubeDone?"":" (not on YouTube yet)")) : newsInWindow(ed).map(n=>(n.kind==="press"?"Press release · ":"")+(n.outlet?n.outlet+" – ":"")+(n.headline||""));
     fields.push({sec:"What Goes In"},{k:"_auto",type:"html",html:()=>'<div class="ro">'+(list.length?esc(list.join("\n")).replace(/\n/g,"<br>"):"Nothing yet for this window ("+esc(fS(add(prevPublish(ed),1)))+" to "+esc(fS(ed.dates.publish))+"). Add it on the "+(k==="micdup"?"Mic'd Up":"In the News")+" page and it shows up here.")+'</div>'},
       {k:"intro",label:"Intro Line",type:"rich",rows:3,ph:k==="micdup"?"MISMO Mic'd Up spotlights the voices shaping the future of real estate finance…":"MISMO regularly shares key updates…"});
+  } else if(isLogoSec(k)){
+    const L=LOGO_SECS[k];
+    fields.push({sec:"Copy"},
+      {k:"headline",label:"Headline",wide:true,ph:L.head,hint:"Leave blank for: "+L.head},
+      {k:"body",label:"Intro",type:"rich",rows:3,ph:L.intro},
+      {sec:"Logos"},{k:"_logos",type:"html",wide:true,html:()=>'<div id="lg-box"></div>'},
+      {k:"ctaText",label:"Button Text (optional)",ph:k==="welcome"?"e.g. Become a Member":"e.g. Become a Sponsor"},
+      {k:"ctaUrl",label:"Button Link",type:"url",ph:"https://"});
   } else {
     fields.push({sec:"Copy"},
       {k:"headline",label:"Headline",wide:true,ph:"e.g. Before Mortgage Can Be AI-Ready, We Need to Be Data-Ready"},
@@ -2731,7 +2759,7 @@ function openSection(ed,k,isNew){
       {k:"ctaText",label:"Link Text",ph:"e.g. Register for the Winter Summit"},
       {k:"ctaUrl",label:"Link",type:"url",ph:"https://"});
   }
-  fields.push({sec:"Lead Picture (Under the Headline)"},{k:"_imgh",type:"html",html:()=>auto?'':'<div class="hint">For more pictures, or a picture anywhere in the text, put your cursor in the Body Copy and press the picture button in its toolbar.</div>'},
+  if(!isLogoSec(k)) fields.push({sec:"Lead Picture (Under the Headline)"},{k:"_imgh",type:"html",html:()=>auto?'':'<div class="hint">For more pictures, or a picture anywhere in the text, put your cursor in the Body Copy and press the picture button in its toolbar.</div>'},
     {k:"_img",type:"html",html:d=>imageField(d)},
     {k:"imageNote",label:"Where the Image Is",ph:"e.g. Q drive › MISMO Matters › 2026-11 › citizens.png"},
     {k:"imageUrl",label:"Image Link in Higher Logic",type:"url",ph:"https://"},
@@ -2744,7 +2772,7 @@ function openSection(ed,k,isNew){
     {k:"status",label:"Status",type:"select",opts:Object.entries(SSTAT).map(([v,[l]])=>[v,l])},
     {k:"amyNotes",label:"Amy's Notes",type:"rich",rows:3,ph:"Edits, questions or a request for a different graphic"});
   fields.push({sec:"Also Use It In"},{k:"reuse",label:"Where else this copy and image go",type:"checks",opts:REUSE.map(([v,l])=>[v,l])});
-  const save = async v=>{ if(isNew){ const order=edSections(ed).map(s=>s.k); if(!order.includes(k)){ order.push(k); await patch("editions",ed.id,{order}); } } await put("sections",id,Object.assign({},doc,v,{month:ed.month,key:k})); };
+  const save = async v=>{ if(isNew){ const order=edSections(ed).map(s=>s.k); if(!order.includes(k)){ order.push(k); await patch("editions",ed.id,{order}); } } await put("sections",id,Object.assign({},doc,v,{month:ed.month,key:k})); if(isLogoSec(k) && v.logos) rememberLogos(v.logos); };
   openPane({eye:monthName(ed.month)+" · MISMO Matters", title:doc.name||meta.name, fields, data:doc, save,
     buttons: auto?[]:[
       {label:"Save & Send to Amy", run:async v=>{ await save(Object.assign(v,{status:"review"})); toast("Sent to Amy for review"); closePane(true); }},
@@ -2752,9 +2780,10 @@ function openSection(ed,k,isNew){
       {label:"Request Changes", run:async v=>{ await save(Object.assign(v,{status:"changes"})); toast("Back to Kelly with notes"); closePane(true); }}
     ],
     del: (!SEC[k] && S.sections[id]) ? async()=>{ await remove("sections",id); await patch("editions",ed.id,{order:edSections(ed).map(s=>s.k).filter(x=>x!==k)}); } : null,
-    after: b=>wireImage(b, doc, v=>{ doc.imageId=v; })
+    after: b=>{ if(isLogoSec(k)) wireLogos(b, doc, ed, k); else wireImage(b, doc, v=>{ doc.imageId=v; }); }
   });
-  PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||""; };
+  PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||"";
+    if(isLogoSec(k) && PANE.logos){ out.logos=PANE.logos().filter(l=>l.id).map(l=>({id:l.id, name:(l.name||"").trim(), group:(l.group||"").trim(), url:(l.url||"").trim()})); } };
 }
 /* lead picture size: what the section says, else headshot-shaped pictures (taller than wide) go small */
 function leadSize(d, lib){ if(d.imageSize) return d.imageSize; return lib && +lib.w && +lib.h > +lib.w*1.1 ? "small" : "full"; }
@@ -2810,7 +2839,7 @@ function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1"
 /* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org (GitMISMO/marketing-hq, mm-headers/).
    The drawing source is mm-headers/source.html. Mic'd Up is a short animated GIF; Outlook shows its first frame. */
 const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
-const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","education","cert","events","news"];
+const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","thanks","education","cert","events","news"];
 /* Vieaux Point and Workgroup Highlights each have a page on the website with every month's
    article; #vp-YYYY-MM / #wg-YYYY-MM opens straight to that month. */
 const FULL_ARTICLE = {vieaux:["https://collaborate.mismo.org/mismowebsite/about-mismo/vieaux-point","vp"], workgroup:["https://collaborate.mismo.org/mismowebsite/about-mismo/workgroup-highlights","wg"]};
@@ -2857,6 +2886,8 @@ function buildEmail(ed, preview, opt){
         if(pr.length) inner+=head("Press Releases",true)+cards(pr.map(n=>card(esc(fS(n.date)), esc(n.headline||""), '', n.url||"#")));
         if(mn.length) inner+=head("MISMO in the News",!pr.length)+cards(mn.map(n=>card(esc(n.outlet||""), esc(n.headline||""), '', n.url||"#")));
       }
+    } else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){
+      inner+=logoWall(ed, s, preview);
     } else {
       if(!d.headline && !d.body && !d.quote) return;
       if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
@@ -2918,6 +2949,7 @@ function buildText(ed){
     let body=[];
     if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
+    else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
     else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k); if(full) body.push("Read the full article: "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
@@ -2943,7 +2975,7 @@ function wirePreview(el,ed){
   $$("[data-hs]",el).forEach(b=>b.onclick=async()=>{ const v=b.dataset.hs; if(hdrOpt(ed)===v) return;
     ed.hdrStyle=v; $$("[data-hs]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $("#pv-mail",el).innerHTML=buildEmail(ed,true); pvFill(el);
     try{ await patch("editions",ed.id,{hdrStyle:v}); toast("Option "+v+" is what Copy HTML gives you now"); }catch(e){} });
-  $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
+  $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
   $$("[data-dev]",el).forEach(b=>b.onclick=()=>{ $$("[data-dev]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $(".mailwrap",el).classList.toggle("phone",b.dataset.dev==="phone"); });
 }
@@ -3573,7 +3605,7 @@ function renderHelp(){
    resources.mismo.org: files will go to MISMO's SharePoint through a Power Automate flow.
    Emails can't show private pictures, so each one also goes into the Higher Logic image
    library before a send (its link is pasted into the section). */
-const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["other","Other"]];
+const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["logos","Member & Sponsor Logos"],["other","Other"]];
 const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
 const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set(), type:""};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
@@ -3766,12 +3798,13 @@ async function openImage(id){
     {k:"edition",label:"MISMO Matters Edition",type:"select",blank:true,opts:eds.map(e=>[e.id,monthName(e.month)])},
     {k:"alt",label:"Alt Text",wide:true,ph:"What the picture shows, for screen readers and email clients that block images"},
     {k:"hlUrl",label:"Link in Higher Logic's Image Library",type:"url",wide:true,ph:"Paste once it's uploaded to Higher Logic; MISMO Matters sections then use it automatically"},
+    ...(im.campaign==="logos"||im.company||im.site?[{k:"company",label:"Company (for member and sponsor logos)",ph:"e.g. Ameriprise Financial"},{k:"site",label:"Company Website",type:"url",ph:"https://"},{k:"group",label:"Member Level or Sponsor Tier",ph:"e.g. Corporate Members"}]:[]),
     {k:"credit",label:"Credit or Source",ph:"Photographer, partner or where it came from"},
     {k:"notes",label:"Notes",type:"rich",rows:3,ph:"Where it has been used, rights or size limits"},
     {k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}
   ];
   openPane({eye:"Image Library", title:im.name||im.file||"Image", fields, data:im, noFocus:true,
-    save:async v=>{ await patch("images",id,{name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, hlUrl:v.hlUrl||"", credit:v.credit, notes:v.notes, archived:!!v.archived}); },
+    save:async v=>{ await patch("images",id,Object.assign({name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, hlUrl:v.hlUrl||"", credit:v.credit, notes:v.notes, archived:!!v.archived}, v.company!==undefined?{company:v.company||"", site:v.site||"", group:v.group||""}:{})); },
     buttons:[{label:"Download Original", run:async()=>downloadImage(S.images[id])},{label:"Copy Link", run:async()=>copyImageLink(S.images[id])}]
   });
 }
@@ -5737,6 +5770,125 @@ function mnPopup(tab){
     else { close(); if(only) go("results"); const c=$("#mn-card"); if(c) c.scrollIntoView({block:"start", behavior:"smooth"}); } });
   d.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
   setTimeout(()=>{ const b=$('[data-pop="go"]',d); if(b) b.focus(); },50);
+}
+/* ================= Logo walls: New Member Welcome and Thank You to Our Sponsors =================
+   Instead of one flat picture of logos, Kelly picks each logo from the Image Library (tagged
+   "Member & Sponsor Logos"). Each logo carries its company name, its level or tier, and its website,
+   and the email draws them as a grid of white logo cards on a branded band. The company details are
+   remembered on the logo in the Image Library, so next time it fills itself in. Sponsors carry over
+   from the month before until someone changes them. */
+const LOGO_SECS = {
+  welcome:{eye:"Welcome to the Community", head:"Please Welcome Our Newest Members",
+    intro:"These organizations joined MISMO this month. We're glad to have you at the table and can't wait to build what's next together.",
+    groups:["Corporate Members","Sole Members","Affiliate Members","Government Members"], word:"Level", carry:false},
+  thanks:{eye:"With Gratitude", head:"Thank You to Our Sponsors",
+    intro:"MISMO's work is made possible by the organizations that support it. Thank you to our sponsors for helping the industry build what's next.",
+    groups:["Platinum Sponsors","Gold Sponsors","Silver Sponsors","Bronze Sponsors","Summit Sponsors"], word:"Tier", carry:true}
+};
+function isLogoSec(k){ return !!LOGO_SECS[k]; }
+function prevEditionOf(ed){ return vals("editions").filter(e=>e.month && e.month<ed.month && !e.archived).sort((a,b)=>a.month<b.month?1:-1)[0]||null; }
+/* the logos for a section: what's saved, or (sponsors) last month's */
+function logoPicks(ed, k){
+  const d=S.sections[ed.month+"__"+k]||{};
+  if(Array.isArray(d.logos)) return d.logos.filter(l=>l && l.id && S.images[l.id]);
+  if(LOGO_SECS[k] && LOGO_SECS[k].carry){ const p=prevEditionOf(ed); if(p){ const pd=S.sections[p.month+"__"+k]; if(pd && Array.isArray(pd.logos)) return pd.logos.filter(l=>l && l.id && S.images[l.id]); } }
+  return [];
+}
+function logosNeedingLinks(ed){ let n=0; edSections(ed).filter(x=>x.on && isLogoSec(x.k)).forEach(x=>logoPicks(ed,x.k).forEach(l=>{ const im=S.images[l.id]; if(!im || !im.hlUrl) n++; })); return n; }
+function logoGroups(list){ const g=[]; list.forEach(l=>{ const k=(l.group||"").trim(); let x=g.find(y=>y.k===k); if(!x){ x={k, items:[]}; g.push(x); } x.items.push(l); }); return g; }
+
+/* ---------- the email ---------- */
+function logoWall(ed, s, preview){
+  const cfg=LOGO_SECS[s.k], d=s.doc, list=logoPicks(ed,s.k);
+  const F="font-family:'IBM Plex Sans',Arial,Helvetica,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const navy="#0d314c", ink="#1d2b36", dark=s.k==="welcome";
+  const eyeC=dark?"#74bfeb":"#2477b8", headC=dark?"#ffffff":navy, txtC=dark?"#cfe6f6":ink, grpC=dark?"#a9d8f3":"#5d7d95", cardB=dark?"#ffffff":"#dde9f2";
+  const intro=d.body ? mdEmail(d.body, F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC, 'color:'+(dark?"#ffffff":"#14486e")+';font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
+  const logo=l=>{ const im=S.images[l.id]||{}; const hl=im.hlUrl||"", src=hl||(preview?imgSrc(im):"");
+    const ar=(+im.w && +im.h) ? im.w/im.h : 2.6, h=ar>=2.2?58:ar>=1.4?70:84, w=Math.round(Math.max(64,Math.min(200,h*ar)));
+    const inner = src
+      ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0"'+(hl||src?'':' data-mmimg="'+esc(l.id)+'"')+'>'
+      : '<div style="'+F+'font-size:18px;line-height:1.3;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
+    const linked = l.url ? '<a href="'+esc(l.url)+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="112" style="background:#ffffff;border:1px solid '+cardB+';border-radius:6px;padding:16px 10px;height:112px;text-align:center">'+linked+'</td></tr></table>'; };
+  const grid=items=>{ let rows=''; for(let i=0;i<items.length;i+=2){ const a=items[i], b=items[i+1];
+      rows+= b ? '<tr><td width="50%" valign="top" style="padding:5px">'+logo(a)+'</td><td width="50%" valign="top" style="padding:5px">'+logo(b)+'</td></tr>'
+               : '<tr><td colspan="2" align="center" style="padding:6px"><table role="presentation" width="50%" cellpadding="0" cellspacing="0" border="0" style="width:50%;margin:0 auto"><tr><td>'+logo(a)+'</td></tr></table></td></tr>'; }
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+rows+'</table>'; };
+  const groups=logoGroups(list), many=groups.length>1 || (groups[0] && groups[0].k);
+  const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
+  const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
+  const cta = d.ctaUrl ? '<p style="margin:18px 0 4px;text-align:center"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+(dark?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
+  const box = dark
+    ? 'bgcolor="'+navy+'" style="background:'+navy+';background-image:linear-gradient(160deg,#0d314c 0%,#123f63 62%,#17507a 100%);border-radius:8px;padding:30px 12px 22px;text-align:center"'
+    : 'bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:28px 12px 22px;text-align:center"';
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td align="center" '+box+'>'+
+    '<div style="'+M+'font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 10px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
+    '<div style="'+F+'font-size:26px;line-height:1.22;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 10px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+rule+
+    '<div style="padding:8px 14px 0;max-width:470px;margin:0 auto">'+intro+'</div>'+body+cta+'</td></tr></table>';
+}
+function logoWallText(ed, s){
+  const cfg=LOGO_SECS[s.k], d=s.doc, out=[d.headline||cfg.head, d.body?mdPlain(d.body):cfg.intro];
+  logoGroups(logoPicks(ed,s.k)).forEach(g=>{ if(g.k) out.push(g.k+":"); g.items.forEach(l=>out.push("• "+(l.name||(S.images[l.id]||{}).name||"")+(l.url?" – "+l.url:""))); });
+  if(d.ctaUrl) out.push((d.ctaText||"Learn more")+": "+d.ctaUrl);
+  return out;
+}
+
+/* ---------- the section pane ---------- */
+function wireLogos(b, doc, ed, k){
+  const cfg=LOGO_SECS[k], box=$("#lg-box",b); if(!box) return;
+  let list=logoPicks(ed,k).map(l=>Object.assign({},l)), pickOpen=false, pickQ="";
+  const carried = !Array.isArray(doc.logos) && list.length;
+  const dirty=()=>{ if(PANE) PANE.dirty=true; };
+  PANE.logos=()=>list;
+  const prev=prevEditionOf(ed), prevList=prev? (S.sections[prev.month+"__"+k]||{}).logos : null;
+  const thumb=im=>{ const src=imgSrc(im); if(!src) imgEnsure(im).then(()=>{ const s=imgSrc(im); $$('[data-lgthumb="'+im.id+'"]').forEach(x=>{ if(s) x.innerHTML='<img src="'+esc(s)+'" alt="">'; }); }); return '<span class="lg-thumb" data-lgthumb="'+esc(im.id)+'">'+(src?'<img src="'+esc(src)+'" alt="">':'')+'</span>'; };
+  const draw=()=>{
+    box.innerHTML=
+      (carried?'<div class="hint">Carried over from '+esc(monthName(prev.month))+'. Change anything and press Save to make this month its own.</div>':'')+
+      (list.length?'<div class="lg-list">'+list.map((l,i)=>{ const im=S.images[l.id]||{};
+        return '<div class="lg-row" data-i="'+i+'">'+thumb(im)+'<div class="lg-f">'+
+          '<input type="text" data-f="name" value="'+esc(l.name||"")+'" placeholder="Company name" aria-label="Company name">'+
+          '<input type="text" data-f="group" value="'+esc(l.group||"")+'" list="lg-groups-'+k+'" placeholder="'+cfg.word+', e.g. '+esc(cfg.groups[0])+'" aria-label="'+cfg.word+'">'+
+          '<input type="url" data-f="url" value="'+esc(l.url||"")+'" placeholder="Website (optional) https://" aria-label="Website">'+
+          (im.hlUrl?'':'<small class="lg-warn">Needs its Higher Logic link before Copy HTML (shows the company name until then).</small>')+
+          '</div><div class="lg-mv"><button type="button" class="btn sm" data-mv="-1" aria-label="Move up"'+(i?'':' disabled')+'>↑</button><button type="button" class="btn sm" data-mv="1" aria-label="Move down"'+(i<list.length-1?'':' disabled')+'>↓</button><button type="button" class="btn sm" data-rm aria-label="Remove">Remove</button></div></div>'; }).join("")+'</div>'
+        :'<div class="empty" style="padding:14px">No logos yet. Add them from the Image Library, or upload new ones.</div>')+
+      '<div class="lg-acts"><button type="button" class="btn sm pri" id="lg-add">Add Logos from the Image Library</button>'+
+      (ASSETS?'<button type="button" class="btn sm" id="lg-up">Upload New Logos</button><input type="file" id="lg-file" accept="image/*" multiple hidden>':'')+
+      (cfg.carry && prevList && prevList.length?'<button type="button" class="btn sm" id="lg-prev">Same as '+esc(MONL[+prev.month.slice(5)-1])+'</button>':'')+'</div>'+
+      '<div id="lg-pick" hidden><input type="search" id="lg-q" placeholder="Search the Image Library" aria-label="Search the Image Library"><div class="imstrip" id="lg-strip"></div><div class="hint">Logos tagged Member &amp; Sponsor Logos come first. Click one to add it.</div></div>'+
+      '<datalist id="lg-groups-'+k+'">'+cfg.groups.map(g=>'<option value="'+esc(g)+'">').join("")+'</datalist>';
+    $$(".lg-row",box).forEach(r=>{ const i=+r.dataset.i;
+      $$("[data-f]",r).forEach(inp=>inp.oninput=()=>{ list[i][inp.dataset.f]=inp.value; dirty(); });
+      $$("[data-mv]",r).forEach(btn=>btn.onclick=()=>{ const j=i+(+btn.dataset.mv); if(j<0||j>=list.length) return; [list[i],list[j]]=[list[j],list[i]]; dirty(); draw(); });
+      $("[data-rm]",r).onclick=()=>{ list.splice(i,1); dirty(); draw(); };
+    });
+    const add=im=>{ if(list.some(l=>l.id===im.id)){ toast("That logo is already here"); return; } const last=list[list.length-1];
+      list.push({id:im.id, name:im.company||im.name||"", group:im.group||(last&&last.group)||"", url:im.site||""}); dirty(); draw(); toast("Added "+(im.company||im.name||"logo")); };
+    const pick=$("#lg-pick",box), strip=$("#lg-strip",box), q=$("#lg-q",box);
+    const fill=()=>{ const t=(q.value||"").toLowerCase();
+      const all=vals("images").filter(i=>!i.archived && !isFile(i) && (!t || ((i.company||"")+" "+(i.name||"")+" "+(i.file||"")).toLowerCase().includes(t)))
+        .sort((a,c)=>((a.campaign==="logos"?0:1)-(c.campaign==="logos"?0:1)) || ((a.at||"")<(c.at||"")?1:-1)).slice(0,40);
+      strip.innerHTML=all.length?all.map(im=>{ const src=imgSrc(im); return '<button type="button" class="impick lgpick'+(src?"":" loading")+'" data-pick="'+esc(im.id)+'" title="'+esc(im.company||im.name||"")+'">'+(src?'<img src="'+esc(src)+'" alt="">':'<span>'+esc((im.name||im.file||"").slice(0,28))+'</span>')+'</button>'; }).join(""):'<div class="hint">Nothing matches.</div>';
+      all.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im).then(()=>{ const s=imgSrc(im); $$('.lgpick[data-pick="'+im.id+'"]',strip).forEach(x=>{ if(s){ x.innerHTML='<img src="'+esc(s)+'" alt="">'; x.classList.remove("loading"); } }); }); });
+      $$("[data-pick]",strip).forEach(p=>p.onclick=()=>{ const im=S.images[p.dataset.pick]; if(im) add(im); }); };
+    $("#lg-add",box).onclick=()=>{ pickOpen=!pickOpen; pick.hidden=!pickOpen; if(pickOpen){ fill(); q.focus(); } };
+    q.value=pickQ; q.oninput=()=>{ pickQ=q.value; fill(); };
+    if(pickOpen){ pick.hidden=false; fill(); }
+    const up=$("#lg-up",box), f=$("#lg-file",box);
+    if(up) up.onclick=()=>f.click();
+    if(f) f.onchange=async()=>{ const made=await addImages([...f.files],{campaign:"logos", edition:""}); made.forEach(im=>add(im)); if(made.length) toast(made.length+" logo"+(made.length===1?"":"s")+" added here and to the Image Library. Press Save to keep them."); };
+    const pv=$("#lg-prev",box); if(pv) pv.onclick=()=>{ list=prevList.filter(l=>S.images[l.id]).map(l=>Object.assign({},l)); dirty(); draw(); toast("Copied "+monthName(prev.month)+"'s sponsors"); };
+  };
+  draw();
+}
+/* after a save: remember each logo's company, level and website on the logo itself */
+async function rememberLogos(list){
+  for(const l of list||[]){ const im=S.images[l.id]; if(!im) continue; const v={};
+    if(l.name && l.name!==im.company) v.company=l.name; if((l.url||"")!==(im.site||"") && l.url) v.site=l.url; if(l.group && l.group!==im.group) v.group=l.group;
+    if(im.campaign!=="logos" && im.campaign!=="brand") v.campaign="logos";
+    if(Object.keys(v).length){ try{ await patch("images", l.id, v); }catch(e){} } }
 }
 
 /* ================= MISMO Mic'd Up ================= */
