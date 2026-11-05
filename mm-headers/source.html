@@ -1,0 +1,139 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+body{margin:0;background:#888;font-family:"Inter Display","Inter",sans-serif;padding:20px;display:flex;flex-direction:column;gap:20px}
+.h{position:relative;width:600px;height:126px;overflow:hidden;
+  background:linear-gradient(100deg,#05192a 0%,#0b2c45 48%,#123f61 100%);color:#fff}
+.h .glow{position:absolute;inset:0;background:radial-gradient(260px 160px at 84% 52%,rgba(116,191,235,.34),rgba(116,191,235,0) 70%)}
+.h .grid{position:absolute;inset:0}
+.h .txt{position:absolute;left:34px;top:0;bottom:0;display:flex;flex-direction:column;justify-content:center;max-width:390px}
+.h .eye{display:flex;align-items:center;gap:9px;font-family:"DejaVu Sans Mono",monospace;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:#a9d8f3;margin:0 0 9px;font-weight:600}
+.h .eye i{display:block;width:20px;height:2px;background:#74bfeb;border-radius:1px}
+.h .t{font-size:31px;line-height:1.02;font-weight:700;letter-spacing:-.025em;white-space:nowrap}
+.h .t b{color:#74bfeb;font-weight:700}
+.h .bar{position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,#74bfeb 0%,#74bfeb 30%,rgba(116,191,235,.25) 62%,rgba(116,191,235,0) 100%)}
+.h .ic{position:absolute;right:34px;top:50%;width:84px;height:84px;margin-top:-39px}
+.h .ic svg{width:84px;height:84px;overflow:visible}
+.h .tag{position:absolute;right:14px;top:7px;font-family:"DejaVu Sans Mono",monospace;font-size:7.5px;letter-spacing:.24em;color:rgba(169,216,243,.55);font-weight:600}
+
+/* ---- Mic'd Up ---- */
+.mu{background:radial-gradient(240px 190px at 80% 30%,rgba(116,191,235,.28),rgba(116,191,235,0) 72%),linear-gradient(100deg,#040f19 0%,#0a2337 52%,#0f3550 100%)}
+.mu .spot{position:absolute;right:40px;top:-30px;width:170px;height:190px;background:conic-gradient(from 160deg at 50% 0%,rgba(255,255,255,0) 0deg,rgba(169,216,243,.13) 20deg,rgba(255,255,255,0) 40deg);filter:blur(2px)}
+.mu .brand{position:absolute;left:34px;top:22px}
+.mu .yel{display:inline-block;background:#ffd100;color:#0b1f30;font-weight:900;font-style:italic;font-size:15px;letter-spacing:.02em;padding:3px 9px 2px;transform:skewX(-8deg);box-shadow:3px 3px 0 rgba(0,0,0,.35)}
+.mu .yel span{display:inline-block;transform:skewX(8deg)}
+.mu .big{font-size:40px;font-weight:900;letter-spacing:-.03em;line-height:1;margin-top:6px;text-shadow:0 2px 14px rgba(116,191,235,.35)}
+.mu .big em{font-style:normal;color:#74bfeb}
+.mu .sub{font-family:"DejaVu Sans Mono",monospace;font-size:8.5px;letter-spacing:.22em;color:#a9d8f3;margin-top:8px;font-weight:600}
+.mu .eq{position:absolute;left:262px;bottom:22px;height:64px;display:flex;align-items:flex-end;gap:4px}
+.mu .eq i{display:block;width:6px;border-radius:3px 3px 1px 1px;background:linear-gradient(0deg,#2477b8,#74bfeb 70%,#d9f0fd)}
+.mu .onair{position:absolute;left:262px;top:20px;display:flex;align-items:center;gap:6px;border:1.5px solid #ff4b3e;color:#ff6a5e;border-radius:3px;padding:3px 7px 3px 6px;font-family:"DejaVu Sans Mono",monospace;font-size:8.5px;letter-spacing:.2em;font-weight:700;background:rgba(255,75,62,.08)}
+.mu .onair .dot{width:7px;height:7px;border-radius:50%;background:#ff4b3e;box-shadow:0 0 8px #ff4b3e}
+.mu .mic{position:absolute;right:58px;top:10px;width:86px;height:110px}
+.mu .wv{position:absolute;right:20px;top:14px;width:160px;height:100px}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <filter id="gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <linearGradient id="chrome" x1="0" x2="1"><stop offset="0" stop-color="#7d93a6"/><stop offset=".35" stop-color="#e9f4fb"/><stop offset=".6" stop-color="#a9bccb"/><stop offset="1" stop-color="#4d6478"/></linearGradient>
+  <linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".45" stop-color="#fff" stop-opacity="1"/></linearGradient>
+  <linearGradient id="streak" x1="0" x2="1"><stop offset="0" stop-color="#a9d8f3" stop-opacity="0"/><stop offset=".55" stop-color="#d9f0fd" stop-opacity=".75"/><stop offset="1" stop-color="#a9d8f3" stop-opacity="0"/></linearGradient>
+  <mask id="gm"><rect width="600" height="126" fill="url(#fade)"/></mask>
+</defs></svg>
+
+<div id="headers"></div>
+<div style="display:flex;gap:10px">
+ <div id="ic-li" style="width:32px;height:32px;border-radius:50%;background:#50a4db;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 448 512" width="15" height="15"><path fill="#0d314c" d="M100.3 448H7.4V148.9h92.9zM53.8 108.1C24.1 108.1 0 83.5 0 53.8a53.8 53.8 0 0 1 107.6 0c0 29.7-24.1 54.3-53.8 54.3zM447.9 448h-92.7V302.4c0-34.7-.7-79.2-48.3-79.2-48.3 0-55.7 37.7-55.7 76.7V448h-92.8V148.9h89.1v40.8h1.3c12.4-23.5 42.7-48.3 87.9-48.3 94 0 111.3 61.9 111.3 142.3V448z"/></svg></div>
+ <div id="ic-yt" style="width:32px;height:32px;border-radius:50%;background:#50a4db;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 576 512" width="17" height="17"><path fill="#0d314c" d="M549.7 124.1c-6.3-23.7-24.8-42.3-48.3-48.6C458.8 64 288 64 288 64S117.2 64 74.6 75.5c-23.5 6.3-42 24.9-48.3 48.6C14.9 167 14.9 256.4 14.9 256.4s0 89.4 11.4 132.3c6.3 23.6 24.8 41.5 48.3 47.8C117.2 448 288 448 288 448s170.8 0 213.4-11.5c23.5-6.3 42-24.2 48.3-47.8 11.4-42.9 11.4-132.3 11.4-132.3s0-89.4-11.4-132.3zM232.2 337.6V175.2l142.7 81.2-142.7 81.2z"/></svg></div>
+ <div id="ic-mail" style="width:14px;height:14px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="14" height="14"><path fill="#0d314c" d="M2 5h20v14H2z"/><path d="M2.5 5.5L12 13l9.5-7.5" fill="none" stroke="#f4f7f9" stroke-width="1.8"/></svg></div>
+</div>
+
+<script>
+const S=`fill="none" stroke="#74bfeb" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#gl)"`;
+const SOFT=`fill="none" stroke="#a9d8f3" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" opacity=".75"`;
+/* each icon is drawn on a 84x84 box, centered 42,42 */
+const ICON={
+  vieaux:`<path ${S} d="M16 22h52a6 6 0 0 1 6 6v24a6 6 0 0 1-6 6H40l-14 11v-11H16a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z"/><path ${S} d="M27 34c-3 0-5 2-5 5s2 4 4 4c0 3-2 5-4 6M41 34c-3 0-5 2-5 5s2 4 4 4c0 3-2 5-4 6"/><path ${SOFT} d="M52 37h12M52 45h9"/>`,
+  summit:`<path ${S} d="M8 68l22-32 10 13 12-21 24 40z"/><path ${SOFT} d="M46 36l6-8 5 7"/><path ${S} d="M52 28V10"/><path d="M52 10h14l-4 5 4 5H52z" fill="#74bfeb" filter="url(#gl)"/>`,
+  highlight:`<path ${S} d="M42 10l9 19 21 3-15 14 4 21-19-10-19 10 4-21L12 32l21-3z"/><circle ${SOFT} cx="42" cy="42" r="8"/>`,
+  workgroup:`<circle ${S} cx="42" cy="20" r="8"/><circle ${S} cx="18" cy="60" r="8"/><circle ${S} cx="66" cy="60" r="8"/><path ${SOFT} d="M37 27L23 53M47 27l14 26M26 60h32"/><circle cx="42" cy="47" r="4" fill="#74bfeb" filter="url(#gl)"/><path ${SOFT} d="M42 28v15M22 57l17-8M62 57l-17-8"/>`,
+  sponsor:`<circle ${S} cx="42" cy="34" r="20"/><path ${S} d="M42 24l3.6 7.3 8 1.2-5.8 5.6 1.4 8-7.2-3.8-7.2 3.8 1.4-8-5.8-5.6 8-1.2z"/><path ${S} d="M30 50l-8 24 11-5 7 9 6-22M54 50l8 24-11-5-7 9"/>`,
+  impl:`<path ${SOFT} d="M10 72h66M10 72V12"/><path ${S} d="M16 62l16-16 11 9 23-27"/><path ${S} d="M56 28h10v10"/><circle cx="32" cy="46" r="3.4" fill="#74bfeb" filter="url(#gl)"/><circle cx="43" cy="55" r="3.4" fill="#74bfeb" filter="url(#gl)"/>`,
+  member:`<path ${S} d="M14 74V30l28-16 28 16v44z"/><path ${SOFT} d="M24 40h8M24 50h8M24 60h8M52 40h8M52 50h8M52 60h8"/><path ${S} d="M36 74V60h12v14"/><path d="M42 24l2.5 5 5.5.8-4 3.9 1 5.5-5-2.6-5 2.6 1-5.5-4-3.9 5.5-.8z" fill="#74bfeb" filter="url(#gl)"/>`,
+  welcome:`<circle ${S} cx="34" cy="26" r="11"/><path ${S} d="M12 70c0-13 10-22 22-22s22 9 22 22"/><path ${S} d="M64 30v20M54 40h20"/><path ${SOFT} d="M60 62h14"/>`,
+  thanks:`<path ${S} d="M42 72C21 58 9 46 9 31a15 15 0 0 1 33-9 15 15 0 0 1 33 9c0 15-12 27-33 41z"/><path ${SOFT} d="M22 31a8 8 0 0 1 8-8"/><path d="M66 8l1.8 4.2 4.2 1.8-4.2 1.8L66 20l-1.8-4.2-4.2-1.8 4.2-1.8z" fill="#74bfeb" filter="url(#gl)"/>`,
+  education:`<path ${S} d="M42 16L6 32l36 16 36-16z"/><path ${S} d="M20 39v15c0 6 10 11 22 11s22-5 22-11V39"/><path ${S} d="M74 34v20"/><circle cx="74" cy="58" r="3.6" fill="#74bfeb" filter="url(#gl)"/>`,
+  cert:`<path ${S} d="M42 8l7 6 9-1 3 8 8 4-1 9 5 7-5 7 1 9-8 4-3 8-9-1-7 6-7-6-9 1-3-8-8-4 1-9-5-7 5-7-1-9 8-4 3-8 9 1z"/><path ${S} d="M30 43l8 8 17-17"/>`,
+  events:`<path ${S} d="M60 12a14 14 0 0 1 14 14c0 11-14 24-14 24S46 37 46 26a14 14 0 0 1 14-14z"/><circle cx="60" cy="26" r="4.5" fill="#74bfeb" filter="url(#gl)"/><path ${SOFT} stroke-dasharray="3 6" d="M58 56c-6 8-20 6-26 2s-14-6-20 2"/><circle ${S} cx="12" cy="62" r="5"/>`,
+  news:`<path ${S} d="M14 16h46v54H20a6 6 0 0 1-6-6z"/><path ${S} d="M60 30h12v34a6 6 0 0 1-12 0"/><path d="M22 26h30v12H22z" fill="#74bfeb" opacity=".9" filter="url(#gl)"/><path ${SOFT} d="M22 46h30M22 53h30M22 60h20"/>`
+};
+const SEC=[
+  ["vieaux","From the President",`President’s <b>Vieaux Point</b>`],
+  ["summit","MISMO Summits",`Summit <b>Spotlight</b>`],
+  ["highlight","What’s New at MISMO",`MISMO <b>Highlight</b>`],
+  ["workgroup","Inside the Workgroups",`Workgroup <b>Highlight</b>`],
+  ["sponsor","With Thanks to Our Sponsors",`Sponsor <b>Highlight</b>`],
+  ["impl","Standards in Practice",`Implementation <b>Success</b>`],
+  ["member","Meet a Member",`Member <b>Highlight</b>`],
+  ["welcome","Joining the Community",`New Member <b>Welcome</b>`],
+  ["thanks","With Gratitude",`Thank You to Our <b>Sponsors</b>`],
+  ["education","Learn What’s Next",`<b>Education</b>`],
+  ["cert","Proven to the Standard",`<b>Certifications</b>`],
+  ["events","MISMO on the Move",`Engagement <b>&amp; Events</b>`],
+  ["news","Headlines and Press",`In the <b>News</b>`]
+];
+/* the backdrop: faint data grid and a skyline of "data bars" on the right, masked in from the left */
+function backdrop(seed){
+  let r=seed*9301+49297; const rnd=()=>((r=(r*9301+49297)%233280)/233280);
+  let bars=""; let x=300;
+  while(x<600){ const w=8+Math.floor(rnd()*14), h=10+Math.floor(rnd()*38); bars+=`<rect x="${x}" y="${126-h}" width="${w}" height="${h}" fill="#1a5580" opacity="${(.28+rnd()*.3).toFixed(2)}"/>`; if(rnd()>.6) bars+=`<rect x="${x+2}" y="${126-h+4}" width="2" height="2" fill="#a9d8f3" opacity=".5"/>`; x+=w+2; }
+  let grid=""; for(let gx=0;gx<=600;gx+=24) grid+=`<path d="M${gx} 0V126" stroke="#74bfeb" stroke-opacity=".06"/>`; for(let gy=6;gy<=126;gy+=24) grid+=`<path d="M0 ${gy}H600" stroke="#74bfeb" stroke-opacity=".06"/>`;
+  const arc=`<path d="M300 104 C 380 92, 430 40, 600 30" fill="none" stroke="#74bfeb" stroke-opacity=".22" stroke-width="1.2"/><path d="M300 112 C 400 104, 470 64, 600 58" fill="none" stroke="#74bfeb" stroke-opacity=".12" stroke-width="1"/>`;
+  const streaks=`<path d="M330 132 L640 40" stroke="url(#streak)" stroke-width="1.3"/><path d="M380 134 L650 66" stroke="url(#streak)" stroke-width=".8" opacity=".7"/><path d="M300 120 L620 22" stroke="url(#streak)" stroke-width=".6" opacity=".45"/>`;
+  return `<svg class="grid" viewBox="0 0 600 126" width="600" height="126"><g mask="url(#gm)">${grid}${bars}${streaks}</g></svg>`;
+}
+/* the badge: one circle, kept clear of the MISMO MATTERS tag above it */
+function rings(){ return `<svg viewBox="0 0 84 84" style="position:absolute;inset:0;overflow:visible"><circle cx="42" cy="42" r="43" fill="rgba(6,32,47,.55)" stroke="#74bfeb" stroke-opacity=".35"/></svg>`; }
+const out=document.getElementById("headers");
+SEC.forEach(([k,eye,t],i)=>{
+  out.insertAdjacentHTML("beforeend",`<div class="h" id="h-${k}"><div class="glow"></div>${backdrop(i+3)}
+    <div class="txt"><div class="eye"><i></i>${eye}</div><div class="t">${t}</div></div>
+    <div class="ic">${rings()}<svg viewBox="0 0 84 84" style="position:relative"><g class="icg">${ICON[k]}</g></svg></div>
+    <div class="tag">MISMO MATTERS</div><div class="bar"></div></div>`);
+});
+/* center every icon in its circle and give them all the same size (the drawings sit a little off-center on their 84px boxes) */
+document.querySelectorAll(".icg").forEach(g=>{ const b=g.getBBox(), s=Math.min(46/b.width, 46/b.height, 1.05), cx=b.x+b.width/2, cy=b.y+b.height/2;
+  g.setAttribute("transform",`translate(42 42) scale(${s.toFixed(3)}) translate(${(-cx).toFixed(2)} ${(-cy).toFixed(2)})`); });
+/* Mic'd Up */
+const N=20;
+out.insertAdjacentHTML("beforeend",`<div class="h mu" id="h-micdup">${backdrop(41)}<div class="spot"></div>
+  <div class="brand"><div class="yel"><span>MISMO</span></div><div class="big">MIC’d <em>Up</em></div><div class="sub">THE PODCAST &middot; NOW ON YOUTUBE</div></div>
+  <div class="onair"><span class="dot"></span>ON AIR</div>
+  <div class="eq">${Array.from({length:N},()=>'<i></i>').join("")}</div>
+  <svg class="wv" viewBox="0 0 160 100"><g fill="none" stroke="#74bfeb" stroke-linecap="round"><path class="w1" d="" stroke-opacity=".5" stroke-width="1.4"/><path class="w2" d="" stroke-opacity=".28" stroke-width="1.2"/></g></svg>
+  <svg class="mic" viewBox="0 0 86 110">
+    <rect x="25" y="4" width="36" height="56" rx="18" fill="#0b2235" stroke="url(#chrome)" stroke-width="3.5"/>
+    <g stroke="#a9bccb" stroke-opacity=".55" stroke-width="1.2">${[12,18,24,30,36,42,48].map(y=>`<path d="M29 ${y}h28"/>`).join("")}${[33,39,45,51].map(x=>`<path d="M${x} 7v50"/>`).join("")}</g>
+    <rect x="22" y="30" width="42" height="7" rx="2" fill="url(#chrome)"/>
+    <path d="M14 40v6a29 29 0 0 0 58 0v-6" fill="none" stroke="url(#chrome)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M43 75v19M27 104h32" stroke="url(#chrome)" stroke-width="5" stroke-linecap="round"/>
+    <path class="mglow" d="M25 22a18 18 0 0 1 36 0" fill="none" stroke="#74bfeb" stroke-width="2" filter="url(#gl)" opacity=".8"/>
+  </svg>
+  <div class="bar"></div></div>`);
+/* one frame of the Mic'd Up animation; f runs 0..frames-1 and loops seamlessly */
+window.frame=(f,frames)=>{
+  const t=f/frames*2*Math.PI;
+  document.querySelectorAll("#h-micdup .eq i").forEach((b,i)=>{
+    const env=Math.sin(Math.PI*(i+.5)/N);
+    const v=.5+.5*Math.sin(t*2+i*.9)*Math.cos(t+i*.37)+.18*Math.sin(t*3+i*2.1);
+    b.style.height=Math.max(5,Math.round(6+env*54*Math.min(1,Math.max(0,v))))+"px";
+  });
+  const dot=document.querySelector("#h-micdup .dot"); const on=.55+.45*Math.cos(t);
+  dot.style.opacity=on.toFixed(2); dot.style.boxShadow=`0 0 ${4+8*on}px #ff4b3e`;
+  const wave=(ph,amp,y0)=>{ let d=""; for(let x=0;x<=160;x+=4){ const a=amp*Math.sin(Math.PI*x/160); d+=(x?"L":"M")+x+" "+(y0+a*Math.sin(x/9+ph)).toFixed(1); } return d; };
+  document.querySelector("#h-micdup .w1").setAttribute("d",wave(t,14,56));
+  document.querySelector("#h-micdup .w2").setAttribute("d",wave(-t*2,9,60));
+  document.querySelector("#h-micdup .mglow").setAttribute("opacity",(.45+.45*on).toFixed(2));
+};
+frame(3,24);
+</script></body></html>
