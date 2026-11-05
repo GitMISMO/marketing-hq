@@ -1614,6 +1614,14 @@ tr.cxrow td .t2{display:inline-block;width:100%}
 .mpl b{font-weight:500;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mpl em{font-style:normal;color:rgba(255,255,255,.55);font-size:11px;white-space:nowrap}
 .mpl.ok b{color:#fff}.mpl.ok em{color:#4fc79b;font-weight:600}
+
+/* a page waiting on its records */
+.ld-wait{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50vh;color:var(--ink-3);font-size:14px}
+.ld-wait b{font-weight:500;margin-left:6px}
+.ld-dot{width:8px;height:8px;border-radius:50%;background:var(--sky);animation:ldp 1s ease-in-out infinite}
+.ld-dot:nth-child(2){animation-delay:.15s}.ld-dot:nth-child(3){animation-delay:.3s}
+@keyframes ldp{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.ld-dot{animation:none;opacity:.6}}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -2197,7 +2205,7 @@ const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boo
 
 /* ================= the shared records ================= */
 const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}};
-let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set();
+let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false; const BOOT=Date.now(), HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
   for(let i=0;i<40 && !(window.claude && window.claude.use);i++) await new Promise(r=>setTimeout(r,100));
@@ -2206,8 +2214,9 @@ async function getClaude(){
 async function connect(){
   const c = await getClaude();
   try{ DB = c ? await c.use("db") : null; }catch(e){ DB=null; }
-  if(!DB){ $("#offline").hidden=false; saveNote(false); schedule(); return; }
-  LIVE=true; saveNote(true);
+  if(!DB){ CONNECTED=true; $("#offline").hidden=false; saveNote(false); schedule(); return; }
+  LIVE=true; CONNECTED=true; saveNote(true);
+  setTimeout(schedule, 8100);   /* never wait on a slow file for more than 8 seconds */
   Object.keys(S).forEach(col=>{
     DB.collection(col).onSnapshot(snap=>{
       const o={}; snap.docs.forEach(d=>{ o[d.id]=Object.assign({id:d.id}, d.data()); });
@@ -2456,13 +2465,21 @@ function applyPosted(){
   });
 }
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
+/* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
+   instead of a wrong picture (an open slot, zero counts) that then corrects itself */
+const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits"],
+  youtube:["episodes"], linkedin:["pieces","episodes"], mailchimp:["pieces"], summits:["pieces"], news:["news"], results:["episodes","pieces","editions"], requests:["inbox","requests"],
+  orders:["orders"], branding:["branding"], images:["images"], people:["audience"], lists:["lists"]};
+function tabReady(t){ if(Date.now()-BOOT>8000) return true; if(!CONNECTED) return !HOST_AT_BOOT; return !LIVE || (TAB_NEEDS[t]||[]).every(c=>LOADED.has(c)); }
 function renderTab(t){
+  if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
     ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
 function badges(){
+  if(!tabReady("home")) return;   /* counts wait until the records are in, so they don't flicker */
   const ev=allEvents(); const over=ev.filter(isOver).length;
   badge("overview", over, true);
   const ed=curEdition(); badge("matters", ed? edSections(ed).filter(s=>s.on && s.doc.status==="review").length : 0);
