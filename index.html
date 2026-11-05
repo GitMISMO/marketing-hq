@@ -2338,7 +2338,7 @@ function epByNum(n, near){
 }
 function epNewId(n){ const top=Math.max(1,...vals("episodes").map(e=>+e.season||1)); return (top>1?"s"+top:"")+"ep"+String(n).padStart(3,"0"); }
 function epNewSeason(){ return String(Math.max(1,...vals("episodes").map(e=>+e.season||1))); }
-function epsInWindow(ed){ const a=prevPublish(ed), b=ed.dates.draft||ed.dates.publish; return vals("episodes").filter(e=>e.airDate && e.airDate>a && e.airDate<=ed.dates.publish).sort((x,y)=>(+x.num||0)-(+y.num||0)); }
+function epsInWindow(ed){ const a=prevPublish(ed), b=ed.dates.draft||ed.dates.publish; return vals("episodes").filter(e=>e.airDate && e.airDate>a && e.airDate<=ed.dates.publish).sort((x,y)=>x.airDate<y.airDate?-1:x.airDate>y.airDate?1:(+x.num||0)-(+y.num||0)); }
 function newsEdition(n){ if(n.edition) return S.editions[n.edition]||null; return n.date ? editionFor(n.date) : null; }
 /* In the News = what the team logged (data/news.json) plus coverage that arrives by email
    (data/newsin.json, written only by the "MISMO Media - In the News Emails" flow's GitHub workflow).
@@ -2877,8 +2877,8 @@ function buildEmail(ed, preview, opt){
       if(s.k==="micdup"){
         const eps=epsInWindow(ed); if(!eps.length) return;
         inner+='<p style="'+P+';margin-bottom:16px">Check out the latest episodes of MISMO Mic&rsquo;d Up on MISMO&rsquo;s YouTube Channel:</p>';
-        inner+=cards(eps.map(e=>{ const lab=((+e.season||1)>1?"Season "+esc(e.season)+" &middot; ":"")+"Episode "+esc(e.num||"?");
-          return card(lab, esc(e.title||("MISMO Mic’d Up "+epWord(e))), e.guests?'with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'', e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos"); }));
+        inner+=cards(eps.map(e=>{ const lab="Season "+esc(e.season||1)+" &middot; Episode "+esc(e.num||"?");
+          return card(lab, esc("MISMO Mic’d Up "+epWord(e)+(e.title?": "+e.title:"")), e.guests?'with '+esc(e.guests)+(e.company?', '+esc(e.company):''):'', e.youtubeUrl||"https://www.youtube.com/@MISMOStandards/videos"); }));
       } else {
         const ns=newsInWindow(ed); if(!ns.length) return;
         const pr=ns.filter(n=>n.kind==="press"), mn=ns.filter(n=>n.kind!=="press");
@@ -2947,7 +2947,7 @@ function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
   on.forEach(s=>{ const d=s.doc, name=(d.name||s.meta.name).toUpperCase();
     let body=[];
-    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push(epWord(e)+": "+e.title+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
+    if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push("MISMO Mic’d Up "+epWord(e)+(e.title?": "+e.title:"")+(e.guests?" — with "+e.guests+(e.company?", "+e.company:""):"")+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
     else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k); if(full) body.push("Read the full article: "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
