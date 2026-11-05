@@ -1622,6 +1622,18 @@ tr.cxrow td .t2{display:inline-block;width:100%}
 .ld-dot:nth-child(2){animation-delay:.15s}.ld-dot:nth-child(3){animation-delay:.3s}
 @keyframes ldp{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
 @media (prefers-reduced-motion:reduce){.ld-dot{animation:none;opacity:.6}}
+
+/* brand files in the Image Library */
+.imfile{width:100%;height:100%;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:linear-gradient(160deg,#0d314c,#14486e);color:#fff}
+.imfile b{font-size:26px;letter-spacing:.04em;font-weight:700}
+.imfile small{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#a9d8f3}
+.imfile.f-pdf{background:linear-gradient(160deg,#7a2620,#b3372c)}
+.imfile.f-ai,.imfile.f-eps{background:linear-gradient(160deg,#5a3a07,#a2701a)}
+.imfile.f-pptx,.imfile.f-ppt{background:linear-gradient(160deg,#8a3a14,#eb6834)}
+.imfile.f-docx,.imfile.f-doc{background:linear-gradient(160deg,#0d314c,#2477b8)}
+.imfile.f-mp4,.imfile.f-mov{background:linear-gradient(160deg,#06202f,#0d314c)}
+.imfile.f-zip{background:linear-gradient(160deg,#2f4a5c,#5b7183)}
+.imfile-pv .imfile{min-height:180px;border-radius:8px}
 </style>
 <style>
 /* ---- the wow layer ---- */
@@ -2205,7 +2217,7 @@ const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boo
 
 /* ================= the shared records ================= */
 const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}};
-let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false; const BOOT=Date.now(), HOST_AT_BOOT=!!(window.claude && window.claude.use);
+let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const BOOT=Date.now(), HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
   for(let i=0;i<40 && !(window.claude && window.claude.use);i++) await new Promise(r=>setTimeout(r,100));
@@ -2216,11 +2228,10 @@ async function connect(){
   try{ DB = c ? await c.use("db") : null; }catch(e){ DB=null; }
   if(!DB){ CONNECTED=true; $("#offline").hidden=false; saveNote(false); schedule(); return; }
   LIVE=true; CONNECTED=true; saveNote(true);
-  setTimeout(schedule, 8100);   /* never wait on a slow file for more than 8 seconds */
   Object.keys(S).forEach(col=>{
     DB.collection(col).onSnapshot(snap=>{
       const o={}; snap.docs.forEach(d=>{ o[d.id]=Object.assign({id:d.id}, d.data()); });
-      S[col]=o; LOADED.add(col); schedule();
+      S[col]=o; if(!FIRST_LOAD){ FIRST_LOAD=Date.now(); setTimeout(schedule, 8100); } LOADED.add(col); schedule();
     }, err=>{ saveNote(false, err && err.message); });
   });
   try{ ASSETS = await c.use("assets"); }catch(e){ ASSETS=null; }
@@ -2467,10 +2478,11 @@ function applyPosted(){
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
-const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits"],
+const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
   youtube:["episodes"], linkedin:["pieces","episodes"], mailchimp:["pieces"], summits:["pieces"], news:["news"], results:["episodes","pieces","editions"], requests:["inbox","requests"],
   orders:["orders"], branding:["branding"], images:["images"], people:["audience"], lists:["lists"]};
-function tabReady(t){ if(Date.now()-BOOT>8000) return true; if(!CONNECTED) return !HOST_AT_BOOT; return !LIVE || (TAB_NEEDS[t]||[]).every(c=>LOADED.has(c)); }
+/* the 8-second "draw anyway" allowance starts when records begin arriving (after sign-in), not when the page opens */
+function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true; if(FIRST_LOAD && Date.now()-FIRST_LOAD>8000) return true; return (TAB_NEEDS[t]||[]).every(c=>LOADED.has(c)); }
 function renderTab(t){
   if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
@@ -3556,7 +3568,7 @@ function renderHelp(){
    library before a send (its link is pasted into the section). */
 const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["other","Other"]];
 const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
-const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set()};
+const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set(), type:""};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
@@ -3565,7 +3577,7 @@ function imgSrc(im){ return IMG_LOCAL[im.id] || im.url || (im.assetId ? "/_blob/
 const SP_IMG = ()=>window.__hqImages || null;
 const IMG_Q = {busy:0, wait:[], tried:{}};
 function imgEnsure(im){
-  if(!im || IMG_LOCAL[im.id] || !im.spPath || !SP_IMG()) return Promise.resolve();
+  if(!im || isFile(im) || IMG_LOCAL[im.id] || !im.spPath || !SP_IMG()) return Promise.resolve();
   if(IMG_Q.tried[im.id]) return IMG_Q.tried[im.id];
   IMG_Q.tried[im.id] = new Promise(res=>{
     const run=()=>{ IMG_Q.busy++; SP_IMG().get(im.spPath).then(b=>{ IMG_LOCAL[im.id]=URL.createObjectURL(b); schedule(); }).catch(()=>{ delete IMG_Q.tried[im.id]; }).then(()=>{ IMG_Q.busy--; res(); const n=IMG_Q.wait.shift(); if(n) n(); }); };
@@ -3574,22 +3586,33 @@ function imgEnsure(im){
   return IMG_Q.tried[im.id];
 }
 const IMG_EXT = /\.(png|jpe?g|gif|svg|webp)$/i;
+/* brand files kept alongside the pictures: design files, guides, templates, video */
+const BRAND_EXT = /\.(png|jpe?g|gif|svg|webp|pdf|ai|eps|pptx?|docx?|xlsx?|mp4|mov|zip)$/i;
+const FILE_KIND = {pdf:"PDF", ai:"Illustrator", eps:"EPS", ppt:"PowerPoint", pptx:"PowerPoint", doc:"Word", docx:"Word", xls:"Excel", xlsx:"Excel", mp4:"Video", mov:"Video", zip:"ZIP"};
+function isFile(im){ return im && im.kind==="file"; }
+function fileExt(im){ return (im.ext || String(im.file||"").split(".").pop() || "").toLowerCase(); }
+function fileTile(im){ const x=fileExt(im); return '<div class="imfile f-'+esc(x)+'"><b>'+esc(x.toUpperCase())+'</b><small>'+esc(FILE_KIND[x]||"File")+'</small></div>'; }
 async function addFromSharePoint(path, campaign){
   const sp=SP_IMG(); if(!sp){ toast("SharePoint pictures open on resources.mismo.org."); return; }
   toast("Reading the SharePoint folder…", 60000);
   let files; try{ files=await sp.list(path); }catch(e){ toast("Couldn't read that folder: "+(e.message||"try again"), 5000); return; }
   const have=new Set(vals("images").map(i=>i.spPath).filter(Boolean));
-  const pics=files.filter(f=>!f.folder && IMG_EXT.test(f.name)), other=files.filter(f=>!f.folder && !IMG_EXT.test(f.name)).length;
-  let n=0;
-  for(const f of pics){ if(have.has(f.path)) continue;
-    await put("images", uid("img"), {name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name, campaign:campaign||"brand", edition:"", alt:"", credit:"", notes:"From SharePoint: "+f.folderPath, w:0, h:0, size:f.size||0, type:"", url:"", assetId:"", spPath:f.path, at:f.modified||new Date().toISOString(), archived:false, source:"sharepoint"}); n++; }
-  toast(n+" picture"+(n===1?"":"s")+" added from SharePoint"+(pics.length-n?" ("+(pics.length-n)+" already here)":"")+(other?". "+other+" other file"+(other===1?"":"s")+" (PDFs, design files) left in SharePoint.":"."), 7000);
+  /* the same file saved in two folders (same name and size) is listed once */
+  const twin=f=>String(f.file||f.name||"").toLowerCase()+"|"+(+f.size||0);
+  const seen=new Set(vals("images").map(twin));
+  const keep=files.filter(f=>!f.folder && BRAND_EXT.test(f.name));
+  let n=0, nf=0, dup=0;
+  for(const f of keep){ if(have.has(f.path)) continue; if(seen.has(twin(f))){ dup++; continue; } seen.add(twin(f));
+    const pic=IMG_EXT.test(f.name);
+    await put("images", uid("img"), {name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name, kind:pic?"":"file", ext:(f.name.split(".").pop()||"").toLowerCase(), campaign:campaign||"brand", edition:"", alt:"", credit:"", notes:"From SharePoint: "+f.folderPath, w:0, h:0, size:f.size||0, type:"", url:"", assetId:"", spPath:f.path, at:f.modified||new Date().toISOString(), archived:false, source:"sharepoint"});
+    if(pic) n++; else nf++; }
+  toast((n||nf ? [n?n+" picture"+(n===1?"":"s"):"", nf?nf+" brand file"+(nf===1?"":"s"):""].filter(Boolean).join(" and ")+" added from SharePoint" : "Nothing new in that folder")+(dup?" ("+dup+" duplicate"+(dup===1?"":"s")+" skipped)":"")+".", 7000);
 }
 function openAddFromSharePoint(){
   openPane({eye:"Image Library", title:"Add Pictures from SharePoint", data:{path:"/MISMO/Active Documents/Marketing/Branding - 2026", campaign:"brand"},
     fields:[{k:"path",label:"SharePoint Folder (in Q Drive)",wide:true,ph:"/MISMO/Active Documents/Marketing/…"},{k:"campaign",label:"Tag Them As",type:"select",opts:IMG_CAMPS},
-      {k:"_h",type:"html",wide:true,html:()=>'<div class="hint">Every picture in the folder and its subfolders is listed in the library. The files stay where they are in SharePoint, so nothing is copied twice. Pictures already listed are skipped.</div>'}],
-    buttons:[{label:"Add These Pictures", run:async v=>{ closePane(true); await addFromSharePoint(v.path, v.campaign); }}]});
+      {k:"_h",type:"html",wide:true,html:()=>'<div class="hint">Every picture and brand file (PDFs, Illustrator and EPS files, PowerPoint and Word files, video, ZIPs) in the folder and its subfolders is listed in the library. The files stay where they are in SharePoint. Anything already listed is skipped, and so is a second copy of the same file saved in another folder.</div>'}],
+    buttons:[{label:"Add These Files", run:async v=>{ closePane(true); await addFromSharePoint(v.path, v.campaign); }}]});
 }
 function imgKB(n){ n=+n||0; return n>=1048576 ? (n/1048576).toFixed(1)+" MB" : Math.max(1,Math.round(n/1024))+" KB"; }
 function imgsLive(){ return vals("images").filter(im=>IM.arch ? true : !im.archived).sort((a,b)=>(a.at||"")<(b.at||"")?1:-1); }
@@ -3646,7 +3669,7 @@ async function saveBlob(blob,name){
   setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500);
 }
 async function downloadZip(ims, label){
-  ims=ims.filter(Boolean); if(!ims.length){ toast("Pick some pictures first."); return; }
+  ims=ims.filter(im=>im && !isFile(im)); if(!ims.length){ toast("Pick some pictures first. Brand files open and download from SharePoint."); return; }
   const used=new Set(), files=[]; let n=0;
   for(const im of ims){
     n++; toast("Gathering "+n+" of "+ims.length+"…", 60000);
@@ -3673,35 +3696,38 @@ function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
   const q=imNorm(IM.q);
-  const list=imgsLive().filter(im=>(!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
+  const list=imgsLive().filter(im=>(!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
   const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
   const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
       (SP_IMG()?'<button class="btn" type="button" id="im-sp">Add from SharePoint</button>':'')+(ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
-    '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.length+'</em> image'+(live.length===1?"":"s")+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
+    '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.filter(i=>!isFile(i)).length+'</em> picture'+(live.filter(i=>!isFile(i)).length===1?"":"s")+(live.some(isFile)?' and <em>'+live.filter(isFile).length+'</em> brand file'+(live.filter(isFile).length===1?"":"s"):'')+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
       (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.'+(!SP_IMG()&&live.some(i=>i.spPath)?' Pictures kept in SharePoint show their previews on resources.mismo.org.':'') : (SP_IMG()?'Pictures load straight from SharePoint. Adding new ones here opens when MISMO Media is switched on.':'Adding pictures here opens when MISMO Media is switched on. Use the Claude version until then.'))+'</div>'+
-      '<div class="tiles"><div class="tile"><div class="v sky">'+live.length+'</div><div class="k">Images</div><div class="s">ready to use</div></div>'+
+      '<div class="tiles"><div class="tile"><div class="v sky">'+live.filter(i=>!isFile(i)).length+'</div><div class="k">Pictures</div><div class="s">'+(live.some(isFile)?live.filter(isFile).length+' brand files too':'ready to use')+'</div></div>'+
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<div class="tile"><div class="v">'+month+'</div><div class="k">Added This Month</div><div class="s">'+esc(MONL[+t.slice(5,7)-1])+'</div></div>'+
         '<div class="tile"><div class="v">'+new Set(live.map(i=>i.campaign)).size+'</div><div class="k">Campaigns</div><div class="s">with pictures</div></div></div></div>'+
     '<div class="card"><div class="ch"><h2>All Images</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
+      '<select id="im-type" aria-label="Kind"><option value="">Pictures and Files</option><option value="pic"'+(IM.type==="pic"?" selected":"")+'>Pictures</option><option value="file"'+(IM.type==="file"?" selected":"")+'>Brand Files</option></select>'+
       '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
-      (list.length?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.length+' (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
+      (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
-          '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
+          '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
           '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(String(im.at||"").slice(0,10))].filter(Boolean).map(esc).join(" · ")+'</div>'+
-          '<div class="imact"><button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button></div></div></div>').join("")+'</div>'
+          '<div class="imact">'+(isFile(im)?'<a class="btn sm" href="'+esc(spFileUrl(im.spPath))+'" target="_blank" rel="noopener" data-stop>Open ↗</a><a class="btn sm" href="'+esc(spFileUrl(im.spPath,true))+'" target="_blank" rel="noopener" data-stop>Download</a>':'<button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>')+'</div></div></div>').join("")+'</div>'
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
     '</div>';
   const spb=$("#im-sp",el); if(spb) spb.onclick=openAddFromSharePoint;
-  list.slice(0,60).forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
+  list.filter(im=>!isFile(im)).slice(0,60).forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
   const add=$("#im-add",el), file=$("#im-file",el);
   if(add) add.onclick=()=>file.click();
   if(file) file.onchange=async()=>{ await addImages(file.files); file.value=""; };
+  $("#im-type",el).onchange=e=>{ IM.type=e.target.value; renderImages(); };
+  $$("a[data-stop]",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
   $("#im-camp",el).onchange=e=>{ IM.camp=e.target.value; if(IM.camp && IM.camp!=="matters") IM.ed=""; renderImages(); };
   const se=$("#im-ed",el); if(se) se.onchange=e=>{ IM.ed=e.target.value; renderImages(); };
   const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
@@ -3715,6 +3741,14 @@ function renderImages(){
 }
 async function openImage(id){
   let im=S.images[id]; if(!im) return;
+  if(isFile(im)){ const eds=editionsSorted();
+    openPane({eye:"Image Library · Brand File", title:im.name||im.file||"File", data:im, noFocus:true, fields:[
+      {k:"_pv",type:"html",wide:true,html:()=>'<div class="impv imfile-pv">'+fileTile(im)+'</div><div class="imsub" style="margin-top:6px">'+esc(im.file||"")+' · '+imgKB(im.size)+' · in SharePoint: '+esc(String(im.spPath||"").replace(/^\/MISMO\/Active Documents\//,"").replace(/\/[^/]+$/,""))+'</div>'},
+      {sec:"About This File"},{k:"name",label:"Name",wide:true},{k:"campaign",label:"Campaign",type:"select",opts:IMG_CAMPS},
+      {k:"notes",label:"Notes",type:"rich",rows:3,ph:"What it's for, which version to use"},{k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}],
+      save:async v=>{ await patch("images",id,{name:v.name, campaign:v.campaign, notes:v.notes, archived:!!v.archived}); },
+      buttons:[{label:"Open in SharePoint", run:async()=>{ window.open(spFileUrl(im.spPath),"_blank","noopener"); }},{label:"Download", run:async()=>{ window.open(spFileUrl(im.spPath,true),"_blank","noopener"); }}]});
+    return; }
   if(!imgSrc(im) && im.spPath && SP_IMG()){ toast("Loading the picture…", 20000); await imgEnsure(im); toast("Ready", 800); im=S.images[id]; }
   const eds=editionsSorted();
   const fields=[
@@ -3736,7 +3770,7 @@ async function openImage(id){
 }
 /* the picker used by MISMO Matters sections: pictures already in the library */
 function libraryStrip(ed){
-  const list=vals("images").filter(i=>!i.archived).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
+  const list=vals("images").filter(i=>!i.archived && !isFile(i)).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
   if(!list.length) return '<div class="hint">No pictures in the Image Library yet.</div>';
   /* SharePoint pictures arrive after the tiles are drawn, so each tile fills itself in */
   list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im).then(()=>{ const src=imgSrc(im); document.querySelectorAll('.impick[data-pick="'+im.id+'"]').forEach(b=>{ if(src){ b.innerHTML='<img src="'+esc(src)+'" alt="">'; b.classList.remove("loading"); } else { b.classList.remove("loading"); b.classList.add("missing"); } }); }); });
