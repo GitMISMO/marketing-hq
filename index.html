@@ -3842,7 +3842,7 @@ function fileTile(im){ const x=fileExt(im); return '<div class="imfile f-'+esc(x
 async function addFromSharePoint(path, campaign){
   const sp=SP_IMG(); if(!sp){ toast("SharePoint pictures open on resources.mismo.org."); return; }
   toast("Reading the SharePoint folder…", 60000);
-  let files; try{ files=await sp.list(path); }catch(e){ toast("Couldn't read that folder: "+(e.message||"try again"), 5000); return; }
+  let files; try{ files=await spListOnce(path, true); }catch(e){ toast("Couldn't read that folder: "+(e.message||"try again"), 5000); return; }
   const have=new Set(vals("images").map(i=>i.spPath).filter(Boolean));
   /* the same file saved in two folders (same name and size) is listed once */
   const twin=f=>String(f.file||f.name||"").toLowerCase()+"|"+(+f.size||0);
@@ -5004,12 +5004,23 @@ function classify(files){
   const tx=files.filter(f=>TX_RX.test(f.name)).sort((a,b)=>(/\.txt$/i.test(b.name)-/\.txt$/i.test(a.name)) || ((b.size||0)-(a.size||0)));
   return {video:vids[0]||null, clips:vids.slice(1), thumbs:files.filter(f=>IMG_RX.test(f.name)), transcript:tx[0]||null};
 }
+/* SharePoint folder listings go through the "Marketing HQ Images" flow, which is slow to list a folder. So: one listing
+   at a time (never a burst), each answer remembered for 5 minutes, and a 30-minute rest after a timeout. A button press
+   always asks fresh. */
+const SPL={chain:Promise.resolve(), cache:{}, restUntil:0};
+function spListOnce(path, fresh){
+  const c=SPL.cache[path]; if(!fresh && c && Date.now()-c.at<5*60*1000) return Promise.resolve(c.files);
+  if(!fresh && Date.now()<SPL.restUntil) return Promise.reject(Object.assign(new Error("SharePoint is slow right now; checking again later"),{code:"REST"}));
+  const run=()=>SPX().list(path).then(files=>{ SPL.cache[path]={at:Date.now(), files}; return files; },
+    err=>{ if(/^(HTTP_5|OFFLINE)/.test(String(err&&err.code||""))) SPL.restUntil=Date.now()+30*60*1000; throw err; });
+  const p=SPL.chain.then(run,run); SPL.chain=p.catch(()=>{}); return p;
+}
 async function kitPullSP(epId, quiet){
   const sp=SPX(); const e=S.episodes[epId]; if(!sp||!e||!e.spFolder) return;
   if(MU.pulling[epId]) return; MU.pulling[epId]=true;
   try{
     if(!quiet) toast("Reading the episode's SharePoint folder…", 60000);
-    const files=(await sp.list(spListPath(e.spFolder))).filter(f=>!f.folder);
+    const files=(await spListOnce(spListPath(e.spFolder), !quiet)).filter(f=>!f.folder);
     const c=classify(files), old=kitOf(epId)||{};
     /* an empty SharePoint folder never wipes out what came from Brian's Drive folder */
     if(!files.length && old.folderId){ if(!quiet) toast("The SharePoint folder is empty, so the kit keeps using Brian's Drive folder.", 5000); MU.pulled[epId]=Date.now(); return; }
@@ -5044,8 +5055,12 @@ async function muSync(){
   for(const e of eps){
     if(!e.spFolder){ await ensureEpFolder(e); continue; }
     const k=kitOf(e.id)||{};
-    const stale=!MU.pulled[e.id] || Date.now()-MU.pulled[e.id]>10*60*1000;
-    if(stale && !k.folderId && (!k.video || !k.transcriptPath || !(k.thumbs||[]).length)) await kitPullSP(e.id, true);
+    /* only the episodes whose files are due (aired in the last 10 days or airing in the next 10), and only if nobody
+       has checked in the last 30 minutes, so open tabs don't keep asking SharePoint */
+    const near=!!e.airDate && e.airDate>=add(t,-10) && e.airDate<=add(t,10);
+    const lastAt=Math.max(MU.pulled[e.id]||0, k.pulledAt?new Date(k.pulledAt).getTime():0);
+    const stale=Date.now()-lastAt>30*60*1000;
+    if(near && stale && !k.folderId && (!k.video || !k.transcriptPath || !(k.thumbs||[]).length)) await kitPullSP(e.id, true);
     await muAuto(e.id);
   }
 }
