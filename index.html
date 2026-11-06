@@ -1270,14 +1270,17 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .kli-note{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:8px 12px;font-size:13px;margin:0 0 8px}
 .kli-edits{background:var(--warn-soft);color:var(--ink)}
 .kli-ok{background:var(--good-soft);color:var(--ink)}
-.kli-cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.kli-cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
+.kli-mine,.kli-mine .kcopy{display:flex;flex-direction:column;min-height:100%}
+.kli-mine .kcopy{flex:1}
+.kli-mine textarea{flex:1;resize:vertical;overflow:hidden}
 .kli-cmp>*{min-width:0}
 .kli-bp .kcopy-h{flex-wrap:wrap;gap:6px}
 .kli-cmp .kcopy{margin:0}
 .kli-bp{border:1px solid var(--border);background:var(--surface-2);border-radius:7px;padding:10px 12px}
 .kli-bp textarea,.kli-bp input{width:100%;box-sizing:border-box;margin:0 0 6px}
 .kli-bpb{display:flex;gap:6px;text-transform:none;letter-spacing:0}
-.kli-bptext{font-size:13.5px;line-height:1.55;color:var(--ink);max-height:260px;overflow:auto}
+.kli-bptext{font-size:13.5px;line-height:1.55;color:var(--ink)}
 .kli-flag{margin-top:8px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--ink);border-radius:5px;padding:6px 9px;font-size:12.5px}
 .kli-rev{border:1px solid var(--warn);background:var(--warn-soft);border-radius:7px;padding:10px 12px;margin-top:8px;font-size:13px}
 .kli-rev textarea{width:100%;box-sizing:border-box;margin:6px 0 0;min-height:52px}
@@ -2661,6 +2664,8 @@ function applyPosted(){
 /* A tab left open across an update keeps running the old code, and its background work (folder checks, autopilot,
    Higher Logic uploads) can undo newer fixes. Every 10 minutes the page checks whether MISMO Media has been updated;
    once it has, this tab stops its background work and asks to be refreshed. */
+/* Mic'd Up steps on hold. Set one to false to bring it back everywhere (kit, Weekly Run, journey, results reminders). */
+const MU_PAUSED = {spotify:true, clips:true};
 const STALE={base:null, on:false};
 function pageSig(t){ let h=0; for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return t.length+":"+h; }
 async function staleCheck(){
@@ -4793,16 +4798,16 @@ function kitCardHtml(){
         copyBox("kit-title","YouTube Title",e.ytTitle||w.title)+copyBox("kit-desc","YouTube Description",w.desc+(w.chapters?"\n\n"+w.chapters:""),8)+
         (fromTx ? '<details class="kmore"><summary>More copy from the transcript</summary>'+
           (w.titles&&w.titles.length?'<div class="hint">Other title ideas: '+w.titles.map(esc).join(" · ")+'</div>':'')+
-          copyBox("kit-long","Long Description (LinkedIn Live event and Spotify)",w.long,8)+copyBox("kit-promo","Brian\'s Promo Post",w.promo,4)+copyBox("kit-matters","MISMO Matters Blurb",w.matters,3)+
+          copyBox("kit-long","Long Description"+(MU_PAUSED.spotify?" (LinkedIn Live event)":" (LinkedIn Live event and Spotify)"),w.long,8)+copyBox("kit-promo","Brian\'s Promo Post",w.promo,4)+copyBox("kit-matters","MISMO Matters Blurb",w.matters,3)+
           (k.article?copyBox("kit-article","Viewpoint Article Draft (for Brian)",k.article,10):'')+'</details>' : '')+
         '<div class="kbtns">'+(hasTx?'<button class="btn sm" type="button" id="kit-writeall">Write Again from the Transcript</button>':'<button class="btn sm" type="button" id="kit-rewrite">Write Again</button>')+(hasTx?'<button class="btn sm" type="button" id="kit-article">'+(k.article?"Redraft":"Draft")+' Brian\'s Viewpoint Article</button>':'')+'<span class="hint">'+(fromTx?'Written in MISMO\'s voice from the transcript.':'Written in MISMO\'s voice from Brian\'s LinkedIn post.')+'</span></div>'
-      : (hasTx ? '<button class="btn sm pri" type="button" id="kit-writeall">Write Everything from the Transcript</button><span class="hint"> YouTube title and description, the long description, Brian\'s post, MISMO\'s LinkedIn Live wording, the MISMO Matters blurb and clip captions.</span>'
+      : (hasTx ? '<button class="btn sm pri" type="button" id="kit-writeall">Write Everything from the Transcript</button><span class="hint"> YouTube title and description, the long description, Brian\'s post, MISMO\'s LinkedIn Live wording, the MISMO Matters blurb'+(MU_PAUSED.clips?'':' and clip captions')+'.</span>'
         : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Once the transcript is in the folder, it\'s all written from that. Or paste Brian\'s LinkedIn post:</div><textarea id="kit-post" rows="3" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm" type="button" id="kit-postgo">Write It</button></div>')))+
     step(++n,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+
-    step(++n,"On Spotify · Friday 6:30 AM", !!e.spotifyDone, '<div class="kbtns"><input type="url" id="kit-sp" placeholder="Paste the Spotify episode link" value="'+esc(e.spotifyUrl||"")+'"><button class="btn sm" type="button" id="kit-spsave">'+(e.spotifyDone?"On Spotify ✓":"Save Link")+'</button><span class="hint">Brian publishes it. Use the long description and the same thumbnail.</span></div>')+
+    (MU_PAUSED.spotify?'':step(++n,"On Spotify · Friday 6:30 AM", !!e.spotifyDone, '<div class="kbtns"><input type="url" id="kit-sp" placeholder="Paste the Spotify episode link" value="'+esc(e.spotifyUrl||"")+'"><button class="btn sm" type="button" id="kit-spsave">'+(e.spotifyDone?"On Spotify ✓":"Save Link")+'</button><span class="hint">Brian publishes it. Use the long description and the same thumbnail.</span></div>'))+
     step(++n,(e.liCanceled?"Canceled · ":"")+"MISMO LinkedIn Live · "+esc(fD(liDate(e)))+" at "+esc(e.linkedinTime||"1:00 PM ET"), liClosed(e), e.liCanceled ? cxBox("ep",e.id,"LinkedIn Post") : liLiveHtml(e,k,liText,thumbs)+cxBox("ep",e.id,"LinkedIn Post"))+
-    step(++n,"Clips for the Next Two Weeks", vals("pieces").some(p=>p.clipOf===e.id), ((k.clips||[]).length ? '<div class="kclips">'+(k.clips||[]).map((c,i)=>'<div class="kfile"><span class="kic">✂</span><div><b>'+esc(c.name)+'</b><small>'+esc(mb(c.size))+((w.clips||[])[i]?' · '+esc((w.clips||[])[i]):'')+'</small></div><a class="btn sm" href="'+esc(spFileUrl(c.path,true))+'" target="_blank" rel="noopener">Download ↓</a></div>').join("")+'</div>' : '<div class="hint">Riverside\'s Magic Clips go in the same folder. Short clips are the best way to keep an episode in front of people after Friday.</div>')+
-      '<div class="kbtns"><button class="btn sm" type="button" id="kit-clips">'+(vals("pieces").some(p=>p.clipOf===e.id)?"Clip Posts Planned ✓":"Plan the Clip Posts")+'</button><span class="hint">Three or four posts on MISMO\'s LinkedIn page over the two weeks after the episode, each with its caption.</span></div>')+
+    (MU_PAUSED.clips?'':step(++n,"Clips for the Next Two Weeks", vals("pieces").some(p=>p.clipOf===e.id), ((k.clips||[]).length ? '<div class="kclips">'+(k.clips||[]).map((c,i)=>'<div class="kfile"><span class="kic">✂</span><div><b>'+esc(c.name)+'</b><small>'+esc(mb(c.size))+((w.clips||[])[i]?' · '+esc((w.clips||[])[i]):'')+'</small></div><a class="btn sm" href="'+esc(spFileUrl(c.path,true))+'" target="_blank" rel="noopener">Download ↓</a></div>').join("")+'</div>' : '<div class="hint">Riverside\'s Magic Clips go in the same folder. Short clips are the best way to keep an episode in front of people after Friday.</div>')+
+      '<div class="kbtns"><button class="btn sm" type="button" id="kit-clips">'+(vals("pieces").some(p=>p.clipOf===e.id)?"Clip Posts Planned ✓":"Plan the Clip Posts")+'</button><span class="hint">Three or four posts on MISMO\'s LinkedIn page over the two weeks after the episode, each with its caption.</span></div>'))+
     step(++n,"The Guest\'s Share Kit", !!e.guestKitSent, (g||e.guestEmail) ? (w.guest?copyBox("kit-guest","A Post for the Guest to Share",w.guest,3):'')+'<div class="kbtns"><a class="btn sm pri" id="kit-guestmail" href="'+esc(guestKitMail(e,k))+'">Email the Guest</a><button class="btn sm" type="button" id="kit-guestsent">'+(e.guestKitSent?"Sent ✓":"Mark as Sent")+'</button><span class="hint">Opens an email to '+esc((g&&(g.shareEmail||g.e))||e.guestEmail)+' with the links and a ready-made post. Send it once the episode is live.</span></div>'
       : '<div class="hint">Send the guest the form when Brian books them (in the episode, under Guest and Run of Show). Their email lands here for the share kit.</div>');
   return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>'+esc(epWord(x))+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||(e.spFolder||"").split("/").pop()||"")+'</span><div class="r">'+
@@ -4863,6 +4868,8 @@ function wireKit(el){
   const lok=$("#kit-liok",el); if(lok) lok.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"approved", liApprovedAt:new Date().toISOString(), liApprovedBy:(window.__hqWho||"")})); toast("Approved. Vanessa can set up the event."); renderMicdup(); };
   const lch=$("#kit-lichg",el); if(lch) lch.onclick=async()=>{ const note=($("#kit-linote",el)||{}).value||""; if(!note.trim()){ toast("Say what to change in the note box."); return; } await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"changes", liNote:note})); toast("Sent back with your note."); renderMicdup(); };
   const led=$("#kit-liedits",el); if(led) led.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"approved", liApprovedAt:new Date().toISOString(), liApprovedBy:"Amy (edits applied)"})); toast("Ready to set up with Amy's edits."); renderMicdup(); };
+  /* MISMO's description shows in full (no scrolling) and lines up with Brian's post beside it */
+  const kli=$("#kit-li",el); if(kli){ const fit=()=>{ kli.style.minHeight="0px"; kli.style.minHeight=(kli.scrollHeight+2)+"px"; }; requestAnimationFrame(fit); kli.addEventListener("input",fit); }
   const lrv=$("#kit-lirevise",el); if(lrv) lrv.onclick=async()=>{ const kk=kitOf(eid)||{}; await put("kits", eid, Object.assign({}, kk, {liStatus:"draft", liRevising:true, liRevFrom:kk.liStatus||"review", liRevNote:""})); renderMicdup(); };
   const lrc=$("#kit-lirevcancel",el); if(lrc) lrc.onclick=async()=>{ const kk=kitOf(eid)||{}; await put("kits", eid, Object.assign({}, kk, {liStatus:kk.liRevFrom||"review", liRevising:false})); renderMicdup(); };
   const rvn=$("#kit-revnote",el); if(rvn) rvn.onchange=()=>put("kits", eid, Object.assign({}, kitOf(eid), {liRevNote:rvn.value}));
@@ -5509,7 +5516,7 @@ function hmEpJourney(e){
   const k=(typeof kitOf==="function"&&kitOf(e.id))||{}, g=typeof guestFor==="function"?guestFor(e):null;
   return [
     ["Guest Form", !!g], ["Recorded", !!e.recordDate], ["Files In", !!k.video], ["Copy Written", !!k.written],
-    ["Amy Approved", k.liStatus==="approved"], ["Live Friday", e.airDate<=T()], ["On Spotify", !!e.spotifyDone], ["On YouTube", !!e.youtubeDone],
+    ["Amy Approved", k.liStatus==="approved"], ["Live Friday", e.airDate<=T()], ...(MU_PAUSED.spotify?[]:[["On Spotify", !!e.spotifyDone]]), ["On YouTube", !!e.youtubeDone],
     ["MISMO LinkedIn Live", liClosed(e)], ["In MISMO Matters", !!(e.youtubeDone && curEdition() && e.airDate<=(curEdition().dates||{}).publish)]
   ];
 }
@@ -6109,7 +6116,7 @@ function mnTasks(per){
     {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,
       how: ed ? 'Open Higher Logic\'s report for the <b>'+esc(monthName(ed.month))+'</b> mailing and type Sent To, Delivered, Opens, Clicks, Unsubscribes and the most-clicked links into <b>Record Stats</b>.' : 'No MISMO Matters went out in '+m+'.',
       why:'The open rate and clicks for the edition.', auto: ed && +edStats(ed).recipients, act: ed ? ["Record Stats", ()=>openStats(ed)] : null},
-    {k:"sp", t:"Spotify",
+    {k:"sp", t:"Spotify", skip:MU_PAUSED.spotify,
       how:'In <b>Spotify for Creators › Analytics</b>, look up each Mic\'d Up episode\'s plays and type them into <b>Spotify Plays</b> on the episode (MISMO Mic\'d Up › the episode › Results).',
       why:'Plays for each episode on Spotify.', link:["Open Spotify for Creators","https://creators.spotify.com/"], act:["Open Mic'd Up", ()=>go("micdup")]}
   ].filter(x=>!x.skip);
@@ -6438,10 +6445,10 @@ function renderMicdup(){
   const webMissing=vals("episodes").filter(e=>owes(e)&&e.youtubeDone&&!e.websiteDone);
   const slots=fridays(add(t,-21),12).filter(f=>{ if(f>=t) return true; const e=epOn(f); return !!(e && owes(e) && !(e.youtubeDone&&liClosed(e)&&e.websiteDone)); }).slice(0,9);  // past Fridays only while their episode still has work left
   const run = slots.map(f=>{ const e=epOn(f); const past=f<t;
-    if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+    if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td>'+(MU_PAUSED.spotify?'':'<td></td>')+'</tr>';
     const ed=editionFor(f);
     return '<tr class="click'+(past&&e.youtubeDone&&liClosed(e)?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
-      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td><td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
+      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td>'+(MU_PAUSED.spotify?'':'<td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td>')+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
   const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(mdPlain(e.notes))+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn and Spotify (6:30 AM), on YouTube that afternoon, MISMO\'s LinkedIn Live Monday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
@@ -6454,12 +6461,12 @@ function renderMicdup(){
       '<div class="tile"><div class="v">'+eps.length+'</div><div class="k">Episodes Logged</div><div class="s">'+(eps[0]?"latest: Ep "+esc(eps[0].num):"")+'</div></div>'+
     '</div></div>'+
     '<div class="flow"><div class="st"><div class="when">1–2 Weeks Ahead</div><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>'+
-      '<div class="st"><div class="when">Friday · 8:30 AM ET</div><b>Live</b><small>LinkedIn Live on Brian\'s profile; Spotify at 6:30 AM</small></div>'+
+      '<div class="st"><div class="when">Friday · 8:30 AM ET</div><b>Live</b><small>LinkedIn Live on Brian\'s profile'+(MU_PAUSED.spotify?'':'; Spotify at 6:30 AM')+'</small></div>'+
       '<div class="st"><div class="when">Friday Afternoon</div><b>YouTube</b><small>Upload with Brian\'s description and proofed captions</small></div>'+
       '<div class="st"><div class="when">Monday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
       '<div class="st"><div class="when">Next MISMO Matters</div><b>Mic\'d Up Section</b><small>Listed automatically once it\'s on YouTube</small></div></div>'+
     kitCardHtml()+
-    '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Recorded · Captions · Spotify · YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck">Recorded</th><th class="ck">Captions</th><th class="ck">Spotify</th><th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
+    '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Recorded · Captions · '+(MU_PAUSED.spotify?'':'Spotify · ')+'YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck">Recorded</th><th class="ck">Captions</th>'+(MU_PAUSED.spotify?'':'<th class="ck">Spotify</th>')+'<th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
     '<div class="card"><div class="ch"><h2>All Episodes</h2><span class="cnt">'+eps.length+'</span></div>'+(all?'<div class="tw"><table class="t"><thead><tr><th class="n">Ep</th><th>Title</th><th>Guest</th><th>Friday</th><th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th></tr></thead><tbody>'+all+'</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("episodes")?"Loading episodes…":"No episodes logged yet. Add the first one above.")+'</div>')+'</div>';
   $("#mu-new",el).onclick=()=>newEpisode(epOn(fri)?add(fri,7):fri);
   $$("[data-ep]",el).forEach(r=>r.onclick=()=>openEpisode(r.dataset.ep));
@@ -6495,9 +6502,9 @@ function openEpisode(id, seed){
     {k:"fileUrl",label:"Episode File (Google Drive Link)",type:"url",ph:"https://drive.google.com/…",wide:true},
     {k:"fileIn",label:"File received from Brian",type:"cb"},
     {k:"bvDescription",label:"Brian's Description",type:"textarea",rows:7,ph:"Paste Brian's description. It goes on YouTube as is, and the LinkedIn post is written from it."},
-    {sec:"Spotify · Friday 6:30 AM"},
+    ...(MU_PAUSED.spotify?[]:[{sec:"Spotify · Friday 6:30 AM"},
     {k:"spotifyDone",label:"On Spotify",type:"cb"},
-    {k:"spotifyUrl",label:"Spotify Link",type:"url",ph:"https://open.spotify.com/episode/…"},
+    {k:"spotifyUrl",label:"Spotify Link",type:"url",ph:"https://open.spotify.com/episode/…"}]),
     {sec:"YouTube · Friday Afternoon"},
     {k:"captions",label:"Captions uploaded and names proofed (MISMO spelled right, no burned-in captions)",type:"cb",wide:true},
     {k:"youtubeDone",label:"Posted to YouTube",type:"cb"},
@@ -6513,7 +6520,7 @@ function openEpisode(id, seed){
     {k:"_draft",type:"html",html:()=>SAMPLE?'<button class="btn" type="button" id="ep-draft">Write the LinkedIn Post from Brian\'s Description</button> <span class="hint" id="ep-draft-msg"></span>':'<span class="hint">Claude can write this post from Brian\'s description when the page is open on claude.ai.</span>'},
     {sec:"Results"},
     {k:"views",label:"YouTube Views",type:"number"},{k:"watchHours",label:"Watch Time (Hours)",type:"number"},{k:"likes",label:"YouTube Likes",type:"number"},
-    {k:"spotifyPlays",label:"Spotify Plays",type:"number"},{k:"liImpressions",label:"LinkedIn Impressions",type:"number"},{k:"liClicks",label:"LinkedIn Clicks",type:"number"},{k:"liReactions",label:"LinkedIn Reactions",type:"number"},
+    ...(MU_PAUSED.spotify?[]:[{k:"spotifyPlays",label:"Spotify Plays",type:"number"}]),{k:"liImpressions",label:"LinkedIn Impressions",type:"number"},{k:"liClicks",label:"LinkedIn Clicks",type:"number"},{k:"liReactions",label:"LinkedIn Reactions",type:"number"},
     {sec:"Website and MISMO Matters"},
     {k:"websiteDone",label:"On the website's Mic'd Up list",type:"cb"},
     {k:"_ed",type:"html",html:()=>'<div class="ro">'+(ed?"Lands in the "+esc(monthName(ed.month))+" MISMO Matters (goes out "+esc(fS(ed.dates.publish))+")":"No MISMO Matters edition covers this date yet.")+'</div>'},
