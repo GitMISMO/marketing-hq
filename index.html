@@ -4468,6 +4468,7 @@ async function kitPullFolder(epId, folderId, chatId){
     toast("Opening Brian's Drive folder…", 60000);
     const got=await dr.list(folderId);
     const files=got.files.filter(f=>!f.folder);
+    if(!files.length && !got.name){ toast("Google says that folder isn't there. Brian needs to share it (or his whole Mic'd Up folder) with jycritchley@gmail.com, the Google account MISMO Media reads Drive with.", 9000); return; }
     const info=parseFolder(got.name);
     const video=kitVideo(files), tf=kitTranscriptFile(files), thumbs=kitThumbFiles(files);
     const old=kitOf(epId)||{};
@@ -4531,7 +4532,7 @@ async function kitSync(){
     const msgs=chatMsgs();
     for(const m of msgs){
       const fid=msgFolder(m); if(!fid) continue;
-      if(vals("kits").some(k=>k.folderId===fid) || KIT.tried[fid]) continue;
+      if(vals("kits").some(k=>k.folderId===fid && (k.files||[]).length) || KIT.tried[fid]) continue;
       KIT.tried[fid]=true;
       // which episode? read the folder name for the number
       let info; try{ info=await DRIVE().list(fid); }catch(e){ continue; }
