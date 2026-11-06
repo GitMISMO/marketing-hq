@@ -4307,8 +4307,13 @@ function nmTok(){try{return window.ResourcesSession.token()||"";}catch(e){return
 function nmNext(mo){let [y,m]=mo.split("-").map(Number);m++;if(m>12){m=1;y++;}return y+"-"+String(m).padStart(2,"0");}
 function nmEdition(joined){const t=T(),jm=String(joined||t).slice(0,7);
   const eds=vals("editions").filter(e=>e&&e.month).sort((a,b)=>a.month.localeCompare(b.month));
-  const ok=eds.find(e=>e.month>jm&&String((e.dates||{}).content||e.month+"-01")>=t);if(ok)return ok.month;
+  /* a new member goes in the first issue after they join that is still being built (build day), not only before its content day (Jonna, Nov 6, 2026) */
+  const ok=eds.find(e=>e.month>jm&&String((e.dates||{}).build||(e.dates||{}).publish||(e.dates||{}).content||e.month+"-01")>=t);if(ok)return ok.month;
   let mo=nmNext(jm);while(mo<=t.slice(0,7))mo=nmNext(mo);return mo;}
+/* the same company under a slightly different name: "HomeVision" and "HomeVision, Inc.", "The Money Store" and "MLD Mortgage dba The Money Store", "Ameriprise Financial" and "Ameriprise Bank" */
+function nmSame(a,b){const parts=s=>String(s||"").toLowerCase().split(/\s+d\/?b\/?a\s+/).map(p=>p.replace(/&/g," and ").replace(/\b(inc|llc|l\.l\.c|corp|corporation|company|co|the|ltd|lp|na|n\.a)\b\.?/g," ").trim()).filter(Boolean);
+  const c=p=>p.replace(/[^a-z0-9]+/g,""),f=p=>(p.match(/[a-z0-9]+/)||[""])[0];
+  const A=parts(a),B=parts(b);return A.some(x=>B.some(y=>{const X=c(x),Y=c(y);return X===Y||(X.length>5&&Y.length>5&&(X.indexOf(Y)===0||Y.indexOf(X)===0))||(f(x).length>=6&&f(x)===f(y)&&!/^(american|national|united|federal|mortgage|financial|first|community|citizens)$/.test(f(x)));}));}
 let NM_BUSY=false;
 async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;NM_BUSY=true;try{
   const r=await fetch(NM_R+"/data/mm-newmembers",{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!r.ok)return;
@@ -4323,9 +4328,9 @@ async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;
     const month=nmEdition(it.joined),group=it.champion?(it.type==="Lender"?"Lender Champions":"Industry Champions"):"Corporate Members";
     const made=await addImages([file],{name:it.name+" Logo",company:it.name,group,campaign:"logos",edition:"",alt:it.name+" logo",site:it.website||"",m360Logo:it.logo.path,m360Key:it.k||"",m360Level:it.level||"",m360Joined:it.joined||""});
     if(!made||!made.length)continue;const im=made[0];have.add(it.logo.path);
-    if(vals("sections").some(x=>x&&x.key==="welcome"&&(x.logos||[]).some(l=>String(l.name||"").toLowerCase()===String(it.name||"").toLowerCase())))continue;
+    if(vals("sections").some(x=>x&&x.key==="welcome"&&(x.logos||[]).some(l=>(l.k&&l.k===it.k)||nmSame(l.name,it.name))))continue;
     const sid=month+"__welcome",cur=(S.sections||{})[sid]||{month,key:"welcome",status:"in",owner:"Kelly",from:"Member 360 new members",headline:"MISMO Welcomes New Members"};
-    const logos=(cur.logos||[]).filter(l=>l.name!==it.name).concat([{id:im.id,name:it.name,group,url:it.website||""}]);
+    const logos=(cur.logos||[]).filter(l=>l.name!==it.name).concat([{id:im.id,name:it.name,group,url:it.website||"",k:it.k||""}]);
     await put("sections",sid,Object.assign({},cur,{month,key:"welcome",logos}));touched[month]=1;}
   for(const month of Object.keys(touched)){const rid="rq-newmembers-"+month,cur=(S.requests||{})[rid];
     const logos=((S.sections||{})[month+"__welcome"]||{}).logos||[],ed=vals("editions").find(e=>e.month===month)||{};
