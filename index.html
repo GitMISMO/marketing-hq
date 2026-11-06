@@ -6240,7 +6240,32 @@ function logoWall(ed, s, preview){
       rows+= b ? '<tr><td width="50%" valign="top" style="padding:5px">'+logo(a)+'</td><td width="50%" valign="top" style="padding:5px">'+logo(b)+'</td></tr>'
                : '<tr><td colspan="2" align="center" style="padding:6px"><table role="presentation" width="50%" cellpadding="0" cellspacing="0" border="0" style="width:50%;margin:0 auto"><tr><td>'+logo(a)+'</td></tr></table></td></tr>'; }
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+rows+'</table>'; };
+  /* sponsors: a compact wall, several logos across, sized and colored by tier (Platinum largest), so even a long
+     sponsor list stays short. The last row of a tier is centered. */
+  const TIERS={platinum:{m:4,h:78,lh:44,lw:120,c:"#9fb0be"}, gold:{m:3,h:72,lh:42,lw:132,c:"#d4a92e"}, silver:{m:4,h:66,lh:36,lw:112,c:"#aab4bd"},
+    bronze:{m:5,h:60,lh:32,lw:124,c:"#c4763a"}, other:{m:4,h:66,lh:36,lw:112,c:"#74bfeb"}};
+  const tierOf=g=>{ const t=String(g||"").toLowerCase(); return t.includes("platinum")?"platinum":t.includes("gold")?"gold":t.includes("silver")?"silver":t.includes("bronze")?"bronze":"other"; };
+  const logoC=(l,T)=>{ const im=S.images[l.id]||{}; const hl=im.hlUrl||"", src=hl||(preview?imgSrc(im):"");
+    const ar=(+im.w && +im.h) ? im.w/im.h : 2.6, w=Math.round(Math.max(36, Math.min(T.lw, T.lh*ar)));
+    const inner = src
+      ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0">'
+      : '<div style="'+F+'font-size:13px;line-height:1.25;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
+    const linked = l.url ? '<a href="'+esc(l.url)+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="'+T.h+'" style="background:#ffffff;border:1px solid #dde9f2;border-top:3px solid '+T.c+';border-radius:5px;padding:8px 6px;height:'+T.h+'px;text-align:center">'+linked+'</td></tr></table>'; };
+  const gridC=(items,T)=>{ const n=items.length, rows=Math.ceil(n/T.m), c=Math.max(Math.ceil(n/rows), Math.min(T.m,3)); let out='';
+    for(let i=0;i<n;i+=c){ const row=items.slice(i,i+c), pct=(100/row.length).toFixed(2), tw=Math.round(row.length/c*100);
+      out+='<table role="presentation" align="center" width="'+tw+'%" cellpadding="0" cellspacing="0" border="0" style="width:'+tw+'%;margin:0 auto"><tr>'+
+        row.map(l=>'<td width="'+pct+'%" valign="top" style="padding:3px;width:'+pct+'%">'+logoC(l,T)+'</td>').join("")+'</tr></table>'; }
+    return out; };
   const groups=logoGroups(list), many=groups.length>1 || (groups[0] && groups[0].k);
+  if(!dark){ const body=groups.map(g=>{ const T=TIERS[tierOf(g.k)];
+      return (many && g.k ? '<div style="'+M+'font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:12px 0 3px;text-align:center"><span style="color:'+T.c+'">&#9632;</span>&nbsp;'+esc(g.k)+'</div>' : '')+gridC(g.items,T); }).join("");
+    const introC=d.body ? mdEmail(d.body, F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC, 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
+    const ctaC = d.ctaUrl ? '<p style="margin:14px 0 2px;text-align:center"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;line-height:1;padding:12px 20px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
+      '<div style="'+M+'font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 6px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
+      '<div style="'+F+'font-size:23px;line-height:1.2;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 6px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+
+      '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>'; }
   const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
   const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
   const cta = d.ctaUrl ? '<p style="margin:18px 0 4px;text-align:center"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+(dark?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
