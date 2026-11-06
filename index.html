@@ -955,6 +955,22 @@ em,i,cite,dfn,var,address{font-style:normal}  /* no italics anywhere */
 .im-filters select,.im-filters input[type=search]{height:34px;font-size:13px;min-width:0;width:auto}
 .im-filters input[type=search]{width:min(220px,100%)}
 .im-arch{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.lgs-note{padding:12px 14px;border-radius:8px;background:var(--surface-2,#f4f7fa);border:1px solid var(--border);font-size:13.5px;margin:0 0 14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lgs-note.warn{background:#fff7e8;border-color:#f0d29a}
+.lgs-note.ok{background:#e8f6ef;border-color:#b7e0c8}
+.lgs-month{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--muted);margin:16px 0 8px}
+.lgs-month span{background:var(--surface-2,#eef3f7);border-radius:4px;padding:1px 7px;letter-spacing:0}
+.lgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.lgs-card{border:1px solid var(--border);border-radius:8px;background:var(--surface);padding:10px;display:flex;flex-direction:column;gap:4px;cursor:pointer;min-width:0}
+.lgs-card:hover,.lgs-card:focus-visible{border-color:var(--sky);outline:none}
+.lgs-card.arch{opacity:.6}
+.lgs-pic{height:74px;border-radius:6px;background:#fff;border:1px solid #e3ebf1;display:flex;align-items:center;justify-content:center;padding:10px;margin:0 0 4px}
+.lgs-pic img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.lgs-pic span{font-weight:700;color:#0d314c;text-align:center;font-size:13px}
+.lgs-card b{font-size:13.5px;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgs-card small{color:var(--muted);font-size:12px;min-height:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lgs-card .chip{align-self:flex-start}
+.subtabs .cnt{font-size:11px;opacity:.75;font-weight:600}
 .imgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;padding:16px}
 .imcard{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface);cursor:pointer;display:flex;flex-direction:column;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
 .imcard:hover,.imcard:focus-visible{border-color:var(--sky);box-shadow:0 8px 22px -14px rgba(7,29,46,.55);transform:translateY(-1px);outline:none}
@@ -2333,7 +2349,7 @@ async function connect(){
       const o={}; snap.docs.forEach(d=>{ o[d.id]=Object.assign({id:d.id}, d.data()); });
       /* a second copy, never changed by the page, to tell later what a save actually changed (November 5, 2026) */
       if(col!=="audience"){ const seen={}; snap.docs.forEach(d=>{ seen[d.id]=Object.assign({id:d.id}, d.data()); }); SEEN[col]=seen; }
-      S[col]=o; if(!FIRST_LOAD){ FIRST_LOAD=Date.now(); setTimeout(schedule, 8100); } LOADED.add(col); schedule();
+      S[col]=o; if(!FIRST_LOAD){ FIRST_LOAD=Date.now(); setTimeout(schedule, 8100); } LOADED.add(col); schedule(); if(col==="images" && typeof hlSoon==="function") hlSoon();
     }, err=>{ saveNote(false, err && err.message); });
   });
   try{ ASSETS = await c.use("assets"); }catch(e){ ASSETS=null; }
@@ -3799,7 +3815,7 @@ function renderHelp(){
    library before a send (its link is pasted into the section). */
 const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["logos","Member & Sponsor Logos"],["other","Other"]];
 const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
-const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set(), type:""};
+const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set(), type:"", view:"lib"};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
@@ -3927,17 +3943,21 @@ function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
   const q=imNorm(IM.q);
-  const list=imgsLive().filter(im=>(!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
+  const list=imgsLive().filter(im=>!isLogo(im) && (!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
+  const logos=live.filter(isLogo), logosOut=logos.filter(i=>!i.hlUrl).length, shelf=IM.view==="logos";
   const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
   const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Pictures for Every Campaign</div><h1>Image Library</h1><div class="sub">Upload once, tag it to a campaign, and download it or copy its link wherever it\'s going: MISMO Matters, LinkedIn, Mailchimp or a summit.</div></div><div class="tools">'+
       (SP_IMG()?'<button class="btn" type="button" id="im-sp">Add from SharePoint</button>':'')+(ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
-    '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.filter(i=>!isFile(i)).length+'</em> picture'+(live.filter(i=>!isFile(i)).length===1?"":"s")+(live.some(isFile)?' and <em>'+live.filter(isFile).length+'</em> brand file'+(live.filter(isFile).length===1?"":"s"):'')+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
+    '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.filter(i=>!isFile(i)&&!isLogo(i)).length+'</em> picture'+(live.filter(i=>!isFile(i)&&!isLogo(i)).length===1?"":"s")+(live.some(isFile)?' and <em>'+live.filter(isFile).length+'</em> brand file'+(live.filter(isFile).length===1?"":"s"):'')+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
       (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.'+(!SP_IMG()&&live.some(i=>i.spPath)?' Pictures kept in SharePoint show their previews on resources.mismo.org.':'') : (SP_IMG()?'Pictures load straight from SharePoint. Adding new ones here opens when MISMO Media is switched on.':'Adding pictures here opens when MISMO Media is switched on. Use the Claude version until then.'))+'</div>'+
-      '<div class="tiles"><div class="tile"><div class="v sky">'+live.filter(i=>!isFile(i)).length+'</div><div class="k">Pictures</div><div class="s">'+(live.some(isFile)?live.filter(isFile).length+' brand files too':'ready to use')+'</div></div>'+
+      '<div class="tiles"><div class="tile"><div class="v sky">'+live.filter(i=>!isFile(i)&&!isLogo(i)).length+'</div><div class="k">Pictures</div><div class="s">'+(live.some(isFile)?live.filter(isFile).length+' brand files too':'ready to use')+'</div></div>'+
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<div class="tile"><div class="v">'+month+'</div><div class="k">Added This Month</div><div class="s">'+esc(MONL[+t.slice(5,7)-1])+'</div></div>'+
-        '<div class="tile"><div class="v">'+new Set(live.map(i=>i.campaign)).size+'</div><div class="k">Campaigns</div><div class="s">with pictures</div></div></div></div>'+
+        '<button class="tile" type="button" data-imview="logos"><div class="v">'+logos.length+'</div><div class="k">Member Logos</div><div class="s">'+(logosOut?logosOut+' not in Higher Logic yet':'all in Higher Logic')+'</div></button></div></div>'+
+    '<div class="subtabs" role="group" aria-label="Which pictures"><button type="button" data-imview="lib" aria-pressed="'+!shelf+'">Library<span class="cnt">'+live.filter(i=>!isLogo(i)).length+'</span></button><button type="button" data-imview="logos" aria-pressed="'+shelf+'">Member &amp; Sponsor Logos<span class="cnt">'+logos.length+'</span></button></div>'+
+    (shelf ? '<div class="card"><div class="ch"><h2>Member &amp; Sponsor Logos</h2><span class="cnt">'+logos.length+'</span><span class="note">from Member 360 and the logo walls</span><div class="r im-filters"><input type="search" class="plain" id="im-q" placeholder="Search companies" value="'+esc(IM.q)+'" aria-label="Search logos"><label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label></div></div><div class="cb">'+logoShelf()+'</div></div>' :
+
     '<div class="card"><div class="ch"><h2>All Images</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
       '<select id="im-type" aria-label="Kind"><option value="">Pictures and Files</option><option value="pic"'+(IM.type==="pic"?" selected":"")+'>Pictures</option><option value="file"'+(IM.type==="file"?" selected":"")+'>Brand Files</option></select>'+
       '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
@@ -3951,7 +3971,13 @@ function renderImages(){
           '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(String(im.at||"").slice(0,10))].filter(Boolean).map(esc).join(" · ")+'</div>'+
           '<div class="imact">'+(isFile(im)?'<a class="btn sm" href="'+esc(spFileUrl(im.spPath))+'" target="_blank" rel="noopener" data-stop>Open ↗</a><a class="btn sm" href="'+esc(spFileUrl(im.spPath,true))+'" target="_blank" rel="noopener" data-stop>Download</a><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>':'<button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>')+'</div></div></div>').join("")+'</div>'
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
-    '</div>';
+    '</div>');
+  $$("[data-imview]",el).forEach(b=>b.onclick=()=>{ IM.view=b.dataset.imview; IM.q=""; renderImages(); });
+  if(shelf){ hlPaint(); $$(".lgs-card",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
+    const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
+    $("#im-arch",el).onchange=e=>{ IM.arch=e.target.checked; renderImages(); };
+    const sb=$("#im-sp",el); if(sb) sb.onclick=openAddFromSharePoint; const ad=$("#im-add",el), fi=$("#im-file",el); if(ad) ad.onclick=()=>fi.click(); if(fi) fi.onchange=async()=>{ await addImages(fi.files,{campaign:"logos"}); fi.value=""; };
+    return; }
   const spb=$("#im-sp",el); if(spb) spb.onclick=openAddFromSharePoint;
   list.filter(im=>!isFile(im)).slice(0,60).forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
   const add=$("#im-add",el), file=$("#im-file",el);
@@ -4002,7 +4028,7 @@ async function openImage(id){
 }
 /* the picker used by MISMO Matters sections: pictures already in the library */
 function libraryStrip(ed){
-  const list=vals("images").filter(i=>!i.archived && !isFile(i)).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
+  const list=vals("images").filter(i=>!i.archived && !isFile(i) && !isLogo(i)).sort((a,b)=>{ const sa=(a.edition===(ed&&ed.id))?0:1, sb=(b.edition===(ed&&ed.id))?0:1; return sa-sb || ((a.at||"")<(b.at||"")?1:-1); }).slice(0,24);
   if(!list.length) return '<div class="hint">No pictures in the Image Library yet.</div>';
   /* SharePoint pictures arrive after the tiles are drawn, so each tile fills itself in */
   list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im).then(()=>{ const src=imgSrc(im); document.querySelectorAll('.impick[data-pick="'+im.id+'"]').forEach(b=>{ if(src){ b.innerHTML='<img src="'+esc(src)+'" alt="">'; b.classList.remove("loading"); } else { b.classList.remove("loading"); b.classList.add("missing"); } }); }); });
@@ -6137,6 +6163,133 @@ async function rememberLogos(list){
     if(l.name && l.name!==im.company) v.company=l.name; if((l.url||"")!==(im.site||"") && l.url) v.site=l.url; if(l.group && l.group!==im.group) v.group=l.group;
     if(im.campaign!=="logos" && im.campaign!=="brand") v.campaign="logos";
     if(Object.keys(v).length){ try{ await patch("images", l.id, v); }catch(e){} } }
+}
+/* ================= Member & sponsor logos: their own shelf, and straight into Higher Logic =================
+   Member 360 sends each new member's logo here (campaign "logos"). They get their own view in the Image
+   Library so the rest of the library stays easy to browse, and they leave the MISMO Matters picture
+   pickers alone (the logo wall has its own picker).
+
+   Higher Logic: emails can only show pictures with a public link. MISMO Media hands each logo that has no
+   link yet to a small uploader page on collaborate.mismo.org (HL_BRIDGE), loaded out of sight, which puts
+   it in Higher Logic's file library (MISMO_Matters_Logos folder) using the session of whoever is signed in
+   to Higher Logic, and sends back the public link. SVG logos are turned into PNGs first, because Gmail and
+   Outlook don't show SVGs. It runs on its own whenever someone signed in to Higher Logic opens MISMO Media;
+   "Send to Higher Logic" does the same in a small window for anyone whose browser keeps the hidden one out. */
+const HL_BRIDGE = "";   // e.g. https://collaborate.mismo.org/mismowebsite/mismo-media-uploader (empty until the page exists)
+const HL_ORIGIN = "https://collaborate.mismo.org";
+const HLB = {state:"idle", last:"", busy:false, frame:null, win:null, ready:null, waits:{}, n:0, tried:false};
+
+function isLogo(im){ return !!im && im.campaign==="logos"; }
+/* what still needs a Higher Logic link: member and sponsor logos, and any picture used in the edition being built */
+function hlNeeded(){
+  const out=new Map(), add=im=>{ if(im && !im.archived && !isFile(im) && !im.hlUrl && (im.spPath||imgSrc(im))) out.set(im.id,im); };
+  vals("images").filter(isLogo).forEach(add);
+  const ed=curEdition(); if(ed) edSections(ed).filter(s=>s.on).forEach(s=>{ const d=s.doc;
+    if(d.imageLib && !d.imageUrl) add(S.images[d.imageLib]);
+    mdBlocks(d.body).forEach(b=>{ if(b.t==="img"){ const r=rtImgInfo(b.ref); if(r.im) add(r.im); } });
+    if(isLogoSec(s.k)) logoPicks(ed,s.k).forEach(l=>add(S.images[l.id])); });
+  return [...out.values()];
+}
+function hlSlug(im){ const base=String(im.company||im.name||im.file||"logo").replace(/\.[a-z0-9]+$/i,"").replace(/\blogo\b/ig,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60)||"picture";
+  return base+(isLogo(im)?"-logo":"")+"-"+String(im.id).slice(-5)+".png"; }
+
+/* the picture as a PNG blob (SVGs drawn onto a canvas at a crisp size) */
+async function hlPng(im){
+  let blob=null;
+  if(im.spPath && SP_IMG()) blob=await SP_IMG().get(im.spPath);
+  else { const u=imgSrc(im); if(u) blob=await fetch(u).then(r=>r.blob()); }
+  if(!blob) throw new Error("no file");
+  const svg=/svg/i.test(blob.type)||/\.svg$/i.test(im.file||"");
+  const url=URL.createObjectURL(svg? new Blob([await blob.text()],{type:"image/svg+xml"}) : blob);
+  try{
+    const img=await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error("can't read picture")); i.src=url; });
+    let w=img.naturalWidth||+im.w||600, h=img.naturalHeight||+im.h||200;
+    if(!svg && /png/i.test(blob.type)) return blob;                       // PNGs go as they are
+    const k=svg ? Math.max(1, Math.min(4, 1200/Math.max(w,1))) : 1;         // SVGs: up to 1200px wide
+    w=Math.round(w*k); h=Math.round(h*k);
+    const c=document.createElement("canvas"); c.width=w; c.height=h; const g=c.getContext("2d");
+    if(!svg){ g.fillStyle="#ffffff"; g.fillRect(0,0,w,h); }
+    g.drawImage(img,0,0,w,h);
+    if(!svg && /jpe?g/i.test(blob.type)) return blob;
+    return await new Promise(r=>c.toBlob(r,"image/png"));
+  } finally { URL.revokeObjectURL(url); }
+}
+
+/* talking to the uploader page */
+window.addEventListener("message", e=>{
+  if(e.origin!==HL_ORIGIN || !e.data || typeof e.data!=="object") return;
+  const d=e.data;
+  if(d.mm==="hl-ready"){ HLB.loggedin=!!d.loggedin; if(HLB.ready){ HLB.ready(d); HLB.ready=null; } return; }
+  if(d.mm==="hl-result" && HLB.waits[d.id]){ HLB.waits[d.id](d); delete HLB.waits[d.id]; }
+});
+function hlTarget(){ return HLB.win && !HLB.win.closed ? HLB.win : (HLB.frame && HLB.frame.contentWindow); }
+function hlOpen(popup){
+  return new Promise(res=>{
+    const t=setTimeout(()=>{ HLB.ready=null; res(null); }, popup?30000:15000);
+    HLB.ready=d=>{ clearTimeout(t); res(d); };
+    if(popup){ HLB.win=window.open(HL_BRIDGE,"mm-hl-uploader","width=460,height=360"); if(!HLB.win){ clearTimeout(t); res(null); } }
+    else { if(HLB.frame) HLB.frame.remove(); const f=document.createElement("iframe"); f.src=HL_BRIDGE; f.title="Higher Logic uploader"; f.setAttribute("aria-hidden","true"); f.tabIndex=-1;
+      f.style.cssText="position:fixed;left:-3000px;top:0;width:10px;height:10px;border:0;opacity:0"; document.body.appendChild(f); HLB.frame=f; }
+  });
+}
+function hlSend(msg){ return new Promise(res=>{ const id="u"+(++HLB.n); const t=setTimeout(()=>{ delete HLB.waits[id]; res({error:"timeout"}); },60000); HLB.waits[id]=d=>{ clearTimeout(t); res(d); };
+  const w=hlTarget(); if(!w){ clearTimeout(t); res({error:"closed"}); return; } w.postMessage(Object.assign({id},msg), HL_ORIGIN); }); }
+
+async function hlRun(popup){
+  if(!HL_BRIDGE || HLB.busy || !LIVE) return;
+  const todo=hlNeeded(); if(!todo.length){ HLB.state="done"; return; }
+  HLB.busy=true; HLB.state="working"; hlPaint();
+  try{
+    const r=await hlOpen(popup);
+    if(!r){ HLB.state="blocked"; return; }
+    if(!r.loggedin){ HLB.state="signin"; return; }
+    let ok=0, bad=0;
+    for(const im of todo){
+      if(S.images[im.id] && S.images[im.id].hlUrl) continue;
+      try{ const png=await hlPng(im); const res=await hlSend({mm:"hl-upload", name:hlSlug(im), blob:png});
+        if(res && res.url){ await patch("images", im.id, {hlUrl:res.url, hlAt:new Date().toISOString()}); ok++; }
+        else { bad++; HLB.last=(res&&res.error)||"no link back"; if(res&&res.error==="signin"){ HLB.state="signin"; break; } }
+      }catch(err){ bad++; HLB.last=err.message||String(err); }
+    }
+    if(HLB.state!=="signin") HLB.state=bad?"partial":"done";
+    if(ok) toast(ok+" picture"+(ok===1?"":"s")+" put in Higher Logic", 3500);
+  } finally {
+    HLB.busy=false; if(HLB.frame){ HLB.frame.remove(); HLB.frame=null; } if(HLB.win && !HLB.win.closed) try{ HLB.win.close(); }catch(e){}
+    hlPaint(); if(TAB==="images") renderImages();
+  }
+}
+/* once the pictures have loaded, and again when new logos arrive */
+let HL_T=null;
+function hlSoon(){ if(!HL_BRIDGE) return; clearTimeout(HL_T); HL_T=setTimeout(()=>{ if(LOADED.has("images") && hlNeeded().length && HLB.state!=="signin") hlRun(false); }, 4000); }
+
+/* the status line on the logo shelf */
+function hlNote(){
+  const n=hlNeeded().length;
+  if(!HL_BRIDGE) return n ? '<div class="lgs-note warn"><b>'+n+' waiting for Higher Logic.</b> They show in the email preview with a dashed outline until they have a Higher Logic link.</div>' : '';
+  if(HLB.state==="working") return '<div class="lgs-note"><b>Putting '+n+' in Higher Logic…</b></div>';
+  if(!n) return '<div class="lgs-note ok"><b>All in Higher Logic.</b> Every logo has its public link, so the email shows them.</div>';
+  const why = HLB.state==="signin" ? 'Sign in to the MISMO website (collaborate.mismo.org) in this browser, then press Send to Higher Logic.'
+    : HLB.state==="blocked" ? 'This browser kept the uploader from loading. Press Send to Higher Logic to do it in a small window.'
+    : HLB.state==="partial" ? 'Some didn\'t go ('+esc(HLB.last)+'). Press Send to Higher Logic to try again.'
+    : 'They go in on their own the next time someone signed in to Higher Logic opens MISMO Media.';
+  return '<div class="lgs-note warn"><b>'+n+' waiting for Higher Logic.</b> '+why+' <button class="btn sm pri" type="button" id="hl-send">Send to Higher Logic</button>'+(HLB.state==="signin"?' <a class="btn sm" href="https://collaborate.mismo.org/mismowebsite/home" target="_blank" rel="noopener">Sign In&nbsp;↗</a>':'')+'</div>';
+}
+function hlPaint(){ const n=$("#lgs-note"); if(n){ n.innerHTML=hlNote(); const b=$("#hl-send",n); if(b) b.onclick=()=>hlRun(true); } }
+
+/* the logo shelf in the Image Library */
+function logoShelf(){
+  const q=imNorm(IM.q);
+  const all=imgsLive().filter(isLogo), list=all.filter(im=>!q || imNorm([im.company,im.name,im.group,im.site,im.file].join(" ")).indexOf(q)>=0);
+  const byMonth={}; list.forEach(im=>{ const m=String(im.at||"").slice(0,7)||"—"; (byMonth[m]=byMonth[m]||[]).push(im); });
+  list.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im); });
+  return '<div id="lgs-note">'+hlNote()+'</div>'+
+    (list.length ? Object.keys(byMonth).sort().reverse().map(m=>'<div class="lgs-month">'+esc(m.length===7?monthName(m):m)+'<span>'+byMonth[m].length+'</span></div><div class="lgs-grid">'+byMonth[m].map(im=>{
+        const src=imgSrc(im);
+        return '<div class="lgs-card'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.company||im.name||"Logo")+'">'+
+          '<div class="lgs-pic">'+(src?'<img src="'+esc(src)+'" alt="" loading="lazy">':'<span>'+esc(im.company||im.name||"")+'</span>')+'</div>'+
+          '<b>'+esc(im.company||im.name||"Untitled")+'</b><small>'+esc(im.group||"")+(im.site?' · '+esc(String(im.site).replace(/^https?:\/\//,"")):'')+'</small>'+
+          '<span class="chip '+(im.hlUrl?'ok':'review')+'">'+(im.hlUrl?'In Higher Logic':'Not in Higher Logic Yet')+'</span></div>'; }).join("")+'</div>').join("")
+      : '<div class="empty">'+(all.length?"No logos match that search.":"Member and sponsor logos land here when Member 360 sends them.")+'</div>');
 }
 
 /* ================= MISMO Mic'd Up ================= */
