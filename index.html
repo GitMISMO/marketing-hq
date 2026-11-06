@@ -4669,18 +4669,25 @@ function liAmyEmail(e, k, name, desc, from, rev){
     '<tr><td style="padding:28px 28px 8px;'+F+'color:#0d314c"><div style="font-size:22px;font-weight:bold;line-height:1.3;margin:0 0 8px">'+(rev?'Revised LinkedIn Live wording':'Please approve the LinkedIn Live wording')+'</div>'+
       (rev?'<div style="font-size:15px;line-height:1.6;color:#0d314c;background:#fff6e0;border:1px solid #a2701a;border-radius:6px;padding:10px 12px;margin:0 0 10px"><b>Please use this version instead of the one we sent earlier.</b>'+(rev.note?'<br>'+esc(rev.note).replace(/\n/g,"<br>"):'')+'</div>':'')+
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, the LinkedIn Live event for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+' is ready for your review. It streams from Riverside to MISMO\'s LinkedIn page on <b style="color:#0d314c">'+esc(when)+'</b>.</div></td></tr>'+
-    '<tr><td style="padding:14px 28px 0;'+F+'"><div style="background:#e3f3ed;border:1px solid #0f7b5c;border-radius:6px;padding:12px 14px;font-size:15px;line-height:1.6;color:#0d314c"><b>Just reply to this email:</b><br>&bull; Reply <b>Approved</b> and Vanessa sets up the event as written.<br>&bull; Or reply with your edits (change the wording right in your reply) and Vanessa uses your version.</div></td></tr>'+
+    '<tr><td style="padding:10px 28px 0;'+F+'font-size:15px;line-height:1.6;color:#44607a">Read it over, then press <b style="color:#0f7b5c">Approve</b> at the bottom. It sends your approval by email. No need to open MISMO Media.</td></tr>'+
     '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT NAME</div><div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd">'+esc(name)+'</div></td></tr>'+
     '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT DESCRIPTION</div><div style="font-size:15px;line-height:1.6;color:#0d314c;border-left:4px solid #74bfeb;padding:10px 12px;background:#f6fafd">'+para(desc)+'</div></td></tr>'+
-    '<tr><td style="padding:24px 28px 8px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="'+MEDIA_URL+'" style="display:inline-block;padding:12px 22px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Review and Approve in MISMO Media</a></td></tr></table>'+
-      '<div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:12px">On the MISMO Mic\'d Up page, open the YouTube Kit, step 6, and press <b>Approve</b>, or <b>Request Changes</b> with a note.</div></td></tr>'+
+    '<tr><td style="padding:22px 28px 6px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr>'+
+      '<td style="background:#0f7b5c;border-radius:6px"><a href="'+liMailto(e,rev,"Approved")+'" style="display:inline-block;padding:13px 28px;'+F+'font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">Approve</a></td><td style="width:10px"></td>'+
+      '<td style="border:1.5px solid #1a8fe3;border-radius:6px"><a href="'+liMailto(e,rev,"Changes:\n\n")+'" style="display:inline-block;padding:12px 22px;'+F+'font-size:15px;font-weight:bold;color:#1a8fe3;text-decoration:none">Request Changes</a></td></tr></table>'+
+      '<div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:10px"><b>Approve</b> opens a reply that already says Approved: press Send and it&rsquo;s done, and Vanessa sets up the event as written. <b>Request Changes</b> opens a reply for your edits (change the wording right in it). You can also just reply to this email.</div></td></tr>'+
     '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#7794aa;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Keep the [MM:…] tag in the subject so your reply finds its episode.</td></tr>'+
     '</table></td></tr></table>';
 }
+/* Amy's buttons in the email are replies, not links to MISMO Media: each opens an email back to the inbox the
+   "MISMO Media - Amy Replies" flow watches (jcritchley@mba.org, subject with [MM:…]), already filled in. */
+const LI_REPLY_TO = "jcritchley@mba.org";
+function liSubject(e, rev){ return (rev?"Revised: approval":"Approval")+" needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording [MM:"+e.id+"]"; }
+function liMailto(e, rev, body){ return "mailto:"+LI_REPLY_TO+"?subject="+encodeURIComponent("RE: "+liSubject(e,rev))+"&body="+encodeURIComponent(body); }
 async function liSendAmy(e, k, name, desc, to, rev){
   const n=window.__hqImages && window.__hqImages.notify; if(!n) return false;
   const who=(window.__hqWho||"");
-  try{ await n(to||LI_APPROVER.email, (rev?"Revised: approval":"Approval")+" needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording [MM:"+e.id+"]", liAmyEmail(e,k,name,desc,who,rev)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
+  try{ await n(to||LI_APPROVER.email, liSubject(e,rev), liAmyEmail(e,k,name,desc,who,rev)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
 }
 function kitsWithAmy(){ return vals("kits").filter(k=>k.liStatus==="review" && S.episodes[k.id]); }
 /* Amy's emailed reply, made ready to paste: email line-wraps joined back into paragraphs, then proofread
