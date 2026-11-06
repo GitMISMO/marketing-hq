@@ -4744,7 +4744,10 @@ function kitCardHtml(){
     step(++n,"The Guest\'s Share Kit", !!e.guestKitSent, (g||e.guestEmail) ? (w.guest?copyBox("kit-guest","A Post for the Guest to Share",w.guest,3):'')+'<div class="kbtns"><a class="btn sm pri" id="kit-guestmail" href="'+esc(guestKitMail(e,k))+'">Email the Guest</a><button class="btn sm" type="button" id="kit-guestsent">'+(e.guestKitSent?"Sent ✓":"Mark as Sent")+'</button><span class="hint">Opens an email to '+esc((g&&(g.shareEmail||g.e))||e.guestEmail)+' with the links and a ready-made post. Send it once the episode is live.</span></div>'
       : '<div class="hint">Send the guest the form when Brian books them (in the episode, under Guest and Run of Show). Their email lands here for the share kit.</div>');
   return '<div class="card kitcard"><div class="ch"><h2>YouTube Kit</h2><select id="kit-ep" aria-label="Episode">'+eps.map(x=>'<option value="'+esc(x.id)+'"'+(x.id===KIT.ep?" selected":"")+'>'+esc(epWord(x))+(x.airDate?' · '+esc(fS(x.airDate)):'')+'</option>').join("")+'</select><span class="note">'+esc(k.folderName||(e.spFolder||"").split("/").pop()||"")+'</span><div class="r">'+
-    (sp?'<a class="btn sm" href="'+esc(spFolderUrl(e.spFolder||k.spFolder))+'" target="_blank" rel="noopener">Open the Folder ↗</a><button class="btn sm" type="button" id="kit-sppull">Check the Folder</button>':'<a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button>')+'</div></div>'+
+    /* Brian still shares a Google Drive folder in the MISMO MIC'D UP chat: paste it here and the kit works from it.
+       (Teams messages aren't read by MISMO Media, by Jonna's decision, so the link is pasted, not picked up.) */
+    (k.folderId?'<a class="btn sm" href="'+esc(k.folderUrl||"#")+'" target="_blank" rel="noopener">Brian\'s Drive Folder ↗</a><button class="btn sm" type="button" id="kit-repull">Pull Again</button><button class="btn sm" type="button" id="kit-drive">Change the Drive Link</button>'
+      :(sp?'<button class="btn sm pri" type="button" id="kit-drive">Paste Brian\'s Drive Link</button><a class="btn sm" href="'+esc(spFolderUrl(e.spFolder||k.spFolder))+'" target="_blank" rel="noopener">Open the Folder ↗</a><button class="btn sm" type="button" id="kit-sppull">Check the Folder</button>':'<button class="btn sm pri" type="button" id="kit-drive">Paste Brian\'s Drive Link</button>'))+'</div></div>'+
     (k.brianPost?'<details class="kpost"><summary>Brian\'s LinkedIn post'+(k.brianPostUrl?' · <a href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">open ↗</a>':'')+'</summary><p>'+esc(k.brianPost).replace(/\n/g,"<br>")+'</p></details>':'')+
     '<div class="ksteps">'+body+'</div></div>';
 }
@@ -4758,6 +4761,8 @@ function wireKit(el){
       if(!ep){ const id=n?epNewId(n):uid("ep"); await put("episodes", id, {num:n||"", season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
       KIT.ep=ep.id; KIT.auto=false; await kitPullFolder(ep.id, m[1], ""); renderMicdup(); }}]});
   if(!eid) return;
+  const kd=$("#kit-drive",el); if(kd) kd.onclick=()=>openPane({eye:"YouTube Kit · "+epWord(e), title:"Brian's Google Drive Folder", data:{url:k.folderUrl||""}, fields:[{k:"url",label:"The folder link Brian posted in the MISMO MIC'D UP chat",type:"url",wide:true,ph:"https://drive.google.com/drive/folders/…"}],
+    buttons:[{label:"Pull It In", run:async v=>{ const m=String(v.url||"").match(FOLDER_RX); if(!m){ toast("That isn't a Google Drive folder link."); return; } closePane(true); await kitPullFolder(eid, m[1], ""); delete KIT.tx[eid]; renderMicdup(); }}]});
   const rp=$("#kit-repull",el); if(rp) rp.onclick=async()=>{ await kitPullFolder(eid, k.folderId, k.chatId); delete KIT.tx[eid]; renderMicdup(); };
   $$("[data-kcopy]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.kcopy,el); copyText(t.value, b.closest(".kcopy").querySelector("span").textContent); });
   $$("[data-kpick]",el).forEach(b=>b.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {thumbPick:b.dataset.kpick})); renderMicdup(); });
@@ -5006,6 +5011,8 @@ async function kitPullSP(epId, quiet){
     if(!quiet) toast("Reading the episode's SharePoint folder…", 60000);
     const files=(await sp.list(spListPath(e.spFolder))).filter(f=>!f.folder);
     const c=classify(files), old=kitOf(epId)||{};
+    /* an empty SharePoint folder never wipes out what came from Brian's Drive folder */
+    if(!files.length && old.folderId){ if(!quiet) toast("The SharePoint folder is empty, so the kit keeps using Brian's Drive folder.", 5000); MU.pulled[epId]=Date.now(); return; }
     const thumbs=[];
     for(const f of c.thumbs){
       const prev=(old.thumbs||[]).find(t=>t.spPath===f.path && S.images[t.img]) || null;
@@ -5038,7 +5045,7 @@ async function muSync(){
     if(!e.spFolder){ await ensureEpFolder(e); continue; }
     const k=kitOf(e.id)||{};
     const stale=!MU.pulled[e.id] || Date.now()-MU.pulled[e.id]>10*60*1000;
-    if(stale && (!k.video || !k.transcriptPath || !(k.thumbs||[]).length)) await kitPullSP(e.id, true);
+    if(stale && !k.folderId && (!k.video || !k.transcriptPath || !(k.thumbs||[]).length)) await kitPullSP(e.id, true);
     await muAuto(e.id);
   }
 }
