@@ -684,9 +684,10 @@
   function unb64(s, type) { var bin = atob(s || ''), n = bin.length, u = new Uint8Array(n); for (var i = 0; i < n; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: type || 'application/octet-stream' }); }
   function pick(o, keys) { for (var i = 0; i < keys.length; i++) { var v = o[keys[i]]; if (v !== undefined && v !== null && v !== '') return v; } return ''; }
   window.__hqImages = {
-    get: function (path) { return imgCall({ action: 'get', path: path }).then(function (j) { return unb64(j.content, j.type); }); },
-    list: function (path) {
-      return imgCall({ action: 'list', path: path }).then(function (j) {
+    get: function (path, site) { var b = { action: 'get', path: path }; if (site) b.site = site; return imgCall(b).then(function (j) { return unb64(j.content, j.type); }); },
+    list: function (path, site) {
+      var b = { action: 'list', path: path }; if (site) b.site = site;
+      return imgCall(b).then(function (j) {
         return (j.files || []).map(function (f) {
           var full = String(pick(f, ['{FullPath}', 'FullPath', 'FileRef'])).replace(/^\/+/, '');
           return { name: String(pick(f, ['{FilenameWithExtension}', 'FileLeafRef', '{Name}', 'Name'])), path: '/' + full,
@@ -719,6 +720,16 @@
   window.__hqImages.mkdir = function (path) { return imgCall({ action: 'mkdir', path: path }); };
   window.__hqImages.writer = function (task, material) { return imgCall({ action: 'write2', task: String(task || ''), material: String(material || '') }).then(function (j) { return String((j && j.result) || ''); }); };
   /* email notices (e.g. "approval needed" to Amy). The flow only sends to @mismo.org or @mba.org addresses. */
+  /* the Sponsorship Portal's applications (relay project "sponsorship"), read-only, for the sponsor logo wall.
+     Anyone without a role on the Sponsorship Portal simply gets nothing back. */
+  window.__hqSponsors = function () {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Not signed in', 401));
+    return fetch(RELAY_URL + '/sponsorship/data/applications', { cache: 'no-store', headers: { 'Authorization': 'Bearer ' + tok } })
+      .then(function (r) { if (!r.ok) throw err('HTTP_' + r.status, 'The Sponsorship Portal didn\u2019t answer', r.status); return r.json(); })
+      .then(function (b) { var d = b && b.data; if (typeof d === 'string') d = JSON.parse(d); d = (d && d.docs) || d || {};
+        return Object.keys(d).map(function (k) { return Object.assign({ id: k }, d[k]); }); });
+  };
   window.__hqImages.notify = function (to, subject, html) { return imgCall({ action: 'notify', to: to, subject: subject, html: html }); };
   var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
 
@@ -1270,6 +1281,10 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .kli-note{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:8px 12px;font-size:13px;margin:0 0 8px}
 .kli-edits{background:var(--warn-soft);color:var(--ink)}
 .kli-ok{background:var(--good-soft);color:var(--ink)}
+.lg-sp{border:1px solid var(--border);background:var(--surface-2);border-radius:7px;padding:9px 12px;margin:0 0 10px;font-size:13px}
+.lg-sp label{font-weight:600;display:flex;gap:7px;align-items:center}
+.lg-sp .hint{margin-top:4px}
+.lg-miss{margin-top:6px;background:var(--warn-soft);border:1px solid var(--warn);border-radius:5px;padding:6px 9px;font-size:12.5px}
 .kli-cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch}
 .kli-mine,.kli-mine .kcopy{display:flex;flex-direction:column;min-height:100%}
 .kli-mine .kcopy{flex:1}
@@ -2679,7 +2694,7 @@ async function staleCheck(){
   }catch(e){}
 }
 staleCheck(); setInterval(staleCheck, 10*60*1000);
-function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
+function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); if(typeof sponsorSync==="function") sponsorSync(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -2969,7 +2984,7 @@ function openSection(ed,k,isNew){
     after: b=>{ if(isLogoSec(k)) wireLogos(b, doc, ed, k); else wireImage(b, doc, v=>{ doc.imageId=v; }); }
   });
   PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||"";
-    if(isLogoSec(k) && PANE.logos){ out.logos=PANE.logos().filter(l=>l.id).map(l=>({id:l.id, name:(l.name||"").trim(), group:(l.group||"").trim(), url:(l.url||"").trim()})); } };
+    if(isLogoSec(k) && PANE.logos){ out.logos=PANE.logos().filter(l=>l.id).map(l=>({id:l.id, name:(l.name||"").trim(), group:(l.group||"").trim(), url:(l.url||"").trim()})); } if(k==="thanks" && PANE.sponsorsAuto){ out.sponsorsAuto=!!PANE.sponsorsAuto(); } };
 }
 /* lead picture size: what the section says, else headshot-shaped pictures (taller than wide) go small */
 function leadSize(d, lib){ if(d.imageSize) return d.imageSize; return lib && +lib.w && +lib.h > +lib.w*1.1 ? "small" : "full"; }
@@ -3898,13 +3913,13 @@ function imgKB(n){ n=+n||0; return n>=1048576 ? (n/1048576).toFixed(1)+" MB" : M
 function imgsLive(){ return vals("images").filter(im=>IM.arch ? true : !im.archived).sort((a,b)=>(a.at||"")<(b.at||"")?1:-1); }
 function imgDims(file){ return new Promise(res=>{ const u=URL.createObjectURL(file), i=new Image(); i.onload=()=>{ res({w:i.naturalWidth,h:i.naturalHeight}); URL.revokeObjectURL(u); }; i.onerror=()=>{ res({w:0,h:0}); URL.revokeObjectURL(u); }; i.src=u; }); }
 
-async function addImages(files, preset){
+async function addImages(files, preset, quiet){
   files=[...(files||[])].filter(f=>/^image\//.test(f.type));
   if(!files.length){ toast("Pick image files (JPG, PNG, GIF, SVG or WebP)."); return []; }
   if(!ASSETS){ toast("Adding pictures here opens when MISMO Media is switched on. Use the Claude version for now.", 4500); return []; }
   const made=[]; let n=0;
   for(const f of files){
-    n++; toast("Adding "+n+" of "+files.length+"…", 60000);
+    n++; if(!quiet) toast("Adding "+n+" of "+files.length+"…", 60000);
     try{
       const dims=await imgDims(f);
       const r=await ASSETS.upload(f);
@@ -3921,7 +3936,7 @@ async function addImages(files, preset){
       await put("images", id, doc); made.push(Object.assign({id},doc));
     }catch(e){ toast("Couldn't add "+f.name+": "+(e.message||e.code||"try again"), 5000); return made; }
   }
-  toast(made.length===1 ? "Image added. Press it to name and tag it." : made.length+" images added. Press each to name and tag it.", 4000);
+  if(!quiet) toast(made.length===1 ? "Image added. Press it to name and tag it." : made.length+" images added. Press each to name and tag it.", 4000);
   return made;
 }
 /* a plain ZIP (stored, no compression: pictures are already compressed) */
@@ -6255,11 +6270,19 @@ function wireLogos(b, doc, ed, k){
   const carried = !Array.isArray(doc.logos) && list.length;
   const dirty=()=>{ if(PANE) PANE.dirty=true; };
   PANE.logos=()=>list;
+  /* sponsors: kept in step with the Sponsorship Portal unless someone unticks it */
+  let auto = k==="thanks" ? doc.sponsorsAuto!==false : null;
+  if(k==="thanks") PANE.sponsorsAuto=()=>auto;
+  const manual=()=>{ if(k==="thanks" && auto){ auto=false; toast("Changed by hand, so this edition stops following the Sponsorship Portal. Tick the box to go back.", 4500); } };
   const prev=prevEditionOf(ed), prevList=prev? (S.sections[prev.month+"__"+k]||{}).logos : null;
   const thumb=im=>{ const src=imgSrc(im); if(!src) imgEnsure(im).then(()=>{ const s=imgSrc(im); $$('[data-lgthumb="'+im.id+'"]').forEach(x=>{ if(s) x.innerHTML='<img src="'+esc(s)+'" alt="">'; }); }); return '<span class="lg-thumb" data-lgthumb="'+esc(im.id)+'">'+(src?'<img src="'+esc(src)+'" alt="">':'')+'</span>'; };
   const draw=()=>{
-    box.innerHTML=
-      (carried?'<div class="hint">Carried over from '+esc(monthName(prev.month))+'. Change anything and press Save to make this month its own.</div>':'')+
+    const sp = k==="thanks" ? '<div class="lg-sp"><label><input type="checkbox" id="lg-auto"'+(auto?' checked':'')+'> Keep in step with the Sponsorship Portal</label>'+
+      (auto ? '<div class="hint">'+(doc.sponsorsFrom?'The '+esc(doc.sponsorsFrom)+' Summit sponsors (approved, paid or in kind), grouped by tier. New sponsors and their logos come in by themselves.':'Fills itself from the Sponsorship Portal\'s approved sponsors for the next Summit.')+'</div>'+
+        ((doc.sponsorsMissing||[]).length?'<div class="lg-miss"><b>No logo yet:</b> '+doc.sponsorsMissing.map(esc).join(", ")+'. Add it to the Image Library (Member Logos) or upload it here, and it joins the wall.</div>':'')
+        : '<div class="hint">Changed by hand. Tick the box to go back to the Sponsorship Portal\'s list.</div>')+'</div>' : '';
+    box.innerHTML=sp+
+      (carried && !auto?'<div class="hint">Carried over from '+esc(monthName(prev.month))+'. Change anything and press Save to make this month its own.</div>':'')+
       (list.length?'<div class="lg-list">'+list.map((l,i)=>{ const im=S.images[l.id]||{};
         return '<div class="lg-row" data-i="'+i+'">'+thumb(im)+'<div class="lg-f">'+
           '<input type="text" data-f="name" value="'+esc(l.name||"")+'" placeholder="Company name" aria-label="Company name">'+
@@ -6274,12 +6297,13 @@ function wireLogos(b, doc, ed, k){
       '<div id="lg-pick" hidden><input type="search" id="lg-q" placeholder="Search the Image Library" aria-label="Search the Image Library"><div class="imstrip" id="lg-strip"></div><div class="hint">Logos tagged Member &amp; Sponsor Logos come first. Click one to add it.</div></div>'+
       '<datalist id="lg-groups-'+k+'">'+cfg.groups.map(g=>'<option value="'+esc(g)+'">').join("")+'</datalist>';
     $$(".lg-row",box).forEach(r=>{ const i=+r.dataset.i;
-      $$("[data-f]",r).forEach(inp=>inp.oninput=()=>{ list[i][inp.dataset.f]=inp.value; dirty(); });
-      $$("[data-mv]",r).forEach(btn=>btn.onclick=()=>{ const j=i+(+btn.dataset.mv); if(j<0||j>=list.length) return; [list[i],list[j]]=[list[j],list[i]]; dirty(); draw(); });
-      $("[data-rm]",r).onclick=()=>{ list.splice(i,1); dirty(); draw(); };
+      $$("[data-f]",r).forEach(inp=>inp.oninput=()=>{ list[i][inp.dataset.f]=inp.value; if(inp.dataset.f!=="url") manual(); dirty(); });
+      $$("[data-f]",r).forEach(inp=>inp.onchange=()=>{ if(k==="thanks" && inp.dataset.f!=="url") draw(); });
+      $$("[data-mv]",r).forEach(btn=>btn.onclick=()=>{ const j=i+(+btn.dataset.mv); if(j<0||j>=list.length) return; [list[i],list[j]]=[list[j],list[i]]; manual(); dirty(); draw(); });
+      $("[data-rm]",r).onclick=()=>{ list.splice(i,1); manual(); dirty(); draw(); };
     });
     const add=im=>{ if(list.some(l=>l.id===im.id)){ toast("That logo is already here"); return; } const last=list[list.length-1];
-      list.push({id:im.id, name:im.company||im.name||"", group:im.group||(last&&last.group)||"", url:im.site||""}); dirty(); draw(); toast("Added "+(im.company||im.name||"logo")); };
+      list.push({id:im.id, name:im.company||im.name||"", group:im.group||(last&&last.group)||"", url:im.site||""}); manual(); dirty(); draw(); toast("Added "+(im.company||im.name||"logo")); };
     const pick=$("#lg-pick",box), strip=$("#lg-strip",box), q=$("#lg-q",box);
     const fill=()=>{ const t=(q.value||"").toLowerCase();
       const all=vals("images").filter(i=>!i.archived && !isFile(i) && (!t || ((i.company||"")+" "+(i.name||"")+" "+(i.file||"")).toLowerCase().includes(t)))
@@ -6293,6 +6317,7 @@ function wireLogos(b, doc, ed, k){
     const up=$("#lg-up",box), f=$("#lg-file",box);
     if(up) up.onclick=()=>f.click();
     if(f) f.onchange=async()=>{ const made=await addImages([...f.files],{campaign:"logos", edition:""}); made.forEach(im=>add(im)); if(made.length) toast(made.length+" logo"+(made.length===1?"":"s")+" added here and to the Image Library. Press Save to keep them."); };
+    const au=$("#lg-auto",box); if(au) au.onchange=()=>{ auto=au.checked; if(auto) SPN.at=0; dirty(); draw(); };
     const pv=$("#lg-prev",box); if(pv) pv.onclick=()=>{ list=prevList.filter(l=>S.images[l.id]).map(l=>Object.assign({},l)); dirty(); draw(); toast("Copied "+monthName(prev.month)+"'s sponsors"); };
   };
   draw();
@@ -6430,6 +6455,74 @@ function logoShelf(){
           '<b>'+esc(im.company||im.name||"Untitled")+'</b><small>'+esc(im.group||"")+(im.site?' · '+esc(String(im.site).replace(/^https?:\/\//,"")):'')+'</small>'+
           '<span class="chip '+(im.hlUrl?'ok':'review')+'">'+(im.hlUrl?'In Higher Logic':'Not in Higher Logic Yet')+'</span></div>'; }).join("")+'</div>').join("")
       : '<div class="empty">'+(all.length?"No logos match that search.":"Member and sponsor logos land here when Member 360 sends them.")+'</div>');
+}
+
+/* ================= Thank You to Our Sponsors, filled from the Sponsorship Portal =================
+   The sponsors of the next MISMO Summit after the edition goes out (the summit's own sponsors and the year's
+   Series sponsors) whose application is Approved, Pending Payment, Paid or In Kind, grouped by their tier.
+   Each one's logo comes from the Image Library (Member & Sponsor Logos); a sponsor who sent a logo with their
+   online application has it brought in from the Sponsor Logos library on the MISMO Summits SharePoint site,
+   and from there it goes to Higher Logic like every other logo. Changing the list by hand in the section and
+   unticking "Keep in step with the Sponsorship Portal" stops it for that edition. */
+const SPON_OK = ["Approved","Pending Payment","Paid","In Kind"];
+const SPON_TIERS = ["PLATINUM","GOLD","SILVER","BRONZE"];
+const SPN = {apps:null, at:0, busy:false, lib:null, missing:[], summit:"", err:""};
+function summitAfter(day){
+  const y=+String(day).slice(0,4), c=[];
+  [y,y+1].forEach(yy=>c.push({name:"Winter "+yy, year:yy, end:yy+"-01-16"},{name:"Spring "+yy, year:yy, end:yy+"-06-12"},{name:"Fall "+yy, year:yy, end:yy+"-09-18"}));
+  return c.find(x=>x.end>=day);
+}
+function sponNorm(t){ return String(t||"").toLowerCase().replace(/&/g," and ").replace(/\b(inc|llc|ltd|corp|corporation|co|company|the)\b/g," ").replace(/[^a-z0-9]+/g," ").trim(); }
+function sponTier(a, sm){ return String(a["level"+sm.year]||a.level2027||a.level2026||a.level||"").trim().toUpperCase(); }
+function sponGroup(t){ return t ? t.charAt(0)+t.slice(1).toLowerCase()+" Sponsors" : "Summit Sponsors"; }
+function sponList(sm){
+  return (SPN.apps||[]).filter(a=>SPON_OK.includes(a.status) && (a.event===sm.name || a.event===sm.year+" Series") && String(a.company||"").trim())
+    .sort((a,b)=>{ const ta=SPON_TIERS.indexOf(sponTier(a,sm)), tb=SPON_TIERS.indexOf(sponTier(b,sm));
+      return ((ta<0?9:ta)-(tb<0?9:tb)) || sponNorm(a.company).localeCompare(sponNorm(b.company)); });
+}
+function sponLogo(a){
+  const logos=vals("images").filter(i=>isLogo(i) && !i.archived), y=sponNorm(a.company);
+  return logos.find(i=>i.sponsorApp===a.id) || logos.find(i=>sponNorm(i.company)===y) ||
+    logos.find(i=>{ const x=sponNorm(i.company); return x && y && (x.startsWith(y+" ") || y.startsWith(x+" ")); }) || null;
+}
+/* the logo the sponsor sent with their online application (file name starts with their Prospectus Reference) */
+async function sponFetchLogo(a, group){
+  const ref=String(a.prospectusRef||"").trim().toUpperCase(), sp=SP_IMG(); if(!ref || !sp || !ASSETS) return null;
+  if(!SPN.lib) SPN.lib=await sp.list("/Sponsor Logos","summits");
+  const f=SPN.lib.find(x=>!x.folder && String(x.name).toUpperCase().startsWith(ref) && /\.(png|jpe?g|gif|svg|webp)$/i.test(x.name));
+  if(!f) return null;
+  const blob=await sp.get(f.path,"summits"), ext=(f.name.match(/\.([a-z0-9]+)$/i)||["","png"])[1].toLowerCase();
+  const type=ext==="svg"?"image/svg+xml":(ext==="jpg"||ext==="jpeg")?"image/jpeg":"image/"+ext;
+  const nm=String(a.company).trim().replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,"")+"-logo."+ext;
+  const made=await addImages([new File([blob], nm, {type})], {campaign:"logos", edition:"", name:String(a.company).trim()+" Logo", company:String(a.company).trim(), group, sponsorApp:a.id,
+    notes:"From the Sponsorship Portal ("+(a.appNo||a.id)+"), Sponsor Logos library: "+f.name}, true);
+  return made[0]||null;
+}
+async function sponsorSync(force){
+  if(STALE.on || SPN.busy || !CANWRITE || !window.__hqSponsors || !LOADED.has("images") || !LOADED.has("editions") || !LOADED.has("sections")) return;
+  const ed=curEdition(); if(!ed || (ed.done && ed.done.publish)) return;
+  const key=ed.month+"__thanks", doc=S.sections[key]||{};
+  if(doc.sponsorsAuto===false) return;
+  if(!force && Date.now()-SPN.at<10*60*1000) return;
+  SPN.busy=true; SPN.at=Date.now(); SPN.err="";
+  try{
+    SPN.apps=await window.__hqSponsors();
+    const sm=summitAfter((ed.dates||{}).publish || ed.month+"-28"); SPN.summit=sm.name;
+    const prev={}; (doc.logos||[]).forEach(l=>{ prev[l.id]=l; });
+    const out=[], missing=[];
+    for(const a of sponList(sm)){
+      const group=sponGroup(sponTier(a,sm));
+      let im=sponLogo(a); if(!im){ try{ im=await sponFetchLogo(a, group); }catch(e){ im=null; } }
+      if(!im){ missing.push(String(a.company).trim()); continue; }
+      if(im.sponsorApp!==a.id){ try{ await patch("images", im.id, {sponsorApp:a.id}); }catch(e){} }
+      out.push({id:im.id, name:String(a.company).trim(), group, url:(prev[im.id]&&prev[im.id].url)||im.site||""});
+    }
+    SPN.missing=missing;
+    const sig=x=>JSON.stringify((x||[]).map(l=>[l.id,l.group,l.name]));
+    if(sig(doc.logos)!==sig(out) || doc.sponsorsFrom!==sm.name || JSON.stringify(doc.sponsorsMissing||[])!==JSON.stringify(missing))
+      await put("sections", key, Object.assign({id:key, month:ed.month, key:"thanks", status:"waiting"}, doc, {logos:out, sponsorsAuto:true, sponsorsFrom:sm.name, sponsorsMissing:missing, sponsorsAt:new Date().toISOString()}));
+  }catch(e){ SPN.err=e.message||String(e); }
+  finally{ SPN.busy=false; }
 }
 
 /* ================= MISMO Mic'd Up ================= */
