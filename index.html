@@ -169,8 +169,81 @@
   }
   function ensure(f) { return f.loaded ? Promise.resolve(f) : load(f); }
 
-  function applyOps(f, content, ops) {
+  /* ---------- saving only what was changed (November 5, 2026) ----------
+     A record panel can sit open for hours. Saving used to write the whole record exactly as
+     the panel had it, and a 409 re-applied that same whole record, so anything someone else
+     saved in the meantime was quietly undone. Now the page can say what the record looked
+     like when the change began (the "base"). Only the fields that differ from it are
+     written, onto the newest copy, at the moment of saving and again after every 409.
+     Every other field keeps its newest value, field by field inside nested parts too
+     (dates, checks). A record someone else deleted in the meantime is not brought back:
+     that change is refused and the page says so. Records nobody touched are never written. */
+  function isPlain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function sig(v) {                     /* the same text for the same value, whatever the key order */
+    if (Array.isArray(v)) return '[' + v.map(sig).join(',') + ']';
+    if (isPlain(v)) return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + sig(v[k]); }).join(',') + '}';
+    return v === undefined ? 'null' : JSON.stringify(v);
+  }
+  /* "" / null / missing are the same; 5 and "5" are the same; an empty part is the same as none */
+  function normVal(v) {
+    if (v === undefined || v === null || v === '') return '';
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (typeof v === 'string') return v;
+    if (isPlain(v) && !Object.keys(v).length) return '';
+    return sig(v);
+  }
+  function sameVal(a, b) { return normVal(a) === normVal(b); }
+  function mergeDoc(cur, mine, base) {
+    if (!isPlain(cur) || !isPlain(mine) || !isPlain(base)) return clone(mine);
+    var out = clone(cur), keys = {};
+    Object.keys(mine).concat(Object.keys(base)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      var m = mine[k], b = base[k], c = cur[k];
+      if (sameVal(m, b)) {              /* not changed here: the newest value stands */
+        if (!(k in out) && b === undefined && m !== undefined) out[k] = clone(m);   /* a blank nobody had */
+        return;
+      }
+      if (m === undefined) { delete out[k]; return; }
+      if (isPlain(m) && (isPlain(b) || b == null) && (isPlain(c) || c == null)) { out[k] = mergeDoc(c || {}, m, b || {}); return; }
+      out[k] = clone(m);
+    });
+    return out;
+  }
+  /* the fields both people changed, to different values (each a list of keys, for nested parts) */
+  function clashes(cur, mine, base, pre) {
+    var out = [];
+    if (!isPlain(cur) || !isPlain(mine) || !isPlain(base)) return out;
+    var keys = {};
+    Object.keys(mine).concat(Object.keys(base)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      if (!pre && (k === 'updatedAt' || k === 'id')) return;
+      var m = mine[k], b = base[k], c = cur[k], at = (pre || []).concat([k]);
+      if (sameVal(m, b) || sameVal(c, b) || sameVal(c, m)) return;
+      if (isPlain(m) && (isPlain(b) || b == null) && (isPlain(c) || c == null)) { out = out.concat(clashes(c || {}, m, b || {}, at)); return; }
+      out.push(at);
+    });
+    return out;
+  }
+  function getAt(o, at) { for (var i = 0; i < at.length; i++) { if (!isPlain(o)) return undefined; o = o[at[i]]; } return o; }
+  function setAt(o, at, v) {
+    for (var i = 0; i < at.length - 1; i++) { if (!isPlain(o[at[i]])) o[at[i]] = {}; o = o[at[i]]; }
+    if (v === undefined) delete o[at[at.length - 1]]; else o[at[at.length - 1]] = clone(v);
+  }
+  var GONE = 'Someone else deleted this record while it was open here, so this change was not saved.';
+  window.__hqMerge = { merge: mergeDoc, clashes: clashes, sameVal: sameVal, normVal: normVal, sig: sig,
+    getAt: getAt, setAt: setAt, clone: clone, GONE: GONE };
+
+  function applyOps(f, content, ops, sending) {
     ops.forEach(function (op) {
+      if (op.kind === 'merge') {        /* only what changed since op.base, onto this copy */
+        var was = f.own ? content.doc : content.docs[op.path];
+        var gone = !!op.base && (was === undefined || was === null);
+        if (sending) op.gone = gone;
+        if (gone) return;
+        var next = op.base ? mergeDoc(was, op.data, op.base) : clone(op.data);
+        if (f.own) content.doc = next; else content.docs[op.path] = next;
+        return;
+      }
       if (f.own) {
         if (op.kind === 'set') content.doc = clone(op.data);
         else if (op.kind === 'update') content.doc = Object.assign({}, content.doc || {}, clone(op.data));
@@ -195,7 +268,7 @@
   }
 
   /* ---------- saving ---------- */
-  function queue(path, kind, data) {
+  function queue(path, kind, data, base) {
     if (PREVIEW) {
       if (now() - previewWarned > 4000) { previewWarned = now(); toast('This is the preview of MISMO Media on resources.mismo.org \u2014 nothing here is saved. Keep using the Claude version until it\u2019s switched on.', 'bad'); }
       return Promise.reject(err('invalid_argument', 'Preview: not saved'));
@@ -204,7 +277,7 @@
     return new Promise(function (res, rej) {
       var go = function () {
         if (kind === 'update' && f.loaded && docIn(f, path) === null) { rej(err('not-found', 'No document to update: ' + path)); return; }
-        f.pending.push({ kind: kind, path: path, data: data, res: res, rej: rej }); f.view = null;
+        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej }); f.view = null;
         if (p.own) register(path, kind !== 'delete');
         notify(f, true);
         schedule(f, FLUSH_MS);
@@ -245,13 +318,13 @@
     var batch = f.pending.slice(), tries = 0;
     var attempt = function () {
       return ensure(f).then(function () {
-        var next = applyOps(f, clone(f.server), batch);
+        var next = applyOps(f, clone(f.server), batch, true);   /* the newest copy, read again after a 409 */
         /* the relay saves files pretty-printed and can only read back a file under 1 MB, so the pretty size is what counts */
         if (JSON.stringify(next, null, 2).length > MAX_FILE) throw err('TOO_BIG', 'This part of MISMO Media has grown too big to save in one piece.');
         return put(f.name, { content: next, sha: f.sha }).then(function (b) {
           f.server = next; f.sha = (b && b.sha) || f.sha; f.loadedAt = now();
           f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
-          batch.forEach(function (op) { op.res(); });
+          batch.forEach(function (op) { if (op.gone) op.rej(err('not-found', GONE)); else op.res(); });
           notify(f, false);
           saved();
         });
@@ -376,6 +449,8 @@
       id: p.id, path: path,
       get: function () { return need().then(function () { return docSnap(path, docValue(path), false); }); },
       set: function (data) { return queue(path, 'set', data); },
+      /* writes only what differs from `base` (the record as the change began); see above */
+      merge: function (data, base) { return queue(path, 'merge', clone(data), base ? clone(base) : null); },
       update: function (patch) { return queue(path, 'update', patch); },
       delete: function () { return queue(path, 'delete', null); },
       onSnapshot: function (cb, errCb) {
@@ -2256,6 +2331,8 @@ async function connect(){
   Object.keys(S).forEach(col=>{
     DB.collection(col).onSnapshot(snap=>{
       const o={}; snap.docs.forEach(d=>{ o[d.id]=Object.assign({id:d.id}, d.data()); });
+      /* a second copy, never changed by the page, to tell later what a save actually changed (November 5, 2026) */
+      if(col!=="audience"){ const seen={}; snap.docs.forEach(d=>{ seen[d.id]=Object.assign({id:d.id}, d.data()); }); SEEN[col]=seen; }
       S[col]=o; if(!FIRST_LOAD){ FIRST_LOAD=Date.now(); setTimeout(schedule, 8100); } LOADED.add(col); schedule();
     }, err=>{ saveNote(false, err && err.message); });
   });
@@ -2293,15 +2370,50 @@ function saveNote(ok, why){
   n.innerHTML = ok ? '<b>Saving</b><span class="ok">Shared with the team · saves as you press Save</span>'
                    : '<b>Saving</b><span class="no">'+esc(why||"Not connected · changes won't be kept")+'</span>';
 }
+/* Saving without overwriting anyone (November 5, 2026). The right-hand panel can sit open
+   for hours, and its Save used to write the whole record as the panel had it, so anything a
+   teammate saved in the meantime was quietly put back. Now every save also carries the record
+   as it was when the change began: as it was when the panel opened, or the newest copy for a
+   quick change made anywhere else. Only what differs from that is written, onto the newest
+   copy, here and in the data store (where it is done again after a 409). If both people
+   changed the same field, the person saving is asked which to keep, and an open panel says so
+   when someone else saves the same record. SEEN holds each record exactly as last read. */
+const SEEN = {};
+function noId(r){ const o=Object.assign({}, r); delete o.id; return o; }
+function baseOf(col,id){
+  const k=col+"/"+id;
+  if(PANE && PANE.at){ if(k in PANE.at.over) return PANE.at.over[k]; const c=PANE.at.cols[col]; if(c && c[id]) return c[id]; }
+  return SEEN[col] ? SEEN[col][id] : undefined;
+}
+function askClash(cl, theirs, mine){
+  const M=window.__hqMerge, title=(($("#pane-title")||{}).textContent||"").trim();
+  const label=at=>{ const lb=document.querySelector('label[for="f-'+at[0]+'"]');
+    return (lb ? lb.textContent.trim() : at[0].replace(/^d_/,"").replace(/([A-Z])/g," $1").replace(/^./,c=>c.toUpperCase())) + (at.length>1 ? " › "+at.slice(1).join(" › ") : ""); };
+  const show=v=>{ const t=M.normVal(v).replace(/<[^>]+>/g," ").replace(/\s+/g," ").trim(); return t==="" ? "(blank)" : t.slice(0,80); };
+  return window.confirm("While you had "+(title||"this record")+" open, someone else saved a different value in the same "+(cl.length===1?"field":"fields")+":\n\n"+
+    cl.map(at=>"• "+label(at)+" — theirs: "+show(M.getAt(theirs,at))+"   ·   yours: "+show(M.getAt(mine,at))).join("\n")+
+    "\n\nOK keeps yours. Cancel keeps theirs for "+(cl.length===1?"this field":"these fields")+" — your other changes still save.");
+}
 async function put(col,id,data){
   const clean = Object.assign({}, data); delete clean.id;
   clean.updatedAt = new Date().toISOString();
-  S[col][id] = Object.assign({id}, clean); schedule();
-  if(DB){ try{ await DB.collection(col).doc(id).set(clean); }catch(e){ toast("Couldn't save: "+(e.message||e.code||"try again"), 4000); throw e; } }
+  const M=window.__hqMerge, k=col+"/"+id, was=baseOf(col,id), now=SEEN[col] && SEEN[col][id];
+  const base = (DB && M && was) ? M.clone(noId(was)) : null;   // a copy: Cancel below edits it
+  if(base && !now && LOADED.has(col)){ toast(M.GONE, 6000); throw new Error(M.GONE); }
+  let out = clean;
+  if(base && now){
+    const cur=noId(now), cl=M.clashes(cur, clean, base);
+    if(cl.length && !askClash(cl, cur, clean)) cl.forEach(at=>M.setAt(base, at, M.getAt(clean, at)));   // Cancel: theirs stands
+    out = M.merge(cur, clean, base);
+  }
+  S[col][id] = Object.assign({id}, out); schedule();
+  if(PANE && PANE.at) PANE.at.over[k] = Object.assign({id}, M ? M.clone(out) : out);   // the panel's new starting point
+  if(DB){ try{ const ref=DB.collection(col).doc(id); await (base && ref.merge ? ref.merge(clean, base) : ref.set(base ? out : clean)); }catch(e){ toast("Couldn't save: "+(e.message||e.code||"try again"), 4000); throw e; } }
 }
 async function patch(col,id,part){ const cur=S[col][id]||{}; return put(col,id,Object.assign({},cur,part)); }
 async function remove(col,id){
   delete S[col][id]; schedule();
+  if(PANE && PANE.at) PANE.at.over[col+"/"+id] = undefined;   // gone on purpose: a later save here starts fresh
   if(DB){ try{ await DB.collection(col).doc(id).delete(); }catch(e){ toast("Couldn't delete: "+(e.message||"try again"),4000); } }
 }
 let _raf=0; function schedule(){ if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
@@ -2410,6 +2522,10 @@ const isOver = e=>!e.done && !e.slot && e.date<T() && !e.big;
 let PANE = null;
 function openPane(cfg){
   PANE = Object.assign({dirty:false}, cfg);
+  /* what every record looked like as this panel opened, and which record it is (November 5, 2026) */
+  PANE.at = {cols:Object.assign({}, SEEN), over:{}};
+  const did = cfg.data && cfg.data.id;
+  if(did) for(const c of Object.keys(SEEN)){ if(SEEN[c] && SEEN[c][did]){ PANE.rec = {col:c, id:did}; break; } }
   $("#pane-eye").textContent = cfg.eye||"";
   $("#pane-title").textContent = cfg.title||"";
   const b=$("#pane-body"); b.innerHTML = buildFields(cfg.fields, cfg.data||{}) + (cfg.extra||"");
@@ -2428,6 +2544,17 @@ function openPane(cfg){
   b.scrollTop=0;
   setTimeout(()=>{ const first=b.querySelector("input:not([type=url]),textarea,select,.rt-ed"); if(first && !cfg.noFocus) try{ first.focus({preventScroll:true}); }catch(e){} },230);
 }
+/* an open panel says so when someone else saves, or deletes, the same record (November 5, 2026) */
+setInterval(()=>{
+  if(!PANE || !PANE.rec || !PANE.at || !window.__hqMerge) return;
+  const {col,id}=PANE.rec, opened=baseOf(col,id), latest=SEEN[col] && SEEN[col][id], M=window.__hqMerge;
+  if(!opened || !LOADED.has(col)) return;
+  const said = latest ? M.sig(latest) : "gone";
+  if((latest && said===M.sig(opened)) || PANE.staleSaid===said) return;
+  PANE.staleSaid = said;
+  const m=$("#pf-msg"); if(m) m.textContent = latest ? "Someone else just saved this record. Saving keeps their changes and adds yours."
+    : "Someone else just deleted this record. Saving won't bring it back.";
+}, 3000);
 function closePane(force){
   if(PANE && PANE.dirty && !force){ const m=$("#pf-msg"); if(m && !m.dataset.warned){ m.dataset.warned="1"; m.textContent="You have changes that aren't saved. Press Close again to leave without saving."; return; } }
   PANE=null; const p=$("#pane"); p.classList.remove("open"); p.setAttribute("aria-hidden","true");
