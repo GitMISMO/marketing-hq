@@ -1270,6 +1270,18 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .kli-note{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:8px 12px;font-size:13px;margin:0 0 8px}
 .kli-edits{background:var(--warn-soft);color:var(--ink)}
 .kli-ok{background:var(--good-soft);color:var(--ink)}
+.kli-cmp{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start}
+.kli-cmp>*{min-width:0}
+.kli-bp .kcopy-h{flex-wrap:wrap;gap:6px}
+.kli-cmp .kcopy{margin:0}
+.kli-bp{border:1px solid var(--border);background:var(--surface-2);border-radius:7px;padding:10px 12px}
+.kli-bp textarea,.kli-bp input{width:100%;box-sizing:border-box;margin:0 0 6px}
+.kli-bpb{display:flex;gap:6px;text-transform:none;letter-spacing:0}
+.kli-bptext{font-size:13.5px;line-height:1.55;color:var(--ink);max-height:260px;overflow:auto}
+.kli-flag{margin-top:8px;background:var(--warn-soft);border:1px solid var(--warn);color:var(--ink);border-radius:5px;padding:6px 9px;font-size:12.5px}
+.kli-rev{border:1px solid var(--warn);background:var(--warn-soft);border-radius:7px;padding:10px 12px;margin-top:8px;font-size:13px}
+.kli-rev textarea{width:100%;box-sizing:border-box;margin:6px 0 0;min-height:52px}
+@media (max-width:760px){.kli-cmp{grid-template-columns:minmax(0,1fr)}}
 .kli-amy{border:1px solid var(--warn);background:var(--warn-soft);border-radius:7px;padding:10px 12px;margin-top:6px}
 .kli-amy textarea{margin:6px 0 0;min-height:56px}
 .kli-go{border:1px solid var(--good);background:var(--good-soft);border-radius:7px;padding:10px 14px;margin-top:6px;font-size:13px}
@@ -4647,14 +4659,15 @@ function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'
 const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};
 const MEDIA_URL = "https://resources.mismo.org/marketing-hq/#micdup";
 /* the "approval needed" email to Amy: plain, branded, works in Outlook */
-function liAmyEmail(e, k, name, desc, from){
+function liAmyEmail(e, k, name, desc, from, rev){
   const F='font-family:Arial,Helvetica,sans-serif;';
   const para=t=>esc(t).replace(/\n/g,"<br>");
   const when=fD(liDate(e))+", "+(e.linkedinTime||"1:00 PM ET");
   return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f6fa;padding:24px 0"><tr><td align="center">'+
     '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #d5e2ed">'+
-    '<tr><td style="background:#0d314c;padding:18px 28px;'+F+'color:#ffffff;font-size:13px;letter-spacing:2px;font-weight:bold">MISMO MEDIA <span style="color:#74bfeb;font-weight:normal">· APPROVAL NEEDED</span></td></tr>'+
-    '<tr><td style="padding:28px 28px 8px;'+F+'color:#0d314c"><div style="font-size:22px;font-weight:bold;line-height:1.3;margin:0 0 8px">Please approve the LinkedIn Live wording</div>'+
+    '<tr><td style="background:#0d314c;padding:18px 28px;'+F+'color:#ffffff;font-size:13px;letter-spacing:2px;font-weight:bold">MISMO MEDIA <span style="color:#74bfeb;font-weight:normal">· '+(rev?'REVISED · ':'')+'APPROVAL NEEDED</span></td></tr>'+
+    '<tr><td style="padding:28px 28px 8px;'+F+'color:#0d314c"><div style="font-size:22px;font-weight:bold;line-height:1.3;margin:0 0 8px">'+(rev?'Revised LinkedIn Live wording':'Please approve the LinkedIn Live wording')+'</div>'+
+      (rev?'<div style="font-size:15px;line-height:1.6;color:#0d314c;background:#fff6e0;border:1px solid #a2701a;border-radius:6px;padding:10px 12px;margin:0 0 10px"><b>Please use this version instead of the one we sent earlier.</b>'+(rev.note?'<br>'+esc(rev.note).replace(/\n/g,"<br>"):'')+'</div>':'')+
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, the LinkedIn Live event for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+' is ready for your review. It streams from Riverside to MISMO\'s LinkedIn page on <b style="color:#0d314c">'+esc(when)+'</b>.</div></td></tr>'+
     '<tr><td style="padding:14px 28px 0;'+F+'"><div style="background:#e3f3ed;border:1px solid #0f7b5c;border-radius:6px;padding:12px 14px;font-size:15px;line-height:1.6;color:#0d314c"><b>Just reply to this email:</b><br>&bull; Reply <b>Approved</b> and Vanessa sets up the event as written.<br>&bull; Or reply with your edits (change the wording right in your reply) and Vanessa uses your version.</div></td></tr>'+
     '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT NAME</div><div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd">'+esc(name)+'</div></td></tr>'+
@@ -4664,10 +4677,10 @@ function liAmyEmail(e, k, name, desc, from){
     '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#7794aa;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Keep the [MM:…] tag in the subject so your reply finds its episode.</td></tr>'+
     '</table></td></tr></table>';
 }
-async function liSendAmy(e, k, name, desc, to){
+async function liSendAmy(e, k, name, desc, to, rev){
   const n=window.__hqImages && window.__hqImages.notify; if(!n) return false;
   const who=(window.__hqWho||"");
-  try{ await n(to||LI_APPROVER.email, "Approval needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording [MM:"+e.id+"]", liAmyEmail(e,k,name,desc,who)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
+  try{ await n(to||LI_APPROVER.email, (rev?"Revised: approval":"Approval")+" needed: Mic'd Up "+epWord(e)+" LinkedIn Live wording [MM:"+e.id+"]", liAmyEmail(e,k,name,desc,who,rev)); return true; }catch(err){ toast("Saved, but the email to Amy didn't send: "+(err.message||"try again"), 6000); return false; }
 }
 function kitsWithAmy(){ return vals("kits").filter(k=>k.liStatus==="review" && S.episodes[k.id]); }
 /* Amy's emailed reply, made ready to paste: email line-wraps joined back into paragraphs, then proofread
@@ -4697,21 +4710,46 @@ async function amyCleanVersion(eid){
   await put("kits", eid, Object.assign({}, kitOf(eid), {amyClean:text, amyFixes:fixes, amyFrom:k.liReplyId||""}));
   return text;
 }
+/* names from the episode plan (company, guests) that MISMO's wording uses but Brian's own post doesn't */
+function liFlags(e,k,liText){
+  if(!k.brianPost || !liText) return [];
+  const bp=k.brianPost.toLowerCase(), lt=liText.toLowerCase();
+  return [e.company].concat(String(e.guests||"").split(/,|&|\band\b/)).map(x=>String(x||"").trim()).filter(x=>x.length>2)
+    .filter((x,i,a)=>a.indexOf(x)===i && lt.includes(x.toLowerCase()) && !bp.includes(x.toLowerCase()));
+}
+/* Brian's own LinkedIn post, beside MISMO's description so the two can be compared */
+function liBrianHtml(e,k,liText){
+  const open=k.brianPostUrl?'<a class="btn sm" href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener">Open on LinkedIn ↗</a>':'';
+  if(!k.brianPost || KIT.bpEdit===k.id) return '<div class="kli-bp"><div class="kcopy-h"><span>Brian\'s LinkedIn Post</span>'+open+'</div>'+
+    '<textarea id="kit-bp" rows="6" placeholder="Paste Brian\'s LinkedIn post about this episode">'+esc(k.brianPost||"")+'</textarea>'+
+    '<input type="url" id="kit-bpurl" placeholder="Link to his post or LinkedIn Live (optional)" value="'+esc(k.brianPostUrl||"")+'">'+
+    '<div class="kbtns"><button class="btn sm" type="button" id="kit-bpsave">Bring It In</button>'+(k.brianPost?'<button class="btn sm" type="button" id="kit-bpcancel">Cancel</button>':'')+'</div></div>';
+  const fl=liFlags(e,k,liText);
+  return '<div class="kli-bp"><div class="kcopy-h"><span>Brian\'s LinkedIn Post</span><span class="kli-bpb">'+open+'<button class="btn sm" type="button" id="kit-bpedit">Change</button></span></div>'+
+    '<div class="kli-bptext">'+esc(k.brianPost).replace(/\n/g,"<br>")+'</div>'+
+    (fl.length?'<div class="kli-flag"><b>Check:</b> MISMO\'s description mentions '+fl.map(x=>'<b>'+esc(x)+'</b>').join(", ")+', but Brian\'s post doesn\'t.</div>':'')+'</div>';
+}
 function liLiveHtml(e,k,liText,thumbs){
   if(!liText) return '<div class="hint">Written in MISMO\'s voice from Brian\'s LinkedIn post, then reviewed by Amy.</div>';
-  const st=k.liStatus||"draft", locked=st==="review"||st==="approved";
+  const st=k.liStatus||"draft", locked=st==="review"||st==="approved", rev=st==="draft" && !!k.liRevising;
   const cover=thumbs.find(t=>t.img===k.thumbPick)||thumbs[0];
   const box=(id,label,val,rows)=>'<div class="kcopy"><div class="kcopy-h"><span>'+label+'</span>'+(st==="approved"?'<button class="btn sm" type="button" data-kcopy="'+id+'">Copy</button>':'')+'</div>'+(rows?'<textarea id="'+id+'" rows="'+rows+'"'+(locked?' readonly':'')+'>'+esc(val||"")+'</textarea>':'<input type="text" id="'+id+'" maxlength="75" value="'+esc(val||"")+'"'+(locked?' readonly':'')+'>')+'</div>';
   let h='<div class="kli-h">'+chip(LI_STAT,st)+'<span class="hint">Streamed from Riverside to MISMO\'s LinkedIn page. No YouTube link.</span></div>'+
-    box("kit-liname","Event Name (75 characters at most)",e.liEventName||liEventName((k.written||{}).title,e))+box("kit-li","Event Description"+(st==="edits"?" (put Amy\'s edits in here)":""),liText,6);
+    box("kit-liname","Event Name (75 characters at most)",e.liEventName||liEventName((k.written||{}).title,e))+
+    '<div class="kli-cmp"><div class="kli-mine">'+box("kit-li","MISMO\'s Event Description"+(st==="edits"?" (put Amy\'s edits in here)":""),liText,9)+'</div>'+liBrianHtml(e,k,liText)+'</div>';
+  const reviseBtn='<button class="btn sm" type="button" id="kit-lirevise">Revise and Send Back to Amy</button>';
   const amyTools=(use)=>'<div class="amy-tools"><button class="btn sm" type="button" id="kit-amycopy">Copy Amy\'s Version</button>'+(use?'<button class="btn sm" type="button" id="kit-amyuse">Put It in the Description</button>':'')+'<span class="hint">Cleaned up from her email and checked for spelling.</span></div>'+amyFixHtml(k);
   if((st==="changes"||st==="edits") && k.liNote) h+='<div class="kli-note'+(st==="edits"?' kli-edits':'')+'"><b>'+(st==="edits"?"Amy\'s edits (from her email reply). Use her wording:":"Amy:")+'</b><br>'+esc(k.liNote).replace(/\n/g,"<br>")+(st==="edits"?amyTools(true):'')+'</div>';
   if(st==="approved" && k.liNote && k.liReplyId) h+='<div class="kli-note kli-ok"><b>Amy replied:</b> '+esc(k.liNote).replace(/\n/g,"<br>")+amyTools(false)+'</div>';
-  if(st==="draft"||st==="changes") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liamy">Send to Amy for Approval</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button></div>';
-  else if(st==="edits") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liedits">Edits Made: Ready to Set Up</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button></div>';
-  else if(st==="review") h+='<div class="kli-amy"><div class="hint">Emailed to Amy. Her reply (Approved, or her edits) lands here by itself. She can also approve here:</div><textarea id="kit-linote" rows="2" placeholder="What to change (only needed for Request Changes)"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-liok">Approve</button><button class="btn sm" type="button" id="kit-lichg">Request Changes</button><button class="btn sm" type="button" id="kit-liresend">Resend to Amy</button></div>'+(k.liSentAt?'<div class="hint">Last sent '+esc(new Date(k.liSentAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'.</div>':'')+'</div>';
+  if(rev) h+='<div class="kli-rev"><b>Revising the wording Amy already has.</b> Fix the description above (or have the Writer redo it), then send it back. Amy\'s email says to use this version instead.'+
+    '<textarea id="kit-revnote" rows="2" placeholder="What changed, for Amy (e.g. Brian recorded this one on his own, so Xactus is out)">'+esc(k.liRevNote||"")+'</textarea>'+
+    '<div class="kbtns"><button class="btn sm pri" type="button" id="kit-lirevsend">Send Revised Version to Amy</button><button class="btn sm" type="button" id="kit-lirewrite">Rewrite It from the Transcript</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button><button class="btn sm" type="button" id="kit-lirevcancel">Cancel</button></div>'+
+    '<div class="hint">Rewrite uses the transcript, Brian\'s post and your note above.</div></div>';
+  else if(st==="draft"||st==="changes") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liamy">Send to Amy for Approval</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button></div>';
+  else if(st==="edits") h+='<div class="kbtns"><button class="btn sm pri" type="button" id="kit-liedits">Edits Made: Ready to Set Up</button><button class="btn sm" type="button" id="kit-lisave">Save Changes</button>'+reviseBtn+'</div>';
+  else if(st==="review") h+='<div class="kli-amy"><div class="hint">Emailed to Amy. Her reply (Approved, or her edits) lands here by itself. She can also approve here:</div><textarea id="kit-linote" rows="2" placeholder="What to change (only needed for Request Changes)"></textarea><div class="kbtns"><button class="btn sm pri" type="button" id="kit-liok">Approve</button><button class="btn sm" type="button" id="kit-lichg">Request Changes</button><button class="btn sm" type="button" id="kit-liresend">Resend to Amy</button>'+reviseBtn+'</div>'+(k.liSentAt?'<div class="hint">Last sent '+esc(new Date(k.liSentAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'.</div>':'')+'</div>';
   else h+='<div class="kli-go"><b>Set up the LinkedIn Live event</b><ol><li>On MISMO\'s LinkedIn page: Create › Event › Online, format LinkedIn Live.</li><li>Paste the event name and description above.</li><li>Date '+esc(fD(liDate(e)))+', '+esc(e.linkedinTime||"1:00 PM ET")+'. Connect it to Riverside as the streaming tool.</li><li>Cover image: '+(cover?'<button class="btn sm" type="button" data-kcover="'+esc(cover.img)+'">Download the Thumbnail</button>':'the thumbnail from step 2')+'</li></ol>'+
-    '<div class="kbtns"><input type="url" id="kit-liurl" placeholder="Paste the LinkedIn event link" value="'+esc(e.linkedinUrl||"")+'"><button class="btn sm" type="button" id="kit-liurl-save">'+(e.liEventSet?"Event Set Up ✓":"Save Event Link")+'</button><button class="btn sm" type="button" id="kit-lidone">'+(e.linkedinDone?"Streamed ✓":"Mark as Streamed")+'</button><button class="btn sm" type="button" id="kit-lireopen">Edit the Wording</button></div></div>';
+    '<div class="kbtns"><input type="url" id="kit-liurl" placeholder="Paste the LinkedIn event link" value="'+esc(e.linkedinUrl||"")+'"><button class="btn sm" type="button" id="kit-liurl-save">'+(e.liEventSet?"Event Set Up ✓":"Save Event Link")+'</button><button class="btn sm" type="button" id="kit-lidone">'+(e.linkedinDone?"Streamed ✓":"Mark as Streamed")+'</button><button class="btn sm" type="button" id="kit-lireopen">Edit the Wording</button>'+reviseBtn+'</div></div>';
   return h;
 }
 
@@ -4818,6 +4856,25 @@ function wireKit(el){
   const lok=$("#kit-liok",el); if(lok) lok.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"approved", liApprovedAt:new Date().toISOString(), liApprovedBy:(window.__hqWho||"")})); toast("Approved. Vanessa can set up the event."); renderMicdup(); };
   const lch=$("#kit-lichg",el); if(lch) lch.onclick=async()=>{ const note=($("#kit-linote",el)||{}).value||""; if(!note.trim()){ toast("Say what to change in the note box."); return; } await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"changes", liNote:note})); toast("Sent back with your note."); renderMicdup(); };
   const led=$("#kit-liedits",el); if(led) led.onclick=async()=>{ await patch("episodes", eid, liVals()); await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"approved", liApprovedAt:new Date().toISOString(), liApprovedBy:"Amy (edits applied)"})); toast("Ready to set up with Amy's edits."); renderMicdup(); };
+  const lrv=$("#kit-lirevise",el); if(lrv) lrv.onclick=async()=>{ const kk=kitOf(eid)||{}; await put("kits", eid, Object.assign({}, kk, {liStatus:"draft", liRevising:true, liRevFrom:kk.liStatus||"review", liRevNote:""})); renderMicdup(); };
+  const lrc=$("#kit-lirevcancel",el); if(lrc) lrc.onclick=async()=>{ const kk=kitOf(eid)||{}; await put("kits", eid, Object.assign({}, kk, {liStatus:kk.liRevFrom||"review", liRevising:false})); renderMicdup(); };
+  const rvn=$("#kit-revnote",el); if(rvn) rvn.onchange=()=>put("kits", eid, Object.assign({}, kitOf(eid), {liRevNote:rvn.value}));
+  const lrw=$("#kit-lirewrite",el); if(lrw) lrw.onclick=async()=>{ lrw.disabled=true; lrw.textContent="Rewriting…"; await patch("episodes", eid, liVals());
+    const t=await kitRewriteLi(eid, ($("#kit-revnote",el)||{}).value||""); if(t) await patch("episodes", eid, {linkedinCopy:t}); renderMicdup(); };
+  const lrs2=$("#kit-lirevsend",el); if(lrs2) lrs2.onclick=async()=>{ const v=liVals(); if(!v.linkedinCopy.trim()){ toast("The description is empty."); return; } lrs2.disabled=true;
+    const note=(($("#kit-revnote",el)||{}).value||"").trim(), kk=kitOf(eid)||{};
+    await patch("episodes", eid, v);
+    const ok=await liSendAmy(S.episodes[eid], kk, v.liEventName, v.linkedinCopy, null, {note});
+    const hist=(kk.liRevisions||[]).concat([{at:new Date().toISOString(), note, by:(window.__hqWho||""), sent:ok}]);
+    await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"review", liRevising:false, liRevNote:"", liRevisions:hist, liSentAt:new Date().toISOString(), liNote:"", amyClean:"", amyFixes:[]}));
+    toast(ok?"The revised version is on its way to Amy. Her reply lands here by itself.":"Marked as with Amy, but the email didn't send.", 5000); renderMicdup(); };
+  const bpe=$("#kit-bpedit",el); if(bpe) bpe.onclick=()=>{ KIT.bpEdit=eid; renderMicdup(); };
+  const bpc=$("#kit-bpcancel",el); if(bpc) bpc.onclick=()=>{ KIT.bpEdit=null; renderMicdup(); };
+  const bps=$("#kit-bpsave",el); if(bps) bps.onclick=async()=>{ let t=($("#kit-bp",el).value||"").trim(), u=($("#kit-bpurl",el).value||"").trim();
+    const li=(t.match(/https?:\/\/[^\s]*linkedin\.com[^\s]*/i)||[""])[0]; if(li){ t=t.replace(li,"").trim(); if(!u) u=li; }
+    if(t.length<40){ toast("Paste Brian's whole LinkedIn post."); return; }
+    if(u && !/^https?:\/\/([a-z]+\.)?linkedin\.com\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
+    KIT.bpEdit=null; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u})); toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
   const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(www\.)?linkedin\.com\//i.test(u)){ toast("Paste the LinkedIn event link."); return; } await patch("episodes", eid, {linkedinUrl:u, liEventSet:true}); toast("Event saved"); renderMicdup(); };
   wireCx(el, ()=>renderMicdup());
@@ -5128,6 +5185,35 @@ function guestFor(e){ if(!e) return null; const g=vals("guests").filter(x=>x.ep=
 function styleSamples(e){
   return epsSorted().filter(x=>x.id!==e.id && (x.bvDescription||(kitOf(x.id)||{}).written)).slice(0,3).map(x=>{ const w=(kitOf(x.id)||{}).written||{}; return "• "+(w.title||x.title||"")+"\n"+String(w.long||w.desc||x.bvDescription||"").slice(0,900); }).join("\n\n");
 }
+/* the guest line comes from the episode plan. When the transcript is in and never names the planned guest or
+   company, Brian recorded it on his own, so the Writer is told to leave them out. */
+function kitGuestLine(e,g,tx){
+  const who=[e.guests||(g&&g.n)||"", g&&g.title, e.company||(g&&g.company)].filter(Boolean);
+  if(!who.length) return "Guest(s): none. Brian Vieaux on his own.";
+  const names=[e.guests||(g&&g.n)||"", e.company||(g&&g.company)||""].join(",").split(/,|&|\band\b/).map(x=>x.trim()).filter(x=>x.length>2);
+  const t=String(tx||"").toLowerCase();
+  if(t.length>=400 && names.length && !names.some(n=>t.includes(n.toLowerCase()) || t.includes(n.split(/\s+/).pop().toLowerCase())))
+    return "Guest(s): none. Brian Vieaux recorded this one on his own. The episode was planned with "+who.join(", ")+", but they are not in the transcript, so do not mention them anywhere.";
+  return "Guest(s): "+who.join(", ");
+}
+/* MISMO's LinkedIn Live description only, redone from the transcript and Brian's post, with a note on what to fix */
+async function kitRewriteLi(epId, note){
+  const e=S.episodes[epId], k=kitOf(epId)||{}; if(!e) return "";
+  try{
+    toast("Rewriting MISMO's LinkedIn Live description…", 90000);
+    const tx=txPlain(await kitLoadTranscript(epId)||""), g=guestFor(e);
+    if(tx.length<400 && !k.brianPost){ toast("The transcript or Brian's post is needed to rewrite it.", 5000); return ""; }
+    const material=["EPISODE: MISMO Mic'd Up "+epWord(e), kitGuestLine(e,g,tx),
+      k.brianPost?"Brian's own LinkedIn post about it (the facts and framing to match):\n"+k.brianPost:"",
+      e.linkedinCopy?"The current description, which needs fixing:\n"+e.linkedinCopy:"",
+      note?"What to fix: "+note:"",
+      "TRANSCRIPT:\n"+tx.slice(0,60000)].filter(Boolean).join("\n\n");
+    const raw=await writer(MU_STYLE+"\n\nRewrite MISMO's company-page post and LinkedIn Live event description for this episode, exactly as the LINKEDIN, MISMO COMPANY PAGE rules say, including the hashtag line. Use only facts from the transcript and Brian's post. Return ONLY a JSON object: {\"text\": the description}.", material);
+    const o=parseJson(raw), t=o && typeof o.text==="string" ? o.text.trim() : "";
+    if(!t){ toast("The Writer sent back something unexpected. Try again.", 5000); return ""; }
+    toast("Rewritten. Read it over, then send it to Amy.", 4000); return t;
+  }catch(err){ toast("Couldn't rewrite it: "+(err.message||"try again"), 6000); return ""; }
+}
 async function kitWriteAll(epId, quiet){
   const say=quiet?(()=>{}):toast;
   const e=S.episodes[epId], k=kitOf(epId)||{}; if(!e) return;
@@ -5137,7 +5223,7 @@ async function kitWriteAll(epId, quiet){
     let tx=await kitLoadTranscript(epId); tx=txPlain(tx||"");
     if(tx.length<400 && !k.brianPost){ say("Add the transcript to the folder first (or paste Brian's LinkedIn post).", 6000); return; }
     const g=guestFor(e), season=+e.season||1, word=epWord(e);
-    const material=["EPISODE: MISMO Mic'd Up "+word, "Guest(s): "+[e.guests||(g&&g.n)||"", g&&g.title, e.company||(g&&g.company)].filter(Boolean).join(", "),
+    const material=["EPISODE: MISMO Mic'd Up "+word, kitGuestLine(e,g,tx),
       "Goes live: "+(e.airDate?fD(e.airDate):"Friday")+" 8:30 AM ET (LinkedIn Live on Brian Vieaux's profile, Spotify, YouTube). MISMO's LinkedIn Live: "+fD(liDate(e))+" "+(e.linkedinTime||"1:00 PM ET")+".",
       g&&g.bio?"Guest bio: "+g.bio:"", k.brianPost?"Brian's own LinkedIn post about it:\n"+k.brianPost:"",
       styleSamples(e)?"Earlier episodes, for style only (do not reuse their facts):\n"+styleSamples(e):"",
