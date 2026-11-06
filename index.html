@@ -4321,7 +4321,8 @@ async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;
   const have=new Set(vals("images").map(im=>im.m360Logo).filter(Boolean)),touched={};
   for(const it of items){if(!it||!it.logo||!it.logo.path||have.has(it.logo.path)||!/^image\//.test(it.logo.type||""))continue;
     /* only members new enough for a welcome: the edition must be within two months of the month they joined (older members were welcomed before) */
-    {const jm=String(it.joined||"").slice(0,7);if(!jm||nmEdition(it.joined)>nmNext(nmNext(jm)))continue;}
+    /* only the issue right after the month they joined (October joiners go in November): a member who joined earlier was welcomed then, even if their logo only arrived now (Jonna, Nov 6, 2026) */
+    {const jm=String(it.joined||"").slice(0,7);if(!jm||nmEdition(it.joined)!==nmNext(jm))continue;}
     const fr=await fetch(NM_R+"/file/"+it.logo.path,{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!fr.ok)continue;
     const fj=await fr.json().catch(()=>null);if(!fj||!fj.content)continue;const bin=atob(String(fj.content).replace(/\s/g,""));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     const ext=it.logo.path.split(".").pop(),file=new File([u],String(it.name||"Logo").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+"-logo."+ext,{type:it.logo.type});
