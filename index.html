@@ -6175,7 +6175,7 @@ async function rememberLogos(list){
    to Higher Logic, and sends back the public link. SVG logos are turned into PNGs first, because Gmail and
    Outlook don't show SVGs. It runs on its own whenever someone signed in to Higher Logic opens MISMO Media;
    "Send to Higher Logic" does the same in a small window for anyone whose browser keeps the hidden one out. */
-const HL_BRIDGE = "";   // e.g. https://collaborate.mismo.org/mismowebsite/mismo-media-uploader (empty until the page exists)
+const HL_BRIDGE = "https://collaborate.mismo.org/mismowebsite/mismo-media-uploader";   // the hidden website page that loads hl-bridge/bridge.js
 const HL_ORIGIN = "https://collaborate.mismo.org";
 const HLB = {state:"idle", last:"", busy:false, frame:null, win:null, ready:null, waits:{}, n:0, tried:false};
 
