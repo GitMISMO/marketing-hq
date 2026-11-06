@@ -2646,6 +2646,22 @@ function applyPosted(){
     else { const pc=S.pieces[id]; if(pc && pc.status!=="done"){ pc.status="done"; if(x.url && !pc.postedUrl) pc.postedUrl=x.url; } }
   });
 }
+/* A tab left open across an update keeps running the old code, and its background work (folder checks, autopilot,
+   Higher Logic uploads) can undo newer fixes. Every 10 minutes the page checks whether MISMO Media has been updated;
+   once it has, this tab stops its background work and asks to be refreshed. */
+const STALE={base:null, on:false};
+function pageSig(t){ let h=0; for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return t.length+":"+h; }
+async function staleCheck(){
+  if(STALE.on) return;
+  try{ const t=await fetch(location.pathname, {cache:"no-store"}).then(r=>r.ok?r.text():""); if(!t) return;
+    const sig=pageSig(t); if(STALE.base===null){ STALE.base=sig; return; }
+    if(sig!==STALE.base){ STALE.on=true; const b=document.createElement("div"); b.id="stale-bar";
+      b.style.cssText="position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9999;background:#0d314c;color:#fff;border:1px solid #74bfeb;border-radius:6px;padding:9px 12px 9px 14px;font:600 13px/1.3 inherit;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.45)";
+      b.innerHTML='MISMO Media has been updated. Refresh to keep working. <button class="btn sm pri" type="button">Refresh</button>';
+      b.querySelector("button").onclick=()=>location.reload(); document.body.appendChild(b); }
+  }catch(e){}
+}
+staleCheck(); setInterval(staleCheck, 10*60*1000);
 function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
@@ -4472,7 +4488,7 @@ async function kitPullFolder(epId, folderId, chatId){
     const info=parseFolder(got.name);
     const video=kitVideo(files), tf=kitTranscriptFile(files), thumbs=kitThumbFiles(files);
     const old=kitOf(epId)||{};
-    const kit=Object.assign({}, old, {folderId, folderUrl:driveFolderUrl(folderId), folderName:got.name, files:files.map(f=>({id:f.id,name:f.name,size:f.size,type:f.type})),
+    const kit=Object.assign({}, old, {source:"drive", folderId, folderUrl:driveFolderUrl(folderId), folderName:got.name, files:files.map(f=>({id:f.id,name:f.name,size:f.size,type:f.type})),
       video:video?{id:video.id,name:video.name,size:video.size}:null, transcriptId:tf?tf.id:"", chatId:chatId||old.chatId||"", pulledAt:new Date().toISOString()});
     // thumbnails go into the Image Library (and SharePoint), once each
     const have=(old.thumbs||[]);
@@ -4525,7 +4541,7 @@ async function kitWrite(epId, force){
 /* match chat messages to episodes and fill in whatever's new. Runs for anyone who can edit, on resources.mismo.org. */
 let KIT_SYNCING=false;
 async function kitSync(){
-  if(KIT_SYNCING || !DRIVE() || !CANWRITE || !LOADED.has("chat") || !LOADED.has("kits") || !LOADED.has("episodes")) return;
+  if(STALE.on || KIT_SYNCING || !DRIVE() || !CANWRITE || !LOADED.has("chat") || !LOADED.has("kits") || !LOADED.has("episodes")) return;
   KIT_SYNCING=true;
   try{
     if(typeof muSync==="function") await muSync();
@@ -5018,13 +5034,14 @@ function spListOnce(path, fresh){
 }
 async function kitPullSP(epId, quiet){
   const sp=SPX(); const e=S.episodes[epId]; if(!sp||!e||!e.spFolder) return;
+  if((kitOf(epId)||{}).folderId){ if(!quiet) toast("This kit comes from Brian's Drive folder, so it stays as it is.", 5000); return; }
   if(MU.pulling[epId]) return; MU.pulling[epId]=true;
   try{
     if(!quiet) toast("Reading the episode's SharePoint folder…", 60000);
     const files=(await spListOnce(spListPath(e.spFolder), !quiet)).filter(f=>!f.folder);
     const c=classify(files), old=kitOf(epId)||{};
-    /* an empty SharePoint folder never wipes out what came from Brian's Drive folder */
-    if(!files.length && old.folderId){ if(!quiet) toast("The SharePoint folder is empty, so the kit keeps using Brian's Drive folder.", 5000); MU.pulled[epId]=Date.now(); return; }
+    /* a kit that came from Brian's Drive folder is never replaced by the SharePoint folder */
+    if(old.folderId){ if(!quiet) toast("This kit comes from Brian's Drive folder, so it stays as it is.", 5000); MU.pulled[epId]=Date.now(); return; }
     const thumbs=[];
     for(const f of c.thumbs){
       const prev=(old.thumbs||[]).find(t=>t.spPath===f.path && S.images[t.img]) || null;
@@ -5050,7 +5067,7 @@ async function kitPullSP(epId, quiet){
 }
 /* runs with kitSync: make folders for upcoming episodes, check folders that are still filling */
 async function muSync(){
-  if(!SPX() || !CANWRITE || !LOADED.has("episodes") || !LOADED.has("kits")) return;
+  if(STALE.on || !SPX() || !CANWRITE || !LOADED.has("episodes") || !LOADED.has("kits")) return;
   const t=T();
   const eps=vals("episodes").filter(e=>e.num && owes(e) && (+e.season||1)>=2 && (!e.airDate || e.airDate>=add(t,-21)));
   for(const e of eps){
@@ -6283,7 +6300,7 @@ async function hlRun(popup){
 }
 /* once the pictures have loaded, and again when new logos arrive */
 let HL_T=null;
-function hlSoon(){ if(!HL_BRIDGE) return; clearTimeout(HL_T); HL_T=setTimeout(()=>{ if(LOADED.has("images") && hlNeeded().length && HLB.state!=="signin") hlRun(false); }, 4000); }
+function hlSoon(){ if(!HL_BRIDGE || STALE.on) return; clearTimeout(HL_T); HL_T=setTimeout(()=>{ if(LOADED.has("images") && hlNeeded().length && HLB.state!=="signin") hlRun(false); }, 4000); }
 
 /* the status line on the logo shelf */
 function hlNote(){
