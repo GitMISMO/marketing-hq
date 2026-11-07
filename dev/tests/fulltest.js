@@ -1,6 +1,6 @@
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch(); const report=[];
-const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
+const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help","settings"];
 for(const [w,tag,dark] of [[1440,'desk',false],[1440,'dark',true],[390,'phone',false]]){
   const p=await b.newPage({viewport:{width:w,height:900},colorScheme:dark?'dark':'light'});
   const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{ if(m.type()==='error' && !/net::|Failed to load|ERR_/.test(m.text())) errs.push('console: '+m.text()); });
