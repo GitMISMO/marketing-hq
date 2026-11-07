@@ -56,6 +56,33 @@
     upload(d.name, d.blob).then(function (url) { say("Saved " + d.name + "."); reply({ url: url }); })
       .catch(function (err) { say("Couldn't save " + d.name + "."); reply({ error: String(err && err.message || err) }); });
   });
+  /* Certification lists: MISMO Media asks for a "who is certified" page on the website (same site as this page)
+     and gets back the program's badge and each certified organization's name and profile page. Read-only, and
+     only pages under /mismowebsite/standards-resources/. */
+  function certs(slug) {
+    if (!/^[a-z0-9-]{3,80}$/.test(String(slug || ""))) return Promise.reject(new Error("bad page"));
+    var path = "/mismowebsite/standards-resources/" + slug;
+    return fetch(path, { credentials: "same-origin" }).then(function (r) { if (!r.ok) throw new Error("the website said " + r.status); return r.text(); })
+      .then(function (html) {
+        var doc = new DOMParser().parseFromString(html, "text/html"), m = doc.querySelector("#MPContentArea") || doc.body;
+        var base = location.origin + path, rel = function (h) { try { return new URL(h, base).pathname.replace(/^\/mismowebsite\//, ""); } catch (e) { return ""; } };
+        var h1 = m.querySelector("h1"), badge = m.querySelector("img[alt*='adge']"), seen = {}, items = [];
+        Array.prototype.forEach.call(m.querySelectorAll("a"), function (a) {
+          if (!/View Profile/i.test(a.textContent)) return;
+          var name = a.textContent.replace(/View Profile\s*→?/i, "").replace(/\s+/g, " ").trim(), img = a.querySelector("img");
+          if (!name && img) name = (img.getAttribute("alt") || "").replace(/\s*logo$/i, "").trim();
+          if (!name || seen[name.toLowerCase()]) return; seen[name.toLowerCase()] = 1;
+          items.push({ name: name, path: rel(a.getAttribute("href") || ""), logo: img ? new URL(img.getAttribute("src") || "", base).href : "" });
+        });
+        return { title: h1 ? h1.textContent.replace(/\s+/g, " ").trim() : "", badge: badge ? new URL(badge.getAttribute("src") || "", base).href.split("?")[0] : "",
+          page: "standards-resources/" + slug, items: items };
+      });
+  }
+  window.addEventListener("message", function (e) {
+    if (e.origin !== PARENT || !e.data || e.data.mm !== "hl-certs") return;
+    var d = e.data, reply = function (x) { x.mm = "hl-result"; x.id = d.id; e.source.postMessage(x, PARENT); };
+    certs(d.slug).then(function (out) { reply(out); }).catch(function (err) { reply({ error: String(err && err.message || err) }); });
+  });
   auth().then(function (a) { target.postMessage({ mm: "hl-ready", loggedin: !!(a && a.loggedin && a.token) }, PARENT); })
     .catch(function () { target.postMessage({ mm: "hl-ready", loggedin: false }, PARENT); });
 })();
