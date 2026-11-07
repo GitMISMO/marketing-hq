@@ -81,6 +81,51 @@ function hmNeeds(){
   return (me.toLowerCase()==="amy"?amy:[]).concat(list.length?list:(me?[]:open)).slice(0,6);
 }
 
+/* Everything waiting on Amy's OK, and one reminder email that covers it all (Nov 7, 2026). Mic'd Up wording
+   keeps its Approve / Request Changes reply buttons (same [MM:…] subjects the Amy Replies flow reads);
+   newsletter sections and posts link to MISMO Media, where she approves them. Kept in settings/amy-remind. */
+function amyWaiting(){
+  const ed=curEdition(), mo=ed?monthName(ed.month).replace(/ \d{4}$/,""):"";
+  return {
+    kits: kitsWithAmy().map(k=>S.episodes[k.id]).filter(Boolean),
+    secs: ed ? edSections(ed).filter(s=>s.on && s.doc.status==="review").map(s=>(s.doc.name||s.meta.name)+" ("+mo+" MISMO Matters)") : [],
+    posts: vals("pieces").filter(p=>p.status==="review").map(p=>p.title||"A post")
+  };
+}
+function amyCount(w){ return w.kits.length+w.secs.length+w.posts.length; }
+function amyRemindEmail(w, from){
+  const F='font-family:Arial,Helvetica,sans-serif;', n=amyCount(w);
+  const row=(t,extra)=>'<tr><td style="padding:9px 0;border-bottom:1px solid #e5eef5;'+F+'font-size:15px;line-height:1.5;color:#0d314c">'+esc(t)+(extra||'')+'</td></tr>';
+  const kitRow=e=>row("Mic'd Up "+epWord(e)+" LinkedIn Live wording"+(e.guests?" ("+e.guests+")":""),
+    '<div style="margin-top:6px"><a href="'+liMailto(e,false,"Approved")+'" style="'+F+'font-size:13px;font-weight:bold;color:#0f7b5c">Approve</a> &nbsp;·&nbsp; <a href="'+liMailto(e,false,"Changes:\n\n")+'" style="'+F+'font-size:13px;font-weight:bold;color:#1a8fe3">Request Changes</a> &nbsp;<span style="font-size:12px;color:#56718a">(the full wording is in the first email)</span></div>');
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f6fa;padding:24px 0"><tr><td align="center">'+
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #d5e2ed">'+
+    '<tr><td style="background:#0d314c;padding:18px 28px;'+F+'color:#ffffff;font-size:13px;letter-spacing:2px;font-weight:bold">MISMO MEDIA <span style="color:#74bfeb;font-weight:normal">· REMINDER</span></td></tr>'+
+    '<tr><td style="padding:26px 28px 6px;'+F+'color:#0d314c"><div style="font-size:21px;font-weight:bold;line-height:1.3;margin:0 0 8px">'+n+' item'+(n===1?' is':'s are')+' waiting on your approval</div>'+
+      '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, a quick reminder. These are ready for your OK.</div></td></tr>'+
+    '<tr><td style="padding:6px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+
+      w.kits.map(kitRow).join("")+w.secs.map(t=>row(t)).join("")+w.posts.map(t=>row(t)).join("")+'</table></td></tr>'+
+    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/marketing-hq/#home" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
+    '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'.</td></tr>'+
+    '</table></td></tr></table>';
+}
+async function remindAmy(){
+  const w=amyWaiting(), n=amyCount(w); if(!n){ toast("Nothing is waiting on Amy."); return; }
+  const last=S.settings["amy-remind"]; const hrs=last&&last.at?(Date.now()-Date.parse(last.at))/36e5:99;
+  if(hrs<4 && !window.confirm("Amy was reminded "+(hrs<1?"less than an hour":Math.round(hrs)+" hour"+(Math.round(hrs)===1?"":"s"))+" ago"+(last.by?" by "+last.by:"")+". Send another reminder?")) return;
+  const send=window.__hqImages && window.__hqImages.notify; if(!send){ toast("Reminders send from resources.mismo.org.", 4000); return; }
+  try{ await send(LI_APPROVER.email, "Reminder: "+n+" item"+(n===1?"":"s")+" waiting on your approval in MISMO Media", amyRemindEmail(w, window.__hqWho||"")); }
+  catch(e){ toast("The reminder didn't send: "+(e.message||"try again"), 6000); return; }
+  try{ await put("settings","amy-remind",{at:new Date().toISOString(), by:window.__hqWho||"", count:n}); }catch(e){}
+  toast("Reminder sent to Amy ("+n+" item"+(n===1?"":"s")+")", 4000); if(TAB==="home") renderHome();
+}
+function amyRemindBar(me){
+  if(String(me||"").toLowerCase()==="amy") return "";
+  const n=amyCount(amyWaiting()); if(!n) return "";
+  const last=S.settings["amy-remind"]; const when=last&&last.at?"reminded "+fS(localDay(last.at)):"";
+  return '<div class="hm-amy"><span><b>'+n+'</b> waiting on Amy'+(when?' · '+esc(when):'')+'</span><button type="button" class="hm-remind" id="hm-remind">Remind Amy</button></div>';
+}
+
 /* the story of one piece of work, from start to finish */
 function hmEpJourney(e){
   const k=(typeof kitOf==="function"&&kitOf(e.id))||{}, g=typeof guestFor==="function"?guestFor(e):null;
@@ -119,7 +164,7 @@ function renderHome(){
       '<p>'+(say.length?say.join("; ").replace(/^./,c=>c.toUpperCase())+".":"Here's everything MISMO is putting out, on one page.")+(late?' <em class="hm-late">'+hmPl(late,"item")+' past due.</em>':'')+'</p></div>'+
       '<div class="hm-needs"><div class="hm-nh">'+(me?"On Your Plate":"Coming Up")+' <span>next 7 days</span></div>'+
         (needs.length?needs.map((e,i)=>'<button type="button" class="hm-need k-'+esc(e.k)+(isOver(e)?' over':'')+'" data-need="'+i+'"><span>'+esc(isOver(e)?"Past due":dBetween(t,e.date)===0?"Today":fS(e.date))+'</span><b>'+esc(e.label)+'</b></button>').join("")
-          :'<div class="hm-clear">Nothing due for you this week.</div>')+
+          :'<div class="hm-clear">Nothing due for you this week.</div>')+amyRemindBar(me)+
         '<button type="button" class="hm-all" data-hgo="overview">See the Full Schedule →</button></div></div>'+
     '<div class="hm-viewbar"><h2 class="hm-h2">'+(HM.view==="map"?"How It All Connects":"The Studio")+'</h2><div class="hm-seg" role="tablist" aria-label="Home view">'+
       '<button type="button" role="tab" data-hview="studio" aria-selected="'+(HM.view!=="map")+'">Studio</button><button type="button" role="tab" data-hview="map" aria-selected="'+(HM.view==="map")+'">How It All Connects</button></div></div>'+
@@ -132,6 +177,7 @@ function renderHome(){
     : hmStudio());
   $$("[data-hview]",el).forEach(b=>b.addEventListener("click",()=>{ HM.view=b.dataset.hview; try{ localStorage.setItem("mm.home.view",HM.view); }catch(e){} renderHome(); }));
   $$("[data-hgo]",el).forEach(b=>b.addEventListener("click",()=>{ const v=b.dataset.hgo; if(v.startsWith("ep:")){ go("micdup"); openEpisode(v.slice(3)); } else go(v); }));
+  const rb=$("#hm-remind",el); if(rb) rb.onclick=async()=>{ rb.disabled=true; try{ await remindAmy(); } finally{ rb.disabled=false; } };
   $$("[data-need]",el).forEach(b=>b.addEventListener("click",()=>{ const e=needs[+b.dataset.need]; if(e && e.go) e.go(); }));
   const map=$("#hm-map",el);
   $$(".hm-node",el).forEach(b=>{

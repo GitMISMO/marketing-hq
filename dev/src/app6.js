@@ -87,6 +87,7 @@ const HELP = [
    <li><b>Start the edition.</b> On MISMO Matters, press <b>Start the Next Edition</b>. It creates the next month with all thirteen sections, waiting for content.</li>
    <li><b>Drop content in as it arrives.</b> Click a section, paste the headline, body copy, quote and link, add the image, and press <b>Save</b>. There's no need to wait for everything.</li>
    <li><b>Send each section to Amy.</b> <b>Save &amp; Send to Amy</b> marks it "With Amy for Review" and it shows in her count.</li>
+   <li><b>Reminding Amy:</b> when anything is waiting on her, Home's On Your Plate box shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
    <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
    <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
    <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b> and paste it into the email's HTML block. <b>Copy Plain Text</b> is the text-only version.</li>
