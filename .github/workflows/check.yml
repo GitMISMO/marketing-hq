@@ -59,8 +59,9 @@ jobs:
           pathlib.Path('dev/out/app.js').write_text(max(b, key=len))
           PY
           npx --yes eslint@9.14.0 -c dev/eslint.config.mjs dev/out/app.js
-      # The browser tests need the sample records, which are kept in the private data repo. Until this
-      # repo has a read-only token for it (secret MARKETING_HQ_DATA_TOKEN), the tests say "Skipped".
+      # The browser tests run on every change. They use the made-up records in dev/tests/fixture.html,
+      # or MISMO's real sample from the private data repo once this repo has a read-only token for it
+      # (secret MARKETING_HQ_DATA_TOKEN).
       - name: Fetch the sample records for the tests
         if: ${{ env.HAS_DATA_TOKEN == 'true' }}
         env:
@@ -68,7 +69,6 @@ jobs:
         run: |
           gh api repos/GitMISMO/marketing-hq-data/contents/dev/sample-data.html -H "Accept: application/vnd.github.raw" > dev/tests/sample-data.html
       - name: Browser tests
-        if: ${{ env.HAS_DATA_TOKEN == 'true' }}
         run: |
           npm install --no-save --no-audit --no-fund playwright@1.48.2
           npx playwright install --with-deps chromium
