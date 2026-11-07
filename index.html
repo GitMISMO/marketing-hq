@@ -2048,13 +2048,10 @@ tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
   .ds-tbl tr{padding:8px 0;border-bottom:1px solid var(--rule)}.ds-tbl td{border:0;padding:3px 0}.ds-tbl td:last-child{width:auto}}
 #page-settings .subtabs{margin:0 0 16px}
 /* System Health, Summit HQ's design (Nov 7, 2026) */
-.hh-btn{position:relative;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:5px 10px 5px 9px;font:500 11.5px/1 var(--display,inherit);cursor:pointer;white-space:nowrap}
-.hh-btn:hover{background:rgba(255,255,255,.18)}
-.hh-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.hh-btn .hh-dot{position:absolute;left:18px;top:3px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 0 2px var(--navy,#0d314c)}
-.hh-btn .hh-dot.ok{background:#72C08E}.hh-btn .hh-dot.warn{background:#E0A83C}.hh-btn .hh-dot.bad{background:#F08579}
-@media(max-width:700px){.hh-btn span{display:none}}
-@media(max-width:480px){.hh-btn{padding:5px 7px}.hqtop .mastrule{display:none}.hqtop .hqname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+#hh-btn{position:relative}
+#hh-btn .hh-dot{position:absolute;left:21px;top:6px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 0 2px var(--navy,#0d314c)}
+#hh-btn .hh-dot.ok{background:#72C08E}#hh-btn .hh-dot.warn{background:#E0A83C}#hh-btn .hh-dot.bad{background:#F08579}
+body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 #hh-bar{position:fixed;top:calc(var(--hq-h,56px) + 10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:140;display:flex;align-items:center;gap:12px;max-width:min(760px,calc(100vw - 32px));
   background:#FBE8E6;color:#7A1913;border:1px solid #A32219;border-radius:8px;padding:9px 10px 9px 14px;font:500 13px/1.4 var(--display,inherit);box-shadow:0 6px 20px rgba(13,49,76,.16)}
 #hh-bar[hidden]{display:none}#hh-bar b{font-weight:700}
@@ -6849,7 +6846,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-07 10:06 ET · ec2f8a0";
+const BUILD = "2026-11-07 10:09 ET · ffd4a4c";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -7047,14 +7044,17 @@ function hhRun(){
   const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
+/* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
 function hhPlace(){
-  const r=document.querySelector(".hqtop-r"); if(!r) return;
+  const foot=document.querySelector(".hq .mast-right"); if(!foot) return;
   if(!HH.btn){
-    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="hh-btn"; b.title="System Health";
-    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
+    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="theme-btn"; b.title="System Health";
+    b.innerHTML='<svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
     b.addEventListener("click", hhOpen); HH.btn=b; HH.dot=b.querySelector(".hh-dot");
   }
-  if(HH.btn.parentNode!==r) r.insertBefore(HH.btn, r.querySelector("#rs-account")||null);
+  const before=document.getElementById("theme-btn");
+  if(before && (HH.btn.parentNode!==foot || HH.btn.nextSibling!==before)) foot.insertBefore(HH.btn, before);
+  else if(!before && HH.btn.parentNode!==foot) foot.appendChild(HH.btn);
 }
 function hhPaint(){
   hhPlace(); if(!HH.last) return;

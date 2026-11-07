@@ -3,6 +3,7 @@
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
 ## 2026-11-07 (midday)
+- System Health moved to the bottom of the left menu, above Dark Mode, as in Summit HQ.
 - Image Library thumbnails: grids and pickers show a small copy (up to 640 px, WebP). The first editor to see a big picture makes it, saves it to SharePoint and notes it on the picture (spThumb), so everyone after gets the small one. Full-size pictures are still used for downloads, the newsletter and Higher Logic.
 
 ## 2026-11-07 (late morning)
