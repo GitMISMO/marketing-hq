@@ -3,6 +3,8 @@
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
 ## 2026-11-07 (afternoon)
+- Unsubscribes: Bring In Informz Unsubscribes loads Informz's unsubscribe report (Contacts › Reports › Unsubscribes) for people who used the Gmail or Outlook unsubscribe button, which only reaches Informz. They're filed with the same ids as the unsubscribe page, marked already out of Higher Logic, and come off the subscriber list. New Send Checklist step for it.
+- Mic'd Up: Spotify left out of the page header, the episode kit's go-live line and the Results tiles while it's on hold.
 - MISMO Matters footer: the Unsubscribe link is marked as Informz's unsubscribe link (External Link to MISMO's own page, per Higher Logic support), so Informz accepts the email for sending and people still land on resources.mismo.org/forms/unsubscribe/.
 
 ## 2026-11-07 (midday)
