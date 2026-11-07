@@ -45,6 +45,14 @@ const r=await p.evaluate(async()=>{
   out.rowsTabbable = [...document.querySelectorAll("tr.click")].every(r=>r.tabIndex===0);
   // 13. pane inert when closed, focus returns
   const btn=document.querySelector("button"); btn.focus(); openPane({title:"T",fields:[{k:"a",label:"A"}],data:{}}); await wait(260); const inertOpen=document.getElementById("pane").inert; closePane(true); out.pane = inertOpen===false && document.getElementById("pane").inert===true && document.activeElement===btn;
+  // 14. dates are editable: a saved holiday moves deadlines, the website date drives newsletter links
+  await put("settings","dates",{holidays:Object.assign({}, HOLIDAYS, {"2028-01-17":"MLK Jr. Birthday"}), summits:SUMMITS.map(s=>Object.assign({},s)).concat([{id:"t",name:"2028 Winter Summit",start:"2028-01-10",end:"2028-01-13",where:"Test"}]), siteLive:"2026-12-01"}); await wait(80);
+  renderAll(); await wait(30);
+  out.dates = HOLIDAYS["2028-01-17"]==="MLK Jr. Birthday" && SUMMITS.some(s=>s.name==="2028 Winter Summit") && siteLive()==="2026-12-01" && certSite({dates:{publish:"2026-11-19"}},"x")==="https://collaborate.mismo.org/mismowebsite/x";
+  go("help"); HL.id="dates"; renderHelp(); await wait(30); out.datesPage = /Dates and Settings/.test(document.querySelector("#page-help").textContent) && document.querySelectorAll("[data-hd]").length>10;
+  // 15. Eastern-time countdown and local days
+  out.et = etAt("2026-11-13","08:30").toISOString()==="2026-11-13T13:30:00.000Z" && localDay("2026-11-07")==="2026-11-07";
+  out.sizes = typeof fileSizes==="function";
   out.leader = LEADER; out.jobs = Object.keys(JOBS);
   return out;
 });
