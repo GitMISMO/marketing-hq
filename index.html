@@ -2016,6 +2016,16 @@ tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
 .nm-att figure{margin:0;width:120px;display:flex;flex-direction:column;gap:4px}
 .nm-att img{width:120px;height:64px;object-fit:contain;background:#fff;border:1px solid var(--line,#e5eef5);border-radius:6px;padding:6px;box-sizing:border-box}
 .nm-att figcaption{font-size:11.5px;color:var(--ink-2,#456179);text-align:center}
+/* Help > Dates and Settings (Nov 7, 2026) */
+.ds-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 6px}
+.ds-row label{font-weight:600}
+.ds-row .hint{flex-basis:100%;margin:0}
+.ds-tbl input{width:100%;box-sizing:border-box;font:inherit;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink)}
+.ds-tbl input[type=date]{min-width:140px}
+.ds-tbl tr.past input{color:var(--ink-3)}
+.ds-tbl td:last-child{width:1%;white-space:nowrap}
+.ds-warn{background:var(--warn-soft,#fbf3e2);border:1px solid var(--warn);color:var(--ink);border-radius:6px;padding:10px 14px;margin:0 0 16px}
+.ds-save{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
 </style>
 
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
@@ -2338,6 +2348,16 @@ const iso = d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const P = s=>{ if(!s||typeof s!=="string") return null; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
 const today = ()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; };
 const T = ()=>iso(today());
+/* the local calendar day of a saved time stamp ("2026-11-07T02:30:00Z" is Nov 6 in the evening in Eastern time) */
+const localDay = ts=>{ const s=String(ts||""); if(!/T\d/.test(s)) return s.slice(0,10); const d=new Date(s); return isNaN(d)?s.slice(0,10):iso(d); };
+/* a wall-clock time in Eastern time (Mic'd Up goes live Friday 8:30 AM ET wherever the viewer is) */
+function etAt(day, hm){
+  const guess=new Date(day+"T"+hm+":00Z");
+  const f=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  const p=Object.fromEntries(f.formatToParts(guess).map(x=>[x.type,x.value]));
+  const asET=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);
+  return new Date(guess.getTime()-(asET-guess.getTime()));
+}
 const add = (s,n)=>{ const d=P(s)||today(); d.setDate(d.getDate()+n); return iso(d); };
 const diff = (a,b)=>Math.round((P(a)-P(b))/864e5);
 const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -2372,8 +2392,8 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}};
-let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const BOOT=Date.now(), HOST_AT_BOOT=!!(window.claude && window.claude.use);
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}};
+let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
   for(let i=0;i<40 && !(window.claude && window.claude.use);i++) await new Promise(r=>setTimeout(r,100));
@@ -2741,9 +2761,9 @@ staleCheck(); setInterval(staleCheck, 3*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") staleCheck(); });
 /* the background jobs (episode files, sponsor logos, certified lists) run from here, but through runJob:
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
-function renderAll(){ applyPosted(); renderTab(TAB); badges();
+function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
   if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
-  if(typeof a11yRows==="function") a11yRows(); }
+  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -3335,14 +3355,6 @@ function wireLanes(el){
   });
 }
 const RING_COL={auto:"#3987e5",waiting:"rgba(255,255,255,.16)",in:"#74bfeb",review:"#e0a83c",changes:"#f08579",approved:"#4fc79b"};
-function ringHtml(on){
-  const n=on.length||1, R=80, r=56, cx=90, cy=90, gap=0.035;
-  const arc=(a0,a1)=>{ const p=(a,rad)=>[cx+rad*Math.sin(a), cy-rad*Math.cos(a)]; const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r); const lg=(a1-a0)>Math.PI?1:0;
-    return 'M'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+R+' '+R+' 0 '+lg+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' L'+x2.toFixed(2)+' '+y2.toFixed(2)+' A'+r+' '+r+' 0 '+lg+' 0 '+x3.toFixed(2)+' '+y3.toFixed(2)+'Z'; };
-  const segs=on.map((s,i)=>{ const a0=i/n*2*Math.PI+gap, a1=(i+1)/n*2*Math.PI-gap; const st=s.meta.auto?"auto":(s.doc.status||"waiting"); return '<path d="'+arc(a0,a1)+'" fill="'+RING_COL[st]+'" data-rk="'+esc(s.k)+'"><title>'+esc((s.doc.name||s.meta.name)+" · "+(s.meta.auto?"Automatic":SSTAT[st][0]))+'</title></path>'; }).join("");
-  const inN=on.filter(s=>s.meta.auto||s.doc.status!=="waiting").length;
-  return '<div class="ring"><svg viewBox="0 0 180 180" role="img" aria-label="'+inN+' of '+on.length+' sections in">'+segs+'</svg><div class="rc"><b>'+inN+'/'+on.length+'</b><span>Sections In</span><small>'+on.filter(s=>s.doc.status==="approved").length+' approved</small></div></div>';
-}
 function ringLegend(){ return '<div class="rlegend">'+[["waiting","Waiting"],["in","Content In"],["review","With Amy"],["changes","Changes"],["approved","Approved"],["auto","Automatic"]].map(([k,l])=>'<span><i style="background:'+RING_COL[k]+'"></i>'+l+'</span>').join("")+'</div>'; }
 function waveHtml(live){ let h=''; for(let i=0;i<48;i++){ const v=0.25+0.75*Math.abs(Math.sin(i*0.55)*Math.cos(i*0.17)); h+='<i style="--h:'+(v*100).toFixed(0)+'%;--d:'+(-(i*0.09)%1.2).toFixed(2)+'s"></i>'; } return '<div class="wave'+(live?"":" idle")+'" aria-hidden="true">'+h+'</div>'; }
 
@@ -3361,31 +3373,31 @@ function peopleIndex(){
   Object.keys(PEOPLE_LISTS).forEach(l=>audienceRows(l).forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists[l]=true; if(r.l && r.l>p.last) p.last=r.l; if(r.d && r.d>p.last) p.last=r.d; if(r.x) r.x.forEach(x=>{ if(!p.x.includes(x)) p.x.push(x); }); p.c+=(+r.c||0); }));
   vals("signups").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
-    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=String(r.at||"").slice(0,10); if(d>p.last) p.last=d; });
+    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=localDay(r.at); if(d>p.last) p.last=d; });
   /* anyone who unsubscribed on MISMO's page comes off the subscriber lists automatically */
   const U=unsubMap();
   Object.values(U).forEach(u=>{ const e=u.e.toLowerCase(); const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
-    if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=String(u.at||"").slice(0,10); if(d>p.last) p.last=d; } });
+    if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=localDay(u.at); if(d>p.last) p.last=d; } });
   return Object.values(map);
 }
 /* sign-ups from the website form, newest first */
 function signupsSorted(){ const U=unsubMap(); return vals("signups").filter(s=>!isUnsubbed(s.e, s.at, U)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
 const HLST = {added:["In Higher Logic","ok"], pending:["Not in Higher Logic Yet","review"], failed:["Higher Logic Refused","changes"]};
-function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),String(s.at||"").slice(0,10)].map(q).join(","))).join("\n"); }
+function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),localDay(s.at)].map(q).join(","))).join("\n"); }
 function signupsCard(){
-  const list=signupsSorted(), t=T(), wk=list.filter(s=>String(s.at||"").slice(0,10)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
+  const list=signupsSorted(), t=T(), wk=list.filter(s=>localDay(s.at)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r"><a class="btn sm" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener">Open Subscribe Form&nbsp;↗</a><button class="btn sm" type="button" id="su-link">Copy Form Link</button>'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Signed Up</th><th>Name</th><th>Email</th><th>Company</th><th>Interests</th><th>Higher Logic</th></tr></thead><tbody>'+
-      list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(String(s.at||"").slice(0,10)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
+      list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(localDay(s.at)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
     :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, marked Pending until they are added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
 }
 const UNST = {pending:["Still in Higher Logic","review"], removed:["Removed in Higher Logic","ok"]};
 function unsubsCard(){
-  const list=unsubsSorted(), t=T(), wk=list.filter(u=>String(u.at||"").slice(0,10)>=add(t,-6)).length, todo=list.filter(u=>unsubHL(u)==="pending");
+  const list=unsubsSorted(), t=T(), wk=list.filter(u=>localDay(u.at)>=add(t,-6)).length, todo=list.filter(u=>unsubHL(u)==="pending");
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Unsubscribes</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/unsubscribe/</span><div class="r"><a class="btn sm" href="'+UNSUB_URL+'" target="_blank" rel="noopener">Open Unsubscribe Page&nbsp;↗</a>'+
       (todo.length?'<button class="btn sm" type="button" id="un-csv">Copy '+todo.length+' for Higher Logic</button><button class="btn sm pri" type="button" id="un-done">Mark Removed in Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Unsubscribed</th><th>Email</th><th>Name</th><th>Why</th><th>Higher Logic</th></tr></thead><tbody>'+
-      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(String(u.at||"").slice(0,10)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||"—")+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
+      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(localDay(u.at)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||"—")+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
     :'<div class="empty">Anyone who uses the Unsubscribe link at the bottom of MISMO Matters lands here and comes off the subscriber list right away.</div>')+
     (todo.length?'<div class="cb"><div class="hint">Until Higher Logic\'s marketing API is connected, opt these people out in Informz before the next send: Copy for Higher Logic, import them as unsubscribes, then press Mark Removed.</div></div>':'')+'</div>';
 }
@@ -3611,7 +3623,7 @@ const HELP = [
   </ul>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
-  <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which. November goes out Thursday, Nov 19, after the new website launches Nov 16.</p>
+  <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which.</p>
   <div class="hflow">
    <div><span>2 weeks before</span><b>Content Due</b><small>Contributors send copy to Kelly</small></div>
    <div><span>Next day</span><b>Sections In</b><small>Kelly drops each piece into its section</small></div>
@@ -3667,7 +3679,7 @@ const HELP = [
    <div><span>2–3 Weeks Ahead</span><b>Guest Form</b><small>The guest fills in bio, topics and questions</small></div>
    <div><span>1–2 Weeks Ahead</span><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>
    <div><span>Same Day</span><b>Into SharePoint</b><small>Video, thumbnails and transcript in the episode folder</small></div>
-   <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile; Spotify at 6:30 AM</small></div>
+   <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile</small></div>
    <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with the written description and proofed captions</small></div>
    <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
@@ -3682,14 +3694,13 @@ const HELP = [
   <p>Each Season 2 episode gets its own folder by itself, in Q Drive › MISMO › Active Documents › Marketing › MISMO Mic'd Up › Season 2, named like <i>S2 Ep 01 - Xactus</i>. <b>Open the Folder</b> in the episode or the kit goes straight there. Brian drops in the final video, the thumbnails and the transcript (.txt). Every ten minutes MISMO Media checks folders that are still missing something and pulls the files in: the largest video is the episode, other videos are clips, pictures go to the Image Library, and the Recorded On date fills itself in.</p>
   <h3>Release Week</h3>
   <ol>
-   <li><b>Friday morning:</b> tick <b>On Spotify</b> and paste its link (step 6 of the kit).</li>
    <li><b>Friday afternoon:</b> work the YouTube Kit (below) and upload. Title: <i>MISMO Mic'd Up Season 2, Ep. N: Title</i>, the way the channel has always done it. Upload the proofed captions; never burn captions into the video.</li>
    <li><b>Monday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
-   <li><b>Clips:</b> <b>Plan the Clip Posts</b> puts four LinkedIn posts on the schedule (4, 7, 11 and 14 days later, 9:00 AM, Vanessa) with captions already written.</li>
+   <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips, so the clip steps are hidden for now.</li>
    <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
-   <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube. Spotify plays go in the episode's Results and add up on the Results page.</li>
+   <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube.</li>
   </ol>
-  <p>The checks on The Weekly Run are Recorded, Captions, Spotify, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
+  <p>The checks on The Weekly Run are Recorded, Captions, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
   <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late or missing anything. Everything from Episode 51 on is tracked.</p>`},
  {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
   <p>Everything Vanessa needs to post an episode is filled in for her. The writing follows MISMO's Mic'd Up house style, taken from the published episodes on YouTube, Spotify, Apple Podcasts and MISMO's and Brian's LinkedIn posts: the same voice and shape, with the guest's title and company always included, the search words up front, chapters, topic-matched hashtags, takeaways and a subscribe line added. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>. Once Brian's files are in the SharePoint folder, the episode's card appears by itself; <b>Check the Folder</b> looks again right away.</p>
@@ -3700,9 +3711,8 @@ const HELP = [
    <li><b>Transcript:</b> <b>Check</b> lists misspelled names and MISMO terms (MISMO, Mic'd Up, Vieaux, eNote, eClose, eVault, SMART Doc, the guest's name and more). Untick anything that's right as it is, then <b>Download Corrected Transcript</b> and upload it to YouTube as the captions.</li>
    <li><b>Titles, Descriptions and Posts:</b> press <b>Write Everything</b>. In about 20 seconds, the "MISMO Media - Writer" prompt reads the transcript and the guest's answers and writes title options, the YouTube title and description, chapters, a longer description, Brian's promo post, the LinkedIn Live event name and description, the MISMO Matters blurb, a post for the guest and clip captions. Copy what you need. <b>Write Again</b> asks for a new version; <b>Draft Article</b> writes a 600–800 word viewpoint piece in Brian's voice.</li>
    <li><b>YouTube:</b> post it, then paste the link. The kit also notices it by itself once the channel lists it.</li>
-   <li><b>Spotify:</b> paste the Spotify link and save.</li>
    <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Monday.</li>
-   <li><b>Clips:</b> download any clip files from the folder, with their written captions. <b>Plan the Clip Posts</b> puts four on the LinkedIn schedule.</li>
+   <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips.</li>
    <li><b>Guest share kit:</b> copy the guest's post, <b>Email the Guest</b>, then <b>Mark as Sent</b>.</li>
   </ol>
   <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. YouTube titles read "MISMO Mic'd Up Season 2, Ep. 1: …" and MISMO's LinkedIn Live events "MISMO Mic'd Up S2 Ep. 1: …". Older Season 1 episodes that came through Google Drive keep their Drive buttons.</p>
@@ -3929,10 +3939,11 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.b)+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.id==="dates"&&typeof datesHtml==="function"?datesHtml():cur.b)+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
   if(cur.id==="system" && typeof wireSystem==="function") wireSystem(el);
+  if(cur.id==="dates" && typeof wireDates==="function") wireDates(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
@@ -4098,7 +4109,7 @@ function renderImages(){
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
           '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
-          '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(String(im.at||"").slice(0,10))].filter(Boolean).map(esc).join(" · ")+'</div>'+
+          '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(localDay(im.at))].filter(Boolean).map(esc).join(" · ")+'</div>'+
           '<div class="imact">'+(isFile(im)?'<a class="btn sm" href="'+esc(spFileUrl(im.spPath))+'" target="_blank" rel="noopener" data-stop>Open ↗</a><a class="btn sm" href="'+esc(spFileUrl(im.spPath,true))+'" target="_blank" rel="noopener" data-stop>Download</a><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>':'<button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>')+'</div></div></div>').join("")+'</div>'
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
     '</div>');
@@ -4615,7 +4626,7 @@ async function kitSync(){
       // which episode? read the folder name for the number
       let info; try{ info=await DRIVE().list(fid); }catch(e){ continue; }
       const n=parseFolder(info.name).num; if(!n) continue;
-      let ep=epByNum(n, String(m.at||"").slice(0,10)||T());
+      let ep=epByNum(n, localDay(m.at)||T());
       if(!ep){ const id=epNewId(n); await put("episodes", id, {num:n, season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
       await kitPullFolder(ep.id, fid, m.id);
     }
@@ -4631,7 +4642,7 @@ async function kitSync(){
       if(!msgIsPost(m) || vals("kits").some(k=>k.postChatId===m.id)) continue;
       const said=String(m.text||"").match(/ep(?:isode)?\.?\s*#?\s*(\d{1,3})/i);
       let target=null;
-      if(said){ const ep=epByNum(said[1], String(m.at||"").slice(0,10)||T()); if(ep && kitOf(ep.id)) target=ep.id; }
+      if(said){ const ep=epByNum(said[1], localDay(m.at)||T()); if(ep && kitOf(ep.id)) target=ep.id; }
       if(!target){ // the newest folder Brian posted before this, still waiting for its post
         const cands=vals("kits").filter(k=>!k.brianPost && k.chatId).map(k=>({k, at:(S.chat[k.chatId]||{}).at||k.pulledAt||""})).filter(x=>x.at<=String(m.at||"9")).sort((a,b)=>b.at.localeCompare(a.at));
         if(cands[0]) target=cands[0].k.id;
@@ -4707,7 +4718,6 @@ async function kitLoadTranscript(epId){
 const LI_STAT = {draft:["Draft","in"], review:["With Amy","review"], changes:["Changes Requested","changes"], approved:["Approved by Amy","ok"], edits:["Amy Replied with Edits","review"]};
 function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'?d Up\s*(Season\s*\d+,\s*)?(Episode|Ep\.)\s*\d+\s*:\s*/i,"").trim(); t=liLabel(e)+": "+t; return t.length>75 ? t.slice(0,72).replace(/\s+\S*$/,"")+"…" : t; }
 const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};
-const MEDIA_URL = "https://resources.mismo.org/marketing-hq/#micdup";
 /* the "approval needed" email to Amy: plain, branded, works in Outlook */
 function liAmyEmail(e, k, name, desc, from, rev){
   const F='font-family:Arial,Helvetica,sans-serif;';
@@ -5174,7 +5184,7 @@ async function kitPullSP(epId, quiet){
       thumbs, pulledAt:new Date().toISOString()});
     if(!kit.thumbPick && thumbs.length===1) kit.thumbPick=thumbs[0].img;
     await put("kits", epId, kit);
-    const part={}; if(c.video && !e.recordDate) part.recordDate=String(c.video.modified||"").slice(0,10)||T();
+    const part={}; if(c.video && !e.recordDate) part.recordDate=localDay(c.video.modified)||T();
     if(c.video && !e.fileIn) part.fileIn=true;
     if(Object.keys(part).length) await patch("episodes", epId, part);
     MU.pulled[epId]=Date.now();
@@ -5664,7 +5674,7 @@ function hmStudio(){
       '<div class="st-top"><span class="st-onair'+(live?" lit":"")+'">'+(live?"On Air":"Next on Air")+'</span><span class="st-lab">MISMO Mic\'d Up</span></div>'+
       '<div class="wave" aria-hidden="true">'+[...Array(64)].map((_,i)=>'<i style="--d:'+((i*37)%17)/10+'s;--h:'+(28+((i*53)%61))+'%"></i>').join("")+'</div>'+
       '<div class="mic-row"><div class="mic-ep"><b>'+esc(epTag(ne))+(ne.title?": "+esc(ne.title):"")+'</b><span>'+esc([ne.guests,ne.company].filter(Boolean).join(" · ")||"Guest to come")+'</span></div>'+
-      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'T08:30:00"></div></div>'+
+      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'"></div></div>'+
       '<div class="mic-steps">'+steps.map(s=>'<span class="'+(s[1]?"on":"")+'">'+(s[1]?"✓ ":"")+esc(s[0])+'</span>').join("")+'</div>'+
     '</button>'; }
   else mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="micdup"><div class="st-top"><span class="st-onair">Off Air</span><span class="st-lab">MISMO Mic\'d Up</span></div><div class="wave quiet" aria-hidden="true">'+[...Array(44)].map(()=>'<i></i>').join("")+'</div><div class="mic-ep"><b>No episode booked</b><span>Add the next Friday</span></div></button>';
@@ -5762,7 +5772,7 @@ function hmStudioLive(el){
   if(HM.timer){ clearInterval(HM.timer); HM.timer=null; }
   const cd=$("#hm-cd",el);
   const tick=()=>{ if(!cd || !document.body.contains(cd)){ clearInterval(HM.timer); HM.timer=null; return; }
-    const at=new Date(cd.dataset.at), ms=at-new Date();
+    const at=etAt(cd.dataset.at,"08:30"), ms=at-new Date();
     if(ms<=0){ cd.innerHTML='<span class="cd-live">Live now · Friday 8:30 AM ET</span>'; return; }
     const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4), s=Math.floor(ms%6e4/1e3);
     cd.innerHTML=[[d,"days"],[h,"hrs"],[m,"min"],[s,"sec"]].map(([v,l])=>'<span><b>'+String(v).padStart(2,"0")+'</b><small>'+l+'</small></span>').join("");
@@ -6601,13 +6611,13 @@ const CERT_PROGRAMS = [
   {k:"evault",     slug:"evault-certified-providers",   name:"eVault Certified Systems",      title:"MISMO Certified eVault Systems",         what:"system"},
   {k:"ron",        slug:"ron-certified-providers",      name:"RON Certified Providers",       title:"MISMO Certified RON Providers",          what:"provider"}
 ];
-const CERT_SITE_LIVE = "2026-11-16";
+const CERT_SITE_LIVE = "2026-11-16";   /* the default; Help > Dates and Settings can change it (siteLive) */
 const CERT = {busy:false, at:0, err:""};
 function certProg(k){ return CERT_PROGRAMS.find(p=>p.k===k) || null; }
 function isCertSpot(s){ return s.k==="cert" && !!certProg(s.doc.certProgram) && (s.doc.certItems||[]).length>0; }
 /* the website address for a page, as it will be when the edition goes out */
 function certSite(ed, path){ const day=(ed && ed.dates && ed.dates.publish) || T();
-  return (day>=CERT_SITE_LIVE ? "https://www.mismo.org/" : "https://collaborate.mismo.org/mismowebsite/") + String(path||"").replace(/^\/+/,""); }
+  return (day>=(typeof siteLive==="function"?siteLive():CERT_SITE_LIVE) ? "https://www.mismo.org/" : "https://collaborate.mismo.org/mismowebsite/") + String(path||"").replace(/^\/+/,""); }
 
 /* ask the uploader page on the website for a program's list */
 async function certAsk(slug){
@@ -6720,7 +6730,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-06 22:24 ET · fd491e9";
+const BUILD = "2026-11-07 09:05 ET · 354e3ec";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -6766,11 +6776,79 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Dates and Settings so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Dates and Settings.");
   return out;
 }
+/* ---------- how full each data file is ----------
+   The save relay takes files up to about 940 KB. Each collection (all episode kits, all sections...) is one
+   file, so this watches them and warns at 70%, long before a save could fail. */
+const FILE_MAX = 940000;
+function fileSizes(){
+  const F=(window.__hqRelay && window.__hqRelay.files) || {};
+  return Object.keys(F).filter(k=>F[k].loaded && F[k].server && !/^audience-|^own-index$/.test(k))
+    .map(k=>{ const n=JSON.stringify(F[k].server,null,2).length; return {name:k, kb:Math.round(n/1024), pct:Math.round(n/FILE_MAX*100)}; })
+    .sort((a,b)=>b.pct-a.pct);
+}
+let SIZE_WARNED=false;
+function sizeWatch(){
+  if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
+  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Help > System Health.", 8000); }
+}
+
+/* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
+   The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
+   the code. They now live in one settings record (settings/dates) that staff edit on Help > Dates and Settings;
+   until someone saves it, the lists written into the code stand. */
+const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
+let SET_SIG = "";
+function datesNow(){ const d=(S.settings||{}).dates; return d && d.holidays ? d : DEF_DATES; }
+function siteLive(){ return datesNow().siteLive || CERT_SITE_LIVE; }
+function applySettings(){
+  const d=datesNow(), sig=JSON.stringify(d); if(sig===SET_SIG) return; SET_SIG=sig;
+  Object.keys(HOLIDAYS).forEach(k=>delete HOLIDAYS[k]); Object.assign(HOLIDAYS, d.holidays||{});
+  SUMMITS.length=0; (d.summits||[]).forEach(s=>SUMMITS.push(Object.assign({}, s)));
+  if(!SUMMITS.length) DEF_DATES.summits.forEach(s=>SUMMITS.push(Object.assign({}, s)));
+}
+const DS = {draft:null};
+function datesHtml(){
+  const d = DS.draft || (DS.draft = JSON.parse(JSON.stringify(datesNow())));
+  const hol = Object.keys(d.holidays).sort();
+  const t=T(), warn=dateWarnings();
+  return '<p class="lead">The dates MISMO Media plans around. Change them here and every schedule, countdown and link follows.</p>'+
+    (warn.length?'<div class="ds-warn">'+warn.map(w=>esc(w)).join("<br>")+'</div>':'')+
+    '<h3>New Website</h3><div class="ds-row"><label for="ds-live">Goes live on</label><input type="date" id="ds-live" value="'+esc(d.siteLive||"")+'"><span class="hint">Newsletter links point to www.mismo.org for editions sent on or after this day, and to collaborate.mismo.org before it.</span></div>'+
+    '<h3>Holidays</h3><p class="hint">MISMO Media moves deadlines off these days and weekends.</p>'+
+    '<table class="tbl ds-tbl"><thead><tr><th>Date</th><th>Holiday</th><th></th></tr></thead><tbody>'+
+      hol.map((k,i)=>'<tr'+(k<t?' class="past"':'')+'><td><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"></td><td><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"></td><td><button class="btn sm" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'">Remove</button></td></tr>').join("")+
+    '</tbody></table><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
+    '<h3>Summits</h3><table class="tbl ds-tbl"><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
+      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="btn sm" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'">Remove</button></td></tr>').join("")+
+    '</tbody></table><p><button class="btn sm" type="button" id="ds-adds">Add a Summit</button></p>'+
+    '<p class="ds-save"><button class="btn pri" type="button" id="ds-save">Save Dates</button> <button class="btn" type="button" id="ds-reset">Undo My Changes</button> <span class="note" id="ds-msg">'+(((S.settings||{}).dates||{}).updatedBy?"Last saved by "+esc(S.settings.dates.updatedBy)+", "+esc(fD(localDay(S.settings.dates.updatedAt))):"Showing the dates built into MISMO Media; nobody has changed them yet.")+'</span></p>';
+}
+function wireDates(el){
+  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>renderHelp();
+  const syncH=()=>{ const out={}; hol.forEach((k,i)=>{ const dt=$('[data-hd="'+i+'"]',el), nm=$('[data-hn="'+i+'"]',el); if(dt && dt.value) out[dt.value]=(nm&&nm.value.trim())||"Holiday"; }); d.holidays=out; };
+  const syncS=()=>{ d.summits.forEach((s,i)=>{ const g=a=>$('[data-'+a+'="'+i+'"]',el); s.name=(g("sn")||{}).value||s.name; s.start=(g("ss")||{}).value||""; s.end=(g("se")||{}).value||s.start; s.where=(g("sw")||{}).value||""; }); };
+  const sync=()=>{ syncH(); syncS(); const l=$("#ds-live",el); if(l) d.siteLive=l.value; };
+  $$("input",el).forEach(i=>{ if(i.closest(".helpbody")) i.addEventListener("change", sync); });
+  $$("[data-hx]",el).forEach(b=>b.onclick=()=>{ sync(); delete d.holidays[hol[+b.dataset.hx]]; redraw(); });
+  $$("[data-sx]",el).forEach(b=>b.onclick=()=>{ sync(); d.summits.splice(+b.dataset.sx,1); redraw(); });
+  const ah=$("#ds-addh",el); if(ah) ah.onclick=()=>{ sync(); let k=add(T(),1); while(d.holidays[k]) k=add(k,1); d.holidays[k]="New holiday"; redraw(); };
+  const as=$("#ds-adds",el); if(as) as.onclick=()=>{ sync(); const y=new Date().getFullYear()+1; d.summits.push({id:"summit-"+Date.now().toString(36), name:y+" Summit", start:"", end:"", where:""}); redraw(); };
+  const rs=$("#ds-reset",el); if(rs) rs.onclick=()=>{ DS.draft=null; redraw(); };
+  const sv=$("#ds-save",el); if(sv) sv.onclick=async()=>{
+    sync();
+    const bad=d.summits.find(s=>!s.name || !s.start || (s.end && s.end<s.start));
+    if(bad){ $("#ds-msg",el).textContent="Each summit needs a name and a start date, and can't end before it starts."; return; }
+    d.summits.forEach(s=>{ if(!s.id) s.id="summit-"+Date.now().toString(36); if(!s.end) s.end=s.start; });
+    d.summits.sort((a,b)=>a.start<b.start?-1:1);
+    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); renderHelp(); }catch(e){}
+  };
+}
+HELP.push({id:"dates", t:"Dates and Settings", g:"System", b:""});
 
 /* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
@@ -6792,6 +6870,8 @@ function systemHtml(){
     (jobs.length?'<h3>Background Jobs</h3><table class="tbl"><thead><tr><th>Job</th><th>Last ran</th><th>Status</th></tr></thead><tbody>'+
       jobs.map(j=>'<tr><td>'+esc(j.name)+'</td><td>'+esc(ago(j.lastRun))+'</td><td>'+(j.lastErr && j.lastErrAt>j.lastOk?'<b class="bad">'+esc(j.lastErr)+'</b> · next try at '+esc(new Date(j.next).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})):"OK")+'</td></tr>').join("")+'</tbody></table>':'')+
     (warn.length?'<h3>Dates to Add</h3><ul>'+warn.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+
+    (()=>{ const fs=fileSizes(); return fs.length?'<h3>Room Left in Each Data File</h3><p>Each kind of record is saved as one file, and one save can hold about 940 KB. Anything over 70% needs splitting before it fills.</p><table class="tbl"><thead><tr><th>Records</th><th class="n">Size</th><th class="n">Full</th></tr></thead><tbody>'+
+      fs.slice(0,12).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="n">'+f.kb+' KB</td><td class="n">'+(f.pct>=70?'<b class="bad">'+f.pct+'%</b>':f.pct+'%')+'</td></tr>').join("")+'</tbody></table>':''; })()+
     '<h3>Recently Deleted</h3>'+(trash.length?'<p>Delete puts things aside instead of erasing them. Bring any of these back with one click.</p><table class="tbl"><thead><tr><th>What</th><th>Deleted</th><th></th></tr></thead><tbody>'+
       trash.slice(0,60).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b><span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(fD(String(x.r._deletedAt).slice(0,10)))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="note">Nothing has been deleted since this was switched on.</p>')+
     '<h3>Download All Data</h3><p>One file with every MISMO Media record (editions, sections, episodes, kits, posts, lists, requests and the subscriber lists), for safekeeping. It holds personal emails, so keep it somewhere private.</p>'+
