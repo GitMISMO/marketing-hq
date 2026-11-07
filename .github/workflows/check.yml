@@ -50,6 +50,15 @@ jobs:
           if ! cmp -s <(norm index.html) <(norm dev/out/site.html); then
             echo "::warning::index.html is not what dev/src builds. Someone changed one without the other; bring dev/src up to date before the next change."
           fi
+      - name: Code check (common mistakes, not style)
+        run: |
+          python3 - <<'PY'
+          import re, pathlib
+          s = pathlib.Path('dev/out/site.html').read_text()
+          b = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', s, re.S)
+          pathlib.Path('dev/out/app.js').write_text(max(b, key=len))
+          PY
+          npx --yes eslint@9.14.0 -c dev/eslint.config.mjs dev/out/app.js
       # The browser tests need the sample records, which are kept in the private data repo. Until this
       # repo has a read-only token for it (secret MARKETING_HQ_DATA_TOKEN), the tests say "Skipped".
       - name: Fetch the sample records for the tests
