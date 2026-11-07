@@ -3974,13 +3974,14 @@ const HELP = [
    <li>Uploading images and "Write the LinkedIn Post" work in the Claude version today and will come to resources.mismo.org when the relay supports them.</li>
   </ul>`},
  {id:"automation", t:"Daily Stats from Power Automate", g:"Behind the Scenes", b:`
-  <p>Once MISMO Media is saving on resources.mismo.org, a scheduled Power Automate flow can bring the numbers in every morning instead of anyone importing them. The flow writes one file, <code>data/feeds.json</code>, into marketing-hq-data, the same way the Member 360 email flow writes its results file. MISMO Media reads it and fills in Results, the edition stats and the episode views on its own. Typed or imported numbers always win over the feed.</p>
-  <table class="t"><thead><tr><th>Source</th><th>Daily?</th><th>How the Flow Gets It</th></tr></thead><tbody>
-   <tr><td>MISMO Matters (Higher Logic)</td><td>Yes</td><td>HTTP call to Higher Logic's marketing (Informz) API for each mailing: sent, delivered, unique opens, unique clicks, unsubscribes, bounces. Needs an API user from Higher Logic.</td></tr>
-   <tr><td>YouTube</td><td>Yes</td><td>HTTP call to the YouTube Data API with a Google API key for views, likes and comments. Power Automate's own YouTube connector only announces new uploads; it has no view counts.</td></tr>
-   <tr><td>Mailchimp</td><td>Yes</td><td>HTTP call to Mailchimp's reports API with a Mailchimp API key.</td></tr>
-   <tr><td>LinkedIn</td><td>Not yet</td><td>Power Automate has no LinkedIn analytics action. Page analytics need a LinkedIn developer app approved for organization data. Until then, drop the monthly export on Results.</td></tr>
-   <tr><td>Website subscribers</td><td>As they happen</td><td>MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td></tr>
+  <p>Where each number comes from today (Nov 7, 2026). The daily ones are written into one file, <code>data/feeds.json</code> in marketing-hq-data, which MISMO Media reads to fill in Results, the edition stats and the episode views. Typed or imported numbers always win over the feed. The rest stay on the monthly checklist at the top of Results, and each line there ticks itself once its numbers arrive.</p>
+  <table class="t"><thead><tr><th>Source</th><th>How It Comes In</th><th>What's Needed</th></tr></thead><tbody>
+   <tr><td>YouTube</td><td><b>Every morning, by itself.</b> The <b>Results feed</b> workflow in marketing-hq-data reads views and likes for every video from the channel's public pages.</td><td>Nothing. Watch time and other Studio numbers still come from the monthly YouTube Studio export, if wanted.</td></tr>
+   <tr><td>MISMO Matters (Informz)</td><td>Typed in from Higher Logic's report with <b>Record Stats</b>, once a month.</td><td>To make it automatic: an Informz API user from Higher Logic support. With it, the Results feed can read sent, delivered, opens, clicks, unsubscribes and bounces every morning.</td></tr>
+   <tr><td>Mailchimp</td><td>The monthly campaigns export dropped on Results.</td><td>Being retired now that MISMO Matters goes through Informz; a Mailchimp API key would make it automatic in the meantime.</td></tr>
+   <tr><td>LinkedIn</td><td>The monthly export dropped on Results (Vanessa).</td><td>LinkedIn doesn't let outside tools read page analytics without an approved developer app, so this stays by hand.</td></tr>
+   <tr><td>In the News</td><td><b>Every morning, by itself.</b> The <b>In the News web search</b> workflow searches Google News and Bing News for MISMO; Brittney's FYI emails come in as they're sent.</td><td>Nothing.</td></tr>
+   <tr><td>Website subscribers</td><td>As they happen. MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td><td>Nothing.</td></tr>
   </tbody></table>
   <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
   <h3>What the File Looks Like</h3>
@@ -6252,7 +6253,7 @@ function mnTasks(per){
       link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-li"},
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
-      why:'Views, watch time and likes for each Mic\'d Up episode.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
+      why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
     {k:"mc", t:"Mailchimp", feed:"mailchimp",
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
       why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mc"},
@@ -6811,7 +6812,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-07 09:42 ET · e480ff4";
+const BUILD = "2026-11-07 09:49 ET · 3a60c2a";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -6934,13 +6935,13 @@ HELP.push({id:"dates", t:"Holidays and Key Dates", g:"Setup", b:""});
    Built the way Summit HQ's is (Jonna liked it): a System Health button in the top bar with a dot
    (green, amber, red), a panel of checks, a red bar across the top when something needs attention,
    and a team error log so a problem on anyone's screen reaches one place. Checks every 5 minutes
-   while MISMO Media is open. Nothing here changes data except the log (feeds/health-log). */
+   while MISMO Media is open. Nothing here changes data except the log (healthlog/log). */
 const HH = {last:null, running:null, modal:null, btn:null, dot:null, bar:null, started:false, shippedUpTo:0, shipT:null};
-const HH_LOG="health-log", HH_KEEP=30, HH_MAX=150;
+const HH_LOG="log", HH_KEEP=30, HH_MAX=150;
 const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
 const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
 const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
-const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log"};
 const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
 function hhSaving(){
@@ -6988,6 +6989,12 @@ function hhWebNews(){
   if(hrs>36) return hhRow("webnews","In the News Web Search","warn","Last searched "+hhWhen(r.at)+", more than a day ago. The \"In the News web search\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
   return hhRow("webnews","In the News Web Search","ok","Last searched "+hhWhen(r.at)+". "+n+" stor"+(n===1?"y":"ies")+" found this month.");
 }
+function hhResults(){
+  const f=feed("youtube"); if(!f || !f.updated) return LOADED.has("feeds")? hhRow("feed","Results Feed","off","Hasn't run yet. It runs every morning; the first run starts it.") : null;
+  const hrs=(Date.now()-Date.parse(f.updated))/36e5, n=Object.keys(f.videos||{}).length;
+  if(hrs>36) return hhRow("feed","Results Feed","warn","YouTube numbers last came in "+hhWhen(f.updated)+", more than a day ago. The \"Results feed\" workflow in marketing-hq-data may be paused.");
+  return hhRow("feed","Results Feed","ok","YouTube views for "+n+" video"+(n===1?"":"s")+", updated "+hhWhen(f.updated)+".");
+}
 function hhDates(){
   const w=dateWarnings(); if(!w.length) return null;
   return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
@@ -7000,7 +7007,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 function hhPlace(){
@@ -7035,7 +7042,7 @@ function hhReport(){
     .concat(HH.last.rows.map(r=>(r.level==="ok"?"OK":r.level==="warn"?"WARNING":r.level==="bad"?"PROBLEM":"NOT CHECKED")+" | "+r.title+": "+r.line+(r.list.length?"\n - "+r.list.join("\n - "):"")))
     .concat(["","Errors on this page:"].concat((window.__mmErrs||[]).slice(-15).map(e=>" "+e.at+" "+e.kind+" x"+e.n+" "+e.msg+(e.src?" ["+e.src+"]":"")))).join("\n");
 }
-async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("feeds").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
+async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("healthlog").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
 function hhTrash(){ const t=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>t.push({c,r}))); return t.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt))); }
 async function hhDraw(){
   if(!HH.modal || !HH.last) return;
@@ -7077,7 +7084,7 @@ async function hhShip(){
     const who=window.__hqWho||"", cur=await hhTeamLog(); const keep=Date.now()-HH_KEEP*864e5;
     let entries=(cur||[]).filter(x=>Date.parse(x.at)>keep);
     fresh.forEach(e=>entries.push({at:e.at, who, kind:e.kind, msg:e.msg, src:e.src||"", n:e.n, tab:e.tab||""}));
-    await DB.collection("feeds").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
+    await DB.collection("healthlog").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
     HH.shippedUpTo=Math.max.apply(null, fresh.map(e=>Date.parse(e.at)));
   }catch(e){}
 }
