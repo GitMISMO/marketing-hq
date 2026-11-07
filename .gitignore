@@ -1,0 +1,13 @@
+# Never in this public repo: subscriber and downloader lists, record exports and the private data copy.
+export/
+seed/
+data-repo/
+*.csv
+*.xlsx
+# Build output and test scratch
+dev/out/
+dev/tests/preview.html
+dev/tests/live.html
+dev/tests/merge.html
+dev/tests/sample-data.html
+node_modules/
