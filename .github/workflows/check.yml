@@ -1,0 +1,66 @@
+# Checks every change to MISMO Media (added Nov 7, 2026, after the application review).
+# It never changes the site: GitHub Pages still publishes index.html as it is. A red X here means
+# "look before trusting this version"; the reason is in the step that failed.
+name: Check MISMO Media
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  HAS_DATA_TOKEN: ${{ secrets.MARKETING_HQ_DATA_TOKEN != '' }}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Every script in the live page is valid JavaScript
+        run: |
+          python3 - <<'PY'
+          import re, subprocess, sys, pathlib
+          s = pathlib.Path('index.html').read_text()
+          blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', s, re.S)
+          bad = 0
+          for i, b in enumerate(blocks):
+              p = pathlib.Path(f'/tmp/block{i}.js'); p.write_text(b)
+              r = subprocess.run(['node', '--check', str(p)], capture_output=True, text=True)
+              if r.returncode: bad += 1; print(f'Script block {i}:', r.stderr[:2000])
+          print(f'{len(blocks)} script blocks checked, {bad} with errors'); sys.exit(1 if bad else 0)
+          PY
+      - name: No tokens or keys in the public files
+        run: |
+          if grep -rEn 'ghp_[A-Za-z0-9]{20}|github_pat_|Bearer ey[A-Za-z0-9]' --include='*.html' --include='*.js' --include='*.md' .; then
+            echo "::error::Something that looks like a token is in a public file"; exit 1; fi
+      - name: No subscriber exports in the repo
+        run: |
+          if ls export seed data-repo 2>/dev/null; then echo "::error::export/, seed/ or data-repo/ must stay out of this public repo"; exit 1; fi
+      - name: The live page matches a build of dev/src
+        run: |
+          python3 dev/build.py
+          norm() { sed 's/const BUILD = "[^"]*"/const BUILD = ""/' "$1"; }
+          if ! cmp -s <(norm index.html) <(norm dev/out/site.html); then
+            echo "::warning::index.html is not what dev/src builds. Someone changed one without the other; bring dev/src up to date before the next change."
+          fi
+      # The browser tests need the sample records, which are kept in the private data repo. Until this
+      # repo has a read-only token for it (secret MARKETING_HQ_DATA_TOKEN), the tests say "Skipped".
+      - name: Fetch the sample records for the tests
+        if: ${{ env.HAS_DATA_TOKEN == 'true' }}
+        env:
+          GH_TOKEN: ${{ secrets.MARKETING_HQ_DATA_TOKEN }}
+        run: |
+          gh api repos/GitMISMO/marketing-hq-data/contents/dev/sample-data.html -H "Accept: application/vnd.github.raw" > dev/tests/sample-data.html
+      - name: Browser tests
+        if: ${{ env.HAS_DATA_TOKEN == 'true' }}
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.48.2
+          npx playwright install --with-deps chromium
+          bash dev/tests/run.sh
