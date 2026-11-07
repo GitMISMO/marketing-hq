@@ -326,6 +326,7 @@ function buildEmail(ed, preview, opt){
   return '<!-- MISMO Matters '+monthName(ed.month)+' · version '+emailVersion(out)+' -->'+out;
 }
 function emailVersion(html){ let h=0; const t=String(html).replace(/<!-- MISMO Matters [^>]*-->/,""); for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return (h>>>0).toString(36).toUpperCase().padStart(7,"0").slice(-7); }
+/* The Unsubscribe link carries Informz's Unsubscribe_Web_Page marker (what its Hyperlink Tool makes for an External Link), so Informz accepts it as the required unsubscribe link while still sending people to MISMO's own page. */
 /* Footer: the website's footer, nice and tight. Two halves sit side by side on a computer and stack on a phone. */
 function emailFooter(F){
   const navy="#0d314c", I=HDR2_BASE;
@@ -338,7 +339,7 @@ function emailFooter(F){
     '<!--[if mso]><table role="presentation" width="552" cellpadding="0" cellspacing="0" border="0"><tr><td width="276" valign="middle"><![endif]-->'+half(left,"left")+
     '<!--[if mso]></td><td width="276" valign="middle" align="right"><![endif]-->'+half('<div style="padding:10px 0 0">'+right+'</div>',"right")+
     '<!--[if mso]></td></tr></table><![endif]-->'+
-    '<div style="border-top:1px solid #e3ebf1;margin:14px 0 0;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></div></td></tr>';
+    '<div style="border-top:1px solid #e3ebf1;margin:14px 0 0;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a name="Unsubscribe" data-informz-link-type="Unsubscribe_Web_Page" href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></div></td></tr>';
 }
 function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
