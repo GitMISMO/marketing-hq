@@ -63,6 +63,14 @@ const r=await p.evaluate(async()=>{
   __MOCK.other("newsweb","w-1",{}); await wait(80);
   go("news"); renderNews(); await wait(30); const pg=document.querySelector("#page-news");
   out.webNews = newsAll().some(n=>n.id==="w-1" && n.viaWeb) && newsInWindow(ed).some(n=>n.id==="w-1") && /Found on the Web/.test(pg.textContent) && !!pg.querySelector("details.nw-old[data-mo='2026-06']") && hhWebNews().level==="ok";
+  // 18. thumbnails: a big picture gets a small copy saved once and noted on the picture
+  { const c=document.createElement("canvas"); c.width=2400; c.height=1600; const g=c.getContext("2d"); for(let i=0;i<4000;i++){ g.fillStyle="hsl("+(i*37%360)+",70%,50%)"; g.fillRect((i*53)%2400,(i*29)%1600,40,40); }
+    const big=await new Promise(r=>c.toBlob(r,"image/png")); const saved=[];
+    window.__hqImages={ get:async p=>p==="/big.png"?big:new Blob([new Uint8Array(10)],{type:"image/webp"}), save:async (b,n)=>{ saved.push({n,size:b.size,type:b.type}); return {id:"/thumbs/"+n}; } };
+    await put("images","imgbig",{name:"Big",file:"big.png",spPath:"/big.png",campaign:"brand"}); await wait(60);
+    await imgEnsureThumb(S.images.imgbig); await wait(120);
+    out.thumb = saved.length===1 && saved[0].size<big.size && /thumb-big/.test(saved[0].n) && __MOCK.D.images.imgbig.spThumb===("/thumbs/"+saved[0].n) && !!IMG_SMALL.imgbig && imgSrc(S.images.imgbig)!==imgThumb(S.images.imgbig);
+    window.__hqImages=undefined; }
   out.leader = LEADER; out.jobs = Object.keys(JOBS);
   return out;
 });
