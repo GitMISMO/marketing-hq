@@ -55,6 +55,7 @@ const SEND_CHECKS = [
   ["test","Test send reviewed","Kelly and Amy have each opened the test and signed off"],
   ["website","Website list updated","The new edition added to the MISMO Matters list on the website"],
   ["linkedin","LinkedIn post about the edition","Announces the edition on the MISMO page"],
+  ["izunsub","Informz unsubscribes brought in","A day or two after sending: Informz › Contacts › Reports › Unsubscribes exported and loaded under Unsubscribes (people who used the Gmail or Outlook unsubscribe button)"],
   ["stats","Stats recorded","Recipients, opens, clicks and top links, a week after sending"]
 ];
 const SUMMITS = [

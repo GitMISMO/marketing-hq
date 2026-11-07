@@ -35,12 +35,33 @@ function signupsCard(){
 const UNST = {pending:["Still in Higher Logic","review"], removed:["Removed in Higher Logic","ok"]};
 function unsubsCard(){
   const list=unsubsSorted(), t=T(), wk=list.filter(u=>localDay(u.at)>=add(t,-6)).length, todo=list.filter(u=>unsubHL(u)==="pending");
-  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Unsubscribes</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/unsubscribe/</span><div class="r"><a class="btn sm" href="'+UNSUB_URL+'" target="_blank" rel="noopener">Open Unsubscribe Page&nbsp;↗</a>'+
+  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Unsubscribes</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/unsubscribe/</span><div class="r"><a class="btn sm" href="'+UNSUB_URL+'" target="_blank" rel="noopener">Open Unsubscribe Page&nbsp;↗</a><button class="btn sm" type="button" id="un-iz" title="For people who used the unsubscribe button in Gmail or Outlook">Bring In Informz Unsubscribes</button><input type="file" id="un-iz-f" accept=".csv,.xlsx,.xls" hidden>'+
       (todo.length?'<button class="btn sm" type="button" id="un-csv">Copy '+todo.length+' for Higher Logic</button><button class="btn sm pri" type="button" id="un-done">Mark Removed in Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Unsubscribed</th><th>Email</th><th>Name</th><th>Why</th><th>Higher Logic</th></tr></thead><tbody>'+
-      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(localDay(u.at)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||"—")+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
+      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(localDay(u.at)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||(u.source==="Informz"?"Gmail or Outlook button (Informz)":"—"))+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
     :'<div class="empty">Anyone who uses the Unsubscribe link at the bottom of MISMO Matters lands here and comes off the subscriber list right away.</div>')+
     (todo.length?'<div class="cb"><div class="hint">Until Higher Logic\'s marketing API is connected, opt these people out in Informz before the next send: Copy for Higher Logic, import them as unsubscribes, then press Mark Removed.</div></div>':'')+'</div>';
+}
+/* Informz's own unsubscribes: the unsubscribe button Gmail and Outlook show uses Informz's List-Unsubscribe header,
+   which Higher Logic can't point at MISMO's page, so those people are opted out in Informz only. After each send,
+   Contacts › Reports › Unsubscribes in Informz is exported and loaded here. Each one is filed like an unsubscribe-page
+   entry (same id, u-<sha1 of the email>), marked as already out of Higher Logic. Nothing touches Aptify. */
+async function importInformzUnsubs(file){
+  let rows; try{ rows=await readSheet(file); }catch(e){ toast("Couldn't read that file: "+(e.message||e), 5000); return; }
+  const U=unsubMap(), now=new Date().toISOString(), seen=new Set(), add=[]; let had=0, bad=0;
+  rows.forEach(r=>{ const e=col(r,/e-?mail/i).toLowerCase();
+    if(!/^[^\s@]{1,64}@[^\s@]+\.[a-z]{2,}$/.test(e)){ bad++; return; } if(seen.has(e)) return; seen.add(e);
+    const d=new Date(col(r,/unsub.*(date|on|time)|date|when/i)); const at=isNaN(d)||d>new Date()?now:d.toISOString();
+    if(U[e] && String(U[e].at||"")>=at){ had++; return; } add.push({e,at}); });
+  if(!add.length){ toast(rows.length?"Nothing new: "+(had?had+" already on the list":"no email column found")+".":"That file is empty.", 5000); return; }
+  if(!window.confirm("Add "+add.length+" Informz unsubscribe"+(add.length===1?"":"s")+" to MISMO's list?"+(had?"\n\n"+had+" are already on it.":"")+(bad?"\n"+bad+" rows had no usable email and are skipped.":"")+"\n\nThey come off the subscriber list here. Nothing changes in Aptify.")) return;
+  let n=0; toast("Adding "+add.length+"…", 3000);
+  for(const x of add){
+    const h=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-1",new TextEncoder().encode(x.e)))).map(b=>b.toString(16).padStart(2,"0")).join("").slice(0,12), id="u-"+h, old=S.unsubs[id]||{};
+    try{ await put("unsubs",id,{e:x.e, at:x.at, firstAt:old.firstAt||x.at, times:(old.times||0)+1, reasons:old.reasons||[], note:old.note||"", source:"Informz", hl:"removed"});
+      await put("unsubhl",id,{e:x.e, hlAt:now>x.at?now:x.at}); n++; }catch(e){ break; }
+  }
+  toast(n+" Informz unsubscribe"+(n===1?"":"s")+" added"+(n<add.length?"; "+(add.length-n)+" didn't save, try the file again":""), 6000); renderPeople();
 }
 function renderPeople(){
   const el=$("#page-people"); const all=peopleIndex();
@@ -69,6 +90,7 @@ function renderPeople(){
   $("#pp-import",el).onclick=openImportPeople;
   const sl=$("#su-link",el); if(sl) sl.onclick=()=>copyText(SUBSCRIBE_URL,"Subscribe form link");
   const uc=$("#un-csv",el); if(uc) uc.onclick=()=>copyText("Email\n"+unsubsSorted().filter(u=>unsubHL(u)==="pending").map(u=>u.e).join("\n"),"Unsubscribes for Higher Logic (CSV)");
+  const iz=$("#un-iz",el), izf=$("#un-iz-f",el); if(iz&&izf){ iz.onclick=()=>izf.click(); izf.onchange=async e=>{ const f=e.target.files[0]; e.target.value=""; if(f) await importInformzUnsubs(f); }; }
   const ud=$("#un-done",el); if(ud) ud.onclick=async()=>{ const todo=unsubsSorted().filter(u=>unsubHL(u)==="pending"); for(const u of todo){ await put("unsubhl",u.id,{e:u.e,hlAt:new Date().toISOString(),}); } toast(todo.length+" marked removed in Higher Logic"); renderPeople(); };
   const sc=$("#su-csv",el); if(sc) sc.onclick=()=>copyText(signupCSV(signupsSorted().filter(s=>s.hl!=="added")),"Sign-ups for Higher Logic (CSV)");
   const qi=$("#pp-q",el); qi.oninput=()=>{ PL.q=qi.value; PL.limit=150; clearTimeout(PL._t); PL._t=setTimeout(()=>{ renderPeople(); const n=$("#pp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
@@ -149,7 +171,7 @@ function renderResults(){
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(eds.length?pct(avgOpen):"—")+'</div><div class="k">MISMO Matters Open Rate</div><div class="s">'+(eds.length?"average of "+eds.length+" edition"+(eds.length>1?"s":""):"from November on")+'</div></button>'+
       '<div class="tile"><div class="v">'+liAll.reduce((n,i)=>n+i.v,0).toLocaleString()+'</div><div class="k">LinkedIn Impressions</div><div class="s">'+liAll.length+' posts logged</div></div>'+
       '<div class="tile"><div class="v">'+ytViews.toLocaleString()+'</div><div class="k">Mic\'d Up Views</div><div class="s">'+yt.length+' episodes logged</div></div>'+
-      '<div class="tile"><div class="v">'+(sp.length?spPlays.toLocaleString():"—")+'</div><div class="k">Mic\'d Up on Spotify</div><div class="s">'+(sp.length?sp.length+' episodes · plays':'type plays into each episode')+'</div></div>'+
+      (MU_PAUSED.spotify&&!sp.length?'':'<div class="tile"><div class="v">'+(sp.length?spPlays.toLocaleString():"—")+'</div><div class="k">Mic\'d Up on Spotify</div><div class="s">'+(sp.length?sp.length+' episodes · plays':'type plays into each episode')+'</div></div>')+
       '<div class="tile"><div class="v">'+(mc.length?pct(mcOpen):"—")+'</div><div class="k">Mailchimp Open Rate</div><div class="s">'+mc.length+' sends logged</div></div>'+
       '<button class="tile" type="button" data-go="people"><div class="v">'+ppl.filter(p=>p.lists.subscribers).length.toLocaleString()+'</div><div class="k">Subscribers</div><div class="s">'+dls.length.toLocaleString()+' downloaders</div></button>'+
     '</div></div>'+

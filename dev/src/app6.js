@@ -318,6 +318,7 @@ const HELP = [
    <li><b>Taken off automatically:</b> the person comes off the subscriber list in MISMO Media straight away. Nothing is deleted; their sign-up stays on file marked unsubscribed. If they subscribe again later, they're back on.</li>
    <li><b>Unsubscribes</b> on the Subscribers page lists the newest first, with the reason and whether they've been opted out in Higher Logic yet. The <b>Unsubscribed</b> tile at the top counts them.</li>
    <li><b>Before each send</b> (the Send Checklist's "unsubscribes removed" step): press <b>Copy for Higher Logic</b> under Unsubscribes, import the list into Informz as unsubscribes, then press <b>Mark Removed in Higher Logic</b>.</li>
+   <li><b>The Gmail and Outlook unsubscribe button:</b> Informz adds it to every email and Higher Logic can't point it at MISMO's page, so pressing it opts the person out in Informz only (never Aptify). A day or two after each send, export <b>Contacts › Reports › Unsubscribes</b> from Informz and press <b>Bring In Informz Unsubscribes</b> under Unsubscribes. New people are added, marked as already out of Higher Logic, and come off the subscriber list here. It's on the Send Checklist.</li>
    <li>Robots are turned away quietly, the same way as on the subscribe form. Search engines don't list the page.</li>
   </ul>
   <h3>How It's Wired</h3>

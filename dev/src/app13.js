@@ -183,7 +183,7 @@ async function kitWriteAll(epId, quiet){
     if(tx.length<400 && !k.brianPost){ say("Add the transcript to the folder first (or paste Brian's LinkedIn post).", 6000); return; }
     const g=guestFor(e), season=+e.season||1, word=epWord(e);
     const material=["EPISODE: MISMO Mic'd Up "+word, kitGuestLine(e,g,tx),
-      "Goes live: "+(e.airDate?fD(e.airDate):"Friday")+" 8:30 AM ET (LinkedIn Live on Brian Vieaux's profile, Spotify, YouTube). MISMO's LinkedIn Live: "+fD(liDate(e))+" "+(e.linkedinTime||"1:00 PM ET")+".",
+      "Goes live: "+(e.airDate?fD(e.airDate):"Friday")+" 8:30 AM ET (LinkedIn Live on Brian Vieaux's profile, "+(MU_PAUSED.spotify?"":"Spotify, ")+"YouTube). MISMO's LinkedIn Live: "+fD(liDate(e))+" "+(e.linkedinTime||"1:00 PM ET")+".",
       g&&g.bio?"Guest bio: "+g.bio:"", k.brianPost?"Brian's own LinkedIn post about it:\n"+k.brianPost:"",
       styleSamples(e)?"Earlier episodes, for style only (do not reuse their facts):\n"+styleSamples(e):"",
       "TRANSCRIPT:\n"+tx.slice(0,60000)].filter(Boolean).join("\n\n");
