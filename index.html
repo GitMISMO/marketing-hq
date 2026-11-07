@@ -2020,12 +2020,23 @@ tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
 .ds-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 6px}
 .ds-row label{font-weight:600}
 .ds-row .hint{flex-basis:100%;margin:0}
-.ds-tbl input{width:100%;box-sizing:border-box;font:inherit;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink)}
+.ds-tbl input{width:100%;box-sizing:border-box;font:inherit;font-size:13.5px;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink)}
 .ds-tbl input[type=date]{min-width:140px}
 .ds-tbl tr.past input{color:var(--ink-3)}
 .ds-tbl td:last-child{width:1%;white-space:nowrap}
+.ds-tbl{table-layout:fixed;width:100%}.ds-tbl th{text-align:left}.ds-tbl td{padding:4px 6px}
+.ds-hols{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:6px 24px;margin:0 0 4px}
+.ds-h{display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center}
+.ds-h input,.ds-row input{font:inherit;font-size:13.5px;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink);min-width:0}
+.ds-h.past input{color:var(--ink-3)}
+.ds-x{width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;padding:0}
+.ds-x:hover{color:var(--bad);border-color:var(--bad)}
+@media(max-width:480px){.ds-hols{grid-template-columns:1fr}.ds-h{grid-template-columns:132px 1fr 28px}}
 .ds-warn{background:var(--warn-soft,#fbf3e2);border:1px solid var(--warn);color:var(--ink);border-radius:6px;padding:10px 14px;margin:0 0 16px}
 .ds-save{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+@media(max-width:640px){.ds-tbl thead{display:none}.ds-tbl,.ds-tbl tbody,.ds-tbl tr,.ds-tbl td{display:block;width:100%;box-sizing:border-box}
+  .ds-tbl tr{padding:8px 0;border-bottom:1px solid var(--rule)}.ds-tbl td{border:0;padding:3px 0}.ds-tbl td:last-child{width:auto}}
+#page-settings .subtabs{margin:0 0 16px}
 </style>
 
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
@@ -2180,6 +2191,9 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       <button type="button" data-hq="help" title="Help">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
         <span>Help &amp; How-To</span></button>
+      <button type="button" data-hq="settings" title="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+        <span>Settings</span><b class="nbadge" id="nb-settings" hidden></b></button>
       <a class="navlink" href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener" title="Open the public Request form (new tab)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
         <span>Request Form</span><i class="ext" aria-hidden="true">↗</i></a>
@@ -2227,6 +2241,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-orders" hidden></section>
   <section class="page" id="page-requests" hidden></section>
   <section class="page" id="page-help" hidden></section>
+  <section class="page" id="page-settings" hidden></section>
 </main>
 
 <aside class="pane" id="pane" role="dialog" aria-hidden="true" inert aria-labelledby="pane-title">
@@ -2406,7 +2421,7 @@ async function connect(){
   LIVE=true; CONNECTED=true; saveNote(true);
   Object.keys(S).forEach(col=>{
     DB.collection(col).onSnapshot(snap=>{
-      /* S = what the pages use; TRASH = records put aside with Delete (Help > System Health brings them back) */
+      /* S = what the pages use; TRASH = records put aside with Delete (Settings > System Health brings them back) */
       const o={}, tr={}; snap.docs.forEach(d=>{ const v=d.data()||{}; if(v._deletedAt){ tr[d.id]=Object.assign({id:d.id}, v); return; } o[d.id]=Object.assign({id:d.id}, v); });
       TRASH[col]=tr;
       /* a second copy, never changed by the page, to tell later what a save actually changed (November 5, 2026) */
@@ -2500,7 +2515,7 @@ async function put(col,id,data){
   if(DB){ try{ const ref=DB.collection(col).doc(id); await (base && ref.merge ? ref.merge(clean, base) : ref.set(base ? out : clean)); }catch(e){ toast("Couldn't save: "+(e.message||e.code||"try again"), 4000); throw e; } }
 }
 async function patch(col,id,part){ const cur=S[col][id]||{}; return put(col,id,Object.assign({},cur,part)); }
-/* Delete puts a record aside rather than erasing it; Help > System Health lists what was put aside and
+/* Delete puts a record aside rather than erasing it; Settings > System Health lists what was put aside and
    brings it back. hard=true erases (used only for housekeeping, e.g. old list parts). */
 async function remove(col,id,hard){
   if(saveBlocked()) return;
@@ -2719,7 +2734,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
+const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help","settings"];
 let TAB="home";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -2763,7 +2778,8 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
 function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
   if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
-  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch(); }
+  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch();
+  if(typeof dateWarnings==="function" && tabReady("home")) badge("settings", dateWarnings().length + fileSizes().filter(f=>f.pct>=70).length, true); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -2774,7 +2790,7 @@ function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true
 function renderTab(t){
   if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
-    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp, settings:renderSettings})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
@@ -3939,11 +3955,9 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.id==="dates"&&typeof datesHtml==="function"?datesHtml():cur.b)+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
-  if(cur.id==="system" && typeof wireSystem==="function") wireSystem(el);
-  if(cur.id==="dates" && typeof wireDates==="function") wireDates(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
@@ -4105,7 +4119,7 @@ function renderImages(){
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
-      (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
+      (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-arcsel">'+([...IM.sel].every(i=>S.images[i]&&S.images[i].archived)?'Bring Back ':'Archive ')+IM.sel.size+' Selected</button><button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
           '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
@@ -4133,6 +4147,11 @@ function renderImages(){
   $$("[data-imsel]",el).forEach(c=>c.onchange=()=>{ if(c.checked) IM.sel.add(c.dataset.imsel); else IM.sel.delete(c.dataset.imsel); renderImages(); });
   const z=$("#im-zip",el); if(z) z.onclick=()=>{ const pick=IM.sel.size ? [...IM.sel].map(i=>S.images[i]) : list; const ced=IM.ed&&S.editions[IM.ed]; downloadZip(pick, "MISMO Images"+(IM.camp?" - "+IMG_CAMP[IM.camp]:"")+(ced?" - "+monthName(ced.month):"")); };
   const zc=$("#im-clr",el); if(zc) zc.onclick=()=>{ IM.sel.clear(); renderImages(); };
+  /* archive (or bring back) the ticked pictures in one go: they leave the library but stay on file (Nov 7, 2026) */
+  const za=$("#im-arcsel",el); if(za) za.onclick=async()=>{ const ids=[...IM.sel].filter(i=>S.images[i]); const back=ids.every(i=>S.images[i].archived);
+    if(!za.dataset.sure){ za.dataset.sure="1"; za.textContent="Press Again to "+(back?"Bring Back ":"Archive ")+ids.length; setTimeout(()=>{ if(za.isConnected){ delete za.dataset.sure; renderImages(); } },4000); return; }
+    for(const i of ids) await patch("images", i, {archived:!back});
+    IM.sel.clear(); toast((back?"Brought back ":"Archived ")+ids.length+" picture"+(ids.length===1?"":"s")+(back?"":". Tick Show Archived to see them again.")); renderImages(); };
   $$("[data-imdl]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); downloadImage(S.images[b.dataset.imdl]); });
   $$("[data-imcp]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); copyImageLink(S.images[b.dataset.imcp]); });
   $$(".imcard",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
@@ -6611,7 +6630,7 @@ const CERT_PROGRAMS = [
   {k:"evault",     slug:"evault-certified-providers",   name:"eVault Certified Systems",      title:"MISMO Certified eVault Systems",         what:"system"},
   {k:"ron",        slug:"ron-certified-providers",      name:"RON Certified Providers",       title:"MISMO Certified RON Providers",          what:"provider"}
 ];
-const CERT_SITE_LIVE = "2026-11-16";   /* the default; Help > Dates and Settings can change it (siteLive) */
+const CERT_SITE_LIVE = "2026-11-16";   /* the default; Settings > Dates can change it (siteLive) */
 const CERT = {busy:false, at:0, err:""};
 function certProg(k){ return CERT_PROGRAMS.find(p=>p.k===k) || null; }
 function isCertSpot(s){ return s.k==="cert" && !!certProg(s.doc.certProgram) && (s.doc.certItems||[]).length>0; }
@@ -6730,7 +6749,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-07 09:05 ET · 354e3ec";
+const BUILD = "2026-11-07 09:17 ET · 4af404a";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -6776,9 +6795,9 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Dates and Settings so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Settings > Dates so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Dates and Settings.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Settings > Dates.");
   return out;
 }
 /* ---------- how full each data file is ----------
@@ -6794,12 +6813,12 @@ function fileSizes(){
 let SIZE_WARNED=false;
 function sizeWatch(){
   if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
-  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Help > System Health.", 8000); }
+  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Settings > System Health.", 8000); }
 }
 
 /* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
    The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
-   the code. They now live in one settings record (settings/dates) that staff edit on Help > Dates and Settings;
+   the code. They now live in one settings record (settings/dates) that staff edit on Settings > Dates;
    until someone saves it, the lists written into the code stand. */
 const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
 let SET_SIG = "";
@@ -6820,16 +6839,16 @@ function datesHtml(){
     (warn.length?'<div class="ds-warn">'+warn.map(w=>esc(w)).join("<br>")+'</div>':'')+
     '<h3>New Website</h3><div class="ds-row"><label for="ds-live">Goes live on</label><input type="date" id="ds-live" value="'+esc(d.siteLive||"")+'"><span class="hint">Newsletter links point to www.mismo.org for editions sent on or after this day, and to collaborate.mismo.org before it.</span></div>'+
     '<h3>Holidays</h3><p class="hint">MISMO Media moves deadlines off these days and weekends.</p>'+
-    '<table class="tbl ds-tbl"><thead><tr><th>Date</th><th>Holiday</th><th></th></tr></thead><tbody>'+
-      hol.map((k,i)=>'<tr'+(k<t?' class="past"':'')+'><td><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"></td><td><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"></td><td><button class="btn sm" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'">Remove</button></td></tr>').join("")+
-    '</tbody></table><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
-    '<h3>Summits</h3><table class="tbl ds-tbl"><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
-      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="btn sm" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'">Remove</button></td></tr>').join("")+
+    '<div class="ds-hols">'+
+      hol.map((k,i)=>'<div class="ds-h'+(k<t?' past':'')+'"><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"><button class="ds-x" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'" title="Remove">×</button></div>').join("")+
+    '</div><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
+    '<h3>Summits</h3><table class="tbl ds-tbl"><colgroup><col style="width:26%"><col style="width:150px"><col style="width:150px"><col><col style="width:36px"></colgroup><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
+      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="ds-x" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'" title="Remove">×</button></td></tr>').join("")+
     '</tbody></table><p><button class="btn sm" type="button" id="ds-adds">Add a Summit</button></p>'+
     '<p class="ds-save"><button class="btn pri" type="button" id="ds-save">Save Dates</button> <button class="btn" type="button" id="ds-reset">Undo My Changes</button> <span class="note" id="ds-msg">'+(((S.settings||{}).dates||{}).updatedBy?"Last saved by "+esc(S.settings.dates.updatedBy)+", "+esc(fD(localDay(S.settings.dates.updatedAt))):"Showing the dates built into MISMO Media; nobody has changed them yet.")+'</span></p>';
 }
 function wireDates(el){
-  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>renderHelp();
+  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>setRedraw();
   const syncH=()=>{ const out={}; hol.forEach((k,i)=>{ const dt=$('[data-hd="'+i+'"]',el), nm=$('[data-hn="'+i+'"]',el); if(dt && dt.value) out[dt.value]=(nm&&nm.value.trim())||"Holiday"; }); d.holidays=out; };
   const syncS=()=>{ d.summits.forEach((s,i)=>{ const g=a=>$('[data-'+a+'="'+i+'"]',el); s.name=(g("sn")||{}).value||s.name; s.start=(g("ss")||{}).value||""; s.end=(g("se")||{}).value||s.start; s.where=(g("sw")||{}).value||""; }); };
   const sync=()=>{ syncH(); syncS(); const l=$("#ds-live",el); if(l) d.siteLive=l.value; };
@@ -6845,10 +6864,9 @@ function wireDates(el){
     if(bad){ $("#ds-msg",el).textContent="Each summit needs a name and a start date, and can't end before it starts."; return; }
     d.summits.forEach(s=>{ if(!s.id) s.id="summit-"+Date.now().toString(36); if(!s.end) s.end=s.start; });
     d.summits.sort((a,b)=>a.start<b.start?-1:1);
-    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); renderHelp(); }catch(e){}
+    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); setRedraw(); }catch(e){}
   };
 }
-HELP.push({id:"dates", t:"Dates and Settings", g:"System", b:""});
 
 /* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
@@ -6880,14 +6898,25 @@ function systemHtml(){
 function wireSystem(el){
   const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
   trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); renderHelp(); } });
+  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); setRedraw(); } });
   const ex=$("#sh-export",el); if(ex) ex.onclick=()=>{
     const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
     const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a");
     a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   };
 }
-HELP.push({id:"system", t:"System Health", g:"System", b:""});
+/* ---------- the Settings page (left nav): Dates and System Health ---------- */
+const SET = {sub:"dates"};
+function setRedraw(){ if(TAB==="settings") renderSettings(); else renderHelp(); }
+function renderSettings(){
+  const el=$("#page-settings"); if(!el) return;
+  const subs=[["dates","Dates"],["system","System Health"]];
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Settings</h1><div class="sub">The dates MISMO Media plans around, and how the system itself is doing.</div></div></div>'+
+    '<div class="subtabs" role="group" aria-label="Settings">'+subs.map(([k,l])=>'<button type="button" data-ssub="'+k+'" aria-pressed="'+(SET.sub===k)+'">'+esc(l)+'</button>').join("")+'</div>'+
+    '<article class="card helpbody"><div class="cb">'+(SET.sub==="system"?systemHtml():datesHtml())+'</div></article>';
+  $$("[data-ssub]",el).forEach(b=>b.onclick=()=>{ SET.sub=b.dataset.ssub; renderSettings(); });
+  if(SET.sub==="system") wireSystem(el); else wireDates(el);
+}
 /* ---------- New member logos from Member 360 (Jonna, Nov 5, 2026). Member 360 lists the new members that have a logo
    (data/mm-newmembers in member-360-data). When MISMO Media opens, each logo not already here is added to the Image Library
    (campaign Logos, in SharePoint like every picture), placed in the New Member Welcome section of the right MISMO Matters edition

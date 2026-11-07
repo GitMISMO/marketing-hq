@@ -3,8 +3,10 @@
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
 ## 2026-11-07 (morning)
-- New Help > Dates and Settings: holidays, summits and the new website's go-live day are edited there instead of in the code, with a warning before a list runs out.
-- Help > System Health shows how full each data file is and warns at 70%, well before a save could fail.
+- Settings in the left nav (Dates and System Health).
+- Image Library: Archive Selected (and Bring Back) for ticked pictures.
+- New Settings > Dates: holidays, summits and the new website's go-live day are edited there instead of in the code, with a warning before a list runs out.
+- Settings > System Health shows how full each data file is and warns at 70%, well before a save could fail.
 - The Mic'd Up countdown counts to 8:30 AM Eastern wherever the viewer is, and saved times show on the right local day.
 - Help pages no longer mention Spotify or clip steps that are on hold, or a fixed November date; unused code removed.
 - The check on every change now also runs a code check for common mistakes.
