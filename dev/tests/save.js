@@ -55,6 +55,14 @@ const r=await p.evaluate(async()=>{
   out.sizes = typeof fileSizes==="function";
   // 16. errors are caught and shown in System Health
   setTimeout(()=>{ throw new Error("test boom"); },0); await wait(50); hhRun(); out.errCaught = (window.__mmErrs||[]).some(e=>/test boom/.test(e.msg)) && HH.last.rows.some(r=>r.key==="err" && r.level==="warn");
+  // 17. web-found news: shown by month, archived when the month's edition is out, and fed to that edition
+  const ed=curEdition(), d=ed.dates.publish, inWin=add(prevPublish(ed),2);
+  __MOCK.D.newsweb={"w-1":{id:"w-1",headline:"Lender X adopts MISMO standards",outlet:"HousingWire",url:"https://example.com/a",date:inWin,month:inWin.slice(0,7),kind:"mention",found:"Bing News"},
+    "w-old":{id:"w-old",headline:"Old MISMO story",outlet:"NMN",url:"https://example.com/b",date:"2026-06-10",month:"2026-06",kind:"mention",found:"Google News"},
+    "_run":{id:"_run",at:new Date().toISOString(),added:2}};
+  __MOCK.other("newsweb","w-1",{}); await wait(80);
+  go("news"); renderNews(); await wait(30); const pg=document.querySelector("#page-news");
+  out.webNews = newsAll().some(n=>n.id==="w-1" && n.viaWeb) && newsInWindow(ed).some(n=>n.id==="w-1") && /Found on the Web/.test(pg.textContent) && !!pg.querySelector("details.nw-old[data-mo='2026-06']") && hhWebNews().level==="ok";
   out.leader = LEADER; out.jobs = Object.keys(JOBS);
   return out;
 });
