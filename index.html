@@ -3104,7 +3104,7 @@ function buildEmail(ed, preview, opt){
     } else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){
       inner+=logoWall(ed, s, preview);
     } else if(isCertSpot(s)){
-      inner+=certSpotlight(ed, s);
+      inner+=certSpotlight(ed, s, body);
     } else {
       if(!d.headline && !d.body && !d.quote) return;
       if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
@@ -6623,7 +6623,10 @@ async function certSync(){
 }
 
 /* ---------- the email ---------- */
-function certSpotlight(ed, s){
+/* where the list goes: on the line "[Certified List]" in the body if there is one, otherwise after the body */
+const CERT_MARK = /^\s*\[Certified List\]\s*$/im;
+function certSplit(md){ md=String(md||""); const m=md.match(CERT_MARK); return m ? [md.slice(0,m.index), md.slice(m.index+m[0].length)] : [md, ""]; }
+function certSpotlight(ed, s, bodyFn){
   const d=s.doc, p=certProg(d.certProgram), items=d.certItems||[];
   const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
   const navy="#0d314c", line="#dde9f2";
@@ -6632,7 +6635,8 @@ function certSpotlight(ed, s){
   const name=i=>{ const u=i.path?certSite(ed,i.path):""; return u ? '<a href="'+esc(u)+'" style="color:'+navy+';text-decoration:none">'+esc(i.name)+'</a>' : esc(i.name); };
   const row=i=>'<tr><td width="14" valign="top" style="padding:7px 0 7px;'+F+'font-size:11px;line-height:20px;color:#74bfeb">&#11042;</td><td style="padding:7px 0 7px 6px;border-bottom:1px solid '+line+';'+F+'font-size:15px;line-height:20px;font-weight:600;color:'+navy+'">'+name(i)+'</td></tr>';
   const list=xs=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+xs.map(row).join("")+'</table>';
-  const intro=d.body ? mdEmail(d.body, F+'font-size:16px;line-height:1.65;margin:0 0 16px;color:#1d2b36', 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '';
+  const md=t=>!String(t||"").trim() ? "" : (bodyFn ? bodyFn(t) : mdEmail(t, F+'font-size:16px;line-height:1.65;margin:0 0 16px;color:#1d2b36', 'color:#14486e;font-weight:600;text-decoration:underline', {}));
+  const [before, after]=certSplit(d.body);
   const count=items.length+' '+(p.what==="system"?"system":p.what==="provider"?"provider":"organization")+(items.length===1?"":"s");
   const eye='<div style="'+M+'font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2477b8;font-weight:600;margin:0 0 6px">MISMO Certified &middot; '+count+'</div>';
   const head='<div style="'+F+'font-size:22px;line-height:1.25;letter-spacing:-.012em;color:'+navy+';font-weight:700;margin:0 0 10px">'+esc(title)+'</div>';
@@ -6647,14 +6651,18 @@ function certSpotlight(ed, s){
       '<tr><td width="50%" valign="top" style="padding:0 10px 0 22px">'+list(items.slice(0,half))+'</td><td width="50%" valign="top" style="padding:0 22px 0 10px">'+list(items.slice(half))+'</td></tr>'+
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
-  return intro+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>';
+  const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(d.ctaUrl)+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
+  return md(before)+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 22px;background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>'+md(after)+cta;
 }
 function certSpotlightText(ed, s){
   const d=s.doc, p=certProg(d.certProgram), out=[];
-  if(d.body) out.push(mdPlain(d.body));
+  const [before, after]=certSplit(d.body);
+  if(before.trim()) out.push(mdPlain(before));
   out.push(d.headline||p.title);
   (d.certItems||[]).forEach(i=>out.push("• "+i.name+(i.path?" – "+certSite(ed,i.path):"")));
   out.push("See the full list: "+certSite(ed, d.certPage||("standards-resources/"+p.slug)));
+  if(after.trim()) out.push(mdPlain(after));
+  if(d.ctaUrl) out.push((d.ctaText||"Learn more")+": "+d.ctaUrl);
   return out;
 }
 
@@ -6667,11 +6675,12 @@ function wireCert(b, doc, ed){
   PANE.certAuto=()=>auto;
   const draw=()=>{ const cur=S.sections[ed.month+"__cert"]||doc, p=certProg(sel?sel.value:cur.certProgram);
     if(!p){ box.innerHTML='<div class="hint">No certification picked: the section runs the headline, body copy and picture below, like any other section.</div>'; return; }
+    const tip='<div class="hint">The list goes where the Body Copy has a line that says <b>[Certified List]</b>, or after the copy if there isn\'t one. The Headline sits on the list; leave it blank to use the certification\'s name.</div>';
     const same=cur.certProgram===p.k, items=same?(cur.certItems||[]):[];
     box.innerHTML='<div class="lg-sp"><label><input type="checkbox" id="cert-auto"'+(auto?' checked':'')+'> Keep in step with the website</label>'+
       '<div class="hint">'+(same&&cur.certAt?'Current from the website as of '+esc(new Date(cur.certAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'. ':'')+(auto?'New certifications on the website come in by themselves.':'Not updating: tick the box to follow the website again.')+'</div>'+
       (items.length?'<div class="cert-list">'+(cur.certBadge?'<img src="'+esc(cur.certBadge)+'" alt="">':'')+'<div><b>'+esc(p.title)+'</b><span>'+items.length+' certified</span><ul>'+items.map(i=>'<li>'+esc(i.name)+'</li>').join("")+'</ul></div></div>':'<div class="hint">Not read from the website yet.</div>')+
-      '<div class="kbtns"><button type="button" class="btn sm" id="cert-get">'+(items.length?'Check the Website Now':'Get the List from the Website')+'</button><a class="btn sm" href="'+esc(certSite(ed,"standards-resources/"+p.slug))+'" target="_blank" rel="noopener">Open the Website Page ↗</a></div></div>';
+      tip+'<div class="kbtns"><button type="button" class="btn sm" id="cert-get">'+(items.length?'Check the Website Now':'Get the List from the Website')+'</button><a class="btn sm" href="'+esc(certSite(ed,"standards-resources/"+p.slug))+'" target="_blank" rel="noopener">Open the Website Page ↗</a></div></div>';
     const au=$("#cert-auto",box); if(au) au.onchange=()=>{ auto=au.checked; if(PANE) PANE.dirty=true; draw(); };
     const g=$("#cert-get",box); if(g) g.onclick=async()=>{ g.disabled=true; g.textContent="Reading the website…";
       try{ const pv=sel?sel.value:""; if(pv && pv!==(S.sections[ed.month+"__cert"]||{}).certProgram) await put("sections", ed.month+"__cert", Object.assign({id:ed.month+"__cert",month:ed.month,key:"cert",status:"waiting"}, S.sections[ed.month+"__cert"]||doc, {certProgram:pv}));
