@@ -202,14 +202,17 @@ function hhRun(){
   const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
+/* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
 function hhPlace(){
-  const r=document.querySelector(".hqtop-r"); if(!r) return;
+  const foot=document.querySelector(".hq .mast-right"); if(!foot) return;
   if(!HH.btn){
-    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="hh-btn"; b.title="System Health";
-    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
+    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="theme-btn"; b.title="System Health";
+    b.innerHTML='<svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
     b.addEventListener("click", hhOpen); HH.btn=b; HH.dot=b.querySelector(".hh-dot");
   }
-  if(HH.btn.parentNode!==r) r.insertBefore(HH.btn, r.querySelector("#rs-account")||null);
+  const before=document.getElementById("theme-btn");
+  if(before && (HH.btn.parentNode!==foot || HH.btn.nextSibling!==before)) foot.insertBefore(HH.btn, before);
+  else if(!before && HH.btn.parentNode!==foot) foot.appendChild(HH.btn);
 }
 function hhPaint(){
   hhPlace(); if(!HH.last) return;
