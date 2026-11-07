@@ -152,7 +152,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -330,12 +330,17 @@ function newsEdition(n){ if(n.edition) return S.editions[n.edition]||null; retur
 /* In the News = what the team logged (data/news.json) plus coverage that arrives by email
    (data/newsin.json, written only by the "MISMO Media - In the News Emails" flow's GitHub workflow).
    Editing an emailed item saves the team's copy under the same id; removing one hides it. */
-function newsGet(id){ return (S.news||{})[id] || (S.newsin||{})[id] || null; }
+/* plus stories the daily web search finds (data/newsweb.json, written only by the "In the News web search" workflow,
+   Nov 7, 2026); its "_run" record says when it last searched */
+function newsGet(id){ return (S.news||{})[id] || (S.newsin||{})[id] || (S.newsweb||{})[id] || null; }
+function newsWebRun(){ return (S.newsweb||{})._run || null; }
 function newsAll(){
   const team=S.news||{}, out=[], urls=new Set(), heads=new Set();
   Object.values(team).forEach(n=>{ if(n.url) urls.add(normUrl(n.url)); if(n.headline) heads.add(String(n.headline).toLowerCase().trim()); if(!n.hidden) out.push(n); });
   Object.values(S.newsin||{}).forEach(n=>{ if(team[n.id]) return; if(n.url && urls.has(normUrl(n.url))) return; if(n.headline && heads.has(String(n.headline).toLowerCase().trim())) return;
-    out.push(Object.assign({kind:"mention"}, n, {auto:true, viaEmail:true})); });
+    out.push(Object.assign({kind:"mention"}, n, {auto:true, viaEmail:true})); urls.add(normUrl(n.url)); heads.add(String(n.headline||"").toLowerCase().trim()); });
+  Object.values(S.newsweb||{}).forEach(n=>{ if(!n || n.id==="_run" || team[n.id]) return; if(n.url && urls.has(normUrl(n.url))) return; if(n.headline && heads.has(String(n.headline).toLowerCase().trim())) return;
+    out.push(Object.assign({kind:"mention"}, n, {auto:true, viaWeb:true})); });
   return out;
 }
 function newsInWindow(ed){
@@ -527,7 +532,7 @@ function renderAll(){ applyPosted(); if(typeof applySettings==="function") apply
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
-  youtube:["episodes"], linkedin:["pieces","episodes"], mailchimp:["pieces"], summits:["pieces"], news:["news"], results:["episodes","pieces","editions"], requests:["inbox","requests"],
+  youtube:["episodes"], linkedin:["pieces","episodes"], mailchimp:["pieces"], summits:["pieces"], news:["news","newsin","newsweb"], results:["episodes","pieces","editions"], requests:["inbox","requests"],
   orders:["orders"], branding:["branding"], images:["images"], people:["audience","signups"], lists:["lists"]};
 /* the 8-second "draw anyway" allowance starts when records begin arriving (after sign-in), not when the page opens */
 function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true; if(FIRST_LOAD && Date.now()-FIRST_LOAD>8000) return true; return (TAB_NEEDS[t]||[]).every(c=>LOADED.has(c)); }

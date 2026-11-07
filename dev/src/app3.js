@@ -269,36 +269,54 @@ function renderSummits(){
 }
 
 /* ================= In the News ================= */
+/* In the News, a month at a time (Nov 7, 2026): this month and last month stay open; once a month is over and its
+   newsletter has gone out, it folds into the Archive (still there, one click away). Stories come from three places:
+   the team, Brittney's emails, and the daily web search. */
+const NW = {open:{}};
 function renderNews(){
-  const el=$("#page-news"), t=T();
+  const el=$("#page-news"), t=T(), thisMo=t.slice(0,7);
   const list=newsAll().sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
   const ed=curEdition(); const forEd = ed? newsInWindow(ed) : [];
-  const month=list.filter(n=>n.date&&n.date.slice(0,7)===t.slice(0,7)).length;
+  const month=list.filter(n=>n.date&&n.date.slice(0,7)===thisMo).length;
   const unshared=list.filter(n=>!n.linkedinDone && n.kind!=="press").length;
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">Source for MISMO Matters and LinkedIn</div><h1>In the News</h1><div class="sub">Press releases and articles that mention MISMO. Log each one once and it feeds the In the News section and the LinkedIn queue.</div></div><div class="tools"><button class="btn pri" type="button" id="nw-new">+ Add an Article</button></div></div>'+
-    '<div class="band"><div class="today">In the News</div><div class="say">'+(ed?'<em>'+forEd.length+'</em> item'+(forEd.length===1?"":"s")+' headed to the '+esc(monthName(ed.month))+' MISMO Matters so far. ':'')+'Check the usual outlets monthly: HousingWire, National Mortgage News, Mortgage News Daily, Inside Mortgage Finance, Scotsman Guide, National Mortgage Professional, The Mortgage Point and Commercial Observer.</div><div class="tiles">'+
+  const toCheck=list.filter(n=>n.auto && n.viaWeb).length;
+  const run=newsWebRun();
+  /* a month stays open until its edition has been sent (the edition sent the next month carries it) */
+  const sentThrough = editionsSorted().filter(e=>e.archived || (e.done&&e.done.publish)).map(e=>e.dates&&e.dates.publish).filter(Boolean).sort().slice(-1)[0]||"";
+  const isArch = mo => mo < thisMo && ((mo+"-31") <= sentThrough || mo < add(t,-62).slice(0,7));
+  const byMo={}; list.forEach(n=>{ const mo=(n.date||"").slice(0,7)||"undated"; (byMo[mo]=byMo[mo]||[]).push(n); });
+  const months=Object.keys(byMo).sort().reverse(), live=months.filter(m=>m==="undated"||!isArch(m)), arch=months.filter(m=>m!=="undated"&&isArch(m));
+  const moName=mo=>mo==="undated"?"No Date":monthName(mo);
+  const row=n=>{ const e=newsEdition(n); return '<tr class="click" data-nw="'+esc(n.id)+'"><td><b>'+esc(fS(n.date))+'</b></td><td>'+esc(n.headline||"")+(n.auto?' <span class="chip review" title="'+(n.viaWeb?"Found by the daily web search ("+esc(n.found||"news search")+"). Check it; press Remove in its panel if it isn’t about MISMO.":"Came in by email. Check it, then untick the box.")+'">'+(n.viaWeb?"Found on the Web":"Found Automatically")+'</span>':'')+'</td><td>'+esc(n.outlet||"")+'</td><td>'+(n.kind==="press"?'<span class="chip in">Press Release</span>':'<span class="chip">In the News</span>')+'</td><td>'+(n.linkedinDone?'<span class="chip done">Shared</span>':(n.kind==="press"?'':'<span class="chip waiting">Not Yet</span>'))+'</td><td>'+(e?esc(monthName(e.month)):'<span class="t2">no edition</span>')+'</td></tr>'; };
+  const table=items=>'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Headline</th><th>Outlet</th><th>Kind</th><th>LinkedIn</th><th>MISMO Matters</th></tr></thead><tbody>'+items.map(row).join("")+'</tbody></table></div>';
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Source for MISMO Matters and LinkedIn</div><h1>In the News</h1><div class="sub">Press releases and articles that mention MISMO, a month at a time. Each one feeds the In the News section of that month’s MISMO Matters and the LinkedIn queue.</div></div><div class="tools"><button class="btn pri" type="button" id="nw-new">+ Add an Article</button></div></div>'+
+    '<div class="band"><div class="today">In the News</div><div class="say">'+(ed?'<em>'+forEd.length+'</em> item'+(forEd.length===1?"":"s")+' headed to the '+esc(monthName(ed.month))+' MISMO Matters so far. ':'')+'MISMO Media searches Google News and Bing News for MISMO every morning'+(run&&run.at?' (last search '+esc(fS(localDay(run.at)))+')':'')+', and Brittney’s FYI emails come in by themselves. Check anything marked <b>Found on the Web</b>; Remove what isn’t about MISMO.</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+forEd.length+'</div><div class="k">For the Next Edition</div><div class="s">'+(ed?esc(fS(add(prevPublish(ed),1)))+' to '+esc(fS(ed.dates.publish)):"")+'</div></div>'+
-      '<div class="tile"><div class="v">'+month+'</div><div class="k">Logged This Month</div><div class="s">'+esc(MONL[today().getMonth()])+'</div></div>'+
+      '<div class="tile"><div class="v">'+month+'</div><div class="k">This Month</div><div class="s">'+esc(MONL[today().getMonth()])+'</div></div>'+
+      '<div class="tile"><div class="v'+(toCheck?" hot":"")+'">'+toCheck+'</div><div class="k">Found on the Web</div><div class="s">waiting for a look</div></div>'+
       '<div class="tile"><div class="v'+(unshared?" hot":"")+'">'+unshared+'</div><div class="k">Not on LinkedIn</div><div class="s">mentions not shared yet</div></div>'+
     '</div></div>'+
-    '<div class="card"><div class="ch"><h2>Every Item</h2><span class="cnt">'+list.length+'</span></div>'+(list.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Headline</th><th>Outlet</th><th>Kind</th><th>LinkedIn</th><th>MISMO Matters</th></tr></thead><tbody>'+
-      list.map(n=>{ const e=newsEdition(n); return '<tr class="click" data-nw="'+esc(n.id)+'"><td><b>'+esc(fS(n.date))+'</b></td><td>'+esc(n.headline||"")+(n.auto?' <span class="chip review" title="Found by the weekly search. Check it, then untick the box.">Found Automatically</span>':'')+'</td><td>'+esc(n.outlet||"")+'</td><td>'+(n.kind==="press"?'<span class="chip in">Press Release</span>':'<span class="chip ch">Mention</span>')+'</td><td>'+tk(n.linkedinDone,false,"Shared on LinkedIn")+'</td><td>'+(e?esc(MONL[+e.month.slice(5)-1]):"—")+'</td></tr>'; }).join("")+
-      '</tbody></table></div>':'<div class="empty"><b>Nothing logged yet.</b> Add press releases and articles as they come out. They land in the next MISMO Matters by date, so nobody has to ask for a list at the end of the month.</div>')+'</div>';
+    (list.length? live.map(mo=>'<div class="card nw-mo"><div class="ch"><h2>'+esc(moName(mo))+'</h2><span class="cnt">'+byMo[mo].length+'</span>'+(mo===thisMo?'<span class="note">this month</span>':'')+'</div>'+table(byMo[mo])+'</div>').join("")
+      +(arch.length?'<div class="card nw-arch"><div class="ch"><h2>Archive</h2><span class="cnt">'+arch.reduce((a,m)=>a+byMo[m].length,0)+'</span><span class="note">past months, after their MISMO Matters went out</span></div><div class="cb">'+
+        arch.map(mo=>'<details class="nw-old"'+(NW.open[mo]?' open':'')+' data-mo="'+esc(mo)+'"><summary><b>'+esc(moName(mo))+'</b> <span class="t2">'+byMo[mo].length+' item'+(byMo[mo].length===1?'':'s')+'</span></summary>'+table(byMo[mo])+'</details>').join("")+'</div></div>':'')
+      :'<div class="card"><div class="empty"><b>Nothing yet.</b> The daily web search, Brittney’s emails and anything you add land here by month, and in that month’s MISMO Matters.</div></div>');
   $("#nw-new",el).onclick=()=>openNews(null);
   $$("[data-nw]",el).forEach(r=>r.onclick=()=>openNews(r.dataset.nw));
+  $$("details.nw-old",el).forEach(d=>d.addEventListener("toggle",()=>{ NW.open[d.dataset.mo]=d.open; }));
 }
 function openNews(id){
-  const src=id?newsGet(id):null, viaEmail=!!(id && !S.news[id] && S.newsin[id]);
+  const src=id?newsGet(id):null, viaEmail=!!(id && !S.news[id] && (S.newsin[id] || S.newsweb[id]));
   const n=id?Object.assign({},src, viaEmail?{auto:true}:{}):{date:T(),kind:"mention"}; const nid=id||uid("n");
+  const fromWeb = src && S.newsweb[id] ? '<div class="ro nw-mail"><b>Found by the daily web search ('+esc(src.found||"news search")+(src.foundAt?', '+esc(fS(localDay(src.foundAt))):'')+')</b><div>Open the link to check it\'s about MISMO. If it isn\'t, press Remove and it won\'t come back.</div></div>' : '';
   const fromMail = src && (src.summary||src.note||src.from) ? '<div class="ro nw-mail"><b>Came in by email'+(src.from?' from '+esc(src.from):'')+(src.at?' · '+esc(fS(String(src.at).slice(0,10))):'')+'</b>'+(src.note?'<div>'+esc(src.note)+'</div>':'')+(src.summary?'<div class="nw-sum">'+esc(src.summary)+'</div>':'')+'</div>' : '';
   openPane({eye:"In the News", title:n.headline||"New Article", data:n, fields:[
-    {sec:"The Article"},{k:"_mail",type:"html",html:()=>fromMail},{k:"headline",label:"Headline",wide:true},{k:"outlet",label:"Outlet",ph:"e.g. HousingWire"},{k:"date",label:"Date",type:"date"},
+    {sec:"The Article"},{k:"_mail",type:"html",html:()=>fromMail+fromWeb},{k:"headline",label:"Headline",wide:true},{k:"outlet",label:"Outlet",ph:"e.g. HousingWire"},{k:"date",label:"Date",type:"date"},
     {k:"kind",label:"Kind",type:"select",opts:[["mention","MISMO in the News"],["press","MISMO Press Release"]]},{k:"url",label:"Link",type:"url",wide:true},
     {k:"edition",label:"Goes in MISMO Matters",type:"select",opts:[["","By date (automatic)"]].concat(editionsSorted().slice().reverse().map(e=>[e.id,monthName(e.month)+(e.archived?" (sent)":"")]))},
     {k:"auto",label:"Found automatically · needs a look",type:"cb"},{sec:"Shared"},{k:"linkedinDone",label:"Shared on the MISMO LinkedIn page",type:"cb"},{k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},{k:"notes",label:"Notes",type:"rich",rows:2}],
     save:async v=>{ await put("news",nid,Object.assign({},n,v)); },
-    /* an emailed item can't be deleted at the source, so removing it hides it for good */
-    del:id?async()=>{ if(S.newsin[id]) await put("news",id,Object.assign({},n,{hidden:true})); else await remove("news",id); }:null, delLabel:id&&S.newsin[id]?"Remove":"Delete" });
+    /* an emailed or web-found item can't be deleted at the source, so removing it hides it for good */
+    del:id?async()=>{ if(S.newsin[id]||S.newsweb[id]) await put("news",id,Object.assign({},n,{hidden:true})); else await remove("news",id); }:null, delLabel:id&&(S.newsin[id]||S.newsweb[id])?"Remove":"Delete" });
 }
 
 /* ================= Lists & Unsubscribes ================= */

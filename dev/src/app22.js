@@ -133,7 +133,7 @@ const HH_LOG="health-log", HH_KEEP=30, HH_MAX=150;
 const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
 const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
 const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
-const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
 const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
 function hhSaving(){
@@ -175,6 +175,12 @@ function hhNews(){
   const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
 }
+function hhWebNews(){
+  const r=newsWebRun(); if(!r || !r.at) return LOADED.has("newsweb")? hhRow("webnews","In the News Web Search","off","Hasn't run yet. It runs every morning; the first run starts it.") : null;
+  const hrs=(Date.now()-Date.parse(r.at))/36e5, mo=T().slice(0,7), n=vals("newsweb").filter(x=>x.id!=="_run" && x.month===mo).length;
+  if(hrs>36) return hhRow("webnews","In the News Web Search","warn","Last searched "+hhWhen(r.at)+", more than a day ago. The \"In the News web search\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
+  return hhRow("webnews","In the News Web Search","ok","Last searched "+hhWhen(r.at)+". "+n+" stor"+(n===1?"y":"ies")+" found this month.");
+}
 function hhDates(){
   const w=dateWarnings(); if(!w.length) return null;
   return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
@@ -187,7 +193,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 function hhPlace(){
