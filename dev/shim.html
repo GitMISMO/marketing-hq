@@ -235,7 +235,7 @@
     return new Promise(function (res, rej) {
       var go = function () {
         if (kind === 'update' && f.loaded && docIn(f, path) === null) { rej(err('not-found', 'No document to update: ' + path)); return; }
-        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej }); f.view = null;
+        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej, at: now() }); f.view = null;
         if (p.own) register(path, kind !== 'delete');
         notify(f, true);
         schedule(f, FLUSH_MS);
@@ -283,6 +283,7 @@
           f.server = next; f.sha = (b && b.sha) || f.sha; f.loadedAt = now();
           f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
           batch.forEach(function (op) { if (op.gone) op.rej(err('not-found', GONE)); else op.res(); });
+          status.savedAt = new Date().toISOString();   /* for System Health */
           notify(f, false);
           saved();
         });
@@ -306,12 +307,15 @@
         /* nothing is lost: the change stays queued and goes out once the relay is back */
         if (e.status === 401 || e.code === 'SIGNED_OUT') f.waitingSignIn = true;
         else setTimeout(function () { schedule(f, 0); }, RETRY_MS);
+        (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: false });
         problem(e);
         return;
       }
       f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
       batch.forEach(function (op) { op.rej(e); });
       notify(f, false);
+      (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: true });
+      if (status.problems.length > 50) status.problems = status.problems.slice(-50);
       problem(e, true);
     }).then(function () {
       f.flushing = false;
