@@ -2277,6 +2277,7 @@ const SEND_CHECKS = [
   ["news","In the News gathered","Press releases and articles since the last edition, from the In the News page"],
   ["links","Links and section jumps tested","Every link, every \"jump to\" and \"back to top\" works"],
   ["text","Plain-text version checked","For readers whose email shows text only"],
+  ["web","Web version published","The edition's own web page, so every Copy Link opens and copies the right section"],
   ["test","Test send reviewed","Kelly and Amy have each opened the test and signed off"],
   ["website","Website list updated","The new edition added to the MISMO Matters list on the website"],
   ["linkedin","LinkedIn post about the edition","Announces the edition on the MISMO page"],
@@ -2965,7 +2966,7 @@ function openSection(ed,k,isNew){
       {k:"body",label:"Body Copy",type:"rich",rows:12,img:ed.month,ph:"Type or paste the copy as it should run. Pasting from Word keeps bold, links and bullets. Add pictures anywhere with the picture button."},
       {k:"quote",label:"Quote",type:"rich",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
       {k:"quoteBy",label:"Quote Attribution",ph:"Name, Title, Company"},
-      ...(FULL_ARTICLE[k] ? [{k:"_full",type:"html",html:()=>'<div class="ro">Read the Full Article goes to <a href="'+esc(fullArticleUrl(ed,k))+'" target="_blank" rel="noopener">'+esc(fullArticleUrl(ed,k).replace(/^https:\/\//,""))+' ↗</a>, the '+esc(monthName(ed.month))+' article on the website.</div>'},{k:"noFull",label:"Leave out the Read the Full Article button",type:"cb"}] : []),
+      ...(FULL_ARTICLE[k] ? [{k:"_full",type:"html",html:d=>'<div class="ro">'+esc(fullArticleLabel(k))+' goes to <a href="'+esc(fullArticleUrl(ed,k,d))+'" target="_blank" rel="noopener">'+esc(fullArticleUrl(ed,k,d).replace(/^https:\/\//,""))+' ↗</a>, the '+esc(monthName(ed.month))+' article on the website.</div>'},{k:"noFull",label:"Leave out the "+fullArticleLabel(k)+" button",type:"cb"}] : []),
       {k:"ctaText",label:"Link Text",ph:"e.g. Register for the Winter Summit"},
       {k:"ctaUrl",label:"Link",type:"url",ph:"https://"});
   }
@@ -3053,8 +3054,22 @@ const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
 const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","thanks","education","cert","events","news"];
 /* Vieaux Point and Workgroup Highlights each have a page on the website with every month's
    article; #vp-YYYY-MM / #wg-YYYY-MM opens straight to that month. */
-const FULL_ARTICLE = {vieaux:["https://collaborate.mismo.org/mismowebsite/about-mismo/vieaux-point","vp"], workgroup:["https://collaborate.mismo.org/mismowebsite/about-mismo/workgroup-highlights","wg"]};
-function fullArticleUrl(ed, k){ const f=FULL_ARTICLE[k]; return f && ed && ed.month ? f[0]+"#"+f[1]+"-"+ed.month : ""; }
+const FULL_ARTICLE = {vieaux:["about-mismo/vieaux-point","vp","Continue Reading"], workgroup:["about-mismo/workgroup-highlights","wg","Read the Full Article"]};
+/* Every edition also lives on the web at its own address, so a reader can link to one section (Copy Link). */
+const MM_WEB_BASE="https://resources.mismo.org/marketing-hq/matters/";
+function mmWebUrl(ed){ return MM_WEB_BASE+(ed&&ed.month||"")+"/"; }
+function buildWebPage(ed){
+  const t="MISMO Matters | "+monthName(ed.month);
+  return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(t)+'</title>'+
+    '<meta property="og:title" content="'+esc(t)+'"><meta property="og:image" content="'+esc(MAST_IMG)+'">'+
+    '<style>html{scroll-behavior:smooth}body{margin:0;background:#f1f6fa}a[name]{scroll-margin-top:12px}a[data-mm-copy].ok{color:#0f7b5c!important}</style></head><body>'+
+    buildEmail(ed,false,hdrOpt(ed))+
+    '<script>document.addEventListener("click",function(e){var a=e.target.closest("a[data-mm-copy]");if(!a)return;e.preventDefault();var u=location.href.split("#")[0]+"#"+a.getAttribute("data-mm-copy");history.replaceState(null,"",u);var l=a.querySelector("[data-mm-label]");function ok(){if(!l)return;l.textContent="Link Copied";a.classList.add("ok");setTimeout(function(){l.textContent="Copy Link";a.classList.remove("ok")},2200)}if(navigator.clipboard)navigator.clipboard.writeText(u).then(ok,function(){prompt("Copy this link",u)});else prompt("Copy this link",u)});<\/script></body></html>';
+}
+function fullArticleLabel(k){ const f=FULL_ARTICLE[k]; return (f&&f[2])||"Read the Full Article"; }
+/* the website moves from collaborate.mismo.org/mismowebsite to www.mismo.org on Nov 16 (certSite picks by publish date);
+   d.fullAnchor (optional) picks up the article where the newsletter cut it off, e.g. vp-2026-11-mcd-cost */
+function fullArticleUrl(ed, k, d){ const f=FULL_ARTICLE[k]; return f && ed && ed.month ? certSite(ed, f[0])+"#"+((d&&d.fullAnchor)||(f[1]+"-"+ed.month)) : ""; }
 function hdrOpt(ed){ return (ed && ed.hdrStyle==="2") ? "2" : "1"; }
 /* IBM Plex for the email apps that load web fonts (Apple Mail on iPhone, iPad and Mac, Outlook for Mac, Samsung Mail).
    Hidden from Outlook on Windows, which would otherwise drop to Times New Roman; it and Gmail use Segoe UI or Arial instead. */
@@ -3120,8 +3135,8 @@ function buildEmail(ed, preview, opt){
       inner+=body(d.body);
       if(isz==="small" && (hl||(preview&&local))) inner+='<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>';
       if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
-      const full = !d.noFull && fullArticleUrl(ed, s.k);
-      if(full) inner+='<p style="margin:0 0 18px"><a href="'+esc(full)+'" style="'+F+'display:inline-block;background:'+(opt==="2"?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Read the Full Article&nbsp;&rarr;</a></p>';
+      const full = !d.noFull && fullArticleUrl(ed, s.k, d);
+      if(full) inner+='<p style="margin:0 0 18px"><a href="'+esc(full)+'" style="'+F+'display:inline-block;background:'+(opt==="2"?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(fullArticleLabel(s.k))+'&nbsp;&rarr;</a></p>';
       if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
     }
     const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
@@ -3130,7 +3145,12 @@ function buildEmail(ed, preview, opt){
       (hdr ? '<tr><td style="padding:0;line-height:0"><a name="'+anchor+'" id="'+anchor+'"></a><img src="'+esc(hdr)+'" alt="'+esc(name)+'" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'
            : '<tr><td bgcolor="#e4f2fb" style="background:#e4f2fb;padding:38px 28px;border-top:1px solid #cfe1ef;border-bottom:1px solid #cfe1ef"><a name="'+anchor+'" id="'+anchor+'"></a><div style="'+F+'font-size:27px;font-weight:700;letter-spacing:-.012em;color:'+navy+';line-height:1.2">'+esc(name)+'</div></td></tr>')+
       '<tr><td style="padding:28px 28px 4px">'+inner+'</td></tr>'+
-      '<tr><td align="right" style="padding:14px 28px 22px;border-top:1px solid #e5eef5;text-align:right"><a href="#mm-top" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap">Back to Top&nbsp;&uarr;</a></td></tr>');
+      /* the foot of every section: Copy Link on the left (the section's own address on the web version, like the
+         Axios editions had), Back to Top on the right */
+      '<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+        '<td align="left" valign="middle" style="text-align:left"><a href="'+esc(mmWebUrl(ed)+"#"+anchor)+'" data-mm-copy="'+anchor+'" title="Link to this section" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap"><img src="'+HDR2_BASE+'ic-link.png" alt="" width="12" height="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;&nbsp;<span data-mm-label>Copy Link</span></a></td>'+
+        '<td align="right" valign="middle" style="text-align:right"><a href="#mm-top" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap">Back to Top&nbsp;&uarr;</a></td>'+
+      '</tr></table></td></tr>');
   });
   /* In This Issue: two columns, numbered down the left column first */
   const half=Math.ceil(toc.length/2), tl=(i)=>{ const t=toc[i]; if(!t) return ''; return '<a href="#'+t[0]+'" style="text-decoration:none;color:'+navy+';'+F+'font-size:14px;font-weight:600"><span style="'+M+'color:#2477b8;font-size:12px;font-weight:500">'+String(i+1).padStart(2,"0")+'</span>&nbsp;&nbsp;'+esc(t[1])+'</a>'; };
@@ -3172,7 +3192,7 @@ function buildText(ed){
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
     else if(isCertSpot(s)){ body=certSpotlightText(ed,s); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k); if(full) body.push("Read the full article: "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullArticleLabel(s.k)+": "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"Unsubscribe: "+UNSUB_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");
@@ -3199,6 +3219,8 @@ function wirePreview(el,ed){
     try{ await patch("editions",ed.id,{hdrStyle:v}); toast("Option "+v+" is what Copy HTML gives you now"); }catch(e){} });
   $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
+  /* in the preview, Copy Link copies the section's web address rather than leaving MISMO Media */
+  $("#pv-mail",el).addEventListener("click",e=>{ const a=e.target.closest("a[data-mm-copy]"); if(!a) return; e.preventDefault(); copyText(a.href,"Section link"); });
   $$("[data-dev]",el).forEach(b=>b.onclick=()=>{ $$("[data-dev]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $(".mailwrap",el).classList.toggle("phone",b.dataset.dev==="phone"); });
 }
 function statsCalc(st){
