@@ -12,13 +12,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MISMO Media</title>
 <!-- Hide the app until someone is signed in. If this file is replaced by an upload, carry this block across. -->
-<style>html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:hidden}/* attached logos on a request (Nov 5, 2026) */
-.nm-att{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line,#e5eef5)}
-.nm-att-h{flex-basis:100%;font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ink-3,#7794aa)}
-.nm-att figure{margin:0;width:120px;display:flex;flex-direction:column;gap:4px}
-.nm-att img{width:120px;height:64px;object-fit:contain;background:#fff;border:1px solid var(--line,#e5eef5);border-radius:6px;padding:6px;box-sizing:border-box}
-.nm-att figcaption{font-size:11.5px;color:var(--ink-2,#456179);text-align:center}
-</style>
+<style>html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:hidden}</style>
 <script>(function(){
   var out = true;
   try {
@@ -761,14 +755,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* Layout: Summit HQ's family — navy masthead, navy left rail of sections, one page per section, records open in a wide right-hand panel. */
 :root{
   --navy:#0d314c; --sky:#74bfeb; --navy-deep:#06202f; --navy-mid:#14486e; --sky-soft:#a9d8f3; --sky-wash:#e4f2fb;
   --ground:#f1f6fa; --surface:#ffffff; --surface-2:#f6fafd; --surface-3:#e9f1f8; --sunk:#f6fafd;
   --border:#d5e2ed; --border-strong:#adc4d6; --rule:#e5eef5; --line:#e5eef5;
-  --ink:#0d314c; --ink-2:#456179; --ink-3:#7794aa;
+  --ink:#0d314c; --ink-2:#456179; --ink-3:#56718a;
   --good:#0f7b5c; --bad:#b3372c; --warn:#a2701a;
   --good-soft:#e3f3ed; --bad-soft:#f8e6e4; --warn-soft:#f7eedc;
   --accent-soft:#e4f2fb;
@@ -1911,7 +1904,7 @@ input[type=file]::file-selector-button:hover{background:var(--surface-3)}
 .pbl i:last-child{width:58%}
 .pb.t-w{--pc:#c3d2de;border-left-style:dashed;background:#f5f8fb}
 .pb.t-w .pbl i{background:repeating-linear-gradient(90deg,#c3d2de 0 6px,transparent 6px 10px);opacity:1}
-.pb.t-w .pbh{color:#7794aa}
+.pb.t-w .pbh{color:#56718a}
 .pb.t-i{--pc:#74bfeb}.pb.t-r{--pc:#e0a83c}.pb.t-c{--pc:#f08579}.pb.t-a{--pc:#4fc79b}.pb.t-u{--pc:#3987e5}
 .pbk{position:absolute;top:5px;right:7px;font-size:11px;color:#0f7b5c;font-weight:700}
 .pscan{position:absolute;left:0;right:0;height:70px;top:-70px;background:linear-gradient(180deg,transparent,rgba(116,191,235,.24),transparent);animation:pscan 5s ease-in-out infinite;pointer-events:none}
@@ -2013,8 +2006,22 @@ input[type=file]::file-selector-button:hover{background:var(--surface-3)}
 .kclips{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
 .kguest{border:1px solid var(--border);border-left:4px solid var(--sky);border-radius:6px;padding:10px 12px;background:var(--surface-2);font-size:13px;margin-bottom:8px}
 .kguest p{margin:6px 0 0}.kguest ol{margin:6px 0 0;padding-left:20px}
+
+/* System Health and Approvals (Nov 7, 2026) */
+.helpbody b.bad,.helpbody .bad{color:var(--bad)}
+.sh-appr{margin:0 0 22px}
+.sh-appr .ch h2{font-size:15px}
+.sh-appr td.n{text-align:right;white-space:nowrap;color:var(--ink-2)}
+tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
+/* attached logos on a request (Nov 5, 2026) */
+.nm-att{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line,#e5eef5)}
+.nm-att-h{flex-basis:100%;font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ink-3,#7794aa)}
+.nm-att figure{margin:0;width:120px;display:flex;flex-direction:column;gap:4px}
+.nm-att img{width:120px;height:64px;object-fit:contain;background:#fff;border:1px solid var(--line,#e5eef5);border-radius:6px;padding:6px;box-sizing:border-box}
+.nm-att figcaption{font-size:11.5px;color:var(--ink-2,#456179);text-align:center}
 </style>
 
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
 <style>
 /* the skeleton the Claude copy is wrapped in */
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -2215,7 +2222,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-help" hidden></section>
 </main>
 
-<aside class="pane" id="pane" aria-hidden="true" aria-labelledby="pane-title">
+<aside class="pane" id="pane" role="dialog" aria-hidden="true" inert aria-labelledby="pane-title">
   <div class="ph">
     <div><div class="pe" id="pane-eye"></div><h2 id="pane-title"></h2></div>
     <button class="btn sm x" id="pane-x" type="button">Close</button>
@@ -2223,7 +2230,7 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <div class="pb" id="pane-body"></div>
   <div class="pf" id="pane-foot"></div>
 </aside>
-<div class="toast" id="toast" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 <script>"use strict";
 /* ================= constants ================= */
 const SECTIONS = [
@@ -2382,9 +2389,11 @@ async function connect(){
   LIVE=true; CONNECTED=true; saveNote(true);
   Object.keys(S).forEach(col=>{
     DB.collection(col).onSnapshot(snap=>{
-      const o={}; snap.docs.forEach(d=>{ o[d.id]=Object.assign({id:d.id}, d.data()); });
+      /* S = what the pages use; TRASH = records put aside with Delete (Help > System Health brings them back) */
+      const o={}, tr={}; snap.docs.forEach(d=>{ const v=d.data()||{}; if(v._deletedAt){ tr[d.id]=Object.assign({id:d.id}, v); return; } o[d.id]=Object.assign({id:d.id}, v); });
+      TRASH[col]=tr;
       /* a second copy, never changed by the page, to tell later what a save actually changed (November 5, 2026) */
-      if(col!=="audience"){ const seen={}; snap.docs.forEach(d=>{ seen[d.id]=Object.assign({id:d.id}, d.data()); }); SEEN[col]=seen; }
+      if(col!=="audience"){ const seen={}; snap.docs.forEach(d=>{ const v=d.data()||{}; if(!v._deletedAt) seen[d.id]=Object.assign({id:d.id}, v); }); SEEN[col]=seen; }
       S[col]=o; if(!FIRST_LOAD){ FIRST_LOAD=Date.now(); setTimeout(schedule, 8100); } LOADED.add(col); schedule(); if(col==="images" && typeof hlSoon==="function") hlSoon();
     }, err=>{ saveNote(false, err && err.message); });
   });
@@ -2429,8 +2438,12 @@ function saveNote(ok, why){
    quick change made anywhere else. Only what differs from that is written, onto the newest
    copy, here and in the data store (where it is done again after a 409). If both people
    changed the same field, the person saving is asked which to keep, and an open panel says so
-   when someone else saves the same record. SEEN holds each record exactly as last read. */
-const SEEN = {};
+   when someone else saves the same record. SEEN holds each record exactly as last read.
+   Added Nov 7 (review): a tab running an old copy of MISMO Media, or a view-only person, saves
+   nothing; every save says who made it; Delete puts things aside instead of erasing them. */
+const SEEN = {}, TRASH = {};
+const WHO=()=>window.__hqWho||"";
+const SOFT_DEL=["sections","episodes","pieces","news","lists","kits","requests"];
 function noId(r){ const o=Object.assign({}, r); delete o.id; return o; }
 function baseOf(col,id){
   const k=col+"/"+id;
@@ -2446,27 +2459,50 @@ function askClash(cl, theirs, mine){
     cl.map(at=>"• "+label(at)+" — theirs: "+show(M.getAt(theirs,at))+"   ·   yours: "+show(M.getAt(mine,at))).join("\n")+
     "\n\nOK keeps yours. Cancel keeps theirs for "+(cl.length===1?"this field":"these fields")+" — your other changes still save.");
 }
+function saveBlocked(){
+  if(!DB) return false;
+  if(STALE.on){ toast("MISMO Media has been updated. Refresh the page to keep saving; this change wasn't saved.", 6000); return true; }
+  if(!CANWRITE){ toast("You can view MISMO Media but not save changes.", 4000); return true; }
+  return false;
+}
 async function put(col,id,data){
+  if(saveBlocked()) return;
   const clean = Object.assign({}, data); delete clean.id;
-  clean.updatedAt = new Date().toISOString();
+  clean.updatedAt = new Date().toISOString(); const by=WHO(); if(by) clean.updatedBy=by;
   const M=window.__hqMerge, k=col+"/"+id, was=baseOf(col,id), now=SEEN[col] && SEEN[col][id];
-  const base = (DB && M && was) ? M.clone(noId(was)) : null;   // a copy: Cancel below edits it
+  const base = (DB && M && was) ? M.clone(noId(was)) : null; // a copy: Cancel below edits it
   if(base && !now && LOADED.has(col)){ toast(M.GONE, 6000); throw new Error(M.GONE); }
   let out = clean;
   if(base && now){
     const cur=noId(now), cl=M.clashes(cur, clean, base);
-    if(cl.length && !askClash(cl, cur, clean)) cl.forEach(at=>M.setAt(base, at, M.getAt(clean, at)));   // Cancel: theirs stands
+    if(cl.length && !askClash(cl, cur, clean)) cl.forEach(at=>M.setAt(base, at, M.getAt(clean, at))); // Cancel: theirs stands
     out = M.merge(cur, clean, base);
   }
   S[col][id] = Object.assign({id}, out); schedule();
-  if(PANE && PANE.at) PANE.at.over[k] = Object.assign({id}, M ? M.clone(out) : out);   // the panel's new starting point
+  if(PANE && PANE.at) PANE.at.over[k] = Object.assign({id}, M ? M.clone(out) : out); // the panel's new starting point
   if(DB){ try{ const ref=DB.collection(col).doc(id); await (base && ref.merge ? ref.merge(clean, base) : ref.set(base ? out : clean)); }catch(e){ toast("Couldn't save: "+(e.message||e.code||"try again"), 4000); throw e; } }
 }
 async function patch(col,id,part){ const cur=S[col][id]||{}; return put(col,id,Object.assign({},cur,part)); }
-async function remove(col,id){
-  delete S[col][id]; schedule();
-  if(PANE && PANE.at) PANE.at.over[col+"/"+id] = undefined;   // gone on purpose: a later save here starts fresh
-  if(DB){ try{ await DB.collection(col).doc(id).delete(); }catch(e){ toast("Couldn't delete: "+(e.message||"try again"),4000); } }
+/* Delete puts a record aside rather than erasing it; Help > System Health lists what was put aside and
+   brings it back. hard=true erases (used only for housekeeping, e.g. old list parts). */
+async function remove(col,id,hard){
+  if(saveBlocked()) return;
+  const rec=S[col][id]; delete S[col][id]; schedule();
+  if(PANE && PANE.at) PANE.at.over[col+"/"+id] = undefined; // gone on purpose: a later save here starts fresh
+  if(!DB) return;
+  if(!hard && rec && SOFT_DEL.includes(col)){
+    const at=new Date().toISOString();
+    TRASH[col]=TRASH[col]||{}; TRASH[col][id]=Object.assign({}, rec, {_deletedAt:at, _deletedBy:WHO()});
+    try{ await DB.collection(col).doc(id).update({_deletedAt:at, _deletedBy:WHO()}); }catch(e){ toast("Couldn't delete: "+(e.message||"try again"),4000); }
+    return;
+  }
+  try{ await DB.collection(col).doc(id).delete(); }catch(e){ toast("Couldn't delete: "+(e.message||"try again"),4000); }
+}
+async function restoreRec(col,id){
+  if(saveBlocked()) return;
+  const rec=TRASH[col]&&TRASH[col][id]; if(!rec) return;
+  delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
+  try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
 let _raf=0; function schedule(){ if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
@@ -2553,7 +2589,7 @@ function allEvents(){
     if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up "+epTag(ep)+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
     const l=liDate(ep); if(l && (!old || ep.linkedinDone)) ev.push({date:l, k:"linkedin", label:(ep.liCanceled?"Canceled · ":"")+"LinkedIn · Mic'd Up "+epTag(ep), done:liClosed(ep), x:!!ep.liCanceled, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
-  fridays(MICDUP_START, 60).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
+  fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.status==="canceled"?"Canceled · ":"")+(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), x:p.status==="canceled", done:pClosed(p)||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
   vals("orders").filter(o=>!o.archived && o.status!=="cancelled").forEach(o=>{
     const pre=["toorder","quote"].includes(o.status||"toorder");
@@ -2573,6 +2609,7 @@ const isOver = e=>!e.done && !e.slot && e.date<T() && !e.big;
 /* ================= the right-hand panel ================= */
 let PANE = null;
 function openPane(cfg){
+  if(!PANE) PANE_FROM = document.activeElement;
   PANE = Object.assign({dirty:false}, cfg);
   /* what every record looked like as this panel opened, and which record it is (November 5, 2026) */
   PANE.at = {cols:Object.assign({}, SEEN), over:{}};
@@ -2592,7 +2629,7 @@ function openPane(cfg){
   (cfg.buttons||[]).forEach((x,i)=>{ f.querySelector('[data-pb="'+i+'"]').onclick=async()=>{ const v=readFields(cfg.fields); if(v===null) return; try{ await x.run(v); PANE.dirty=false; }catch(e){} }; });
   if(cfg.del){ const d=$("#pf-del"); d.onclick=async()=>{ if(d.dataset.sure){ await cfg.del(); toast(cfg.delLabel==="Archive"?"Archived":"Deleted"); closePane(true); } else { d.dataset.sure="1"; d.textContent="Press Again to "+(cfg.delLabel||"Delete"); setTimeout(()=>{ if(d){ delete d.dataset.sure; d.textContent=cfg.delLabel||"Delete"; } },3500); } }; }
   if(cfg.after) cfg.after(b);
-  const p=$("#pane"); p.classList.add("open"); p.setAttribute("aria-hidden","false");
+  const p=$("#pane"); p.classList.add("open"); p.setAttribute("aria-hidden","false"); p.inert=false;
   b.scrollTop=0;
   setTimeout(()=>{ const first=b.querySelector("input:not([type=url]),textarea,select,.rt-ed"); if(first && !cfg.noFocus) try{ first.focus({preventScroll:true}); }catch(e){} },230);
 }
@@ -2609,8 +2646,11 @@ setInterval(()=>{
 }, 3000);
 function closePane(force){
   if(PANE && PANE.dirty && !force){ const m=$("#pf-msg"); if(m && !m.dataset.warned){ m.dataset.warned="1"; m.textContent="You have changes that aren't saved. Press Close again to leave without saving."; return; } }
-  PANE=null; const p=$("#pane"); p.classList.remove("open"); p.setAttribute("aria-hidden","true");
+  PANE=null; const p=$("#pane"); p.classList.remove("open"); p.setAttribute("aria-hidden","true"); p.inert=true;
+  /* back to the button or row that opened it, so keyboard users aren't dropped at the top of the page */
+  const from=PANE_FROM; PANE_FROM=null; if(from && document.contains(from) && from.focus) try{ from.focus({preventScroll:true}); }catch(e){}
 }
+let PANE_FROM=null;
 const CAL_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
 function buildFields(fields, d){
   let h='', open=false;
@@ -2695,12 +2735,18 @@ async function staleCheck(){
     const sig=pageSig(t); if(STALE.base===null){ STALE.base=sig; return; }
     if(sig!==STALE.base){ STALE.on=true; const b=document.createElement("div"); b.id="stale-bar";
       b.style.cssText="position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:9999;background:#0d314c;color:#fff;border:1px solid #74bfeb;border-radius:6px;padding:9px 12px 9px 14px;font:600 13px/1.3 inherit;display:flex;gap:12px;align-items:center;box-shadow:0 8px 24px -8px rgba(0,0,0,.45)";
-      b.innerHTML='MISMO Media has been updated. Refresh to keep working. <button class="btn sm pri" type="button">Refresh</button>';
+      b.setAttribute("role","alert");
+      b.innerHTML='MISMO Media has been updated. Saving is paused in this tab until you refresh. <button class="btn sm pri" type="button">Refresh</button>';
       b.querySelector("button").onclick=()=>location.reload(); document.body.appendChild(b); }
   }catch(e){}
 }
-staleCheck(); setInterval(staleCheck, 10*60*1000);
-function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); if(typeof sponsorSync==="function") sponsorSync(); if(typeof certSync==="function") certSync(); }
+staleCheck(); setInterval(staleCheck, 3*60*1000);
+document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") staleCheck(); });
+/* the background jobs (episode files, sponsor logos, certified lists) run from here, but through runJob:
+   at most once a minute, only in one tab per browser, and with a growing pause after a failure */
+function renderAll(){ applyPosted(); renderTab(TAB); badges();
+  if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
+  if(typeof a11yRows==="function") a11yRows(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -3079,7 +3125,7 @@ function buildEmail(ed, preview, opt){
   /* Laid out like the hand-built November edition: a 600px column, full-width section header
      images edge to edge, roomy 16px type, and every block in tables so Outlook keeps it. */
   const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
-  const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#7794aa", soft="#f6fafd", line="#dde9f2";
+  const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#56718a", soft="#f6fafd", line="#dde9f2";
   const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
   const A='color:'+link+';font-weight:600;text-decoration:underline';
   /* subheads always start below a small picture beside the text, never beside it */
@@ -3137,7 +3183,7 @@ function buildEmail(ed, preview, opt){
       if(d.quote) inner+='<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 20px"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>';
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+='<p style="margin:0 0 18px"><a href="'+esc(full)+'" style="'+F+'display:inline-block;background:'+(opt==="2"?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(fullArticleLabel(s.k))+'&nbsp;&rarr;</a></p>';
-      if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
+      if(d.ctaUrl) inner+='<p style="margin:0 0 18px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>';
     }
     const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
     toc.push([anchor,name]);
@@ -3155,7 +3201,7 @@ function buildEmail(ed, preview, opt){
   /* In This Issue: two columns, numbered down the left column first */
   const half=Math.ceil(toc.length/2), tl=(i)=>{ const t=toc[i]; if(!t) return ''; return '<a href="#'+t[0]+'" style="text-decoration:none;color:'+navy+';'+F+'font-size:14px;font-weight:600"><span style="'+M+'color:#2477b8;font-size:12px;font-weight:500">'+String(i+1).padStart(2,"0")+'</span>&nbsp;&nbsp;'+esc(t[1])+'</a>'; };
   let tocRows=''; for(let r=0;r<half;r++){ const last=r===half-1; tocRows+='<tr><td width="50%" valign="top" style="padding:0 10px '+(last?0:9)+'px 0">'+tl(r)+'</td><td width="50%" valign="top" style="padding:0 0 '+(last?0:9)+'px 10px">'+tl(r+half)+'</td></tr>'; }
-  return EMAIL_FONTS+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
+  const out = EMAIL_FONTS+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
     '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8e5ef">'+
     '<tr><td style="padding:0;line-height:0"><a name="mm-top" id="mm-top"></a><img src="'+MAST_IMG+'" alt="MISMO Matters" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0" border="0"></td></tr>'+
     /* the band under the masthead lines up with the masthead picture: the month starts under the MISMO logo and
@@ -3169,7 +3215,10 @@ function buildEmail(ed, preview, opt){
     '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:30px 28px"><div style="'+F+'font-size:19px;line-height:1.45;color:#ffffff;font-weight:700;margin:0 0 8px;letter-spacing:-.008em">Engage With MISMO to Shape the Future of the Mortgage Industry</div><div style="'+F+'font-size:15.5px;line-height:1.6;color:#a9d8f3;margin:0 0 20px">We have a chair at the table waiting for you.</div><a href="'+SUBSCRIBE_URL+'" style="'+F+'display:inline-block;'+(opt==="2"?'background:#1a8fe3;color:#ffffff;border:1px solid #2e9dee;':'background:#74bfeb;color:'+navy+';')+'text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">Subscribe to MISMO Matters&nbsp;&rarr;</a></td></tr>'+
     emailFooter(F)+
     '</table></td></tr></table>';
+  /* every build carries its version, so the copy in Informz can be checked against MISMO Media before sending */
+  return '<!-- MISMO Matters '+monthName(ed.month)+' · version '+emailVersion(out)+' -->'+out;
 }
+function emailVersion(html){ let h=0; const t=String(html).replace(/<!-- MISMO Matters [^>]*-->/,""); for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return (h>>>0).toString(36).toUpperCase().padStart(7,"0").slice(-7); }
 /* Footer: the website's footer, nice and tight. Two halves sit side by side on a computer and stack on a phone. */
 function emailFooter(F){
   const navy="#0d314c", I=HDR2_BASE;
@@ -3182,7 +3231,7 @@ function emailFooter(F){
     '<!--[if mso]><table role="presentation" width="552" cellpadding="0" cellspacing="0" border="0"><tr><td width="276" valign="middle"><![endif]-->'+half(left,"left")+
     '<!--[if mso]></td><td width="276" valign="middle" align="right"><![endif]-->'+half('<div style="padding:10px 0 0">'+right+'</div>',"right")+
     '<!--[if mso]></td></tr></table><![endif]-->'+
-    '<div style="border-top:1px solid #e3ebf1;margin:14px 0 0;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#7794aa">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></div></td></tr>';
+    '<div style="border-top:1px solid #e3ebf1;margin:14px 0 0;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></div></td></tr>';
 }
 function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
@@ -3201,7 +3250,7 @@ function buildText(ed){
 function previewView(ed){
   return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Section header style"><button type="button" data-hs="1" aria-pressed="'+(hdrOpt(ed)==="1")+'">Option 1 · Original</button><button type="button" data-hs="2" aria-pressed="'+(hdrOpt(ed)==="2")+'">Option 2 · New</button></div><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
     '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed,true)+'</div></div>'+
-    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block. Each section has its own link, so a reader can share one story, and every section has a way back to the top.</p></div></div>';
+    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block. Each section has its own link, so a reader can share one story, and every section has a way back to the top. This build is version <b>'+esc(emailVersion(buildEmail(ed)))+'</b>; the same number is on the first line of the HTML, so you can check that Informz has the latest before sending.</p></div></div>';
 }
 function copyText(s, what){
   const done=()=>toast(what+" copied");
@@ -3381,12 +3430,12 @@ function renderPeople(){
   });
 }
 
-/* reading a spreadsheet or CSV someone drops in (SheetJS, loaded from cdnjs) */
-function readSheet(file){
+/* reading a spreadsheet or CSV someone drops in (SheetJS 0.20.3, fetched only when needed, integrity-checked) */
+async function readSheet(file){
+  await loadXLSX();
   return new Promise((res,rej)=>{
     const fr=new FileReader();
     fr.onload=()=>{ try{
-      if(!window.XLSX) throw new Error("The spreadsheet reader didn't load. Check your connection and reload the page.");
       const wb=XLSX.read(new Uint8Array(fr.result),{type:"array",cellDates:true});
       let best=[]; wb.SheetNames.forEach(n=>{ const raw=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:false});
         let h=raw.findIndex(r=>r.filter(c=>String(c).trim()).length>=2 && r.some(c=>/mail|title|views|impressions|video|content|subject|post/i.test(String(c)))); if(h<0) h=0;
@@ -3883,9 +3932,10 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.b)+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
+  if(cur.id==="system" && typeof wireSystem==="function") wireSystem(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
@@ -4400,64 +4450,12 @@ function rqAsked(r){
   const links=String(r.links||"").split(/\s+/).filter(x=>/^https?:\/\//i.test(x)).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.length>60?u.slice(0,58)+"…":u)+'</a>').join("<br>");
   return '<div class="rqasked"><div class="rqa-h"><span class="rqt">'+esc(rqTypeName(r))+'</span><span class="rqa-when">Sent '+esc(r.at?fD(String(r.at).slice(0,10)):"")+'</span></div>'+
     '<h3>'+esc(r.title||"Untitled request")+'</h3>'+(r.details?'<div class="rt-view">'+mdHtml(r.details)+'</div>':'')+
-    row("From", esc(r.n||"")+(r.e?' · <a href="mailto:'+esc(r.e)+'?subject='+encodeURIComponent("Your request: "+(r.title||""))+'">'+esc(r.e)+'</a>':''))+
+    row("From", esc(r.n||"")+(r.e?' · <a href="mailto:'+encodeURIComponent(r.e||"")+'?subject='+encodeURIComponent("Your request: "+(r.title||""))+'">'+esc(r.e)+'</a>':''))+
     row("Role", esc([r.role,r.group].filter(Boolean).join(" · ")))+
     row("Needed By", r.neededBy?esc(fD(r.neededBy))+(r.firm?' <b>(firm date)</b>':''):"")+
     row("Audience", esc(r.audience||""))+row("Event", esc(r.event||""))+row("Links and Files", links)+
     '</div>';
 }
-/* ---------- New member logos from Member 360 (Jonna, Nov 5, 2026). Member 360 lists the new members that have a logo
-   (data/mm-newmembers in member-360-data). When MISMO Media opens, each logo not already here is added to the Image Library
-   (campaign Logos, in SharePoint like every picture), placed in the New Member Welcome section of the right MISMO Matters edition
-   (the first edition after the month they joined whose content date hasn't passed), and the month's LinkedIn new member
-   announcement request is made or brought up to date with the logos attached. ---------- */
-const NM_R="https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws/member-360";
-function nmTok(){try{return window.ResourcesSession.token()||"";}catch(e){return "";}}
-function nmNext(mo){let [y,m]=mo.split("-").map(Number);m++;if(m>12){m=1;y++;}return y+"-"+String(m).padStart(2,"0");}
-function nmEdition(joined){const t=T(),jm=String(joined||t).slice(0,7);
-  const eds=vals("editions").filter(e=>e&&e.month).sort((a,b)=>a.month.localeCompare(b.month));
-  /* a new member goes in the first issue after they join that is still being built (build day), not only before its content day (Jonna, Nov 6, 2026) */
-  const ok=eds.find(e=>e.month>jm&&String((e.dates||{}).build||(e.dates||{}).publish||(e.dates||{}).content||e.month+"-01")>=t);if(ok)return ok.month;
-  let mo=nmNext(jm);while(mo<=t.slice(0,7))mo=nmNext(mo);return mo;}
-/* the same company under a slightly different name: "HomeVision" and "HomeVision, Inc.", "The Money Store" and "MLD Mortgage dba The Money Store", "Ameriprise Financial" and "Ameriprise Bank" */
-function nmSame(a,b){const parts=s=>String(s||"").toLowerCase().split(/\s+d\/?b\/?a\s+/).map(p=>p.replace(/&/g," and ").replace(/\b(inc|llc|l\.l\.c|corp|corporation|company|co|the|ltd|lp|na|n\.a)\b\.?/g," ").trim()).filter(Boolean);
-  const c=p=>p.replace(/[^a-z0-9]+/g,""),f=p=>(p.match(/[a-z0-9]+/)||[""])[0];
-  const A=parts(a),B=parts(b);return A.some(x=>B.some(y=>{const X=c(x),Y=c(y);return X===Y||(X.length>5&&Y.length>5&&(X.indexOf(Y)===0||Y.indexOf(X)===0))||(f(x).length>=6&&f(x)===f(y)&&!/^(american|national|united|federal|mortgage|financial|first|community|citizens)$/.test(f(x)));}));}
-let NM_BUSY=false;
-async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;NM_BUSY=true;try{
-  const r=await fetch(NM_R+"/data/mm-newmembers",{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!r.ok)return;
-  const j=await r.json().catch(()=>null);const items=((j&&j.data)||{}).items||[];if(!items.length)return;
-  const have=new Set(vals("images").map(im=>im.m360Logo).filter(Boolean)),touched={};
-  for(const it of items){if(!it||!it.logo||!it.logo.path||have.has(it.logo.path)||!/^image\//.test(it.logo.type||""))continue;
-    /* only members new enough for a welcome: the edition must be within two months of the month they joined (older members were welcomed before) */
-    /* only the issue right after the month they joined (October joiners go in November): a member who joined earlier was welcomed then, even if their logo only arrived now (Jonna, Nov 6, 2026) */
-    {const jm=String(it.joined||"").slice(0,7);if(!jm||nmEdition(it.joined)!==nmNext(jm))continue;}
-    const fr=await fetch(NM_R+"/file/"+it.logo.path,{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!fr.ok)continue;
-    const fj=await fr.json().catch(()=>null);if(!fj||!fj.content)continue;const bin=atob(String(fj.content).replace(/\s/g,""));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-    const ext=it.logo.path.split(".").pop(),file=new File([u],String(it.name||"Logo").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+"-logo."+ext,{type:it.logo.type});
-    const month=nmEdition(it.joined),group=it.champion?(it.type==="Lender"?"Lender Champions":"Industry Champions"):"Corporate Members";
-    const made=await addImages([file],{name:it.name+" Logo",company:it.name,group,campaign:"logos",edition:"",alt:it.name+" logo",site:it.website||"",m360Logo:it.logo.path,m360Key:it.k||"",m360Level:it.level||"",m360Joined:it.joined||""});
-    if(!made||!made.length)continue;const im=made[0];have.add(it.logo.path);
-    if(vals("sections").some(x=>x&&x.key==="welcome"&&(x.logos||[]).some(l=>(l.k&&l.k===it.k)||nmSame(l.name,it.name))))continue;
-    const sid=month+"__welcome",cur=(S.sections||{})[sid]||{month,key:"welcome",status:"in",owner:"Kelly",from:"Member 360 new members",headline:"MISMO Welcomes New Members"};
-    const logos=(cur.logos||[]).filter(l=>l.name!==it.name).concat([{id:im.id,name:it.name,group,url:it.website||"",k:it.k||""}]);
-    await put("sections",sid,Object.assign({},cur,{month,key:"welcome",logos}));touched[month]=1;}
-  for(const month of Object.keys(touched)){const rid="rq-newmembers-"+month,cur=(S.requests||{})[rid];
-    const logos=((S.sections||{})[month+"__welcome"]||{}).logos||[],ed=vals("editions").find(e=>e.month===month)||{};
-    const need=(ed.dates&&(ed.dates.publish||ed.dates.approve))||(month+"-15");
-    await put("requests",rid,Object.assign({status:"review",role:"MISMO Staff",type:"linkedin",n:"Member 360",e:"",group:"Membership",owner:"",neededBy:need,at:new Date().toISOString()},cur||{},{
-      title:"New Member Announcement: "+monthName(month),
-      details:"LinkedIn post welcoming MISMO's new members, to go with the "+monthName(month)+" MISMO Matters: "+logos.map(l=>l.name).join(", ")+". Their logos are attached below and are in the Image Library under Logos.",
-      images:logos.map(l=>l.id),links:logos.map(l=>l.name+(l.url?" · "+l.url:"")).join("\n"),auto:"member-360"}));}
-  if(Object.keys(touched).length)toast("New member logos from Member 360 added to MISMO Matters and the LinkedIn request.",5000);
-}catch(e){console.error("new member logos",e);}finally{NM_BUSY=false;}}
-{let n=0;const iv=setInterval(()=>{n++;if(DB&&typeof S!=="undefined"&&S.images&&Object.keys(S.images).length&&S.editions){clearInterval(iv);setTimeout(()=>nmImport(),6000);}else if(n>120)clearInterval(iv);},1500);}
-/* a request with logos attached shows them */
-{const _oR=openRequest;openRequest=function(id){const r=_oR.apply(this,arguments);try{const q=id&&rqGet(id);if(q&&Array.isArray(q.images)&&q.images.length){const b=document.getElementById("pane-body");
-  if(b){const box=document.createElement("div");box.className="nm-att";box.innerHTML='<div class="nm-att-h">Attached Logos</div>';
-    q.images.forEach(iid=>{const im=(S.images||{})[iid];if(!im)return;const fig=document.createElement("figure"),img=document.createElement("img"),cap=document.createElement("figcaption");
-      img.alt=im.alt||im.name||"";cap.textContent=im.company||im.name||"";fig.append(img,cap);box.appendChild(fig);Promise.resolve(imgEnsure(im)).then(()=>{const s=imgSrc(im);if(s)img.src=s;});});
-    b.appendChild(box);}}}catch(e){console.error("attached logos",e);}return r;};}
 function openRequest(id){
   const isNew=!id, r = id ? rqGet(id) : {status:"review", role:"MISMO Staff", type:"linkedin", owner:"", n:"", e:""};
   if(id && !r) return;
@@ -4725,13 +4723,13 @@ function liAmyEmail(e, k, name, desc, from, rev){
       (rev?'<div style="font-size:15px;line-height:1.6;color:#0d314c;background:#fff6e0;border:1px solid #a2701a;border-radius:6px;padding:10px 12px;margin:0 0 10px"><b>Please use this version instead of the one we sent earlier.</b>'+(rev.note?'<br>'+esc(rev.note).replace(/\n/g,"<br>"):'')+'</div>':'')+
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, the LinkedIn Live event for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+' is ready for your review. It streams from Riverside to MISMO\'s LinkedIn page on <b style="color:#0d314c">'+esc(when)+'</b>.</div></td></tr>'+
     '<tr><td style="padding:10px 28px 0;'+F+'font-size:15px;line-height:1.6;color:#44607a">Read it over, then press <b style="color:#0f7b5c">Approve</b> at the bottom. It sends your approval by email. No need to open MISMO Media.</td></tr>'+
-    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT NAME</div><div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd">'+esc(name)+'</div></td></tr>'+
-    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#7794aa;margin:0 0 6px">EVENT DESCRIPTION</div><div style="font-size:15px;line-height:1.6;color:#0d314c;border-left:4px solid #74bfeb;padding:10px 12px;background:#f6fafd">'+para(desc)+'</div></td></tr>'+
+    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#56718a;margin:0 0 6px">EVENT NAME</div><div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd">'+esc(name)+'</div></td></tr>'+
+    '<tr><td style="padding:16px 28px 0;'+F+'"><div style="font-size:11px;letter-spacing:1.5px;font-weight:bold;color:#56718a;margin:0 0 6px">EVENT DESCRIPTION</div><div style="font-size:15px;line-height:1.6;color:#0d314c;border-left:4px solid #74bfeb;padding:10px 12px;background:#f6fafd">'+para(desc)+'</div></td></tr>'+
     '<tr><td style="padding:22px 28px 6px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr>'+
       '<td style="background:#0f7b5c;border-radius:6px"><a href="'+liMailto(e,rev,"Approved")+'" style="display:inline-block;padding:13px 28px;'+F+'font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none">Approve</a></td><td style="width:10px"></td>'+
       '<td style="border:1.5px solid #1a8fe3;border-radius:6px"><a href="'+liMailto(e,rev,"Changes:\n\n")+'" style="display:inline-block;padding:12px 22px;'+F+'font-size:15px;font-weight:bold;color:#1a8fe3;text-decoration:none">Request Changes</a></td></tr></table>'+
       '<div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:10px"><b>Approve</b> opens a reply that already says Approved: press Send and it&rsquo;s done, and Vanessa sets up the event as written. <b>Request Changes</b> opens a reply for your edits (change the wording right in it). You can also just reply to this email.</div></td></tr>'+
-    '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#7794aa;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Keep the [MM:…] tag in the subject so your reply finds its episode.</td></tr>'+
+    '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Keep the [MM:…] tag in the subject so your reply finds its episode.</td></tr>'+
     '</table></td></tr></table>';
 }
 /* Amy's buttons in the email are replies, not links to MISMO Media: each opens an email back to the inbox the
@@ -5087,7 +5085,7 @@ function mailchimpHero(list){
   const rows=[].concat(ahead.slice(0,3), sent.slice(0,Math.max(0,3-Math.min(3,ahead.length)))).slice(0,3);
   const row=(x,i)=>'<div role="button" tabindex="0" class="mrow'+(x===p?" next":"")+'" data-hero-mc="'+esc(x.id)+'"><span class="mfrom"><b>MISMO</b>'+(x.audience?'<em>'+esc(x.audience)+'</em>':'')+'</span>'+
     '<span class="msub"><b>'+esc(x.title||"Untitled campaign")+'</b><small>'+esc(mdPlain(x.copy||(x.status==="done"?(+x.sent?"Sent to "+(+x.sent).toLocaleString()+" people":"Sent"):"Open it to write the email.")).replace(/\s+/g," ").slice(0,90))+'</small></span>'+
-    '<span class="mwhen">'+(x.reviewLink&&x.status!=="done"?'<a class="mrev" href="'+esc(x.reviewLink)+'" target="_blank" rel="noopener">Review ↗</a>':'')+(x.status==="done"?"Sent "+esc(fS(x.date)):x.status==="canceled"?'<i class="msched cxd">Canceled</i>'+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date))+(x.sendTime?' · '+esc(x.sendTime):''):esc(fS(x.date)))+'</span></div>';
+    '<span class="mwhen">'+(safeHref(x.reviewLink)&&x.status!=="done"?'<a class="mrev" href="'+esc(safeHref(x.reviewLink))+'" target="_blank" rel="noopener">Review ↗</a>':'')+(x.status==="done"?"Sent "+esc(fS(x.date)):x.status==="canceled"?'<i class="msched cxd">Canceled</i>'+esc(fS(x.date)):x===p?'<i class="msched">Scheduled</i>'+esc(fS(x.date))+(x.sendTime?' · '+esc(x.sendTime):''):esc(fS(x.date)))+'</span></div>';
   const pc=(n,d)=>d?Math.round(n/d*100)+"%":"—";
   const stats=last&&+last.sent?'<div class="mstats"><div><b>'+(+last.sent).toLocaleString()+'</b><small>sent to</small></div><div><b>'+pc(+last.opens||0,+last.sent)+'</b><small>opened</small></div><div><b>'+pc(+last.clicks||0,+last.sent)+'</b><small>clicked</small></div><div><b>'+(+last.unsubs||0)+'</b><small>unsubscribed</small></div></div>':'';
   return '<div class="hero">'+
@@ -5124,16 +5122,17 @@ function spFolderUrl(lib){ return SP_SITE+"/MISMO/Forms/AllItems.aspx?id="+encod
 function spFileUrl(listPath, download){ return spUrl(listPath)+(download?"?download=1":"?web=1"); }
 
 /* ---------- folders ---------- */
-const MU = {made:{}, pulling:{}, pulled:{}, writing:{}};
+const MU = {made:{}, pulling:{}, pulled:{}, writing:{}, folderFail:{}};
 async function ensureEpFolder(e){
   const sp=SPX(); if(!sp || !e || !e.num || e.spFolder) return e && e.spFolder;
   const lib=epFolderLib(e), season=MU_LIB+"/Season "+(+e.season||1);
+  if(MU.folderFail[e.id] && Date.now()-MU.folderFail[e.id] < 30*60*1000) return "";
   try{
     if(!MU.made[season]){ await sp.mkdir(season); MU.made[season]=true; }
     await sp.mkdir(lib);
     await patch("episodes", e.id, {spFolder:lib});
     return lib;
-  }catch(err){ return ""; }
+  }catch(err){ MU.folderFail[e.id]=Date.now(); if(typeof jobNote==="function") jobNote("SharePoint folders", err); return ""; }
 }
 /* what's in an episode folder */
 const VID_RX=/\.(mp4|mov|m4v)$/i, IMG_RX=/\.(png|jpe?g|webp)$/i, TX_RX=/\.(txt|srt|vtt)$/i;
@@ -5380,7 +5379,7 @@ function guestPaneHtml(e, id){
     '<div><small>Answered the guest form '+esc(fS(String(g.at).slice(0,10)))+'.</small></div>'+
     (g.topics?'<p><b>Topics:</b> '+esc(g.topics).replace(/\n/g,"<br>")+'</p>':'')+
     (g.questions&&g.questions.length?'<ol>'+g.questions.map(q=>'<li>'+esc(q)+'</li>').join("")+'</ol>':'')+
-    (g.avoid?'<p><b>Steer clear of:</b> '+esc(g.avoid)+'</p>':'')+(g.linkedin?'<p><a href="'+esc(g.linkedin)+'" target="_blank" rel="noopener">LinkedIn profile ↗</a></p>':'')+'</div>';
+    (g.avoid?'<p><b>Steer clear of:</b> '+esc(g.avoid)+'</p>':'')+(safeHref(g.linkedin)?'<p><a href="'+esc(safeHref(g.linkedin))+'" target="_blank" rel="noopener">LinkedIn profile ↗</a></p>':'')+'</div>';
   else h+='<div class="hint">'+(id?'No answers from the guest yet. Send them the guest form when Brian books them; their answers show here.':'Save the episode first, then send the guest the form.')+'</div>';
   h+='<div class="kbtns">'+(id?'<button class="btn sm" type="button" id="ep-gform">Copy Guest Form Link</button>':'')+(id?'<button class="btn sm'+(g?' pri':'')+'" type="button" id="ep-ros">Draft the Run of Show</button>':'')+(id?'<button class="btn sm" type="button" id="ep-ros-mail">Email the Run of Show to Brian</button>':'')+'</div><span class="hint" id="ep-gmsg"></span>';
   return h;
@@ -5395,7 +5394,7 @@ function wireGuestPane(b, id){
   const m=$("#ep-ros-mail",b); if(m) m.onclick=async()=>{ const t=($("#f-runOfShow",b).value||"").trim(); if(!t){ msg.textContent="Draft or write the run of show first."; return; }
     const n=window.__hqImages && window.__hqImages.notify; if(!n){ msg.textContent="Email works on resources.mismo.org."; return; }
     const e=S.episodes[id]||{}; m.disabled=true; msg.textContent="Sending…";
-    try{ await n(BRIAN_EMAIL, "Run of show: Mic'd Up "+epWord(e)+(e.guests?" with "+e.guests:""), '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0d314c"><p>Hi Brian, here is the run of show for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+', drafted from the guest\'s answers.</p><div style="border-left:4px solid #74bfeb;background:#f6fafd;padding:12px 16px">'+mdEmail(t,'margin:0 0 10px','color:#14486e')+'</div><p style="font-size:12px;color:#7794aa">Sent from MISMO Media.</p></div>');
+    try{ await n(BRIAN_EMAIL, "Run of show: Mic'd Up "+epWord(e)+(e.guests?" with "+e.guests:""), '<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#0d314c"><p>Hi Brian, here is the run of show for MISMO Mic\'d Up '+esc(epWord(e))+(e.guests?' with '+esc(e.guests):'')+', drafted from the guest\'s answers.</p><div style="border-left:4px solid #74bfeb;background:#f6fafd;padding:12px 16px">'+mdEmail(t,'margin:0 0 10px','color:#14486e')+'</div><p style="font-size:12px;color:#56718a">Sent from MISMO Media.</p></div>');
       msg.textContent="Sent to Brian."; }catch(err){ msg.textContent="Didn't send: "+(err.message||"try again"); }
     m.disabled=false; };
 }
@@ -5794,6 +5793,8 @@ function hmLoadQr(){
    Mailchimp/newsletter HTML shows the real formatting. */
 
 const RT_SAFE_URL = /^(https?:|mailto:|tel:)/i;
+/* safeHref: what any typed-in link goes through before it becomes an href (review, Nov 7 2026) */
+function safeHref(u){ const v=rtUrl(u); return /^(https?:|mailto:|tel:)/i.test(v)?v:""; }
 function rtUrl(u){ u=String(u||"").trim(); if(!u) return ""; if(/^www\./i.test(u)) u="https://"+u; u=u.replace(/^(mailto:)+/i,"mailto:"); if(!/^[a-z][a-z0-9+.-]*:/i.test(u) && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(u)) u="mailto:"+u; return RT_SAFE_URL.test(u)?u:""; }
 
 /* inline: **bold**, *italic*, [text](url), bare links. `aStyle` adds inline styles for email. */
@@ -6269,7 +6270,7 @@ function logoWall(ed, s, preview){
     const inner = src
       ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0"'+(hl||src?'':' data-mmimg="'+esc(l.id)+'"')+'>'
       : '<div style="'+F+'font-size:18px;line-height:1.3;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
-    const linked = l.url ? '<a href="'+esc(l.url)+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
+    const linked = safeHref(l.url) ? '<a href="'+esc(safeHref(l.url))+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="112" style="background:#ffffff;border:1px solid '+cardB+';'+(dark?'border-top:3px solid #74bfeb;':'')+'border-radius:6px;padding:16px 10px;height:112px;text-align:center">'+linked+'</td></tr></table>'; };
   const grid=items=>{ let rows=''; for(let i=0;i<items.length;i+=2){ const a=items[i], b=items[i+1];
       rows+= b ? '<tr><td width="50%" valign="top" style="padding:5px">'+logo(a)+'</td><td width="50%" valign="top" style="padding:5px">'+logo(b)+'</td></tr>'
@@ -6285,7 +6286,7 @@ function logoWall(ed, s, preview){
     const inner = src
       ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0">'
       : '<div style="'+F+'font-size:13px;line-height:1.25;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
-    const linked = l.url ? '<a href="'+esc(l.url)+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
+    const linked = safeHref(l.url) ? '<a href="'+esc(safeHref(l.url))+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="'+T.h+'" style="background:#ffffff;border:1px solid #dde9f2;border-top:3px solid '+T.c+';border-radius:5px;padding:8px 6px;height:'+T.h+'px;text-align:center">'+linked+'</td></tr></table>'; };
   const gridC=(items,T)=>{ const n=items.length, rows=Math.ceil(n/T.m), c=Math.max(Math.ceil(n/rows), Math.min(T.m,3)); let out='';
     for(let i=0;i<n;i+=c){ const row=items.slice(i,i+c), pct=(100/row.length).toFixed(2), tw=Math.round(row.length/c*100);
@@ -6296,14 +6297,14 @@ function logoWall(ed, s, preview){
   if(!dark){ const body=groups.map(g=>{ const T=TIERS[tierOf(g.k)];
       return (many && g.k ? '<div style="'+M+'font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:12px 0 3px;text-align:center"><span style="color:'+T.c+'">&#9632;</span>&nbsp;'+esc(g.k)+'</div>' : '')+gridC(g.items,T); }).join("");
     const introC=d.body ? mdEmail(d.body, F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC, 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
-    const ctaC = d.ctaUrl ? '<p style="margin:14px 0 2px;text-align:center"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;line-height:1;padding:12px 20px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
+    const ctaC = d.ctaUrl ? '<p style="margin:14px 0 2px;text-align:center"><a href="'+esc(safeHref(d.ctaUrl))+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;line-height:1;padding:12px 20px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
     return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
       '<div style="'+M+'font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 6px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
       '<div style="'+F+'font-size:23px;line-height:1.2;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 6px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+
       '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>'; }
   const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
   const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
-  const cta = d.ctaUrl ? '<p style="margin:18px 0 4px;text-align:center"><a href="'+esc(d.ctaUrl)+'" style="'+F+'display:inline-block;background:'+(dark?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
+  const cta = d.ctaUrl ? '<p style="margin:18px 0 4px;text-align:center"><a href="'+esc(safeHref(d.ctaUrl))+'" style="'+F+'display:inline-block;background:'+(dark?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
   const box = dark
     ? 'bgcolor="'+navy+'" style="background:'+navy+';background-image:linear-gradient(180deg,#0d314c 0%,#0d314c 38%,#123f63 74%,#17507a 100%);border-radius:8px;padding:14px 12px 24px;text-align:center"'
     : 'bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:28px 12px 22px;text-align:center"';
@@ -6673,7 +6674,7 @@ function certSpotlight(ed, s, bodyFn){
       '<tr><td width="50%" valign="top" style="padding:0 10px 0 22px">'+list(items.slice(0,half))+'</td><td width="50%" valign="top" style="padding:0 22px 0 10px">'+list(items.slice(half))+'</td></tr>'+
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
-  const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(d.ctaUrl)+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
+  const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
   return md(before)+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 22px;background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>'+md(after)+cta;
 }
 function certSpotlightText(ed, s){
@@ -6712,6 +6713,174 @@ function wireCert(b, doc, ed){
   if(sel) sel.addEventListener("change", ()=>{ if(PANE) PANE.dirty=true; draw(); });
   draw();
 }
+/* ================= System Health (Nov 7, 2026 review) =================
+   One place that shows how MISMO Media itself is doing: which version is running, whether saving works,
+   how the background jobs are going, date lists that are about to run out, and what was put aside with
+   Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
+   the spreadsheet reader loaded on demand, keyboard access to clickable rows, Approvals on Home, and
+   a download of all the data. */
+const BUILD = "2026-11-06 22:04 ET · 051f3f8";
+
+/* ---------- one autopilot tab per browser ----------
+   Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
+   to Amy). The browser hands this lock to one tab at a time; the others wait until that tab closes. */
+let LEADER = !(navigator.locks && navigator.locks.request);
+try{ if(navigator.locks && navigator.locks.request) navigator.locks.request("mismo-media-autopilot", ()=>{ LEADER=true; if(typeof schedule==="function") schedule(); return new Promise(()=>{}); }); }catch(e){ LEADER=true; }
+
+/* ---------- background jobs ----------
+   At most once a minute each, only in the autopilot tab, and after a failure a pause that doubles each
+   time (1, 2, 4 ... up to 60 minutes). The last error is shown on System Health. */
+const JOBS = {};
+function job(name){ return JOBS[name] || (JOBS[name]={name, runs:0, fails:0, lastRun:0, lastOk:0, lastErr:"", lastErrAt:0, next:0, busy:false}); }
+function jobNote(name, err){ const j=job(name); j.fails++; j.lastErr=String((err&&(err.message||err.code))||err||"failed").slice(0,200); j.lastErrAt=Date.now(); j.next=Date.now()+Math.min(60, Math.pow(2, Math.min(6, j.fails-1)))*60000; }
+function runJob(name, fn, minMs){
+  if(!fn || !LEADER || (typeof STALE!=="undefined" && STALE.on)) return;
+  const j=job(name), now=Date.now();
+  if(j.busy || now<j.next || now-j.lastRun<(minMs||60000)) return;
+  j.busy=true; j.lastRun=now; j.runs++;
+  Promise.resolve().then(fn).then(()=>{ j.busy=false; j.lastOk=Date.now(); if(j.fails && Date.now()>=j.next) j.fails=0; }, e=>{ j.busy=false; jobNote(name, e); });
+}
+
+/* ---------- the spreadsheet reader, only when someone imports a file ---------- */
+let XLSX_P=null;
+function loadXLSX(){
+  if(window.XLSX) return Promise.resolve();
+  if(XLSX_P) return XLSX_P;
+  XLSX_P=new Promise((res,rej)=>{ const s=document.createElement("script");
+    s.src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+    s.integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT"; s.crossOrigin="anonymous";
+    s.onload=()=>res(); s.onerror=()=>{ XLSX_P=null; rej(new Error("The spreadsheet reader didn't load. Check your connection and try again.")); };
+    document.head.appendChild(s); });
+  return XLSX_P;
+}
+
+/* ---------- keyboard: clickable rows open with Enter, like a link ---------- */
+function a11yRows(){ $$("tr.click:not([tabindex])").forEach(r=>{ r.tabIndex=0; }); }
+document.addEventListener("keydown", e=>{
+  const t=e.target; if(!(t && t.matches && t.matches("tr.click")) || (e.key!=="Enter" && e.key!==" ")) return;
+  e.preventDefault(); t.click();
+});
+
+/* ---------- date lists that run out ---------- */
+function dateWarnings(){
+  const t=T(), soon=add(t,120), out=[];
+  const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays so schedules skip them.");
+  const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits.");
+  return out;
+}
+
+/* ---------- Approvals on Home: everything waiting on someone's OK, and for how long ---------- */
+function approvalsWaiting(){
+  const t=T(), out=[];
+  if(typeof kitsWithAmy==="function") kitsWithAmy().forEach(k=>{ const e=S.episodes[k.id]; out.push({what:"Mic'd Up "+(typeof epTag==="function"?epTag(e):"")+" LinkedIn Live wording", who:"Amy", since:String(k.liSentAt||"").slice(0,10), go:()=>{ go("micdup"); if(typeof openEpisode==="function") openEpisode(e.id); }}); });
+  const ed=curEdition(); if(ed) edSections(ed).filter(s=>s.on && s.doc.status==="review").forEach(s=>out.push({what:monthName(ed.month)+" MISMO Matters: "+(s.doc.name||s.meta.name), who:"Review", since:String(s.doc.updatedAt||"").slice(0,10), go:()=>go("matters")}));
+  vals("pieces").filter(p=>p.status==="review").forEach(p=>out.push({what:p.title||p.name||"Post", who:"Review", since:String(p.updatedAt||"").slice(0,10), go:()=>go(p.channel||"linkedin")}));
+  out.forEach(x=>{ x.days = x.since ? Math.max(0, dBetween(x.since, t)) : null; });
+  return out.sort((a,b)=>(b.days||0)-(a.days||0));
+}
+const _renderHomeBase = renderHome;
+renderHome = function(){
+  _renderHomeBase();
+  const el=$("#page-home"); if(!el || !tabReady("home")) return;
+  const list=approvalsWaiting(); if(!list.length) return;
+  const box=document.createElement("div"); box.className="card sh-appr";
+  box.innerHTML='<div class="ch"><h2>Waiting on Approval</h2><span class="note">'+list.length+' item'+(list.length===1?"":"s")+'</span></div><div class="cb"><table class="tbl"><tbody>'+
+    list.map((x,i)=>'<tr class="click" data-ap="'+i+'"><td><b>'+esc(x.what)+'</b></td><td>'+esc(x.who)+'</td><td class="n">'+(x.days==null?"":x.days===0?"Since today":esc(x.days+" day"+(x.days===1?"":"s")+" waiting"))+'</td></tr>').join("")+'</tbody></table></div>';
+  const hero=$(".hm-hero",el); if(hero && hero.nextSibling) el.insertBefore(box, hero.nextSibling); else el.appendChild(box);
+  $$("[data-ap]",box).forEach(r=>r.onclick=()=>list[+r.dataset.ap].go());
+  a11yRows();
+};
+
+/* ---------- System Health (a Help topic) ---------- */
+const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
+function trashLabel(col, r){ return r.name||r.title||r.headline||(r.num?"Episode "+r.num:"")||r.key||r.id; }
+function systemHtml(){
+  const ago=ms=>{ if(!ms) return "never"; const m=Math.round((Date.now()-ms)/60000); return m<1?"just now":m<60?m+" min ago":Math.round(m/60)+" h ago"; };
+  const jobs=Object.values(JOBS);
+  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
+  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
+  const warn=dateWarnings();
+  const relay=window.__hqRelay && window.__hqRelay.status ? window.__hqRelay.status : null;
+  return '<p class="lead">How MISMO Media itself is doing. Nothing here needs attention unless it is marked.</p>'+
+    '<h3>This Copy</h3><table class="tbl"><tbody>'+
+      '<tr><td>Version</td><td><b>'+esc(BUILD.indexOf("__")===0?"development copy":BUILD)+'</b></td></tr>'+
+      '<tr><td>Saving</td><td>'+(typeof STALE!=="undefined" && STALE.on?'<b class="bad">Paused: a newer MISMO Media is out. Refresh the page.</b>':!CANWRITE?"View only":LIVE?"On, to MISMO's records":"Not connected")+'</td></tr>'+
+      (relay?'<tr><td>Connection</td><td>'+(relay.offline?'<b class="bad">Can\'t reach the save relay right now</b>':"OK")+(relay.lastError?' · last problem: '+esc(relay.lastError):"")+'</td></tr>':'')+
+      '<tr><td>Background jobs</td><td>'+(LEADER?"Run from this tab":"Run from another MISMO Media tab in this browser")+'</td></tr>'+
+    '</tbody></table>'+
+    (jobs.length?'<h3>Background Jobs</h3><table class="tbl"><thead><tr><th>Job</th><th>Last ran</th><th>Status</th></tr></thead><tbody>'+
+      jobs.map(j=>'<tr><td>'+esc(j.name)+'</td><td>'+esc(ago(j.lastRun))+'</td><td>'+(j.lastErr && j.lastErrAt>j.lastOk?'<b class="bad">'+esc(j.lastErr)+'</b> · next try at '+esc(new Date(j.next).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})):"OK")+'</td></tr>').join("")+'</tbody></table>':'')+
+    (warn.length?'<h3>Dates to Add</h3><ul>'+warn.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+
+    '<h3>Recently Deleted</h3>'+(trash.length?'<p>Delete puts things aside instead of erasing them. Bring any of these back with one click.</p><table class="tbl"><thead><tr><th>What</th><th>Deleted</th><th></th></tr></thead><tbody>'+
+      trash.slice(0,60).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b><span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(fD(String(x.r._deletedAt).slice(0,10)))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="note">Nothing has been deleted since this was switched on.</p>')+
+    '<h3>Download All Data</h3><p>One file with every MISMO Media record (editions, sections, episodes, kits, posts, lists, requests and the subscriber lists), for safekeeping. It holds personal emails, so keep it somewhere private.</p>'+
+    '<p><button class="btn" type="button" id="sh-export">Download All Data</button></p>';
+}
+function wireSystem(el){
+  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
+  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
+  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); renderHelp(); } });
+  const ex=$("#sh-export",el); if(ex) ex.onclick=()=>{
+    const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
+    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a");
+    a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+  };
+}
+HELP.push({id:"system", t:"System Health", g:"System", b:""});
+/* ---------- New member logos from Member 360 (Jonna, Nov 5, 2026). Member 360 lists the new members that have a logo
+   (data/mm-newmembers in member-360-data). When MISMO Media opens, each logo not already here is added to the Image Library
+   (campaign Logos, in SharePoint like every picture), placed in the New Member Welcome section of the right MISMO Matters edition
+   (the first edition after the month they joined whose content date hasn't passed), and the month's LinkedIn new member
+   announcement request is made or brought up to date with the logos attached. ---------- */
+const NM_R="https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws/member-360";
+function nmTok(){try{return window.ResourcesSession.token()||"";}catch(e){return "";}}
+function nmNext(mo){let [y,m]=mo.split("-").map(Number);m++;if(m>12){m=1;y++;}return y+"-"+String(m).padStart(2,"0");}
+function nmEdition(joined){const t=T(),jm=String(joined||t).slice(0,7);
+  const eds=vals("editions").filter(e=>e&&e.month).sort((a,b)=>a.month.localeCompare(b.month));
+  /* a new member goes in the first issue after they join that is still being built (build day), not only before its content day (Jonna, Nov 6, 2026) */
+  const ok=eds.find(e=>e.month>jm&&String((e.dates||{}).build||(e.dates||{}).publish||(e.dates||{}).content||e.month+"-01")>=t);if(ok)return ok.month;
+  let mo=nmNext(jm);while(mo<=t.slice(0,7))mo=nmNext(mo);return mo;}
+/* the same company under a slightly different name: "HomeVision" and "HomeVision, Inc.", "The Money Store" and "MLD Mortgage dba The Money Store", "Ameriprise Financial" and "Ameriprise Bank" */
+function nmSame(a,b){const parts=s=>String(s||"").toLowerCase().split(/\s+d\/?b\/?a\s+/).map(p=>p.replace(/&/g," and ").replace(/\b(inc|llc|l\.l\.c|corp|corporation|company|co|the|ltd|lp|na|n\.a)\b\.?/g," ").trim()).filter(Boolean);
+  const c=p=>p.replace(/[^a-z0-9]+/g,""),f=p=>(p.match(/[a-z0-9]+/)||[""])[0];
+  const A=parts(a),B=parts(b);return A.some(x=>B.some(y=>{const X=c(x),Y=c(y);return X===Y||(X.length>5&&Y.length>5&&(X.indexOf(Y)===0||Y.indexOf(X)===0))||(f(x).length>=6&&f(x)===f(y)&&!/^(american|national|united|federal|mortgage|financial|first|community|citizens)$/.test(f(x)));}));}
+let NM_BUSY=false;
+async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;NM_BUSY=true;try{
+  const r=await fetch(NM_R+"/data/mm-newmembers",{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!r.ok)return;
+  const j=await r.json().catch(()=>null);const items=((j&&j.data)||{}).items||[];if(!items.length)return;
+  const have=new Set(vals("images").map(im=>im.m360Logo).filter(Boolean)),touched={};
+  for(const it of items){if(!it||!it.logo||!it.logo.path||have.has(it.logo.path)||!/^image\//.test(it.logo.type||""))continue;
+    /* only members new enough for a welcome: the edition must be within two months of the month they joined (older members were welcomed before) */
+    /* only the issue right after the month they joined (October joiners go in November): a member who joined earlier was welcomed then, even if their logo only arrived now (Jonna, Nov 6, 2026) */
+    {const jm=String(it.joined||"").slice(0,7);if(!jm||nmEdition(it.joined)!==nmNext(jm))continue;}
+    const fr=await fetch(NM_R+"/file/"+it.logo.path,{headers:{Authorization:"Bearer "+nmTok()},cache:"no-store"});if(!fr.ok)continue;
+    const fj=await fr.json().catch(()=>null);if(!fj||!fj.content)continue;const bin=atob(String(fj.content).replace(/\s/g,""));const u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    const ext=it.logo.path.split(".").pop(),file=new File([u],String(it.name||"Logo").replace(/[^\w\- ]+/g,"").trim().replace(/\s+/g,"-")+"-logo."+ext,{type:it.logo.type});
+    const month=nmEdition(it.joined),group=it.champion?(it.type==="Lender"?"Lender Champions":"Industry Champions"):"Corporate Members";
+    const made=await addImages([file],{name:it.name+" Logo",company:it.name,group,campaign:"logos",edition:"",alt:it.name+" logo",site:it.website||"",m360Logo:it.logo.path,m360Key:it.k||"",m360Level:it.level||"",m360Joined:it.joined||""});
+    if(!made||!made.length)continue;const im=made[0];have.add(it.logo.path);
+    if(vals("sections").some(x=>x&&x.key==="welcome"&&(x.logos||[]).some(l=>(l.k&&l.k===it.k)||nmSame(l.name,it.name))))continue;
+    const sid=month+"__welcome",cur=(S.sections||{})[sid]||{month,key:"welcome",status:"in",owner:"Kelly",from:"Member 360 new members",headline:"MISMO Welcomes New Members"};
+    const logos=(cur.logos||[]).filter(l=>l.name!==it.name).concat([{id:im.id,name:it.name,group,url:it.website||"",k:it.k||""}]);
+    await put("sections",sid,Object.assign({},cur,{month,key:"welcome",logos}));touched[month]=1;}
+  for(const month of Object.keys(touched)){const rid="rq-newmembers-"+month,cur=(S.requests||{})[rid];
+    const logos=((S.sections||{})[month+"__welcome"]||{}).logos||[],ed=vals("editions").find(e=>e.month===month)||{};
+    const need=(ed.dates&&(ed.dates.publish||ed.dates.approve))||(month+"-15");
+    await put("requests",rid,Object.assign({status:"review",role:"MISMO Staff",type:"linkedin",n:"Member 360",e:"",group:"Membership",owner:"",neededBy:need,at:new Date().toISOString()},cur||{},{
+      title:"New Member Announcement: "+monthName(month),
+      details:"LinkedIn post welcoming MISMO's new members, to go with the "+monthName(month)+" MISMO Matters: "+logos.map(l=>l.name).join(", ")+". Their logos are attached below and are in the Image Library under Logos.",
+      images:logos.map(l=>l.id),links:logos.map(l=>l.name+(l.url?" · "+l.url:"")).join("\n"),auto:"member-360"}));}
+  if(Object.keys(touched).length)toast("New member logos from Member 360 added to MISMO Matters and the LinkedIn request.",5000);
+}catch(e){console.error("new member logos",e);}finally{NM_BUSY=false;}}
+{let n=0;const iv=setInterval(()=>{n++;if(DB&&typeof S!=="undefined"&&S.images&&Object.keys(S.images).length&&S.editions){clearInterval(iv);setTimeout(()=>nmImport(),6000);}else if(n>120)clearInterval(iv);},1500);}
+/* a request with logos attached shows them */
+{const _oR=openRequest;openRequest=function(id){const r=_oR.apply(this,arguments);try{const q=id&&rqGet(id);if(q&&Array.isArray(q.images)&&q.images.length){const b=document.getElementById("pane-body");
+  if(b){const box=document.createElement("div");box.className="nm-att";box.innerHTML='<div class="nm-att-h">Attached Logos</div>';
+  q.images.forEach(iid=>{const im=(S.images||{})[iid];if(!im)return;const fig=document.createElement("figure"),img=document.createElement("img"),cap=document.createElement("figcaption");
+  img.alt=im.alt||im.name||"";cap.textContent=im.company||im.name||"";fig.append(img,cap);box.appendChild(fig);Promise.resolve(imgEnsure(im)).then(()=>{const s=imgSrc(im);if(s)img.src=s;});});
+  b.appendChild(box);}}}catch(e){console.error("attached logos",e);}return r;};}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
@@ -7081,7 +7250,7 @@ function openList(id){
   }
   document.addEventListener('keydown',e=>{
     const t=e.target; const typing = t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.tagName==='SELECT'||t.isContentEditable);
-    if(e.key==='Escape' && PANE && !typing){ closePane(); return; }
+    if(e.key==='Escape' && PANE && (!typing || (t.closest && t.closest('#pane')))){ closePane(); return; }
     if(e.key==='\\' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey){ e.preventDefault(); toggle(); }
     if((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==='k'){ e.preventDefault(); set(false); setTimeout(()=>{ const q=document.getElementById('rail-q'); if(q){ q.focus(); q.select(); } }, 230); }
   });
