@@ -37,8 +37,10 @@ const r=await p.evaluate(async()=>{
   const h=document.querySelector("#page-help").textContent; out.system = /System Health/.test(h) && /Recently Deleted/.test(h) && /New one/.test(h) && /Download All Data/.test(h);
   // 10. bring back from System Health
   document.querySelector("[data-restore]").click(); await wait(120); out.restoreBtn = !!S.pieces.ptest;
-  // 11. Approvals on Home
-  go("home"); renderHome(); await wait(50); out.approvals = /Waiting on Approval/.test(document.querySelector("#page-home").textContent) && /New one/.test(document.querySelector("#page-home").textContent);
+  // 11. approvals show in On Your Plate for Amy (no separate card)
+  S.sections["2026-11__vieaux"].status="review"; const needs=(()=>{ const f=hmFirst; hmFirst=()=>"Amy"; const n=hmNeeds(); hmFirst=f; return n; })();
+  go("home"); renderHome(); await wait(50);
+  out.approvals = needs.some(n=>/Approve .*Vieaux Point/.test(n.label)) && needs.some(n=>/New one/.test(n.label)) && !/Waiting on Approval/.test(document.querySelector("#page-home").textContent);
   // 12. rows reachable by keyboard
   out.rowsTabbable = [...document.querySelectorAll("tr.click")].every(r=>r.tabIndex===0);
   // 13. pane inert when closed, focus returns
