@@ -8,13 +8,13 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The live page. GitHub Pages publishes it as is. It is **built**, never hand-edited. |
-| `dev/src/app*.js` | The code, in 22 files that are joined in a fixed order (see `ORDER` in `dev/build.py`). |
+| `dev/src/app*.js` | The code, in 23 files that are joined in a fixed order (see `ORDER` in `dev/build.py`). |
 | `dev/src/head.html`, `dev/src/body.html` | Styles and page skeleton. |
 | `dev/shim.html` | The door to the save relay: sign-in, loading, saving, conflict handling. |
 | `dev/gate.html` | The shared resources.mismo.org sign-in gate (copied from Member 360). |
 | `dev/logo.txt` | The MISMO logo symbol. |
-| `dev/build.py` | Builds `dev/out/site.html` (the live page) and `dev/out/plain.html` (no sign-in, for tests). |
-| `dev/tests/` | Browser tests and a stand-in for the save relay. Their sample records are in the private repo (`marketing-hq-data/dev/sample-data.html`); copy that file next to `run.sh`. |
+| `dev/build.py` | Builds `dev/out/site.html` (the live page) and `dev/out/plain.html` (no sign-in, for tests). The live page carries a safety list (Content-Security-Policy, `CSP` in build.py) of the only sites it may load code from or send data to; add a new service there first. |
+| `dev/tests/` | Browser tests and a stand-in for the save relay. They run on made-up records (`fixture.html`, made by `make-fixture.py`), or on MISMO's real sample (`marketing-hq-data/dev/sample-data.html` in the private repo) when that file is copied next to `run.sh`. |
 | `hl-bridge/` | The script the Higher Logic website loads to upload pictures and read certified lists. |
 | `mm-headers/` | Newsletter header images and icons. |
 
@@ -27,8 +27,9 @@ through the relay after sign-in. Never put a token, a subscriber list or any rec
 1. Start from the latest `main`. Two people (or Claude sessions) may work on MISMO Media; always build on
    what is live now, never on an older copy.
 2. Change `dev/src/` (and `dev/shim.html` if saving is involved).
-3. `python3 dev/build.py` then `bash dev/tests/run.sh`. All three test sets must pass:
-   every tab opens cleanly at desktop, dark and phone sizes; 24 interaction checks; the save checks.
+3. `python3 dev/build.py` then `bash dev/tests/run.sh`. All five test sets must pass:
+   every tab opens cleanly at desktop, dark and phone sizes; 24 interaction checks; the save checks;
+   the Informz unsubscribe import; Remind Amy. The Check MISMO Media action runs the same tests on every push.
 4. Copy `dev/out/site.html` over `index.html`, and commit **both** `dev/` and `index.html` together,
    with a line in `CHANGELOG.md`.
 5. GitHub Pages publishes in about a minute. The **Check MISMO Media** action runs on every push; a red X
