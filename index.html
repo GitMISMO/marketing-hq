@@ -271,7 +271,7 @@
     return new Promise(function (res, rej) {
       var go = function () {
         if (kind === 'update' && f.loaded && docIn(f, path) === null) { rej(err('not-found', 'No document to update: ' + path)); return; }
-        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej }); f.view = null;
+        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej, at: now() }); f.view = null;
         if (p.own) register(path, kind !== 'delete');
         notify(f, true);
         schedule(f, FLUSH_MS);
@@ -319,6 +319,7 @@
           f.server = next; f.sha = (b && b.sha) || f.sha; f.loadedAt = now();
           f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
           batch.forEach(function (op) { if (op.gone) op.rej(err('not-found', GONE)); else op.res(); });
+          status.savedAt = new Date().toISOString();   /* for System Health */
           notify(f, false);
           saved();
         });
@@ -342,12 +343,15 @@
         /* nothing is lost: the change stays queued and goes out once the relay is back */
         if (e.status === 401 || e.code === 'SIGNED_OUT') f.waitingSignIn = true;
         else setTimeout(function () { schedule(f, 0); }, RETRY_MS);
+        (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: false });
         problem(e);
         return;
       }
       f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
       batch.forEach(function (op) { op.rej(e); });
       notify(f, false);
+      (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: true });
+      if (status.problems.length > 50) status.problems = status.problems.slice(-50);
       problem(e, true);
     }).then(function () {
       f.flushing = false;
@@ -752,6 +756,12 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookSession); else hookSession();
 })();
 </script>
+<script>/* System Health: catch every error from the first line of the page (Nov 7, 2026) */
+(function(){var L=window.__mmErrs=[];function add(kind,msg,src){msg=String(msg||"error").slice(0,300);var k=kind+"|"+msg,e=null;for(var i=0;i<L.length;i++)if(L[i].k===k)e=L[i];
+if(e){e.n++;e.at=new Date().toISOString();}else{L.push({k:k,kind:kind,msg:msg,src:String(src||"").slice(0,160),n:1,at:new Date().toISOString(),tab:(window.TAB||"")});if(L.length>40)L.shift();}
+try{window.dispatchEvent(new Event("mm:err"));}catch(x){}}
+window.addEventListener("error",function(e){if(e&&e.message)add("error",e.message,(e.filename||"").split("/").pop()+":"+(e.lineno||""));});
+window.addEventListener("unhandledrejection",function(e){var r=e&&e.reason;add("promise",(r&&(r.message||r.code))||r);});})();</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
@@ -2037,6 +2047,48 @@ tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
 @media(max-width:640px){.ds-tbl thead{display:none}.ds-tbl,.ds-tbl tbody,.ds-tbl tr,.ds-tbl td{display:block;width:100%;box-sizing:border-box}
   .ds-tbl tr{padding:8px 0;border-bottom:1px solid var(--rule)}.ds-tbl td{border:0;padding:3px 0}.ds-tbl td:last-child{width:auto}}
 #page-settings .subtabs{margin:0 0 16px}
+/* System Health, Summit HQ's design (Nov 7, 2026) */
+.hh-btn{position:relative;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:5px;padding:5px 10px 5px 9px;font:500 11.5px/1 var(--display,inherit);cursor:pointer;white-space:nowrap}
+.hh-btn:hover{background:rgba(255,255,255,.18)}
+.hh-btn svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hh-btn .hh-dot{position:absolute;left:18px;top:3px;width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.35);box-shadow:0 0 0 2px var(--navy,#0d314c)}
+.hh-btn .hh-dot.ok{background:#72C08E}.hh-btn .hh-dot.warn{background:#E0A83C}.hh-btn .hh-dot.bad{background:#F08579}
+@media(max-width:700px){.hh-btn span{display:none}}
+@media(max-width:480px){.hh-btn{padding:5px 7px}.hqtop .mastrule{display:none}.hqtop .hqname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+#hh-bar{position:fixed;top:calc(var(--hq-h,56px) + 10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:140;display:flex;align-items:center;gap:12px;max-width:min(760px,calc(100vw - 32px));
+  background:#FBE8E6;color:#7A1913;border:1px solid #A32219;border-radius:8px;padding:9px 10px 9px 14px;font:500 13px/1.4 var(--display,inherit);box-shadow:0 6px 20px rgba(13,49,76,.16)}
+#hh-bar[hidden]{display:none}#hh-bar b{font-weight:700}
+#hh-bar .hh-go{flex:0 0 auto;background:#A32219;color:#fff;border:0;border-radius:5px;padding:6px 11px;font:inherit;font-weight:600;cursor:pointer}
+#hh-bar .hh-x{flex:0 0 auto;background:none;border:0;color:inherit;font-size:20px;line-height:1;padding:0 4px;cursor:pointer;opacity:.7}
+.hh-modal{position:fixed;inset:0;z-index:150;background:rgba(6,32,47,.45);display:flex;align-items:flex-start;justify-content:center;padding:max(16px,4vh) 12px;overflow:auto}
+.hh-box{width:min(860px,96vw);background:var(--surface);color:var(--ink);border-radius:10px;box-shadow:0 18px 50px rgba(6,32,47,.35);display:flex;flex-direction:column;max-height:92vh}
+.hh-hd{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.hh-hd b{font-size:16px}
+.hh-body{padding:14px 18px 18px;overflow:auto}
+.hh-body h4{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);margin:16px 0 6px}
+.hh-sum{display:flex;align-items:center;gap:10px;margin:2px 0 12px;font-size:13.5px}
+.hh-big{width:12px;height:12px;border-radius:50%;flex:0 0 auto}
+.hh-big.ok,.hh-row.ok::before{background:var(--good,#0F7B5C)}
+.hh-big.warn,.hh-row.warn::before{background:var(--warn,#A2701A)}
+.hh-big.bad,.hh-row.bad::before{background:var(--bad,#A32219)}
+.hh-big.off,.hh-row.off::before{background:var(--ink-3)}
+.hh-grid{columns:3 240px;column-gap:8px}
+.hh-grid .hh-row{break-inside:avoid;margin:0 0 8px}
+.hh-row{position:relative;border:1px solid var(--border);border-radius:6px;padding:9px 11px 9px 22px;background:var(--surface)}
+.hh-row::before{content:"";position:absolute;left:9px;top:14px;width:7px;height:7px;border-radius:50%}
+.hh-row.bad{border-color:var(--bad);background:var(--bad-soft,#FBE8E6)}
+.hh-row.warn{border-color:var(--warn);background:var(--warn-soft,#FBF0DC)}
+.hh-row .hh-t{font-weight:700;font-size:13px}
+.hh-row .hh-l{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.hh-row ul{margin:5px 0 0;padding-left:16px;font-size:12px;color:var(--ink-2)}
+.hh-bars{margin-top:5px;display:flex;flex-direction:column;gap:4px}
+.hh-bars div{display:grid;grid-template-columns:1fr 46px;gap:8px;align-items:center;font-size:11.5px;color:var(--ink-2)}
+.hh-bars i{display:block;height:5px;border-radius:3px;background:var(--rule);overflow:hidden;grid-column:1/-1}
+.hh-bars i s{display:block;height:100%;background:var(--navy-mid,#14486e)}
+.hh-bars i s.warn{background:var(--warn)}.hh-bars i s.bad{background:var(--bad)}
+.hh-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hh-tbl td:first-child{white-space:normal}.hh-tbl td{font-size:12.5px}
+.hh-quiet{color:var(--ink-3);font-size:12.5px;margin:4px 0 0}
 </style>
 
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
@@ -2191,9 +2243,6 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
       <button type="button" data-hq="help" title="Help">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 014.8.9c0 1.7-2.4 2.2-2.4 3.8M12 17.2v.01"/></svg>
         <span>Help &amp; How-To</span></button>
-      <button type="button" data-hq="settings" title="Settings">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
-        <span>Settings</span><b class="nbadge" id="nb-settings" hidden></b></button>
       <a class="navlink" href="https://resources.mismo.org/forms/request/" target="_blank" rel="noopener" title="Open the public Request form (new tab)">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l2.5-8h11L20 13v6H4z"/><path d="M4 13h4.5l1 2.5h5l1-2.5H20"/></svg>
         <span>Request Form</span><i class="ext" aria-hidden="true">↗</i></a>
@@ -2241,7 +2290,6 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
   <section class="page" id="page-orders" hidden></section>
   <section class="page" id="page-requests" hidden></section>
   <section class="page" id="page-help" hidden></section>
-  <section class="page" id="page-settings" hidden></section>
 </main>
 
 <aside class="pane" id="pane" role="dialog" aria-hidden="true" inert aria-labelledby="pane-title">
@@ -2734,7 +2782,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help","settings"];
+const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
 let TAB="home";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -2778,8 +2826,7 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
 function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
   if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
-  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch();
-  if(typeof dateWarnings==="function" && tabReady("home")) badge("settings", dateWarnings().length + fileSizes().filter(f=>f.pct>=70).length, true); }
+  if(typeof a11yRows==="function") a11yRows(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -2790,7 +2837,7 @@ function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true
 function renderTab(t){
   if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
-    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp, settings:renderSettings})[t]();
+    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
@@ -3955,9 +4002,10 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="dates"&&typeof datesHtml==="function"?datesHtml():cur.b)+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
+  if(cur.id==="dates" && typeof wireDates==="function") wireDates(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }
@@ -6749,7 +6797,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-07 09:17 ET · 4af404a";
+const BUILD = "2026-11-07 09:36 ET · 00a7d05";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -6795,9 +6843,9 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Settings > Dates so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Holidays and Key Dates so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Settings > Dates.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Holidays and Key Dates.");
   return out;
 }
 /* ---------- how full each data file is ----------
@@ -6810,15 +6858,10 @@ function fileSizes(){
     .map(k=>{ const n=JSON.stringify(F[k].server,null,2).length; return {name:k, kb:Math.round(n/1024), pct:Math.round(n/FILE_MAX*100)}; })
     .sort((a,b)=>b.pct-a.pct);
 }
-let SIZE_WARNED=false;
-function sizeWatch(){
-  if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
-  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Settings > System Health.", 8000); }
-}
 
 /* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
    The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
-   the code. They now live in one settings record (settings/dates) that staff edit on Settings > Dates;
+   the code. They now live in one settings record (settings/dates) that staff edit on Help > Holidays and Key Dates;
    until someone saves it, the lists written into the code stand. */
 const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
 let SET_SIG = "";
@@ -6831,6 +6874,7 @@ function applySettings(){
   if(!SUMMITS.length) DEF_DATES.summits.forEach(s=>SUMMITS.push(Object.assign({}, s)));
 }
 const DS = {draft:null};
+function setRedraw(){ renderHelp(); }
 function datesHtml(){
   const d = DS.draft || (DS.draft = JSON.parse(JSON.stringify(datesNow())));
   const hol = Object.keys(d.holidays).sort();
@@ -6868,55 +6912,162 @@ function wireDates(el){
   };
 }
 
-/* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
 function trashLabel(col, r){ return r.name||r.title||r.headline||(r.num?"Episode "+r.num:"")||r.key||r.id; }
-function systemHtml(){
-  const ago=ms=>{ if(!ms) return "never"; const m=Math.round((Date.now()-ms)/60000); return m<1?"just now":m<60?m+" min ago":Math.round(m/60)+" h ago"; };
-  const jobs=Object.values(JOBS);
-  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
-  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  const warn=dateWarnings();
-  const relay=window.__hqRelay && window.__hqRelay.status ? window.__hqRelay.status : null;
-  return '<p class="lead">How MISMO Media itself is doing. Nothing here needs attention unless it is marked.</p>'+
-    '<h3>This Copy</h3><table class="tbl"><tbody>'+
-      '<tr><td>Version</td><td><b>'+esc(BUILD.indexOf("__")===0?"development copy":BUILD)+'</b></td></tr>'+
-      '<tr><td>Saving</td><td>'+(typeof STALE!=="undefined" && STALE.on?'<b class="bad">Paused: a newer MISMO Media is out. Refresh the page.</b>':!CANWRITE?"View only":LIVE?"On, to MISMO's records":"Not connected")+'</td></tr>'+
-      (relay?'<tr><td>Connection</td><td>'+(relay.offline?'<b class="bad">Can\'t reach the save relay right now</b>':"OK")+(relay.lastError?' · last problem: '+esc(relay.lastError):"")+'</td></tr>':'')+
-      '<tr><td>Background jobs</td><td>'+(LEADER?"Run from this tab":"Run from another MISMO Media tab in this browser")+'</td></tr>'+
-    '</tbody></table>'+
-    (jobs.length?'<h3>Background Jobs</h3><table class="tbl"><thead><tr><th>Job</th><th>Last ran</th><th>Status</th></tr></thead><tbody>'+
-      jobs.map(j=>'<tr><td>'+esc(j.name)+'</td><td>'+esc(ago(j.lastRun))+'</td><td>'+(j.lastErr && j.lastErrAt>j.lastOk?'<b class="bad">'+esc(j.lastErr)+'</b> · next try at '+esc(new Date(j.next).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})):"OK")+'</td></tr>').join("")+'</tbody></table>':'')+
-    (warn.length?'<h3>Dates to Add</h3><ul>'+warn.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+
-    (()=>{ const fs=fileSizes(); return fs.length?'<h3>Room Left in Each Data File</h3><p>Each kind of record is saved as one file, and one save can hold about 940 KB. Anything over 70% needs splitting before it fills.</p><table class="tbl"><thead><tr><th>Records</th><th class="n">Size</th><th class="n">Full</th></tr></thead><tbody>'+
-      fs.slice(0,12).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="n">'+f.kb+' KB</td><td class="n">'+(f.pct>=70?'<b class="bad">'+f.pct+'%</b>':f.pct+'%')+'</td></tr>').join("")+'</tbody></table>':''; })()+
-    '<h3>Recently Deleted</h3>'+(trash.length?'<p>Delete puts things aside instead of erasing them. Bring any of these back with one click.</p><table class="tbl"><thead><tr><th>What</th><th>Deleted</th><th></th></tr></thead><tbody>'+
-      trash.slice(0,60).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b><span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(fD(String(x.r._deletedAt).slice(0,10)))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="note">Nothing has been deleted since this was switched on.</p>')+
-    '<h3>Download All Data</h3><p>One file with every MISMO Media record (editions, sections, episodes, kits, posts, lists, requests and the subscriber lists), for safekeeping. It holds personal emails, so keep it somewhere private.</p>'+
-    '<p><button class="btn" type="button" id="sh-export">Download All Data</button></p>';
+HELP.push({id:"dates", t:"Holidays and Key Dates", g:"Setup", b:""});
+
+/* ==================== System Health (Nov 7, 2026) ====================
+   Built the way Summit HQ's is (Jonna liked it): a System Health button in the top bar with a dot
+   (green, amber, red), a panel of checks, a red bar across the top when something needs attention,
+   and a team error log so a problem on anyone's screen reaches one place. Checks every 5 minutes
+   while MISMO Media is open. Nothing here changes data except the log (feeds/health-log). */
+const HH = {last:null, running:null, modal:null, btn:null, dot:null, bar:null, started:false, shippedUpTo:0, shipT:null};
+const HH_LOG="health-log", HH_KEEP=30, HH_MAX=150;
+const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
+const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
+const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
+const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+
+function hhSaving(){
+  const r=window.__hqRelay; if(!r) return hhRow("save","Saving",LIVE?"ok":"off",LIVE?"Saving to MISMO's records.":"Not connected on this copy.");
+  const st=r.status||{}, files=r.files||{}; let n=0, oldest=0;
+  Object.keys(files).forEach(k=>(files[k].pending||[]).forEach(op=>{ n++; if(op.at && (!oldest||op.at<oldest)) oldest=op.at; }));
+  const lost=(st.problems||[]).filter(p=>p.lost && Date.now()-Date.parse(p.at)<864e5), retry=(st.problems||[]).filter(p=>!p.lost && Date.now()-Date.parse(p.at)<36e5);
+  const age=oldest?Math.round((Date.now()-oldest)/6e4):0;
+  if(STALE.on) return hhRow("save","Saving","warn","A newer MISMO Media is out, so saving is paused in this tab. Refresh the page.");
+  if(lost.length) return hhRow("save","Saving","bad",lost.length+" change"+(lost.length>1?"s were":" was")+" refused today and taken back. Make "+(lost.length>1?"them":"it")+" again; if it keeps happening, tell Perry.", lost.slice(-3).map(p=>hhWhen(p.at)+": "+(p.code||"error")+(p.msg?" ("+p.msg+")":"")));
+  if(n && age>=5) return hhRow("save","Saving","bad",n+" change"+(n>1?"s have":" has")+" been waiting "+age+" minutes to save. Keep this tab open; if it doesn't clear, the save relay may be down (tell Perry).");
+  if(st.offline) return hhRow("save","Saving","warn","Can't reach the save relay right now. Changes wait here and save when it's back.");
+  if(retry.length) return hhRow("save","Saving","warn","A save had to be tried again in the last hour"+(n?"; "+n+" still waiting.":", and went through."));
+  if(!CANWRITE) return hhRow("save","Saving","ok","View only: you can look at everything but not change it.");
+  return hhRow("save","Saving","ok", n? n+" change"+(n>1?"s":"")+" saving now." : "Every change is saved"+(st.savedAt?". Last save "+hhWhen(st.savedAt)+".":"."));
 }
-function wireSystem(el){
-  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
-  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); setRedraw(); } });
-  const ex=$("#sh-export",el); if(ex) ex.onclick=()=>{
-    const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
-    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a");
-    a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-  };
+function hhStorage(){
+  const fs=fileSizes(); if(!fs.length) return hhRow("store","Storage","off","Not loaded yet.");
+  const top=fs.slice(0,4), w=top[0], lvl=w.pct>=90?"bad":w.pct>=70?"warn":"ok";
+  const bars='<div class="hh-bars">'+top.map(f=>'<div><span>'+esc(hhNice(f.name))+'</span><span>'+f.pct+'%</span><i><s class="'+(f.pct>=90?"bad":f.pct>=70?"warn":"")+'" style="width:'+Math.min(100,f.pct)+'%"></s></i></div>').join("")+'</div>';
+  const line= lvl==="bad"? hhNice(w.name)+" is "+w.pct+"% full. Tell Perry before it reaches 100%: saves to it would stop."
+    : lvl==="warn"? hhNice(w.name)+" is "+w.pct+"% full. Plenty for now; worth splitting before it fills."
+    : "Every shared file has room. The fullest is "+w.pct+"% full.";
+  return hhRow("store","Storage",lvl,line,[],bars);
 }
-/* ---------- the Settings page (left nav): Dates and System Health ---------- */
-const SET = {sub:"dates"};
-function setRedraw(){ if(TAB==="settings") renderSettings(); else renderHelp(); }
-function renderSettings(){
-  const el=$("#page-settings"); if(!el) return;
-  const subs=[["dates","Dates"],["system","System Health"]];
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Settings</h1><div class="sub">The dates MISMO Media plans around, and how the system itself is doing.</div></div></div>'+
-    '<div class="subtabs" role="group" aria-label="Settings">'+subs.map(([k,l])=>'<button type="button" data-ssub="'+k+'" aria-pressed="'+(SET.sub===k)+'">'+esc(l)+'</button>').join("")+'</div>'+
-    '<article class="card helpbody"><div class="cb">'+(SET.sub==="system"?systemHtml():datesHtml())+'</div></article>';
-  $$("[data-ssub]",el).forEach(b=>b.onclick=()=>{ SET.sub=b.dataset.ssub; renderSettings(); });
-  if(SET.sub==="system") wireSystem(el); else wireDates(el);
+function hhJobs(){
+  const js=Object.values(JOBS);
+  if(!LEADER) return hhRow("jobs","Background Jobs","ok","Running from another MISMO Media tab in this browser.");
+  if(!js.length) return hhRow("jobs","Background Jobs","ok","Episode files, sponsor logos and certified lists: nothing has needed doing yet.");
+  const bad=js.filter(j=>j.lastErr && j.lastErrAt>j.lastOk);
+  if(bad.length) return hhRow("jobs","Background Jobs","warn",bad.length+" job"+(bad.length>1?"s":"")+" hit a problem and will try again by "+new Date(Math.max(...bad.map(j=>j.next))).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})+".", bad.map(j=>j.name+": "+j.lastErr));
+  return hhRow("jobs","Background Jobs","ok",js.map(j=>j.name).join(", ")+": all working. Last run "+hhWhen(Math.max(...js.map(j=>j.lastRun)))+".");
 }
+function hhSignups(){
+  const L=vals("signups").map(s=>s.at).filter(Boolean).sort(); if(!L.length) return null;
+  return hhRow("sign","Website Sign-Ups","ok","Last sign-up arrived "+hhWhen(L[L.length-1])+".");
+}
+function hhNews(){
+  const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
+  return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
+}
+function hhDates(){
+  const w=dateWarnings(); if(!w.length) return null;
+  return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
+}
+function hhVersion(){ return hhRow("ver","This Copy","ok","Version "+(BUILD.indexOf("__")===0?"development copy":BUILD)+"."); }
+function hhErrors(){
+  const L=window.__mmErrs||[];
+  if(!L.length) return hhRow("err","Errors on This Page","ok","None since this page was opened.");
+  const n=L.reduce((a,e)=>a+e.n,0);
+  return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
+}
+function hhRun(){
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
+}
+function hhPlace(){
+  const r=document.querySelector(".hqtop-r"); if(!r) return;
+  if(!HH.btn){
+    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="hh-btn"; b.title="System Health";
+    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
+    b.addEventListener("click", hhOpen); HH.btn=b; HH.dot=b.querySelector(".hh-dot");
+  }
+  if(HH.btn.parentNode!==r) r.insertBefore(HH.btn, r.querySelector("#rs-account")||null);
+}
+function hhPaint(){
+  hhPlace(); if(!HH.last) return;
+  const w=hhWorst(HH.last.rows);
+  if(HH.dot) HH.dot.className="hh-dot "+w;
+  if(HH.btn) HH.btn.setAttribute("aria-label","System Health: "+(w==="bad"?"needs attention":w==="warn"?"a warning":"all working"));
+  const bad=HH.last.rows.filter(r=>r.level==="bad"), sig=bad.map(r=>r.key+":"+r.line).join("|");
+  let gone=""; try{ gone=sessionStorage.getItem("mm:health-dismissed")||""; }catch(e){}
+  if(!HH.bar){ HH.bar=document.createElement("div"); HH.bar.id="hh-bar"; HH.bar.setAttribute("role","alert"); HH.bar.hidden=true; document.body.appendChild(HH.bar); }
+  if(!bad.length || sig===gone) HH.bar.hidden=true;
+  else {
+    HH.bar.innerHTML='<span><b>'+esc(bad[0].title)+':</b> '+esc(bad[0].line)+(bad.length>1?" (and "+(bad.length-1)+" more)":"")+'</span><button type="button" class="hh-go">Details</button><button type="button" class="hh-x" aria-label="Hide until something else changes">&times;</button>';
+    HH.bar.querySelector(".hh-go").onclick=hhOpen;
+    HH.bar.querySelector(".hh-x").onclick=()=>{ try{ sessionStorage.setItem("mm:health-dismissed",sig); }catch(e){} HH.bar.hidden=true; };
+    HH.bar.hidden=false;
+  }
+  if(HH.modal) hhDraw();
+}
+function hhReport(){
+  if(!HH.last) return "";
+  return ["MISMO Media System Health, "+new Date(HH.last.at).toLocaleString("en-US"),""]
+    .concat(HH.last.rows.map(r=>(r.level==="ok"?"OK":r.level==="warn"?"WARNING":r.level==="bad"?"PROBLEM":"NOT CHECKED")+" | "+r.title+": "+r.line+(r.list.length?"\n - "+r.list.join("\n - "):"")))
+    .concat(["","Errors on this page:"].concat((window.__mmErrs||[]).slice(-15).map(e=>" "+e.at+" "+e.kind+" x"+e.n+" "+e.msg+(e.src?" ["+e.src+"]":"")))).join("\n");
+}
+async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("feeds").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
+function hhTrash(){ const t=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>t.push({c,r}))); return t.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt))); }
+async function hhDraw(){
+  if(!HH.modal || !HH.last) return;
+  const body=HH.modal.querySelector(".hh-body"), w=hhWorst(HH.last.rows), trash=hhTrash();
+  body.innerHTML='<div class="hh-sum"><i class="hh-big '+w+'"></i><span><b>'+(w==="bad"?"Something Needs Attention":w==="warn"?"Working, With a Warning":"Everything Is Working")+'</b>. Checked '+hhWhen(HH.last.at)+'; it checks again every 5 minutes while MISMO Media is open.</span></div>'+
+    '<div class="hh-grid">'+HH.last.rows.map(r=>'<div class="hh-row '+r.level+'"><div class="hh-t">'+esc(r.title)+'</div><div class="hh-l">'+esc(r.line)+'</div>'+(r.list.length?'<ul>'+r.list.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>':'')+r.extra+'</div>').join("")+'</div>'+
+    '<p class="hh-quiet">Not watched from here (their work never shows in MISMO Media until it lands, so a stop can\'t be seen): the Images flow, Amy\'s Replies, the Teams chat links and posting. Power Automate emails a flow\'s owner when it keeps failing.</p>'+
+    '<h4>Team Error Log (Last 7 Days)</h4><div class="hh-log"><p class="hh-quiet">Loading&hellip;</p></div>'+
+    '<h4>Recently Deleted</h4>'+(trash.length?'<table class="tbl hh-tbl"><tbody>'+trash.slice(0,20).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b> <span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(hhWhen(x.r._deletedAt))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="hh-quiet">Nothing deleted. Delete puts things aside here instead of erasing them.</p>')+
+    '<div class="hh-acts"><button type="button" class="btn pri" data-hh="again">Check Again</button><button type="button" class="btn" data-hh="copy">Copy Report</button><button type="button" class="btn" data-hh="export" title="Every record in one file, for safekeeping. It holds personal emails, so keep it private.">Download All Data</button></div>';
+  body.querySelector('[data-hh="again"]').onclick=e=>{ e.target.textContent="Checked"; hhRun(); };
+  body.querySelector('[data-hh="copy"]').onclick=async e=>{ try{ await navigator.clipboard.writeText(hhReport()); e.target.textContent="Copied"; }catch(x){ e.target.textContent="Couldn't Copy"; } };
+  body.querySelector('[data-hh="export"]').onclick=()=>{ const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
+    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); };
+  $$("[data-restore]",body).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); hhDraw(); } });
+  const entries=await hhTeamLog(), box=body.querySelector(".hh-log"); if(!box) return;
+  const recent=(entries||[]).filter(x=>Date.now()-Date.parse(x.at)<7*864e5).slice(-25).reverse();
+  box.innerHTML= entries===null? '<p class="hh-quiet">The team log couldn\'t be read just now.</p>'
+    : !recent.length? '<p class="hh-quiet">No errors logged by anyone in the last 7 days.</p>'
+    : '<table class="tbl hh-tbl"><thead><tr><th>When</th><th>Who</th><th>Where</th><th>What</th></tr></thead><tbody>'+recent.map(x=>'<tr><td>'+esc(hhWhen(x.at))+'</td><td>'+esc(x.who||"")+'</td><td>'+esc(x.tab||"")+'</td><td>'+esc(x.msg)+(x.n>1?' ('+x.n+' times)':'')+'</td></tr>').join("")+'</tbody></table>';
+}
+function hhOpen(){
+  if(!HH.modal){
+    const m=document.createElement("div"); m.className="hh-modal"; m.id="hh-modal";
+    m.innerHTML='<div class="hh-box" role="dialog" aria-modal="true" aria-label="System Health"><div class="hh-hd"><b>System Health</b><button type="button" class="btn">Close</button></div><div class="hh-body"></div></div>';
+    const from=document.activeElement;
+    const close=()=>{ m.remove(); HH.modal=null; document.removeEventListener("keydown",key); if(from&&from.focus) try{ from.focus(); }catch(e){} };
+    const key=e=>{ if(e.key==="Escape") close(); };
+    m.querySelector(".hh-hd .btn").onclick=close; m.addEventListener("click",e=>{ if(e.target===m) close(); });
+    document.addEventListener("keydown",key); document.body.appendChild(m); HH.modal=m;
+    setTimeout(()=>{ try{ m.querySelector(".hh-hd .btn").focus(); }catch(e){} },30);
+  }
+  hhRun();
+}
+/* the team's log: errors from everyone's screen in one place (written about a minute after they happen) */
+async function hhShip(){
+  const L=window.__mmErrs||[], fresh=L.filter(e=>Date.parse(e.at)>HH.shippedUpTo); if(!fresh.length || !DB || !CANWRITE || STALE.on) return;
+  try{
+    const who=window.__hqWho||"", cur=await hhTeamLog(); const keep=Date.now()-HH_KEEP*864e5;
+    let entries=(cur||[]).filter(x=>Date.parse(x.at)>keep);
+    fresh.forEach(e=>entries.push({at:e.at, who, kind:e.kind, msg:e.msg, src:e.src||"", n:e.n, tab:e.tab||""}));
+    await DB.collection("feeds").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
+    HH.shippedUpTo=Math.max.apply(null, fresh.map(e=>Date.parse(e.at)));
+  }catch(e){}
+}
+window.addEventListener("mm:err", ()=>{ clearTimeout(HH.shipT); HH.shipT=setTimeout(hhShip, 60000); if(HH.last){ HH.last.rows=HH.last.rows.map(r=>r.key==="err"?hhErrors():r); hhPaint(); } });
+function hhStart(){
+  if(HH.started) return; HH.started=true; hhPlace();
+  setTimeout(hhRun, 20000); setInterval(()=>{ if(!document.hidden) hhRun(); }, 5*60000); setInterval(hhPlace, 4000);
+  if((window.__mmErrs||[]).length){ HH.shipT=setTimeout(hhShip, 60000); }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", hhStart); else hhStart();
 /* ---------- New member logos from Member 360 (Jonna, Nov 5, 2026). Member 360 lists the new members that have a logo
    (data/mm-newmembers in member-360-data). When MISMO Media opens, each logo not already here is added to the Image Library
    (campaign Logos, in SharePoint like every picture), placed in the New Member Welcome section of the right MISMO Matters edition

@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-07 (late morning)
+- System Health rebuilt the way Summit HQ's works: a System Health button with a status dot in the top bar, a panel of checks (saving, storage, background jobs, sign-ups, In the News, dates, errors, version), a red bar across the top when something needs attention, a team error log (feeds/health-log), Check Again, Copy Report, Recently Deleted and Download All Data.
+- Holidays and Key Dates moved to Help & How-To; the Settings item left the left nav.
+
 ## 2026-11-07 (morning)
 - Settings in the left nav (Dates and System Health).
 - Image Library: Archive Selected (and Bring Back) for ticked pictures.
