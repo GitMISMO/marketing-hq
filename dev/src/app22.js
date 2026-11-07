@@ -50,9 +50,9 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Settings > Dates so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Holidays and Key Dates so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Settings > Dates.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Holidays and Key Dates.");
   return out;
 }
 /* ---------- how full each data file is ----------
@@ -65,15 +65,10 @@ function fileSizes(){
     .map(k=>{ const n=JSON.stringify(F[k].server,null,2).length; return {name:k, kb:Math.round(n/1024), pct:Math.round(n/FILE_MAX*100)}; })
     .sort((a,b)=>b.pct-a.pct);
 }
-let SIZE_WARNED=false;
-function sizeWatch(){
-  if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
-  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Settings > System Health.", 8000); }
-}
 
 /* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
    The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
-   the code. They now live in one settings record (settings/dates) that staff edit on Settings > Dates;
+   the code. They now live in one settings record (settings/dates) that staff edit on Help > Holidays and Key Dates;
    until someone saves it, the lists written into the code stand. */
 const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
 let SET_SIG = "";
@@ -86,6 +81,7 @@ function applySettings(){
   if(!SUMMITS.length) DEF_DATES.summits.forEach(s=>SUMMITS.push(Object.assign({}, s)));
 }
 const DS = {draft:null};
+function setRedraw(){ renderHelp(); }
 function datesHtml(){
   const d = DS.draft || (DS.draft = JSON.parse(JSON.stringify(datesNow())));
   const hol = Object.keys(d.holidays).sort();
@@ -123,52 +119,159 @@ function wireDates(el){
   };
 }
 
-/* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
 function trashLabel(col, r){ return r.name||r.title||r.headline||(r.num?"Episode "+r.num:"")||r.key||r.id; }
-function systemHtml(){
-  const ago=ms=>{ if(!ms) return "never"; const m=Math.round((Date.now()-ms)/60000); return m<1?"just now":m<60?m+" min ago":Math.round(m/60)+" h ago"; };
-  const jobs=Object.values(JOBS);
-  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
-  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  const warn=dateWarnings();
-  const relay=window.__hqRelay && window.__hqRelay.status ? window.__hqRelay.status : null;
-  return '<p class="lead">How MISMO Media itself is doing. Nothing here needs attention unless it is marked.</p>'+
-    '<h3>This Copy</h3><table class="tbl"><tbody>'+
-      '<tr><td>Version</td><td><b>'+esc(BUILD.indexOf("__")===0?"development copy":BUILD)+'</b></td></tr>'+
-      '<tr><td>Saving</td><td>'+(typeof STALE!=="undefined" && STALE.on?'<b class="bad">Paused: a newer MISMO Media is out. Refresh the page.</b>':!CANWRITE?"View only":LIVE?"On, to MISMO's records":"Not connected")+'</td></tr>'+
-      (relay?'<tr><td>Connection</td><td>'+(relay.offline?'<b class="bad">Can\'t reach the save relay right now</b>':"OK")+(relay.lastError?' · last problem: '+esc(relay.lastError):"")+'</td></tr>':'')+
-      '<tr><td>Background jobs</td><td>'+(LEADER?"Run from this tab":"Run from another MISMO Media tab in this browser")+'</td></tr>'+
-    '</tbody></table>'+
-    (jobs.length?'<h3>Background Jobs</h3><table class="tbl"><thead><tr><th>Job</th><th>Last ran</th><th>Status</th></tr></thead><tbody>'+
-      jobs.map(j=>'<tr><td>'+esc(j.name)+'</td><td>'+esc(ago(j.lastRun))+'</td><td>'+(j.lastErr && j.lastErrAt>j.lastOk?'<b class="bad">'+esc(j.lastErr)+'</b> · next try at '+esc(new Date(j.next).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})):"OK")+'</td></tr>').join("")+'</tbody></table>':'')+
-    (warn.length?'<h3>Dates to Add</h3><ul>'+warn.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+
-    (()=>{ const fs=fileSizes(); return fs.length?'<h3>Room Left in Each Data File</h3><p>Each kind of record is saved as one file, and one save can hold about 940 KB. Anything over 70% needs splitting before it fills.</p><table class="tbl"><thead><tr><th>Records</th><th class="n">Size</th><th class="n">Full</th></tr></thead><tbody>'+
-      fs.slice(0,12).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="n">'+f.kb+' KB</td><td class="n">'+(f.pct>=70?'<b class="bad">'+f.pct+'%</b>':f.pct+'%')+'</td></tr>').join("")+'</tbody></table>':''; })()+
-    '<h3>Recently Deleted</h3>'+(trash.length?'<p>Delete puts things aside instead of erasing them. Bring any of these back with one click.</p><table class="tbl"><thead><tr><th>What</th><th>Deleted</th><th></th></tr></thead><tbody>'+
-      trash.slice(0,60).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b><span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(fD(String(x.r._deletedAt).slice(0,10)))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="note">Nothing has been deleted since this was switched on.</p>')+
-    '<h3>Download All Data</h3><p>One file with every MISMO Media record (editions, sections, episodes, kits, posts, lists, requests and the subscriber lists), for safekeeping. It holds personal emails, so keep it somewhere private.</p>'+
-    '<p><button class="btn" type="button" id="sh-export">Download All Data</button></p>';
+HELP.push({id:"dates", t:"Holidays and Key Dates", g:"Setup", b:""});
+
+/* ==================== System Health (Nov 7, 2026) ====================
+   Built the way Summit HQ's is (Jonna liked it): a System Health button in the top bar with a dot
+   (green, amber, red), a panel of checks, a red bar across the top when something needs attention,
+   and a team error log so a problem on anyone's screen reaches one place. Checks every 5 minutes
+   while MISMO Media is open. Nothing here changes data except the log (feeds/health-log). */
+const HH = {last:null, running:null, modal:null, btn:null, dot:null, bar:null, started:false, shippedUpTo:0, shipT:null};
+const HH_LOG="health-log", HH_KEEP=30, HH_MAX=150;
+const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
+const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
+const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
+const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+
+function hhSaving(){
+  const r=window.__hqRelay; if(!r) return hhRow("save","Saving",LIVE?"ok":"off",LIVE?"Saving to MISMO's records.":"Not connected on this copy.");
+  const st=r.status||{}, files=r.files||{}; let n=0, oldest=0;
+  Object.keys(files).forEach(k=>(files[k].pending||[]).forEach(op=>{ n++; if(op.at && (!oldest||op.at<oldest)) oldest=op.at; }));
+  const lost=(st.problems||[]).filter(p=>p.lost && Date.now()-Date.parse(p.at)<864e5), retry=(st.problems||[]).filter(p=>!p.lost && Date.now()-Date.parse(p.at)<36e5);
+  const age=oldest?Math.round((Date.now()-oldest)/6e4):0;
+  if(STALE.on) return hhRow("save","Saving","warn","A newer MISMO Media is out, so saving is paused in this tab. Refresh the page.");
+  if(lost.length) return hhRow("save","Saving","bad",lost.length+" change"+(lost.length>1?"s were":" was")+" refused today and taken back. Make "+(lost.length>1?"them":"it")+" again; if it keeps happening, tell Perry.", lost.slice(-3).map(p=>hhWhen(p.at)+": "+(p.code||"error")+(p.msg?" ("+p.msg+")":"")));
+  if(n && age>=5) return hhRow("save","Saving","bad",n+" change"+(n>1?"s have":" has")+" been waiting "+age+" minutes to save. Keep this tab open; if it doesn't clear, the save relay may be down (tell Perry).");
+  if(st.offline) return hhRow("save","Saving","warn","Can't reach the save relay right now. Changes wait here and save when it's back.");
+  if(retry.length) return hhRow("save","Saving","warn","A save had to be tried again in the last hour"+(n?"; "+n+" still waiting.":", and went through."));
+  if(!CANWRITE) return hhRow("save","Saving","ok","View only: you can look at everything but not change it.");
+  return hhRow("save","Saving","ok", n? n+" change"+(n>1?"s":"")+" saving now." : "Every change is saved"+(st.savedAt?". Last save "+hhWhen(st.savedAt)+".":"."));
 }
-function wireSystem(el){
-  const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
-  trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); setRedraw(); } });
-  const ex=$("#sh-export",el); if(ex) ex.onclick=()=>{
-    const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
-    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a");
-    a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
-  };
+function hhStorage(){
+  const fs=fileSizes(); if(!fs.length) return hhRow("store","Storage","off","Not loaded yet.");
+  const top=fs.slice(0,4), w=top[0], lvl=w.pct>=90?"bad":w.pct>=70?"warn":"ok";
+  const bars='<div class="hh-bars">'+top.map(f=>'<div><span>'+esc(hhNice(f.name))+'</span><span>'+f.pct+'%</span><i><s class="'+(f.pct>=90?"bad":f.pct>=70?"warn":"")+'" style="width:'+Math.min(100,f.pct)+'%"></s></i></div>').join("")+'</div>';
+  const line= lvl==="bad"? hhNice(w.name)+" is "+w.pct+"% full. Tell Perry before it reaches 100%: saves to it would stop."
+    : lvl==="warn"? hhNice(w.name)+" is "+w.pct+"% full. Plenty for now; worth splitting before it fills."
+    : "Every shared file has room. The fullest is "+w.pct+"% full.";
+  return hhRow("store","Storage",lvl,line,[],bars);
 }
-/* ---------- the Settings page (left nav): Dates and System Health ---------- */
-const SET = {sub:"dates"};
-function setRedraw(){ if(TAB==="settings") renderSettings(); else renderHelp(); }
-function renderSettings(){
-  const el=$("#page-settings"); if(!el) return;
-  const subs=[["dates","Dates"],["system","System Health"]];
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Settings</h1><div class="sub">The dates MISMO Media plans around, and how the system itself is doing.</div></div></div>'+
-    '<div class="subtabs" role="group" aria-label="Settings">'+subs.map(([k,l])=>'<button type="button" data-ssub="'+k+'" aria-pressed="'+(SET.sub===k)+'">'+esc(l)+'</button>').join("")+'</div>'+
-    '<article class="card helpbody"><div class="cb">'+(SET.sub==="system"?systemHtml():datesHtml())+'</div></article>';
-  $$("[data-ssub]",el).forEach(b=>b.onclick=()=>{ SET.sub=b.dataset.ssub; renderSettings(); });
-  if(SET.sub==="system") wireSystem(el); else wireDates(el);
+function hhJobs(){
+  const js=Object.values(JOBS);
+  if(!LEADER) return hhRow("jobs","Background Jobs","ok","Running from another MISMO Media tab in this browser.");
+  if(!js.length) return hhRow("jobs","Background Jobs","ok","Episode files, sponsor logos and certified lists: nothing has needed doing yet.");
+  const bad=js.filter(j=>j.lastErr && j.lastErrAt>j.lastOk);
+  if(bad.length) return hhRow("jobs","Background Jobs","warn",bad.length+" job"+(bad.length>1?"s":"")+" hit a problem and will try again by "+new Date(Math.max(...bad.map(j=>j.next))).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})+".", bad.map(j=>j.name+": "+j.lastErr));
+  return hhRow("jobs","Background Jobs","ok",js.map(j=>j.name).join(", ")+": all working. Last run "+hhWhen(Math.max(...js.map(j=>j.lastRun)))+".");
 }
+function hhSignups(){
+  const L=vals("signups").map(s=>s.at).filter(Boolean).sort(); if(!L.length) return null;
+  return hhRow("sign","Website Sign-Ups","ok","Last sign-up arrived "+hhWhen(L[L.length-1])+".");
+}
+function hhNews(){
+  const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
+  return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
+}
+function hhDates(){
+  const w=dateWarnings(); if(!w.length) return null;
+  return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
+}
+function hhVersion(){ return hhRow("ver","This Copy","ok","Version "+(BUILD.indexOf("__")===0?"development copy":BUILD)+"."); }
+function hhErrors(){
+  const L=window.__mmErrs||[];
+  if(!L.length) return hhRow("err","Errors on This Page","ok","None since this page was opened.");
+  const n=L.reduce((a,e)=>a+e.n,0);
+  return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
+}
+function hhRun(){
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
+}
+function hhPlace(){
+  const r=document.querySelector(".hqtop-r"); if(!r) return;
+  if(!HH.btn){
+    const b=document.createElement("button"); b.type="button"; b.id="hh-btn"; b.className="hh-btn"; b.title="System Health";
+    b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg><i class="hh-dot" aria-hidden="true"></i><span>System Health</span>';
+    b.addEventListener("click", hhOpen); HH.btn=b; HH.dot=b.querySelector(".hh-dot");
+  }
+  if(HH.btn.parentNode!==r) r.insertBefore(HH.btn, r.querySelector("#rs-account")||null);
+}
+function hhPaint(){
+  hhPlace(); if(!HH.last) return;
+  const w=hhWorst(HH.last.rows);
+  if(HH.dot) HH.dot.className="hh-dot "+w;
+  if(HH.btn) HH.btn.setAttribute("aria-label","System Health: "+(w==="bad"?"needs attention":w==="warn"?"a warning":"all working"));
+  const bad=HH.last.rows.filter(r=>r.level==="bad"), sig=bad.map(r=>r.key+":"+r.line).join("|");
+  let gone=""; try{ gone=sessionStorage.getItem("mm:health-dismissed")||""; }catch(e){}
+  if(!HH.bar){ HH.bar=document.createElement("div"); HH.bar.id="hh-bar"; HH.bar.setAttribute("role","alert"); HH.bar.hidden=true; document.body.appendChild(HH.bar); }
+  if(!bad.length || sig===gone) HH.bar.hidden=true;
+  else {
+    HH.bar.innerHTML='<span><b>'+esc(bad[0].title)+':</b> '+esc(bad[0].line)+(bad.length>1?" (and "+(bad.length-1)+" more)":"")+'</span><button type="button" class="hh-go">Details</button><button type="button" class="hh-x" aria-label="Hide until something else changes">&times;</button>';
+    HH.bar.querySelector(".hh-go").onclick=hhOpen;
+    HH.bar.querySelector(".hh-x").onclick=()=>{ try{ sessionStorage.setItem("mm:health-dismissed",sig); }catch(e){} HH.bar.hidden=true; };
+    HH.bar.hidden=false;
+  }
+  if(HH.modal) hhDraw();
+}
+function hhReport(){
+  if(!HH.last) return "";
+  return ["MISMO Media System Health, "+new Date(HH.last.at).toLocaleString("en-US"),""]
+    .concat(HH.last.rows.map(r=>(r.level==="ok"?"OK":r.level==="warn"?"WARNING":r.level==="bad"?"PROBLEM":"NOT CHECKED")+" | "+r.title+": "+r.line+(r.list.length?"\n - "+r.list.join("\n - "):"")))
+    .concat(["","Errors on this page:"].concat((window.__mmErrs||[]).slice(-15).map(e=>" "+e.at+" "+e.kind+" x"+e.n+" "+e.msg+(e.src?" ["+e.src+"]":"")))).join("\n");
+}
+async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("feeds").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
+function hhTrash(){ const t=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>t.push({c,r}))); return t.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt))); }
+async function hhDraw(){
+  if(!HH.modal || !HH.last) return;
+  const body=HH.modal.querySelector(".hh-body"), w=hhWorst(HH.last.rows), trash=hhTrash();
+  body.innerHTML='<div class="hh-sum"><i class="hh-big '+w+'"></i><span><b>'+(w==="bad"?"Something Needs Attention":w==="warn"?"Working, With a Warning":"Everything Is Working")+'</b>. Checked '+hhWhen(HH.last.at)+'; it checks again every 5 minutes while MISMO Media is open.</span></div>'+
+    '<div class="hh-grid">'+HH.last.rows.map(r=>'<div class="hh-row '+r.level+'"><div class="hh-t">'+esc(r.title)+'</div><div class="hh-l">'+esc(r.line)+'</div>'+(r.list.length?'<ul>'+r.list.map(x=>'<li>'+esc(x)+'</li>').join("")+'</ul>':'')+r.extra+'</div>').join("")+'</div>'+
+    '<p class="hh-quiet">Not watched from here (their work never shows in MISMO Media until it lands, so a stop can\'t be seen): the Images flow, Amy\'s Replies, the Teams chat links and posting. Power Automate emails a flow\'s owner when it keeps failing.</p>'+
+    '<h4>Team Error Log (Last 7 Days)</h4><div class="hh-log"><p class="hh-quiet">Loading&hellip;</p></div>'+
+    '<h4>Recently Deleted</h4>'+(trash.length?'<table class="tbl hh-tbl"><tbody>'+trash.slice(0,20).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b> <span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(hhWhen(x.r._deletedAt))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="hh-quiet">Nothing deleted. Delete puts things aside here instead of erasing them.</p>')+
+    '<div class="hh-acts"><button type="button" class="btn pri" data-hh="again">Check Again</button><button type="button" class="btn" data-hh="copy">Copy Report</button><button type="button" class="btn" data-hh="export" title="Every record in one file, for safekeeping. It holds personal emails, so keep it private.">Download All Data</button></div>';
+  body.querySelector('[data-hh="again"]').onclick=e=>{ e.target.textContent="Checked"; hhRun(); };
+  body.querySelector('[data-hh="copy"]').onclick=async e=>{ try{ await navigator.clipboard.writeText(hhReport()); e.target.textContent="Copied"; }catch(x){ e.target.textContent="Couldn't Copy"; } };
+  body.querySelector('[data-hh="export"]').onclick=()=>{ const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
+    const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),4000); };
+  $$("[data-restore]",body).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); hhDraw(); } });
+  const entries=await hhTeamLog(), box=body.querySelector(".hh-log"); if(!box) return;
+  const recent=(entries||[]).filter(x=>Date.now()-Date.parse(x.at)<7*864e5).slice(-25).reverse();
+  box.innerHTML= entries===null? '<p class="hh-quiet">The team log couldn\'t be read just now.</p>'
+    : !recent.length? '<p class="hh-quiet">No errors logged by anyone in the last 7 days.</p>'
+    : '<table class="tbl hh-tbl"><thead><tr><th>When</th><th>Who</th><th>Where</th><th>What</th></tr></thead><tbody>'+recent.map(x=>'<tr><td>'+esc(hhWhen(x.at))+'</td><td>'+esc(x.who||"")+'</td><td>'+esc(x.tab||"")+'</td><td>'+esc(x.msg)+(x.n>1?' ('+x.n+' times)':'')+'</td></tr>').join("")+'</tbody></table>';
+}
+function hhOpen(){
+  if(!HH.modal){
+    const m=document.createElement("div"); m.className="hh-modal"; m.id="hh-modal";
+    m.innerHTML='<div class="hh-box" role="dialog" aria-modal="true" aria-label="System Health"><div class="hh-hd"><b>System Health</b><button type="button" class="btn">Close</button></div><div class="hh-body"></div></div>';
+    const from=document.activeElement;
+    const close=()=>{ m.remove(); HH.modal=null; document.removeEventListener("keydown",key); if(from&&from.focus) try{ from.focus(); }catch(e){} };
+    const key=e=>{ if(e.key==="Escape") close(); };
+    m.querySelector(".hh-hd .btn").onclick=close; m.addEventListener("click",e=>{ if(e.target===m) close(); });
+    document.addEventListener("keydown",key); document.body.appendChild(m); HH.modal=m;
+    setTimeout(()=>{ try{ m.querySelector(".hh-hd .btn").focus(); }catch(e){} },30);
+  }
+  hhRun();
+}
+/* the team's log: errors from everyone's screen in one place (written about a minute after they happen) */
+async function hhShip(){
+  const L=window.__mmErrs||[], fresh=L.filter(e=>Date.parse(e.at)>HH.shippedUpTo); if(!fresh.length || !DB || !CANWRITE || STALE.on) return;
+  try{
+    const who=window.__hqWho||"", cur=await hhTeamLog(); const keep=Date.now()-HH_KEEP*864e5;
+    let entries=(cur||[]).filter(x=>Date.parse(x.at)>keep);
+    fresh.forEach(e=>entries.push({at:e.at, who, kind:e.kind, msg:e.msg, src:e.src||"", n:e.n, tab:e.tab||""}));
+    await DB.collection("feeds").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
+    HH.shippedUpTo=Math.max.apply(null, fresh.map(e=>Date.parse(e.at)));
+  }catch(e){}
+}
+window.addEventListener("mm:err", ()=>{ clearTimeout(HH.shipT); HH.shipT=setTimeout(hhShip, 60000); if(HH.last){ HH.last.rows=HH.last.rows.map(r=>r.key==="err"?hhErrors():r); hhPaint(); } });
+function hhStart(){
+  if(HH.started) return; HH.started=true; hhPlace();
+  setTimeout(hhRun, 20000); setInterval(()=>{ if(!document.hidden) hhRun(); }, 5*60000); setInterval(hhPlace, 4000);
+  if((window.__mmErrs||[]).length){ HH.shipT=setTimeout(hhShip, 60000); }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", hhStart); else hhStart();

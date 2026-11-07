@@ -479,7 +479,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help","settings"];
+const TABS=["home","overview","requests","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
 let TAB="home";
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -523,8 +523,7 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
 function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
   if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
-  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch();
-  if(typeof dateWarnings==="function" && tabReady("home")) badge("settings", dateWarnings().length + fileSizes().filter(f=>f.pct>=70).length, true); }
+  if(typeof a11yRows==="function") a11yRows(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -535,7 +534,7 @@ function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true
 function renderTab(t){
   if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
-    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp, settings:renderSettings})[t]();
+    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, people:renderPeople, results:renderResults, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
