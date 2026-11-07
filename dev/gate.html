@@ -1,0 +1,23 @@
+<!-- Hide the app until someone is signed in. If this file is replaced by an upload, carry this block across. -->
+<style>html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:hidden}</style>
+<script>(function(){
+  var out = true;
+  try {
+    var s = JSON.parse(localStorage.getItem('resources:session') || 'null');
+    out = !(s && s.token && s.expiresAt && Date.parse(s.expiresAt) > Date.now());
+  } catch (e) { out = true; }
+  document.documentElement.classList.add(out ? 'hq-out' : 'hq-in');
+})();</script>
+<script src="/assets/session.js"></script>
+<script>(function(){
+  function sync(){
+    var rs = window.ResourcesSession, inn = !!(rs && rs.current());
+    document.documentElement.classList.toggle('hq-out', !inn);
+    document.documentElement.classList.toggle('hq-in', inn);
+  }
+  if (window.ResourcesSession) { window.ResourcesSession.onChange(sync); sync(); }
+  else { document.addEventListener('DOMContentLoaded', function(){
+    if (window.ResourcesSession) { window.ResourcesSession.onChange(sync); sync(); }
+    else document.documentElement.classList.remove('hq-out');   // module missing: do not lock the page
+  }); }
+})();</script>

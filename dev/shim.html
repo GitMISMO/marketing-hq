@@ -1,0 +1,718 @@
+<script>
+/* ============================================================================
+   MARKETING HQ ON resources.mismo.org - the one door to MISMO's save relay
+   ----------------------------------------------------------------------------
+   Built the same way as Member 360's, Summit HQ's and the IIF Planning HQ's doors.
+   MISMO Media was built inside Claude, where it reached its records through
+   window.claude.use('db'). This gives the page that same door, backed by the save
+   relay instead, so none of the tabs change.
+
+   Where the data lives: the PRIVATE repository GitMISMO/marketing-hq-data, reached
+   only through the relay under the project key "marketing-hq". This PUBLIC page
+   holds no records at all: editions, episodes, posts, news, lists and the
+   subscriber and downloader lists all arrive after sign-in.
+
+   How documents are filed (the relay has no "list a folder" route):
+     editions, sections, episodes, pieces, news, lists
+                         one file per collection: {docs:{"<collection>/<id>": {...}}}
+     audience-...        the subscriber and downloader lists, one file per part:
+                         {doc:{...}}, listed in own-index so the collection can be read
+
+   PREVIEW: while PREVIEW is true, the page opens for everyone with access but saves
+   nothing, and says so. Switching on = set PREVIEW to false, after Claude re-copies
+   the latest records from the Claude version into marketing-hq-data.
+
+   Saving: every save sends the version (sha) it last read. If someone else saved
+   in between, the relay answers 409; the change is re-applied on top of theirs and
+   sent again. Other people's changes are re-read every minute while the page is open.
+
+   Sign-in is the shared resources.mismo.org sign-in (/assets/session.js). Who may
+   open it, and who may save, is set per person in People & Access.
+   ========================================================================== */
+(function () {
+  'use strict';
+  if (window.__hqRelay) return;
+
+  var RELAY_URL = 'https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws';
+  var PROJECT = 'marketing-hq', TOOL = 'MISMO Media';
+  var PREVIEW = false;          /* see the header: false once MISMO Media is switched on */
+  var POLL_MS = 60000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
+  /* collections whose documents each get a file of their own (the big synced ones) */
+  var OWN = ['audience'];
+  function hot(name) { return !/^audience-|^own-index$/.test(name); }
+  var FLUSH_MS = 350, RETRY_MS = 8000;
+  var MAX_FILE = 940000;        /* the relay takes at most 1,000,000 bytes a save */
+
+  /* ---------- browser storage: every tool shares this web address ----------
+     This page's own keys (the remembered menu width and the like) are filed under
+     tools:marketing-hq: so they cannot collide with another tool's. The sign-in and the
+     MISMO theme are shared on purpose and are left alone. */
+  (function () {
+    var P = 'tools:marketing-hq:';
+    var shared = function (k) { k = String(k); return k.indexOf('tools:') === 0 || k.indexOf('resources:') === 0 || k === 'mismo.portal.theme'; };
+    try {
+      var S = Storage.prototype, g = S.getItem, s = S.setItem, r = S.removeItem;
+      S.getItem = function (k) { return g.call(this, shared(k) ? k : P + k); };
+      S.setItem = function (k, v) { return s.call(this, shared(k) ? k : P + k, v); };
+      S.removeItem = function (k) { return r.call(this, shared(k) ? k : P + k); };
+    } catch (e) {}
+  })();
+
+  function RS() { return window.ResourcesSession || null; }
+  function clone(v) { return v === undefined ? undefined : JSON.parse(JSON.stringify(v)); }
+  function safe(s) { return String(s).toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/-{3,}/g, '--').replace(/^-+|-+$/g, '') || 'x'; }
+  function err(code, message, status) { var e = new Error(message || code); e.code = code; e.status = status || 0; return e; }
+  function now() { return Date.now(); }
+
+  /* ---------- where a document is filed ---------- */
+  function place(path) {
+    var seg = String(path).split('/');
+    if (seg.length !== 2) throw err('invalid_argument', 'Not a document path: ' + path);
+    if (OWN.indexOf(seg[0]) >= 0) return { file: safe(seg[0] + '-' + seg[1]).slice(0, 40), own: true, coll: seg[0], id: seg[1] };
+    return { file: safe(seg[0]).slice(0, 40), coll: seg[0], id: seg[1] };
+  }
+  function parentOf(path) { var s = String(path).split('/'); return s.slice(0, -1).join('/'); }
+  function idOf(path) { var s = String(path).split('/'); return s[s.length - 1]; }
+
+  /* ---------- talking to the relay ---------- */
+  var status = { offline: false, lastError: '' };
+  function net(method, name, body) {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Not signed in', 401));
+    var headers = { 'Authorization': 'Bearer ' + tok };
+    if (body) headers['Content-Type'] = 'application/json';
+    return fetch(RELAY_URL + '/' + PROJECT + '/data/' + encodeURIComponent(name), {
+      method: method, cache: 'no-store', headers: headers, body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) {
+      status.offline = false;
+      return r.json().catch(function () { return {}; }).then(function (b) {
+        if (r.ok) return b;
+        var e = err((b && b.error) || ('HTTP_' + r.status), b && b.message, r.status);
+        e.gh = (b && typeof b.status === 'number') ? b.status : 0;   /* what GitHub itself answered */
+        if (r.status === 401 && rs) { needSignIn(); }
+        throw e;
+      });
+    }, function () { status.offline = true; throw err('OFFLINE', 'Could not reach the relay', 0); });
+  }
+
+  /* ---------- files ---------- */
+  var F = {};
+  function file(name, own) {
+    if (!F[name]) F[name] = { name: name, own: !!own, server: null, sha: null, loaded: false, loading: null,
+      loadedAt: 0, pending: [], timer: null, flushing: false, view: null, waitingSignIn: false };
+    return F[name];
+  }
+  function normalise(f, c) {
+    c = c && typeof c === 'object' ? c : {};
+    if (f.own) return { doc: c.doc === undefined ? null : c.doc };
+    return { docs: c.docs && typeof c.docs === 'object' ? c.docs : {} };
+  }
+  function load(f) {
+    if (f.loading) return f.loading;
+    f.loading = net('GET', f.name).then(function (b) {
+      return { content: normalise(f, b && b.data), sha: (b && b.sha) || null };
+    }, function (e) {
+      /* the relay answers a missing file with {data:null}; a 404 means something else is
+         wrong (most often UNKNOWN_PROJECT) and must not be mistaken for an empty file */
+      if (e && e.status === 404 && (e.code === 'NOT_FOUND' || e.code === 'HTTP_404')) return { content: normalise(f, null), sha: null };
+      throw e;
+    }).then(function (got) {
+      var before = f.loaded ? JSON.stringify(f.server) : null;
+      f.server = got.content; f.sha = got.sha; f.loaded = true; f.loadedAt = now(); f.view = null;
+      f.loading = null;
+      if (before !== JSON.stringify(f.server)) notify(f, false);
+      return f;
+    }, function (e) { f.loading = null; throw e; });
+    return f.loading;
+  }
+  function ensure(f) { return f.loaded ? Promise.resolve(f) : load(f); }
+
+  /* ---------- saving only what was changed (November 5, 2026) ----------
+     A record panel can sit open for hours. Saving used to write the whole record exactly as
+     the panel had it, and a 409 re-applied that same whole record, so anything someone else
+     saved in the meantime was quietly undone. Now the page can say what the record looked
+     like when the change began (the "base"). Only the fields that differ from it are
+     written, onto the newest copy, at the moment of saving and again after every 409.
+     Every other field keeps its newest value, field by field inside nested parts too
+     (dates, checks). A record someone else deleted in the meantime is not brought back:
+     that change is refused and the page says so. Records nobody touched are never written. */
+  function isPlain(v) { return !!v && typeof v === 'object' && !Array.isArray(v); }
+  function sig(v) {                     /* the same text for the same value, whatever the key order */
+    if (Array.isArray(v)) return '[' + v.map(sig).join(',') + ']';
+    if (isPlain(v)) return '{' + Object.keys(v).sort().map(function (k) { return JSON.stringify(k) + ':' + sig(v[k]); }).join(',') + '}';
+    return v === undefined ? 'null' : JSON.stringify(v);
+  }
+  /* "" / null / missing are the same; 5 and "5" are the same; an empty part is the same as none */
+  function normVal(v) {
+    if (v === undefined || v === null || v === '') return '';
+    if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+    if (typeof v === 'string') return v;
+    if (isPlain(v) && !Object.keys(v).length) return '';
+    return sig(v);
+  }
+  function sameVal(a, b) { return normVal(a) === normVal(b); }
+  function mergeDoc(cur, mine, base) {
+    if (!isPlain(cur) || !isPlain(mine) || !isPlain(base)) return clone(mine);
+    var out = clone(cur), keys = {};
+    Object.keys(mine).concat(Object.keys(base)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      var m = mine[k], b = base[k], c = cur[k];
+      if (sameVal(m, b)) {              /* not changed here: the newest value stands */
+        if (!(k in out) && b === undefined && m !== undefined) out[k] = clone(m);   /* a blank nobody had */
+        return;
+      }
+      if (m === undefined) { delete out[k]; return; }
+      if (isPlain(m) && (isPlain(b) || b == null) && (isPlain(c) || c == null)) { out[k] = mergeDoc(c || {}, m, b || {}); return; }
+      out[k] = clone(m);
+    });
+    return out;
+  }
+  /* the fields both people changed, to different values (each a list of keys, for nested parts) */
+  function clashes(cur, mine, base, pre) {
+    var out = [];
+    if (!isPlain(cur) || !isPlain(mine) || !isPlain(base)) return out;
+    var keys = {};
+    Object.keys(mine).concat(Object.keys(base)).forEach(function (k) { keys[k] = 1; });
+    Object.keys(keys).forEach(function (k) {
+      if (!pre && (k === 'updatedAt' || k === 'id')) return;
+      var m = mine[k], b = base[k], c = cur[k], at = (pre || []).concat([k]);
+      if (sameVal(m, b) || sameVal(c, b) || sameVal(c, m)) return;
+      if (isPlain(m) && (isPlain(b) || b == null) && (isPlain(c) || c == null)) { out = out.concat(clashes(c || {}, m, b || {}, at)); return; }
+      out.push(at);
+    });
+    return out;
+  }
+  function getAt(o, at) { for (var i = 0; i < at.length; i++) { if (!isPlain(o)) return undefined; o = o[at[i]]; } return o; }
+  function setAt(o, at, v) {
+    for (var i = 0; i < at.length - 1; i++) { if (!isPlain(o[at[i]])) o[at[i]] = {}; o = o[at[i]]; }
+    if (v === undefined) delete o[at[at.length - 1]]; else o[at[at.length - 1]] = clone(v);
+  }
+  var GONE = 'Someone else deleted this record while it was open here, so this change was not saved.';
+  window.__hqMerge = { merge: mergeDoc, clashes: clashes, sameVal: sameVal, normVal: normVal, sig: sig,
+    getAt: getAt, setAt: setAt, clone: clone, GONE: GONE };
+
+  function applyOps(f, content, ops, sending) {
+    ops.forEach(function (op) {
+      if (op.kind === 'merge') {        /* only what changed since op.base, onto this copy */
+        var was = f.own ? content.doc : content.docs[op.path];
+        var gone = !!op.base && (was === undefined || was === null);
+        if (sending) op.gone = gone;
+        if (gone) return;
+        var next = op.base ? mergeDoc(was, op.data, op.base) : clone(op.data);
+        if (f.own) content.doc = next; else content.docs[op.path] = next;
+        return;
+      }
+      if (f.own) {
+        if (op.kind === 'set') content.doc = clone(op.data);
+        else if (op.kind === 'update') content.doc = Object.assign({}, content.doc || {}, clone(op.data));
+        else if (op.kind === 'delete') content.doc = null;
+        return;
+      }
+      if (op.kind === 'set') content.docs[op.path] = clone(op.data);
+      else if (op.kind === 'update') content.docs[op.path] = Object.assign({}, content.docs[op.path] || {}, clone(op.data));
+      else if (op.kind === 'delete') delete content.docs[op.path];
+    });
+    return content;
+  }
+  function viewOf(f) {
+    if (!f.loaded) return null;
+    if (!f.view) f.view = applyOps(f, clone(f.server), f.pending);
+    return f.view;
+  }
+  function docIn(f, path) {
+    var v = viewOf(f); if (!v) return undefined;
+    var d = f.own ? v.doc : v.docs[path];
+    return d === undefined ? null : d;
+  }
+
+  /* ---------- saving ---------- */
+  function queue(path, kind, data, base) {
+    if (PREVIEW) {
+      if (now() - previewWarned > 4000) { previewWarned = now(); toast('This is the preview of MISMO Media on resources.mismo.org \u2014 nothing here is saved. Keep using the Claude version until it\u2019s switched on.', 'bad'); }
+      return Promise.reject(err('invalid_argument', 'Preview: not saved'));
+    }
+    var p = place(path), f = file(p.file, p.own);
+    return new Promise(function (res, rej) {
+      var go = function () {
+        if (kind === 'update' && f.loaded && docIn(f, path) === null) { rej(err('not-found', 'No document to update: ' + path)); return; }
+        f.pending.push({ kind: kind, path: path, data: data, base: base || null, res: res, rej: rej }); f.view = null;
+        if (p.own) register(path, kind !== 'delete');
+        notify(f, true);
+        schedule(f, FLUSH_MS);
+      };
+      if (kind === 'update' && !f.loaded) ensure(f).then(go, function (e) { rej(e); });
+      else { if (!f.loaded) ensure(f).catch(function () {}); go(); }
+    });
+  }
+  var previewWarned = 0;
+  /* files that hold one document each are listed in own-index, so a collection can be read back */
+  function register(path, present) {
+    var r = file('own-index');
+    var known = r.loaded ? !!(viewOf(r).docs[path]) : null;
+    if (known === present) return;
+    r.pending.push({ kind: present ? 'set' : 'delete', path: path, data: present ? { file: place(path).file } : null,
+      res: function () {}, rej: function () {} });
+    r.view = null;
+    if (!r.loaded) ensure(r).catch(function () {}); else notify(r, true);
+    schedule(r, FLUSH_MS);
+  }
+  function schedule(f, ms) {
+    if (f.timer) return;
+    f.timer = setTimeout(function () { f.timer = null; flush(f); }, ms);
+  }
+  /* GitHub makes one commit to a branch at a time, so every save goes out after the
+     one before it has finished, never side by side. */
+  var putChain = Promise.resolve();
+  function put(name, body) {
+    var go = function () { return net('PUT', name, body); };
+    var p = putChain.then(go, go);
+    putChain = p.then(function () {}, function () {});
+    return p;
+  }
+  function flush(f) {
+    if (f.flushing || !f.pending.length) return;
+    if (!(RS() && RS().token())) { f.waitingSignIn = true; needSignIn(); return; }
+    f.flushing = true;
+    var batch = f.pending.slice(), tries = 0;
+    var attempt = function () {
+      return ensure(f).then(function () {
+        var next = applyOps(f, clone(f.server), batch, true);   /* the newest copy, read again after a 409 */
+        /* the relay saves files pretty-printed and can only read back a file under 1 MB, so the pretty size is what counts */
+        if (JSON.stringify(next, null, 2).length > MAX_FILE) throw err('TOO_BIG', 'This part of MISMO Media has grown too big to save in one piece.');
+        return put(f.name, { content: next, sha: f.sha }).then(function (b) {
+          f.server = next; f.sha = (b && b.sha) || f.sha; f.loadedAt = now();
+          f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
+          batch.forEach(function (op) { if (op.gone) op.rej(err('not-found', GONE)); else op.res(); });
+          notify(f, false);
+          saved();
+        });
+      }).catch(function (e) {
+        if (e && e.status === 409 && tries < 8) {
+          tries++;
+          f.loaded = false;
+          return new Promise(function (r) { setTimeout(r, 300 * tries + Math.random() * 500); })
+            .then(function () { return load(f); }).then(attempt);
+        }
+        throw e;
+      });
+    };
+    attempt().catch(function (e) {
+      /* a 502 from the relay with TOKEN or GITHUB is a setup problem, not a blip: say so at
+         once rather than retrying quietly forever */
+      var transient = e && (e.code === 'OFFLINE' || e.status === 401 || e.code === 'SIGNED_OUT' ||
+        (e.status >= 500 && e.code !== 'TOKEN' && e.code !== 'GITHUB' && e.code !== 'REJECTED') ||
+        (e.code === 'GITHUB' && (e.gh >= 500 || !e.gh && /timed? ?out|ETIMEDOUT|ECONNRESET|fetch failed/i.test(e.message || ''))));
+      if (transient) {
+        /* nothing is lost: the change stays queued and goes out once the relay is back */
+        if (e.status === 401 || e.code === 'SIGNED_OUT') f.waitingSignIn = true;
+        else setTimeout(function () { schedule(f, 0); }, RETRY_MS);
+        problem(e);
+        return;
+      }
+      f.pending = f.pending.filter(function (op) { return batch.indexOf(op) < 0; }); f.view = null;
+      batch.forEach(function (op) { op.rej(e); });
+      notify(f, false);
+      problem(e, true);
+    }).then(function () {
+      f.flushing = false;
+      if (f.pending.length && !f.waitingSignIn) schedule(f, FLUSH_MS);
+    });
+  }
+  function anyPending() { return Object.keys(F).some(function (k) { return F[k].pending.length; }); }
+  window.addEventListener('beforeunload', function (e) {
+    if (anyPending()) { e.preventDefault(); e.returnValue = 'MISMO Media is still saving.'; return e.returnValue; }
+  });
+
+  /* ---------- snapshots and listeners ---------- */
+  function docSnap(path, data, pending) {
+    var exists = data !== null && data !== undefined;
+    return { id: idOf(path), exists: exists, ref: { id: idOf(path), path: path },
+      data: function () { return exists ? clone(data) : undefined; },
+      metadata: { hasPendingWrites: !!pending, fromCache: false } };
+  }
+  var docL = [], collL = [];
+  function docValue(path) {
+    var p = place(path);
+    return docIn(file(p.file, p.own), path);
+  }
+  function isOwn(coll) { return OWN.indexOf(coll) >= 0; }
+  function ownPaths(coll) {
+    var r = viewOf(file('own-index')); if (!r) return [];
+    return Object.keys(r.docs).filter(function (p) { return parentOf(p) === coll; });
+  }
+  function collDocs(coll) {
+    var out = {};
+    if (isOwn(coll)) {
+      ownPaths(coll).forEach(function (p) { var f = F[place(p).file]; if (f && f.loaded) { var d = docIn(f, p); if (d !== null) out[p] = d; } });
+      return out;
+    }
+    var v = viewOf(file(place(coll + '/x').file));
+    if (v) Object.keys(v.docs).forEach(function (p) { if (parentOf(p) === coll) out[p] = v.docs[p]; });
+    return out;
+  }
+  /* the files a collection's listeners depend on */
+  function filesOfColl(coll) {
+    if (!isOwn(coll)) return [place(coll + '/x').file];
+    return ['own-index'].concat(ownPaths(coll).map(function (p) { return place(p).file; }));
+  }
+  function loadColl(coll) {
+    if (!isOwn(coll)) return ensure(file(place(coll + '/x').file));
+    return ensure(file('own-index')).then(function () {
+      return Promise.all(ownPaths(coll).map(function (p) { return ensure(file(place(p).file, true)); }));
+    });
+  }
+  function collSnap(coll, changes, pending) {
+    var docs = collDocs(coll), list = Object.keys(docs).map(function (p) { return docSnap(p, docs[p], pending); });
+    return { docs: list, size: list.length, empty: !list.length,
+      forEach: function (fn) { list.forEach(fn); },
+      docChanges: function () { return changes || list.map(function (d) { return { type: 'added', doc: d }; }); },
+      metadata: { hasPendingWrites: !!pending, fromCache: false } };
+  }
+  function notify(f, pending) {
+    if (f.name === 'own-index') collL.forEach(function (l) {   /* a new own document: load it */
+      if (isOwn(l.coll)) ownPaths(l.coll).forEach(function (p) { var of = file(place(p).file, true); if (!of.loaded && !of.loading) ensure(of).catch(function () {}); });
+    });
+    docL.forEach(function (l) {
+      if (place(l.path).file !== f.name || !f.loaded) return;
+      var d = docValue(l.path), sig = JSON.stringify(d);
+      if (l.primed && sig === l.sig) return;
+      l.primed = true; l.sig = sig;
+      try { l.cb(docSnap(l.path, d, pending)); } catch (e) { console.error(e); }
+    });
+    collL.forEach(function (l) {
+      var files = filesOfColl(l.coll);
+      if (files.indexOf(f.name) < 0) return;
+      if (!files.every(function (n) { return file(n).loaded; })) return;
+      var docs = collDocs(l.coll), changes = [], seen = {};
+      Object.keys(docs).forEach(function (p) {
+        var sig = JSON.stringify(docs[p]); seen[p] = 1;
+        if (!(p in l.last)) changes.push({ type: 'added', doc: docSnap(p, docs[p], pending) });
+        else if (l.last[p] !== sig) changes.push({ type: 'modified', doc: docSnap(p, docs[p], pending) });
+        l.last[p] = sig;
+      });
+      Object.keys(l.last).forEach(function (p) {
+        if (!seen[p]) { changes.push({ type: 'removed', doc: docSnap(p, null, pending) }); delete l.last[p]; }
+      });
+      if (l.primed && !changes.length) return;
+      l.primed = true;
+      try { l.cb(collSnap(l.coll, changes, pending)); } catch (e) { console.error(e); }
+    });
+  }
+
+  /* ---------- the store, in the shape the tabs already use ---------- */
+  function docRef(path) {
+    var p = place(path);
+    var need = function () { return ensure(file(p.file, p.own)); };
+    return {
+      id: p.id, path: path,
+      get: function () { return need().then(function () { return docSnap(path, docValue(path), false); }); },
+      set: function (data) { return queue(path, 'set', data); },
+      /* writes only what differs from `base` (the record as the change began); see above */
+      merge: function (data, base) { return queue(path, 'merge', clone(data), base ? clone(base) : null); },
+      update: function (patch) { return queue(path, 'update', patch); },
+      delete: function () { return queue(path, 'delete', null); },
+      onSnapshot: function (cb, errCb) {
+        var l = { path: path, cb: cb, primed: false, sig: null }; docL.push(l);
+        need().then(function () {
+          if (l.primed) return;
+          var d = docValue(path);
+          l.primed = true; l.sig = JSON.stringify(d);
+          cb(docSnap(path, d, false));
+        }).catch(function (e) { if (errCb) errCb(e); });
+        return function () { var i = docL.indexOf(l); if (i >= 0) docL.splice(i, 1); };
+      }
+    };
+  }
+  function collRef(coll, max) {
+    var ref = {
+      id: coll, path: coll,
+      doc: function (id) { return docRef(coll + '/' + (id || (now().toString(36) + Math.random().toString(36).slice(2, 8)))); },
+      add: function (data) {
+        var id = now().toString(36) + Math.random().toString(36).slice(2, 8);
+        return queue(coll + '/' + id, 'set', data).then(function () { return { id: id, path: coll + '/' + id }; });
+      },
+      limit: function (n) { return collRef(coll, n); },
+      where: function () { return ref; }, orderBy: function () { return ref; },
+      get: function () {
+        return loadColl(coll).then(function () {
+          var s = collSnap(coll, null, false);
+          if (max && s.docs.length > max) { s.docs = s.docs.slice(0, max); s.size = s.docs.length; }
+          return s;
+        });
+      },
+      onSnapshot: function (cb, errCb) {
+        var l = { coll: coll, cb: cb, primed: false, last: {} }; collL.push(l);
+        loadColl(coll).then(function () {
+          if (l.primed) return;
+          var docs = collDocs(coll); Object.keys(docs).forEach(function (p) { l.last[p] = JSON.stringify(docs[p]); });
+          l.primed = true; cb(collSnap(coll, null, false));
+        }).catch(function (e) { if (errCb) errCb(e); });
+        return function () { var i = collL.indexOf(l); if (i >= 0) collL.splice(i, 1); };
+      }
+    };
+    return ref;
+  }
+  function hasListener(f) {
+    return docL.some(function (l) { return place(l.path).file === f.name; }) ||
+      collL.some(function (l) { return filesOfColl(l.coll).indexOf(f.name) >= 0; });
+  }
+  var DB = { doc: docRef, collection: function (c) { return collRef(c); } };
+
+  /* ---------- keeping up with everyone else ---------- */
+  var lastActive = now();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (ev) {
+    document.addEventListener(ev, function () { lastActive = now(); }, { capture: true, passive: true });
+  });
+  function poll(force) {
+    if (!ready || !(RS() && RS().token())) return;
+    if (PREVIEW && !force) return;          /* nothing changes in the preview copy */
+    if (!force && document.visibilityState === 'hidden') return;
+    var idle = now() - lastActive > IDLE_AFTER;
+    Object.keys(F).forEach(function (k) {
+      var f = F[k];
+      if (!f.loaded || f.flushing || f.pending.length || f.loading || !hasListener(f)) return;
+      var gap = hot(k) ? (idle ? IDLE_POLL_MS : POLL_MS) : COOL_POLL_MS;
+      if (!force && now() - (f.polledAt || f.loadedAt) < gap) return;
+      f.polledAt = now();
+      load(f).catch(function () {});
+    });
+  }
+  setInterval(function () { poll(false); }, 5000);
+  document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') poll(true); });
+
+  /* ---------- who is signed in ----------
+     The page stamps each change with the id it is given and shows the name that id
+     resolves to. Here the id carries both, "Name <email>", so every person's name
+     shows on the history, not only the viewer's own. */
+  function me() { var s = RS() && RS().current(); return { name: (s && s.name) || '', email: (s && s.email) || '' }; }
+  function myId() { var m = me(); return m.email ? (m.name ? m.name + ' <' + m.email + '>' : m.email) : ''; }
+  var NAMES = {};                /* Claude account ids already in the data -> names (from names.json) */
+  function nameOf(id) { id = String(id || ''); var i = id.indexOf(' <'); return i > 0 ? id.slice(0, i) : (NAMES[id] || (id === 'claude' ? 'Claude' : '')); }
+  var USER = {
+    id: function () { return Promise.resolve(myId()); },
+    profiles: function (ids) { var o = {}; (ids || []).forEach(function (id) { o[id] = { name: nameOf(id) }; }); return Promise.resolve(o); },
+    can: function () { var rs = RS(); return Promise.resolve(!PREVIEW && !!(rs && rs.canEdit && rs.canEdit(PROJECT))); },
+    me: function () { return Promise.resolve(me()); },
+    profile: function () { return Promise.resolve(me()); }
+  };
+
+  /* ---------- files handed to the person ---------- */
+  var DOWNLOADS = {
+    save: function (o) {
+      return new Promise(function (res) {
+        var data = o && o.data, blob = data instanceof Blob ? data : new Blob([data], { type: 'application/octet-stream' });
+        var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (o && o.filename) || 'download';
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); res(); }, 1500);
+      });
+    }
+  };
+
+  /* ---------- the sign-in gate ---------- */
+  var ready = false, readyWaiters = [], gateEl = null;
+  function whenReady() { return ready ? Promise.resolve() : new Promise(function (r) { readyWaiters.push(r); }); }
+  var WHY = {
+    UNKNOWN_PROJECT: 'The save relay doesn\u2019t know MISMO Media yet. It\u2019s being added to the relay\u2019s project list.',
+    NO_ACCESS: 'Your account doesn\u2019t have MISMO Media yet. Ask Jonna Critchley to add you.',
+    TOKEN: 'The save relay\u2019s GitHub key was refused. It needs the marketing-hq-data repository added to it.',
+    GITHUB: 'GitHub refused the save. The save relay\u2019s GitHub key most likely doesn\u2019t include the marketing-hq-data repository yet.',
+    CONFIG_UNAVAILABLE: 'The save relay can\u2019t read its settings right now.',
+    OFFLINE: 'MISMO Media couldn\u2019t reach the save relay. Check your connection.'
+  };
+  /* The gate sits UNDER the shared sign-in box (session.js draws it at z-index 9500),
+     so pressing Sign In shows that box on top rather than behind this card. */
+  function gate(kind, e) {
+    if (!document.body) { document.addEventListener('DOMContentLoaded', function () { gate(kind, e); }, { once: true }); return; }
+    if (!gateEl) {
+      var st = document.createElement('style');
+      st.textContent = '#hq-gate{position:fixed;inset:0;z-index:9400;display:flex;align-items:center;justify-content:center;padding:16px;' +
+        'background:var(--ground,#f1f6fa);font-family:"IBM Plex Sans",system-ui,sans-serif}' +
+        '#hq-gate[hidden]{display:none}' +
+        '#hq-gate .card{max-width:420px;width:100%;background:var(--surface,#fff);border:1px solid var(--border,#d5e2ed);border-radius:12px;padding:28px 26px;box-shadow:0 8px 28px rgba(13,49,76,.12)}' +
+        '#hq-gate .ey{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3,#7794aa);margin-bottom:6px}' +
+        '#hq-gate h1{font-size:21px;margin:0 0 10px;color:var(--ink,#0d314c);font-weight:700}' +
+        '#hq-gate p{font-size:14px;line-height:1.5;margin:0 0 18px;color:var(--ink-2,#456179)}' +
+        '#hq-gate button{font:inherit;font-size:14px;font-weight:600;padding:10px 18px;border-radius:8px;border:1px solid var(--navy,#0d314c);' +
+        'background:var(--navy,#0d314c);color:#fff;cursor:pointer}#hq-gate button:hover{filter:brightness(1.12)}';
+      document.head.appendChild(st);
+      gateEl = document.createElement('div'); gateEl.id = 'hq-gate'; gateEl.setAttribute('role', 'dialog');
+      document.body.appendChild(gateEl);
+    }
+    if (!kind) { gateEl.hidden = true; return; }
+    gateEl.hidden = false;
+    var h, p, b = null, fn = null;
+    /* Signing in and being refused are NOT drawn here: every resources.mismo.org tool uses
+       the shared screens from session.js for those. This card only covers the app while it
+       waits, loads, or cannot reach its data. 'blank' is the plain backdrop behind the
+       shared sign-in window. */
+    if (kind === 'blank') { gateEl.innerHTML = ''; return; }
+    if (kind === 'loading') { h = 'Opening MISMO Media\u2026'; p = 'Reading the latest from the private data store.'; }
+    else if (kind === 'nosession') { h = 'MISMO Media Couldn\u2019t Load'; p = 'The resources.mismo.org sign-in didn\u2019t load. Check your connection, then reload the page.'; b = 'Reload'; fn = function () { location.reload(); }; }
+    else { h = 'MISMO Media Couldn\u2019t Reach Its Data'; p = (e && (WHY[e.code] || e.message)) || 'Something went wrong reading the data.'; b = 'Try Again'; fn = function () { start(); }; }
+    gateEl.innerHTML = '<div class="card"><div class="ey">MISMO Media</div><h1></h1><p></p></div>';
+    gateEl.querySelector('h1').textContent = h; gateEl.querySelector('p').textContent = p;
+    if (b) { var btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b; btn.addEventListener('click', fn); gateEl.querySelector('.card').appendChild(btn); }
+  }
+  var starting = false;
+  function start() {
+    var rs = RS();
+    if (!rs) { gate('nosession'); return; }
+    if (starting) return;
+    if (ready && rs.current() && rs.role(PROJECT)) { gate(null); resumeWrites(); return; }
+    starting = true; gate('blank');
+    /* requireAccess shows the shared sign-in or refusal as needed, and asks the relay
+       before refusing, so access granted after signing in is picked up without another
+       sign-in. */
+    rs.requireAccess(PROJECT, { toolName: TOOL, eyebrow: 'Programs & Operations' }).then(function () {
+      if (ready) return;
+      gate('loading');
+      return ensure(file('editions'));
+    }).then(function () {
+      ready = true; starting = false; gate(null); resumeWrites();
+      readyWaiters.splice(0).forEach(function (r) { r(); });
+    }, function (e) {
+      starting = false;
+      /* The relay refused though the browser's copy said yes: access removed since. */
+      if (e && e.code === 'NO_ACCESS') { rs.signIn({ reason: 'no-access', toolName: TOOL, gated: true }).catch(function () {}); return; }
+      if (e && e.message === 'cancelled') return;
+      gate('error', e);
+    });
+  }
+  function resumeWrites() {
+    Object.keys(F).forEach(function (k) { var f = F[k]; if (f.waitingSignIn) { f.waitingSignIn = false; schedule(f, 0); } });
+  }
+  var askedSignIn = false;
+  function needSignIn() {
+    if (askedSignIn) return; askedSignIn = true;
+    var rs = RS(); if (!rs) return;
+    rs.signIn({ reason: 'expired' }).catch(function () {}).then(function () { askedSignIn = false; });
+  }
+  function hookSession() {
+    var rs = RS(); if (!rs) { gate('nosession'); return; }
+    rs.onChange(function () { start(); });
+    start();
+  }
+
+  /* ---------- a quiet line when a save has a problem ---------- */
+  var toastEl = null, toastT = null;
+  function toast(text, tone) {
+    if (!document.body) return;
+    if (!toastEl) {
+      toastEl = document.createElement('div'); toastEl.id = 'hq-savestate';
+      toastEl.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;max-width:min(560px,calc(100vw - 32px));' +
+        'padding:10px 16px;border-radius:8px;font:500 13px/1.4 "IBM Plex Sans",system-ui,sans-serif;box-shadow:0 6px 20px rgba(13,49,76,.18)';
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = text;
+    toastEl.style.background = tone === 'bad' ? '#b3372c' : '#0d314c';
+    toastEl.style.color = '#fff'; toastEl.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(function () { toastEl.hidden = true; }, tone === 'bad' ? 9000 : 4000);
+  }
+  var troubled = false;
+  function problem(e, lost) {
+    status.lastError = (e && (e.code || e.message)) || 'error';
+    if (lost) {
+      var why = (e && (WHY[e.code] || e.message)) || 'relay error';
+      if (e && e.code === 'GITHUB') why = e.gh === 404
+        ? 'GitHub says the save relay\u2019s key can\u2019t see the marketing-hq-data repository. It needs adding to the key\u2019s repository list'
+        : 'GitHub refused the save' + (e.gh ? ': ' + e.gh + (e.message ? ' ' + e.message : '') : (e.message ? ': ' + e.message : ''));
+      toast('A change didn\u2019t save (' + why + '). It has been taken back.', 'bad'); return;
+    }
+    troubled = true;
+    toast(e && (e.status === 401 || e.code === 'SIGNED_OUT') ? 'Sign in again to finish saving \u2014 nothing is lost.' : 'Not saved yet \u2014 trying again. Keep this tab open.', 'bad');
+  }
+  function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
+
+  /* ---------- pictures: MISMO's SharePoint, through the "Marketing HQ Images" flow ----------
+     The flow checks the person's resources.mismo.org sign-in with the relay before it does
+     anything, so the address alone opens nothing. Pictures are saved under
+     Q Drive > MISMO > Active Documents > Marketing > Marketing HQ Images > YYYY-MM. */
+  var IMG_FLOW = 'https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/08/workflows/01f7614395764726a891cc4895979fc0/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=V95BJOC4MMsJqZ7rtare6aDAbOxfpVJ_PCDOuH65mUo';
+  function imgCall(body) {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Sign in to resources.mismo.org first', 401));
+    body.token = tok;
+    return fetch(IMG_FLOW, { method: 'POST', cache: 'no-store', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) {
+        if (r.ok) return j;
+        throw err(r.status === 403 ? 'DENIED' : 'HTTP_' + r.status, r.status === 403 ? 'Your account can\u2019t do that in MISMO Media' : 'SharePoint didn\u2019t answer (' + r.status + ')', r.status);
+      }); }, function () { throw err('OFFLINE', 'Could not reach SharePoint', 0); });
+  }
+  function b64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(',')[1] || ''); }; r.onerror = function () { rej(err('read_failed', 'Could not read the file')); }; r.readAsDataURL(blob); }); }
+  function unb64(s, type) { var bin = atob(s || ''), n = bin.length, u = new Uint8Array(n); for (var i = 0; i < n; i++) u[i] = bin.charCodeAt(i); return new Blob([u], { type: type || 'application/octet-stream' }); }
+  function pick(o, keys) { for (var i = 0; i < keys.length; i++) { var v = o[keys[i]]; if (v !== undefined && v !== null && v !== '') return v; } return ''; }
+  window.__hqImages = {
+    get: function (path, site) { var b = { action: 'get', path: path }; if (site) b.site = site; return imgCall(b).then(function (j) { return unb64(j.content, j.type); }); },
+    list: function (path, site) {
+      var b = { action: 'list', path: path }; if (site) b.site = site;
+      return imgCall(b).then(function (j) {
+        return (j.files || []).map(function (f) {
+          var full = String(pick(f, ['{FullPath}', 'FullPath', 'FileRef'])).replace(/^\/+/, '');
+          return { name: String(pick(f, ['{FilenameWithExtension}', 'FileLeafRef', '{Name}', 'Name'])), path: '/' + full,
+            folder: f['{IsFolder}'] === true || String(f.FSObjType) === '1', folderPath: String(pick(f, ['{Path}'])).replace(/\/$/, ''),
+            size: +pick(f, ['{FileSize}', 'File_x0020_Size', 'FileSize']) || 0, modified: pick(f, ['Modified', '{ModifiedDate}']) };
+        });
+      });
+    },
+    save: function (blob, name) {
+      var d = new Date(), folder = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2);
+      var file = now().toString(36) + '-' + String(name || blob.name || 'image').replace(/[\\/:*?"<>|#%]+/g, '-').slice(-80);
+      return b64(blob).then(function (content) { return imgCall({ action: 'save', folder: folder, name: file, content: content }); })
+        .then(function (j) { return { id: '/' + String(j.path || '').replace(/^\/+/, ''), url: '', sizeBytes: blob.size, contentType: blob.type, sp: true }; });
+    }
+  };
+  /* Mic'd Up: Brian's Google Drive folders and the "Mic'd Up Writer" prompt, through the same flow */
+  window.__hqImages.drive = {
+    list: function (folderId) { return imgCall({ action: 'drivelist', id: folderId }).then(function (j) {
+      var first = (j.files || [])[0] || {}, segs = String(first.Path || '').split('/').filter(Boolean);
+      return { name: String(j.name || (segs.length > 1 ? segs[segs.length - 2] : '')), files: (j.files || []).map(function (f) {
+        return { id: String(pick(f, ['Id', 'id'])), name: String(pick(f, ['Name', 'DisplayName', 'name'])), size: +pick(f, ['Size', 'size']) || 0,
+          type: String(pick(f, ['MediaType', 'mimeType'])), folder: f.IsFolder === true, modified: pick(f, ['LastModified', 'modifiedTime']) }; }) }; }); },
+    get: function (fileId) { return imgCall({ action: 'driveget', id: fileId }).then(function (j) { return unb64(j.content, j.type); }); },
+    write: function (folderName, post) { return imgCall({ action: 'write', folderName: folderName, post: post }).then(function (j) {
+      var o = j.result || j; if (typeof o === 'string') { try { o = JSON.parse(o.replace(/^```(json)?|```$/g, '')); } catch (e) { o = { text: o }; } }
+      return o || {}; }); }
+  };
+  /* Mic'd Up episode folders in SharePoint (Q Drive > MISMO > Active Documents > Marketing > MISMO Mic'd Up)
+     and the general "MISMO Media - Writer" prompt, through the same flow */
+  window.__hqImages.mkdir = function (path) { return imgCall({ action: 'mkdir', path: path }); };
+  window.__hqImages.writer = function (task, material) { return imgCall({ action: 'write2', task: String(task || ''), material: String(material || '') }).then(function (j) { return String((j && j.result) || ''); }); };
+  /* email notices (e.g. "approval needed" to Amy). The flow only sends to @mismo.org or @mba.org addresses. */
+  /* the Sponsorship Portal's applications (relay project "sponsorship"), read-only, for the sponsor logo wall.
+     Anyone without a role on the Sponsorship Portal simply gets nothing back. */
+  window.__hqSponsors = function () {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Not signed in', 401));
+    return fetch(RELAY_URL + '/sponsorship/data/applications', { cache: 'no-store', headers: { 'Authorization': 'Bearer ' + tok } })
+      .then(function (r) { if (!r.ok) throw err('HTTP_' + r.status, 'The Sponsorship Portal didn\u2019t answer', r.status); return r.json(); })
+      .then(function (b) { var d = b && b.data; if (typeof d === 'string') d = JSON.parse(d); d = (d && d.docs) || d || {};
+        return Object.keys(d).map(function (k) { return Object.assign({ id: k }, d[k]); }); });
+  };
+  window.__hqImages.notify = function (to, subject, html) { return imgCall({ action: 'notify', to: to, subject: subject, html: html }); };
+  var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
+
+  /* ---------- the door ---------- */
+  window.claude = {
+    use: function (cap) {
+      if (cap === 'db') return whenReady().then(function () { return DB; });
+      if (cap === 'user') return whenReady().then(function () { return USER; });
+      if (cap === 'downloads') return Promise.resolve(DOWNLOADS);
+      if (cap === 'assets') return whenReady().then(function () { return PREVIEW ? null : ASSETS; });
+      return Promise.resolve(null);      /* 'sample' (writing the LinkedIn post) waits for the relay */
+    }
+  };
+  /* the notice at the top of the page: preview, or view-only access */
+  function banner() {
+    var b = document.getElementById('savebanner'); if (!b) return;
+    b.innerHTML = PREVIEW
+      ? '<b>Preview: MISMO Media on resources.mismo.org.</b> Nothing here is saved yet. Keep using the Claude version until it\u2019s switched on.'
+      : '<b>You have view-only access to MISMO Media.</b> You can look around; ask Jonna Critchley if you need to make changes.';
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', banner); else banner();
+  window.__hqRelay = { files: F, place: place, poll: function () { poll(true); }, pending: anyPending, status: status,
+    why: function () { return WHY[status.lastError] || status.lastError || ''; },
+    config: { RELAY_URL: RELAY_URL, PROJECT: PROJECT, POLL_MS: POLL_MS } };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hookSession); else hookSession();
+})();
+</script>
