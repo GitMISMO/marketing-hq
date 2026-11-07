@@ -102,7 +102,7 @@ function wireLogos(b, doc, ed, k){
   if(k==="thanks") PANE.sponsorsAuto=()=>auto;
   const manual=()=>{ if(k==="thanks" && auto){ auto=false; toast("Changed by hand, so this edition stops following the Sponsorship Portal. Tick the box to go back.", 4500); } };
   const prev=prevEditionOf(ed), prevList=prev? (S.sections[prev.month+"__"+k]||{}).logos : null;
-  const thumb=im=>{ const src=imgSrc(im); if(!src) imgEnsure(im).then(()=>{ const s=imgSrc(im); $$('[data-lgthumb="'+im.id+'"]').forEach(x=>{ if(s) x.innerHTML='<img src="'+esc(s)+'" alt="">'; }); }); return '<span class="lg-thumb" data-lgthumb="'+esc(im.id)+'">'+(src?'<img src="'+esc(src)+'" alt="">':'')+'</span>'; };
+  const thumb=im=>{ const src=imgThumb(im); if(!src) imgEnsureThumb(im).then(()=>{ const s=imgThumb(im); $$('[data-lgthumb="'+im.id+'"]').forEach(x=>{ if(s) x.innerHTML='<img src="'+esc(s)+'" alt="">'; }); }); return '<span class="lg-thumb" data-lgthumb="'+esc(im.id)+'">'+(src?'<img src="'+esc(src)+'" alt="">':'')+'</span>'; };
   const draw=()=>{
     const sp = k==="thanks" ? '<div class="lg-sp"><label><input type="checkbox" id="lg-auto"'+(auto?' checked':'')+'> Keep in step with the Sponsorship Portal</label>'+
       (auto ? '<div class="hint">'+(doc.sponsorsFrom?'The '+esc(doc.sponsorsFrom)+' Summit sponsors (approved, paid or in kind), grouped by tier. New sponsors and their logos come in by themselves.':'Fills itself from the Sponsorship Portal\'s approved sponsors for the next Summit.')+'</div>'+
@@ -135,8 +135,8 @@ function wireLogos(b, doc, ed, k){
     const fill=()=>{ const t=(q.value||"").toLowerCase();
       const all=vals("images").filter(i=>!i.archived && !isFile(i) && (!t || ((i.company||"")+" "+(i.name||"")+" "+(i.file||"")).toLowerCase().includes(t)))
         .sort((a,c)=>((a.campaign==="logos"?0:1)-(c.campaign==="logos"?0:1)) || ((a.at||"")<(c.at||"")?1:-1)).slice(0,40);
-      strip.innerHTML=all.length?all.map(im=>{ const src=imgSrc(im); return '<button type="button" class="impick lgpick'+(src?"":" loading")+'" data-pick="'+esc(im.id)+'" title="'+esc(im.company||im.name||"")+'">'+(src?'<img src="'+esc(src)+'" alt="">':'<span>'+esc((im.name||im.file||"").slice(0,28))+'</span>')+'</button>'; }).join(""):'<div class="hint">Nothing matches.</div>';
-      all.forEach(im=>{ if(!imgSrc(im)) imgEnsure(im).then(()=>{ const s=imgSrc(im); $$('.lgpick[data-pick="'+im.id+'"]',strip).forEach(x=>{ if(s){ x.innerHTML='<img src="'+esc(s)+'" alt="">'; x.classList.remove("loading"); } }); }); });
+      strip.innerHTML=all.length?all.map(im=>{ const src=imgThumb(im); return '<button type="button" class="impick lgpick'+(src?"":" loading")+'" data-pick="'+esc(im.id)+'" title="'+esc(im.company||im.name||"")+'">'+(src?'<img src="'+esc(src)+'" alt="">':'<span>'+esc((im.name||im.file||"").slice(0,28))+'</span>')+'</button>'; }).join(""):'<div class="hint">Nothing matches.</div>';
+      all.forEach(im=>{ if(!imgThumb(im)) imgEnsureThumb(im).then(()=>{ const s=imgThumb(im); $$('.lgpick[data-pick="'+im.id+'"]',strip).forEach(x=>{ if(s){ x.innerHTML='<img src="'+esc(s)+'" alt="">'; x.classList.remove("loading"); } }); }); });
       $$("[data-pick]",strip).forEach(p=>p.onclick=()=>{ const im=S.images[p.dataset.pick]; if(im) add(im); }); };
     $("#lg-add",box).onclick=()=>{ pickOpen=!pickOpen; pick.hidden=!pickOpen; if(pickOpen){ fill(); q.focus(); } };
     q.value=pickQ; q.oninput=()=>{ pickQ=q.value; fill(); };
