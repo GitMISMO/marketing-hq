@@ -6731,7 +6731,8 @@ function logoShelf(){
 
 /* ================= Thank You to Our Sponsors, filled from the Sponsorship Portal =================
    The sponsors of the next MISMO Summit after the edition goes out (the summit's own sponsors and the year's
-   Series sponsors) whose application is Approved, Pending Payment, Paid or In Kind, grouped by their tier.
+   Series sponsors; a custom package only for the summits it lists, at that summit's tier) whose application is
+   Approved, Pending Payment, Paid or In Kind, grouped by their tier.
    Each one's logo comes from the Image Library (Member & Sponsor Logos); a sponsor who sent a logo with their
    online application has it brought in from the Sponsor Logos library on the MISMO Summits SharePoint site,
    and from there it goes to Higher Logic like every other logo. Changing the list by hand in the section and
@@ -6745,10 +6746,17 @@ function summitAfter(day){
   return c.find(x=>x.end>=day);
 }
 function sponNorm(t){ return String(t||"").toLowerCase().replace(/&/g," and ").replace(/\b(inc|llc|ltd|corp|corporation|co|company|the)\b/g," ").replace(/[^a-z0-9]+/g," ").trim(); }
-function sponTier(a, sm){ return String(a["level"+sm.year]||a.level2027||a.level2026||a.level||"").trim().toUpperCase(); }
+/* A custom Series package (Sponsorship Portal, Oct 2026) lists only the summits it covers, each with its own tier:
+   a.custom = [{s:"Winter"|"Spring"|"Fall", tier, opp, amount}]. A Spring & Fall package has no Winter line, so it
+   isn't thanked in a Winter edition. Lines without a summit or tier don't count (the portal's own rule). */
+function sponCustom(a){ if(!/^\d{4}\s+Series$/.test(a.event||"") || !Array.isArray(a.custom)) return null; const l=a.custom.filter(x=>x && x.s && x.tier); return l.length?l:null; }
+function sponSeason(sm){ return String(sm.name||"").split(" ")[0]; }
+function sponTier(a, sm){
+  const c=sponCustom(a); if(c){ const l=c.find(x=>x.s===sponSeason(sm)); if(l) return String(l.tier).trim().toUpperCase(); }
+  return String(a["level"+sm.year]||a.level2027||a.level2026||a.level||"").trim().toUpperCase(); }
 function sponGroup(t){ return t ? t.charAt(0)+t.slice(1).toLowerCase()+" Sponsors" : "Summit Sponsors"; }
 function sponList(sm){
-  return (SPN.apps||[]).filter(a=>SPON_OK.includes(a.status) && (a.event===sm.name || a.event===sm.year+" Series") && String(a.company||"").trim())
+  return (SPN.apps||[]).filter(a=>SPON_OK.includes(a.status) && (a.event===sm.name || (a.event===sm.year+" Series" && (!sponCustom(a) || sponCustom(a).some(x=>x.s===sponSeason(sm))))) && String(a.company||"").trim())
     .sort((a,b)=>{ const ta=SPON_TIERS.indexOf(sponTier(a,sm)), tb=SPON_TIERS.indexOf(sponTier(b,sm));
       return ((ta<0?9:ta)-(tb<0?9:tb)) || sponNorm(a.company).localeCompare(sponNorm(b.company)); });
 }
@@ -6930,7 +6938,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-07 13:08 ET · 9cebc50";
+const BUILD = "2026-11-07 14:00 ET · ed1f976";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
