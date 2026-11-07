@@ -33,13 +33,17 @@
       });
     });
   }
+  /* pictures only: a PNG, JPEG, GIF or WebP, checked by both the name and the file type (Nov 7, 2026 review),
+     so nothing that could run as a page (HTML, SVG) can be put on the website through this bridge */
+  var IMG_EXT = /\.(png|jpe?g|gif|webp)$/i, IMG_TYPE = /^image\/(png|jpeg|gif|webp)$/i;
   function upload(name, blob) {
     name = String(name || "picture.png").replace(/[^A-Za-z0-9._-]+/g, "-").slice(0, 120);
+    if (!IMG_EXT.test(name) || !(blob && IMG_TYPE.test(blob.type || ""))) return Promise.reject(new Error("only PNG, JPEG, GIF or WebP pictures can be added"));
     return folder().then(function (p) {
       var link = p.url + "/" + encodeURIComponent(name);
       if (p.have[name.toLowerCase()]) return link;   /* already there: reuse it, never overwrite */
       return auth().then(function (a) {
-        var fd = new FormData(); fd.append("file", new File([blob], name, { type: blob.type || "image/png" }));
+        var fd = new FormData(); fd.append("file", new File([blob], name, { type: blob.type }));
         return fetch(API + "?action=upload&path=" + encodeURIComponent(p.dir) + "&name=" + encodeURIComponent(name) + "&csrf=" + encodeURIComponent(a.token), { method: "POST", credentials: "same-origin", body: fd });
       }).then(function (r) { if (!r.ok) throw new Error("Higher Logic said " + r.status); return rpc("listFiles", { path: p.dir, offset: 0, length: 2000 }); })
         .then(function (l) {
