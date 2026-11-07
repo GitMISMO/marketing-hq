@@ -374,7 +374,11 @@ function wirePreview(el,ed){
   $$("[data-hs]",el).forEach(b=>b.onclick=async()=>{ const v=b.dataset.hs; if(hdrOpt(ed)===v) return;
     ed.hdrStyle=v; $$("[data-hs]",el).forEach(x=>x.setAttribute("aria-pressed",String(x===b))); $("#pv-mail",el).innerHTML=buildEmail(ed,true); pvFill(el);
     try{ await patch("editions",ed.id,{hdrStyle:v}); toast("Option "+v+" is what Copy HTML gives you now"); }catch(e){} });
-  $("#pv-html",el).onclick=()=>{ copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
+  /* sending is held until Amy has approved every section that's running (sections that fill themselves don't need it);
+     copying anyway is allowed, with a clear question first (Nov 7, 2026, from the application review) */
+  $("#pv-html",el).onclick=()=>{ const wait=edSections(ed).filter(x=>x.on && !x.meta.auto && x.doc.status!=="approved").map(x=>x.doc.name||x.meta.name);
+    if(wait.length && !window.confirm(wait.length+" section"+(wait.length===1?" isn't":"s aren't")+" approved yet:\n\n• "+wait.join("\n• ")+"\n\nCopy the HTML anyway? (Fine for a test; the real send should wait for Amy's OK.)")) return;
+    copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
   /* in the preview, Copy Link copies the section's web address rather than leaving MISMO Media */
   $("#pv-mail",el).addEventListener("click",e=>{ const a=e.target.closest("a[data-mm-copy]"); if(!a) return; e.preventDefault(); copyText(a.href,"Section link"); });

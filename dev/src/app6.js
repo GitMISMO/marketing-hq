@@ -119,6 +119,7 @@ const HELP = [
    <li>The preview only shows sections that are running and have content.</li>
    <li>Every section has its own link, an "In This Issue" list at the top jumps to each one, and every section has "Back to top," so readers can share one story.</li>
    <li><b>Copy HTML for Higher Logic</b> copies the whole email. Paste it into Higher Logic's HTML block. If copying is blocked, a box opens with the HTML selected so you can copy it yourself.</li>
+   <li>If any section that's running hasn't been approved by Amy yet, <b>Copy HTML</b> lists them and asks before copying. Copying anyway is fine for a test; the real send waits for her OK.</li>
    <li>Images that haven't been uploaded to Higher Logic show as a placeholder saying which image goes there.</li>
    <li>The header graphics currently load from the October edition's copies. Moving them into Higher Logic is on the setup list.</li>
    <li>The footer's Unsubscribe link goes to MISMO's own unsubscribe page (resources.mismo.org/forms/unsubscribe/). The footer keeps the logo, address and social links; the Privacy Policy and Terms of Use stay on the website.</li>
