@@ -3,6 +3,9 @@
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
 ## 2026-11-07 (late morning)
+- In the News searches Google News and Bing News for MISMO every morning (marketing-hq-data workflow "In the News web search", data/newsweb.json). New stories show marked Found on the Web and go into the In the News section of the edition their date falls in; Remove hides one for good.
+- In the News is shown a month at a time; once a month's MISMO Matters has gone out, that month folds into the Archive.
+- System Health shows when the web search last ran.
 - System Health rebuilt the way Summit HQ's works: a System Health button with a status dot in the top bar, a panel of checks (saving, storage, background jobs, sign-ups, In the News, dates, errors, version), a red bar across the top when something needs attention, a team error log (feeds/health-log), Check Again, Copy Report, Recently Deleted and Download All Data.
 - Holidays and Key Dates moved to Help & How-To; the Settings item left the left nav.
 
