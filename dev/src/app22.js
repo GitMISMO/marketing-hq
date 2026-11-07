@@ -2,8 +2,8 @@
    One place that shows how MISMO Media itself is doing: which version is running, whether saving works,
    how the background jobs are going, date lists that are about to run out, and what was put aside with
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
-   the spreadsheet reader loaded on demand, keyboard access to clickable rows, Approvals on Home, and
-   a download of all the data. */
+   the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
+   a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
 const BUILD = "__BUILD__";
 
 /* ---------- one autopilot tab per browser ----------
@@ -55,28 +55,6 @@ function dateWarnings(){
   if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits.");
   return out;
 }
-
-/* ---------- Approvals on Home: everything waiting on someone's OK, and for how long ---------- */
-function approvalsWaiting(){
-  const t=T(), out=[];
-  if(typeof kitsWithAmy==="function") kitsWithAmy().forEach(k=>{ const e=S.episodes[k.id]; out.push({what:"Mic'd Up "+(typeof epTag==="function"?epTag(e):"")+" LinkedIn Live wording", who:"Amy", since:String(k.liSentAt||"").slice(0,10), go:()=>{ go("micdup"); if(typeof openEpisode==="function") openEpisode(e.id); }}); });
-  const ed=curEdition(); if(ed) edSections(ed).filter(s=>s.on && s.doc.status==="review").forEach(s=>out.push({what:monthName(ed.month)+" MISMO Matters: "+(s.doc.name||s.meta.name), who:"Review", since:String(s.doc.updatedAt||"").slice(0,10), go:()=>go("matters")}));
-  vals("pieces").filter(p=>p.status==="review").forEach(p=>out.push({what:p.title||p.name||"Post", who:"Review", since:String(p.updatedAt||"").slice(0,10), go:()=>go(p.channel||"linkedin")}));
-  out.forEach(x=>{ x.days = x.since ? Math.max(0, dBetween(x.since, t)) : null; });
-  return out.sort((a,b)=>(b.days||0)-(a.days||0));
-}
-const _renderHomeBase = renderHome;
-renderHome = function(){
-  _renderHomeBase();
-  const el=$("#page-home"); if(!el || !tabReady("home")) return;
-  const list=approvalsWaiting(); if(!list.length) return;
-  const box=document.createElement("div"); box.className="card sh-appr";
-  box.innerHTML='<div class="ch"><h2>Waiting on Approval</h2><span class="note">'+list.length+' item'+(list.length===1?"":"s")+'</span></div><div class="cb"><table class="tbl"><tbody>'+
-    list.map((x,i)=>'<tr class="click" data-ap="'+i+'"><td><b>'+esc(x.what)+'</b></td><td>'+esc(x.who)+'</td><td class="n">'+(x.days==null?"":x.days===0?"Since today":esc(x.days+" day"+(x.days===1?"":"s")+" waiting"))+'</td></tr>').join("")+'</tbody></table></div>';
-  const hero=$(".hm-hero",el); if(hero && hero.nextSibling) el.insertBefore(box, hero.nextSibling); else el.appendChild(box);
-  $$("[data-ap]",box).forEach(r=>r.onclick=()=>list[+r.dataset.ap].go());
-  a11yRows();
-};
 
 /* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};

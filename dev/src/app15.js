@@ -74,6 +74,10 @@ function hmNeeds(){
   const open=ev.filter(e=>!e.done && !e.slot && !e.big && e.date<=add(t,7)).sort((a,b)=>a.date<b.date?-1:1);
   const list=open.filter(mine);
   const amy=kitsWithAmy().map(k=>({date:t, k:"micdup", label:"Approve the Mic'd Up "+epTag(S.episodes[k.id])+" LinkedIn Live wording", who:"Amy", go:()=>{ go("micdup"); }}));
+  /* newsletter sections and posts waiting on her OK show in the same list (Nov 7, 2026: no separate approvals card) */
+  const ed=curEdition();
+  if(ed) edSections(ed).filter(s=>s.on && s.doc.status==="review").forEach(s=>amy.push({date:t, k:"matters", label:"Approve "+(s.doc.name||s.meta.name)+" for the "+monthName(ed.month).replace(/ \d{4}$/,"")+" MISMO Matters", who:"Amy", go:()=>go("matters")}));
+  vals("pieces").filter(p=>p.status==="review").forEach(p=>amy.push({date:t, k:p.channel||"linkedin", label:"Approve "+(p.title||"a post"), who:"Amy", go:()=>go(p.channel||"linkedin")}));
   return (me.toLowerCase()==="amy"?amy:[]).concat(list.length?list:(me?[]:open)).slice(0,6);
 }
 
