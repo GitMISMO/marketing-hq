@@ -17,4 +17,5 @@ out=$(node interact.js 2>&1); echo "$out" | grep -c "^PASS" | sed 's/$/ interact
 out=$(node save.js 2>&1); echo "$out"; if echo "$out" | grep -q '": false'; then fail=1; fi; echo "$out" | grep -q "errors \[\]" || fail=1
 out=$(node unsub.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node remind.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node sponsors.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
