@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-07 (midday)
+- Image Library thumbnails: grids and pickers show a small copy (up to 640 px, WebP). The first editor to see a big picture makes it, saves it to SharePoint and notes it on the picture (spThumb), so everyone after gets the small one. Full-size pictures are still used for downloads, the newsletter and Higher Logic.
+
 ## 2026-11-07 (late morning)
 - Results feed: YouTube views and likes come in every morning (marketing-hq-data workflow "Results feed", data/feeds.json), so the YouTube line of the monthly checklist ticks itself. Help now says plainly where every number comes from and what automatic MISMO Matters numbers would need (an Informz API user).
 - The team error log moved to its own file (healthlog/log) so the results feed owns data/feeds.json.
