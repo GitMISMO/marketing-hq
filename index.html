@@ -1281,6 +1281,11 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .kli-note{background:var(--bad-soft);color:var(--bad);border-radius:6px;padding:8px 12px;font-size:13px;margin:0 0 8px}
 .kli-edits{background:var(--warn-soft);color:var(--ink)}
 .kli-ok{background:var(--good-soft);color:var(--ink)}
+.cert-list{display:flex;gap:14px;align-items:flex-start;margin:8px 0 4px}
+.cert-list img{width:84px;height:auto;flex:0 0 84px}
+.cert-list b{display:block;font-size:13.5px}.cert-list span{font-size:12px;color:var(--ink-3)}
+.cert-list ul{margin:4px 0 0;padding-left:18px;font-size:13px;columns:2;column-gap:18px}
+@media (max-width:600px){.cert-list ul{columns:1}}
 .lg-sp{border:1px solid var(--border);background:var(--surface-2);border-radius:7px;padding:9px 12px;margin:0 0 10px;font-size:13px}
 .lg-sp label{font-weight:600;display:flex;gap:7px;align-items:center}
 .lg-sp .hint{margin-top:4px}
@@ -2694,7 +2699,7 @@ async function staleCheck(){
   }catch(e){}
 }
 staleCheck(); setInterval(staleCheck, 10*60*1000);
-function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); if(typeof sponsorSync==="function") sponsorSync(); }
+function renderAll(){ applyPosted(); renderTab(TAB); badges(); if(typeof kitSync==="function") kitSync(); if(typeof sponsorSync==="function") sponsorSync(); if(typeof certSync==="function") certSync(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
@@ -2908,6 +2913,7 @@ function sectionsView(ed,secs){
   const rows = secs.map(s=>{
     const d=s.doc; let snip='';
     if(s.meta.auto){ const n = s.k==="micdup" ? epsInWindow(ed).length : newsInWindow(ed).length; snip='<i>'+n+(s.k==="micdup"?" episode":" item")+(n===1?"":"s")+' so far · fills itself</i>'; }
+    else if(isCertSpot(s)){ const p=certProg(d.certProgram); snip=esc(p.name)+' · '+d.certItems.length+' certified, current from the website'; }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ const L=logoPicks(ed,s.k); snip=L.length+' logo'+(L.length===1?'':'s')+': '+esc(L.map(l=>l.name||(S.images[l.id]||{}).name||"").join(", ")); }
     else snip = d.headline ? esc(d.headline) : (d.body ? esc(mdPlain(d.body).slice(0,120)) : '<i>Nothing in yet</i>');
     const reuse = REUSE.map(([k,l,a])=>'<span class="rz k-'+(k==="website"?"other":k)+(d.reuse&&d.reuse[k]?" on":"")+'" title="'+esc(l)+'">'+a+'</span>').join("");
@@ -2951,8 +2957,11 @@ function openSection(ed,k,isNew){
       {k:"ctaText",label:"Button Text (optional)",ph:k==="welcome"?"e.g. Become a Member":"e.g. Become a Sponsor"},
       {k:"ctaUrl",label:"Button Link",type:"url",ph:"https://"});
   } else {
+    if(k==="cert") fields.push({sec:"Certification Spotlight"},
+      {k:"certProgram",label:"Certification to Highlight",type:"select",wide:true,opts:[["","None: write the section myself"]].concat(CERT_PROGRAMS.map(p=>[p.k,p.name]))},
+      {k:"_cert",type:"html",wide:true,html:()=>certPaneHtml()});
     fields.push({sec:"Copy"},
-      {k:"headline",label:"Headline",wide:true,ph:"e.g. Before Mortgage Can Be AI-Ready, We Need to Be Data-Ready"},
+      {k:"headline",label:"Headline",wide:true,ph:k==="cert"?"Leave blank to use the certification's name, e.g. MISMO Certified FRAME Advisory Partners":"e.g. Before Mortgage Can Be AI-Ready, We Need to Be Data-Ready"},
       {k:"body",label:"Body Copy",type:"rich",rows:12,img:ed.month,ph:"Type or paste the copy as it should run. Pasting from Word keeps bold, links and bullets. Add pictures anywhere with the picture button."},
       {k:"quote",label:"Quote",type:"rich",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
       {k:"quoteBy",label:"Quote Attribution",ph:"Name, Title, Company"},
@@ -2973,7 +2982,8 @@ function openSection(ed,k,isNew){
     {k:"status",label:"Status",type:"select",opts:Object.entries(SSTAT).map(([v,[l]])=>[v,l])},
     {k:"amyNotes",label:"Amy's Notes",type:"rich",rows:3,ph:"Edits, questions or a request for a different graphic"});
   fields.push({sec:"Also Use It In"},{k:"reuse",label:"Where else this copy and image go",type:"checks",opts:REUSE.map(([v,l])=>[v,l])});
-  const save = async v=>{ if(isNew){ const order=edSections(ed).map(s=>s.k); if(!order.includes(k)){ order.push(k); await patch("editions",ed.id,{order}); } } await put("sections",id,Object.assign({},doc,v,{month:ed.month,key:k})); if(isLogoSec(k) && v.logos) rememberLogos(v.logos); };
+  const save = async v=>{ if(isNew){ const order=edSections(ed).map(s=>s.k); if(!order.includes(k)){ order.push(k); await patch("editions",ed.id,{order}); } } await put("sections",id,Object.assign({},doc,v,{month:ed.month,key:k})); if(isLogoSec(k) && v.logos) rememberLogos(v.logos);
+    if(k==="cert" && certProg(v.certProgram) && (doc.certProgram!==v.certProgram || !(S.sections[id]||{}).certItems)){ certRefresh(ed).catch(e=>toast("Saved. Couldn't read the website yet: "+(e.message||"try again"), 6000)); } };
   openPane({eye:monthName(ed.month)+" · MISMO Matters", title:doc.name||meta.name, fields, data:doc, save,
     buttons: auto?[]:[
       {label:"Save & Send to Amy", run:async v=>{ await save(Object.assign(v,{status:"review"})); toast("Sent to Amy for review"); closePane(true); }},
@@ -2981,10 +2991,10 @@ function openSection(ed,k,isNew){
       {label:"Request Changes", run:async v=>{ await save(Object.assign(v,{status:"changes"})); toast("Back to Kelly with notes"); closePane(true); }}
     ],
     del: (!SEC[k] && S.sections[id]) ? async()=>{ await remove("sections",id); await patch("editions",ed.id,{order:edSections(ed).map(s=>s.k).filter(x=>x!==k)}); } : null,
-    after: b=>{ if(isLogoSec(k)) wireLogos(b, doc, ed, k); else wireImage(b, doc, v=>{ doc.imageId=v; }); }
+    after: b=>{ if(isLogoSec(k)) wireLogos(b, doc, ed, k); else wireImage(b, doc, v=>{ doc.imageId=v; }); if(k==="cert") wireCert(b, doc, ed); }
   });
   PANE.set = out=>{ if(doc.imageId!==undefined) out.imageId=doc.imageId||""; if(doc.imageLib!==undefined) out.imageLib=doc.imageLib||"";
-    if(isLogoSec(k) && PANE.logos){ out.logos=PANE.logos().filter(l=>l.id).map(l=>({id:l.id, name:(l.name||"").trim(), group:(l.group||"").trim(), url:(l.url||"").trim()})); } if(k==="thanks" && PANE.sponsorsAuto){ out.sponsorsAuto=!!PANE.sponsorsAuto(); } };
+    if(isLogoSec(k) && PANE.logos){ out.logos=PANE.logos().filter(l=>l.id).map(l=>({id:l.id, name:(l.name||"").trim(), group:(l.group||"").trim(), url:(l.url||"").trim()})); } if(k==="thanks" && PANE.sponsorsAuto){ out.sponsorsAuto=!!PANE.sponsorsAuto(); } if(k==="cert" && PANE.certAuto){ out.certAuto=!!PANE.certAuto(); } };
 }
 /* lead picture size: what the section says, else headshot-shaped pictures (taller than wide) go small */
 function leadSize(d, lib){ if(d.imageSize) return d.imageSize; return lib && +lib.w && +lib.h > +lib.w*1.1 ? "small" : "full"; }
@@ -3093,6 +3103,8 @@ function buildEmail(ed, preview, opt){
       }
     } else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){
       inner+=logoWall(ed, s, preview);
+    } else if(isCertSpot(s)){
+      inner+=certSpotlight(ed, s);
     } else {
       if(!d.headline && !d.body && !d.quote) return;
       if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
@@ -3159,6 +3171,7 @@ function buildText(ed){
     if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push("MISMO Mic’d Up "+epWord(e)+(e.title?": "+e.title:"")+(e.guests?" — with "+e.guests+(e.company?", "+e.company:""):"")+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
+    else if(isCertSpot(s)){ body=certSpotlightText(ed,s); }
     else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k); if(full) body.push("Read the full article: "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
@@ -6548,6 +6561,125 @@ async function sponsorSync(force){
       await put("sections", key, Object.assign({id:key, month:ed.month, key:"thanks", status:"waiting"}, doc, {logos:out, sponsorsAuto:true, sponsorsFrom:sm.name, sponsorsMissing:missing, sponsorsAt:new Date().toISOString()}));
   }catch(e){ SPN.err=e.message||String(e); }
   finally{ SPN.busy=false; }
+}
+/* ================= Certification Spotlight (the Certifications section) =================
+   Like the sponsor and new member walls: an edition can run it or not. Pick the certification to highlight
+   and the section shows that program's badge and everyone currently certified, read from the program's
+   "who is certified" page on the website. It stays current by itself (checked twice a day while the edition
+   is being built), so a newly certified organization shows up without anyone retyping the list. The website
+   is read through the hidden uploader page on collaborate.mismo.org (the same site), so nothing is copied by hand.
+   Links point at collaborate.mismo.org until the new website goes live on November 16, 2026, then at www.mismo.org. */
+const CERT_PROGRAMS = [
+  {k:"frame",      slug:"frame-advisory-partners",      name:"FRAME Advisory Partners",       title:"MISMO Certified FRAME Advisory Partners", what:"organization"},
+  {k:"consultant", slug:"certified-consultants",        name:"Certified Consultants",         title:"MISMO Certified Consultants",            what:"organization"},
+  {k:"product",    slug:"certified-product-providers",  name:"Certified Product Providers",   title:"MISMO Certified Product Providers",      what:"organization"},
+  {k:"eclose",     slug:"eclosing-certified-providers", name:"eClose Certified Providers",    title:"MISMO Certified eClose Providers",       what:"provider"},
+  {k:"evault",     slug:"evault-certified-providers",   name:"eVault Certified Systems",      title:"MISMO Certified eVault Systems",         what:"system"},
+  {k:"ron",        slug:"ron-certified-providers",      name:"RON Certified Providers",       title:"MISMO Certified RON Providers",          what:"provider"}
+];
+const CERT_SITE_LIVE = "2026-11-16";
+const CERT = {busy:false, at:0, err:""};
+function certProg(k){ return CERT_PROGRAMS.find(p=>p.k===k) || null; }
+function isCertSpot(s){ return s.k==="cert" && !!certProg(s.doc.certProgram) && (s.doc.certItems||[]).length>0; }
+/* the website address for a page, as it will be when the edition goes out */
+function certSite(ed, path){ const day=(ed && ed.dates && ed.dates.publish) || T();
+  return (day>=CERT_SITE_LIVE ? "https://www.mismo.org/" : "https://collaborate.mismo.org/mismowebsite/") + String(path||"").replace(/^\/+/,""); }
+
+/* ask the uploader page on the website for a program's list */
+async function certAsk(slug){
+  if(!HL_BRIDGE) throw new Error("The website reader isn't set up");
+  let waited=0; while(HLB.busy && waited<60){ await new Promise(r=>setTimeout(r,1000)); waited++; }
+  HLB.busy=true;
+  try{
+    const r=await hlOpen(false); if(!r) throw new Error("This browser kept the website reader from loading");
+    const out=await hlSend({mm:"hl-certs", slug});
+    if(!out || out.error) throw new Error(out&&out.error||"no answer from the website");
+    return out;
+  } finally { HLB.busy=false; if(HLB.frame){ HLB.frame.remove(); HLB.frame=null; } }
+}
+async function certRefresh(ed, quiet){
+  const key=ed.month+"__cert", doc=S.sections[key]||{}, p=certProg(doc.certProgram); if(!p) return null;
+  const out=await certAsk(p.slug);
+  const items=(out.items||[]).map(i=>({name:i.name, path:i.path||""})).filter(i=>i.name);
+  if(!items.length) throw new Error("the website page lists no one right now");
+  const sig=x=>JSON.stringify((x||[]).map(i=>[i.name,i.path]));
+  const changed = sig(doc.certItems)!==sig(items) || (doc.certBadge||"")!==(out.badge||"") || (doc.certPage||"")!==(out.page||"");
+  const v=Object.assign({id:key, month:ed.month, key:"cert", status:"waiting"}, doc, {certItems:items, certBadge:out.badge||"", certPage:out.page||"", certFrom:out.title||p.name, certAt:new Date().toISOString()});
+  await put("sections", key, v);
+  if(!quiet) toast(changed ? "Updated from the website: "+items.length+" certified." : "Checked the website: no changes ("+items.length+" certified).", 4000);
+  return v;
+}
+/* keeps the current edition's list in step with the website, twice a day */
+async function certSync(){
+  if(STALE.on || CERT.busy || !CANWRITE || !LOADED.has("sections") || !LOADED.has("editions")) return;
+  const ed=curEdition(); if(!ed || (ed.done && ed.done.publish)) return;
+  const doc=S.sections[ed.month+"__cert"]||{};
+  if(!certProg(doc.certProgram) || doc.certAuto===false) return;
+  const last=Math.max(CERT.at, doc.certAt?Date.parse(doc.certAt):0);
+  if(Date.now()-last < 12*3600*1000) return;
+  CERT.busy=true; CERT.at=Date.now();
+  try{ await certRefresh(ed, true); CERT.err=""; }catch(e){ CERT.err=e.message||String(e); }
+  finally{ CERT.busy=false; }
+}
+
+/* ---------- the email ---------- */
+function certSpotlight(ed, s){
+  const d=s.doc, p=certProg(d.certProgram), items=d.certItems||[];
+  const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const navy="#0d314c", line="#dde9f2";
+  const listUrl=certSite(ed, d.certPage||("standards-resources/"+p.slug));
+  const title=d.headline||p.title;
+  const name=i=>{ const u=i.path?certSite(ed,i.path):""; return u ? '<a href="'+esc(u)+'" style="color:'+navy+';text-decoration:none">'+esc(i.name)+'</a>' : esc(i.name); };
+  const row=i=>'<tr><td width="14" valign="top" style="padding:7px 0 7px;'+F+'font-size:11px;line-height:20px;color:#74bfeb">&#11042;</td><td style="padding:7px 0 7px 6px;border-bottom:1px solid '+line+';'+F+'font-size:15px;line-height:20px;font-weight:600;color:'+navy+'">'+name(i)+'</td></tr>';
+  const list=xs=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+xs.map(row).join("")+'</table>';
+  const intro=d.body ? mdEmail(d.body, F+'font-size:16px;line-height:1.65;margin:0 0 16px;color:#1d2b36', 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '';
+  const count=items.length+' '+(p.what==="system"?"system":p.what==="provider"?"provider":"organization")+(items.length===1?"":"s");
+  const eye='<div style="'+M+'font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2477b8;font-weight:600;margin:0 0 6px">MISMO Certified &middot; '+count+'</div>';
+  const head='<div style="'+F+'font-size:22px;line-height:1.25;letter-spacing:-.012em;color:'+navy+';font-weight:700;margin:0 0 10px">'+esc(title)+'</div>';
+  const more='<p style="margin:14px 0 0;'+F+'font-size:14px"><a href="'+esc(listUrl)+'" style="color:#14486e;font-weight:700;text-decoration:none">See every '+esc(p.name.replace(/^Certified /,"certified ").replace(/s$/,""))+' on mismo.org&nbsp;&rarr;</a></p>';
+  const badge=d.certBadge ? '<a href="'+esc(listUrl)+'"><img src="'+esc(d.certBadge)+'" alt="'+esc(p.title)+' badge" width="170" style="display:block;width:170px;max-width:100%;height:auto;margin:0 auto;border:0" border="0"></a>' : '';
+  let card;
+  if(items.length<=10 && badge){
+    card='<tr><td width="38%" align="center" valign="middle" style="padding:22px 8px 22px 16px">'+badge+'</td><td width="62%" valign="middle" style="padding:22px 22px 22px 10px">'+eye+head+list(items)+more+'</td></tr>';
+  } else {
+    const half=Math.ceil(items.length/2);
+    card='<tr><td colspan="2" style="padding:22px 22px 6px">'+(badge?'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="130" valign="middle" style="padding-right:16px">'+badge.replace(/width="170"/,'width="120"').replace(/width:170px/,'width:120px')+'</td><td valign="middle">'+eye+head+'</td></tr></table>':eye+head)+'</td></tr>'+
+      '<tr><td width="50%" valign="top" style="padding:0 10px 0 22px">'+list(items.slice(0,half))+'</td><td width="50%" valign="top" style="padding:0 22px 0 10px">'+list(items.slice(half))+'</td></tr>'+
+      '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
+  }
+  return intro+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px;background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>';
+}
+function certSpotlightText(ed, s){
+  const d=s.doc, p=certProg(d.certProgram), out=[];
+  if(d.body) out.push(mdPlain(d.body));
+  out.push(d.headline||p.title);
+  (d.certItems||[]).forEach(i=>out.push("• "+i.name+(i.path?" – "+certSite(ed,i.path):"")));
+  out.push("See the full list: "+certSite(ed, d.certPage||("standards-resources/"+p.slug)));
+  return out;
+}
+
+/* ---------- the section pane ---------- */
+function certPaneHtml(){ return '<div id="cert-box"></div>'; }
+function wireCert(b, doc, ed){
+  const box=$("#cert-box",b); if(!box) return;
+  const sel=$("#f-certProgram",b);
+  let auto = doc.certAuto!==false;
+  PANE.certAuto=()=>auto;
+  const draw=()=>{ const cur=S.sections[ed.month+"__cert"]||doc, p=certProg(sel?sel.value:cur.certProgram);
+    if(!p){ box.innerHTML='<div class="hint">No certification picked: the section runs the headline, body copy and picture below, like any other section.</div>'; return; }
+    const same=cur.certProgram===p.k, items=same?(cur.certItems||[]):[];
+    box.innerHTML='<div class="lg-sp"><label><input type="checkbox" id="cert-auto"'+(auto?' checked':'')+'> Keep in step with the website</label>'+
+      '<div class="hint">'+(same&&cur.certAt?'Current from the website as of '+esc(new Date(cur.certAt).toLocaleString([],{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}))+'. ':'')+(auto?'New certifications on the website come in by themselves.':'Not updating: tick the box to follow the website again.')+'</div>'+
+      (items.length?'<div class="cert-list">'+(cur.certBadge?'<img src="'+esc(cur.certBadge)+'" alt="">':'')+'<div><b>'+esc(p.title)+'</b><span>'+items.length+' certified</span><ul>'+items.map(i=>'<li>'+esc(i.name)+'</li>').join("")+'</ul></div></div>':'<div class="hint">Not read from the website yet.</div>')+
+      '<div class="kbtns"><button type="button" class="btn sm" id="cert-get">'+(items.length?'Check the Website Now':'Get the List from the Website')+'</button><a class="btn sm" href="'+esc(certSite(ed,"standards-resources/"+p.slug))+'" target="_blank" rel="noopener">Open the Website Page ↗</a></div></div>';
+    const au=$("#cert-auto",box); if(au) au.onchange=()=>{ auto=au.checked; if(PANE) PANE.dirty=true; draw(); };
+    const g=$("#cert-get",box); if(g) g.onclick=async()=>{ g.disabled=true; g.textContent="Reading the website…";
+      try{ const pv=sel?sel.value:""; if(pv && pv!==(S.sections[ed.month+"__cert"]||{}).certProgram) await put("sections", ed.month+"__cert", Object.assign({id:ed.month+"__cert",month:ed.month,key:"cert",status:"waiting"}, S.sections[ed.month+"__cert"]||doc, {certProgram:pv}));
+        await certRefresh(ed); }catch(e){ toast("Couldn't read the website: "+(e.message||"try again"), 6000); }
+      draw(); };
+  };
+  if(sel) sel.addEventListener("change", ()=>{ if(PANE) PANE.dirty=true; draw(); });
+  draw();
 }
 
 /* ================= MISMO Mic'd Up ================= */
