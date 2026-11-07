@@ -44,6 +44,24 @@ b2=body.replace('<span class="hqtop-r"><span class="eyebrow-m">Strategic Growth<
     <div id="rs-account"></div></span>''')
 b2=b2.replace('<main id="main">','<main id="main">\n  <div class="banner" id="savebanner" hidden></div>')
 assert 'rs-account' in b2 and 'savebanner' in b2
+# The page's safety list (Content-Security-Policy, Nov 7, 2026): the only places it may load code from or send
+# data to. Pictures may come from any https site (news stories, YouTube), but data only goes to the save relay,
+# the image flow, Higher Logic's picture store and the spreadsheet reader. Anything else is blocked and shows in
+# System Health's error log. Add a site here (and test) before the page needs it.
+CSP = "; ".join([
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: blob: https:",
+  "connect-src 'self' data: blob: https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com https://higherlogicdownload.s3.amazonaws.com https://cdn.sheetjs.com",
+  "frame-src 'self' blob: https://collaborate.mismo.org",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+])
 top='''<!doctype html>
 <!--
   MISMO Media (formerly Marketing HQ), resources.mismo.org/marketing-hq/
@@ -56,6 +74,7 @@ top='''<!doctype html>
   in this file, and no records either: they all arrive from marketing-hq-data after sign-in.
 -->
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="'''+CSP+'''">
 <title>MISMO Media</title>
 '''
 out=top+gate+'\n'+shim+'\n'+h2+'\n'+extra+'\n</head><body>\n'+logo+'</defs></svg>'+b2+'<script>'+app+'</script>\n</body></html>\n'
