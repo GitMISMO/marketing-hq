@@ -14,7 +14,7 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 | `dev/gate.html` | The shared resources.mismo.org sign-in gate (copied from Member 360). |
 | `dev/logo.txt` | The MISMO logo symbol. |
 | `dev/build.py` | Builds `dev/out/site.html` (the live page) and `dev/out/plain.html` (no sign-in, for tests). |
-| `dev/tests/` | Browser tests with sample data and a stand-in for the save relay. |
+| `dev/tests/` | Browser tests and a stand-in for the save relay. Their sample records are in the private repo (`marketing-hq-data/dev/sample-data.html`); copy that file next to `run.sh`. |
 | `hl-bridge/` | The script the Higher Logic website loads to upload pictures and read certified lists. |
 | `mm-headers/` | Newsletter header images and icons. |
 
