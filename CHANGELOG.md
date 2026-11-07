@@ -3,6 +3,7 @@
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
 ## 2026-11-07 (evening)
+- MISMO Matters: Copy HTML lists any running section Amy hasn't approved yet and asks before copying (fine for a test; the real send waits for her OK).
 - Remind Amy: Home's On Your Plate shows how many items are waiting on Amy, with a Remind Amy button. One email lists them all (Mic'd Up wording keeps its Approve and Request Changes reply buttons; sections and posts link to MISMO Media), records who reminded her and when (settings/amy-remind), and asks before a second reminder within four hours.
 - A safety list on the page (Content-Security-Policy): code and data may only go to the save relay, the image flow, Higher Logic's picture store, Google Fonts and the spreadsheet reader. Anything else is blocked and shows in System Health's error log.
 - The full browser tests now run on every change, on made-up test records (dev/tests/fixture.html), with new tests for the Informz unsubscribe import and Remind Amy.
