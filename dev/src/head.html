@@ -1268,10 +1268,21 @@ tr.click:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:-2px}
 .ds-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin:0 0 6px}
 .ds-row label{font-weight:600}
 .ds-row .hint{flex-basis:100%;margin:0}
-.ds-tbl input{width:100%;box-sizing:border-box;font:inherit;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink)}
+.ds-tbl input{width:100%;box-sizing:border-box;font:inherit;font-size:13.5px;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink)}
 .ds-tbl input[type=date]{min-width:140px}
 .ds-tbl tr.past input{color:var(--ink-3)}
 .ds-tbl td:last-child{width:1%;white-space:nowrap}
+.ds-tbl{table-layout:fixed;width:100%}.ds-tbl th{text-align:left}.ds-tbl td{padding:4px 6px}
+.ds-hols{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:6px 24px;margin:0 0 4px}
+.ds-h{display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center}
+.ds-h input,.ds-row input{font:inherit;font-size:13.5px;padding:5px 7px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink);min-width:0}
+.ds-h.past input{color:var(--ink-3)}
+.ds-x{width:28px;height:28px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink-2);font-size:16px;line-height:1;cursor:pointer;padding:0}
+.ds-x:hover{color:var(--bad);border-color:var(--bad)}
+@media(max-width:480px){.ds-hols{grid-template-columns:1fr}.ds-h{grid-template-columns:132px 1fr 28px}}
 .ds-warn{background:var(--warn-soft,#fbf3e2);border:1px solid var(--warn);color:var(--ink);border-radius:6px;padding:10px 14px;margin:0 0 16px}
 .ds-save{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:18px}
+@media(max-width:640px){.ds-tbl thead{display:none}.ds-tbl,.ds-tbl tbody,.ds-tbl tr,.ds-tbl td{display:block;width:100%;box-sizing:border-box}
+  .ds-tbl tr{padding:8px 0;border-bottom:1px solid var(--rule)}.ds-tbl td{border:0;padding:3px 0}.ds-tbl td:last-child{width:auto}}
+#page-settings .subtabs{margin:0 0 16px}
 </style>

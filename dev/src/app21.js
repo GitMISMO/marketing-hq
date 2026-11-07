@@ -13,7 +13,7 @@ const CERT_PROGRAMS = [
   {k:"evault",     slug:"evault-certified-providers",   name:"eVault Certified Systems",      title:"MISMO Certified eVault Systems",         what:"system"},
   {k:"ron",        slug:"ron-certified-providers",      name:"RON Certified Providers",       title:"MISMO Certified RON Providers",          what:"provider"}
 ];
-const CERT_SITE_LIVE = "2026-11-16";   /* the default; Help > Dates and Settings can change it (siteLive) */
+const CERT_SITE_LIVE = "2026-11-16";   /* the default; Settings > Dates can change it (siteLive) */
 const CERT = {busy:false, at:0, err:""};
 function certProg(k){ return CERT_PROGRAMS.find(p=>p.k===k) || null; }
 function isCertSpot(s){ return s.k==="cert" && !!certProg(s.doc.certProgram) && (s.doc.certItems||[]).length>0; }

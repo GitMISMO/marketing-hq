@@ -50,9 +50,9 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Dates and Settings so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Settings > Dates so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Dates and Settings.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Settings > Dates.");
   return out;
 }
 /* ---------- how full each data file is ----------
@@ -68,12 +68,12 @@ function fileSizes(){
 let SIZE_WARNED=false;
 function sizeWatch(){
   if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
-  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Help > System Health.", 8000); }
+  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Settings > System Health.", 8000); }
 }
 
 /* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
    The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
-   the code. They now live in one settings record (settings/dates) that staff edit on Help > Dates and Settings;
+   the code. They now live in one settings record (settings/dates) that staff edit on Settings > Dates;
    until someone saves it, the lists written into the code stand. */
 const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
 let SET_SIG = "";
@@ -94,16 +94,16 @@ function datesHtml(){
     (warn.length?'<div class="ds-warn">'+warn.map(w=>esc(w)).join("<br>")+'</div>':'')+
     '<h3>New Website</h3><div class="ds-row"><label for="ds-live">Goes live on</label><input type="date" id="ds-live" value="'+esc(d.siteLive||"")+'"><span class="hint">Newsletter links point to www.mismo.org for editions sent on or after this day, and to collaborate.mismo.org before it.</span></div>'+
     '<h3>Holidays</h3><p class="hint">MISMO Media moves deadlines off these days and weekends.</p>'+
-    '<table class="tbl ds-tbl"><thead><tr><th>Date</th><th>Holiday</th><th></th></tr></thead><tbody>'+
-      hol.map((k,i)=>'<tr'+(k<t?' class="past"':'')+'><td><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"></td><td><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"></td><td><button class="btn sm" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'">Remove</button></td></tr>').join("")+
-    '</tbody></table><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
-    '<h3>Summits</h3><table class="tbl ds-tbl"><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
-      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="btn sm" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'">Remove</button></td></tr>').join("")+
+    '<div class="ds-hols">'+
+      hol.map((k,i)=>'<div class="ds-h'+(k<t?' past':'')+'"><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"><button class="ds-x" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'" title="Remove">×</button></div>').join("")+
+    '</div><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
+    '<h3>Summits</h3><table class="tbl ds-tbl"><colgroup><col style="width:26%"><col style="width:150px"><col style="width:150px"><col><col style="width:36px"></colgroup><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
+      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="ds-x" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'" title="Remove">×</button></td></tr>').join("")+
     '</tbody></table><p><button class="btn sm" type="button" id="ds-adds">Add a Summit</button></p>'+
     '<p class="ds-save"><button class="btn pri" type="button" id="ds-save">Save Dates</button> <button class="btn" type="button" id="ds-reset">Undo My Changes</button> <span class="note" id="ds-msg">'+(((S.settings||{}).dates||{}).updatedBy?"Last saved by "+esc(S.settings.dates.updatedBy)+", "+esc(fD(localDay(S.settings.dates.updatedAt))):"Showing the dates built into MISMO Media; nobody has changed them yet.")+'</span></p>';
 }
 function wireDates(el){
-  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>renderHelp();
+  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>setRedraw();
   const syncH=()=>{ const out={}; hol.forEach((k,i)=>{ const dt=$('[data-hd="'+i+'"]',el), nm=$('[data-hn="'+i+'"]',el); if(dt && dt.value) out[dt.value]=(nm&&nm.value.trim())||"Holiday"; }); d.holidays=out; };
   const syncS=()=>{ d.summits.forEach((s,i)=>{ const g=a=>$('[data-'+a+'="'+i+'"]',el); s.name=(g("sn")||{}).value||s.name; s.start=(g("ss")||{}).value||""; s.end=(g("se")||{}).value||s.start; s.where=(g("sw")||{}).value||""; }); };
   const sync=()=>{ syncH(); syncS(); const l=$("#ds-live",el); if(l) d.siteLive=l.value; };
@@ -119,10 +119,9 @@ function wireDates(el){
     if(bad){ $("#ds-msg",el).textContent="Each summit needs a name and a start date, and can't end before it starts."; return; }
     d.summits.forEach(s=>{ if(!s.id) s.id="summit-"+Date.now().toString(36); if(!s.end) s.end=s.start; });
     d.summits.sort((a,b)=>a.start<b.start?-1:1);
-    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); renderHelp(); }catch(e){}
+    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); setRedraw(); }catch(e){}
   };
 }
-HELP.push({id:"dates", t:"Dates and Settings", g:"System", b:""});
 
 /* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
@@ -154,11 +153,22 @@ function systemHtml(){
 function wireSystem(el){
   const trash=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>trash.push({c, r})));
   trash.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt)));
-  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); renderHelp(); } });
+  $$("[data-restore]",el).forEach(b=>b.onclick=async()=>{ const x=trash[+b.dataset.restore]; if(x){ b.disabled=true; await restoreRec(x.c, x.r.id); setRedraw(); } });
   const ex=$("#sh-export",el); if(ex) ex.onclick=()=>{
     const data={exported:new Date().toISOString(), version:BUILD, records:S, deleted:TRASH};
     const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"}), a=document.createElement("a");
     a.href=URL.createObjectURL(blob); a.download="MISMO Media data "+T()+".json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
   };
 }
-HELP.push({id:"system", t:"System Health", g:"System", b:""});
+/* ---------- the Settings page (left nav): Dates and System Health ---------- */
+const SET = {sub:"dates"};
+function setRedraw(){ if(TAB==="settings") renderSettings(); else renderHelp(); }
+function renderSettings(){
+  const el=$("#page-settings"); if(!el) return;
+  const subs=[["dates","Dates"],["system","System Health"]];
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Settings</h1><div class="sub">The dates MISMO Media plans around, and how the system itself is doing.</div></div></div>'+
+    '<div class="subtabs" role="group" aria-label="Settings">'+subs.map(([k,l])=>'<button type="button" data-ssub="'+k+'" aria-pressed="'+(SET.sub===k)+'">'+esc(l)+'</button>').join("")+'</div>'+
+    '<article class="card helpbody"><div class="cb">'+(SET.sub==="system"?systemHtml():datesHtml())+'</div></article>';
+  $$("[data-ssub]",el).forEach(b=>b.onclick=()=>{ SET.sub=b.dataset.ssub; renderSettings(); });
+  if(SET.sub==="system") wireSystem(el); else wireDates(el);
+}

@@ -387,11 +387,9 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.id==="dates"&&typeof datesHtml==="function"?datesHtml():cur.b)+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+cur.b+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
-  if(cur.id==="system" && typeof wireSystem==="function") wireSystem(el);
-  if(cur.id==="dates" && typeof wireDates==="function") wireDates(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }

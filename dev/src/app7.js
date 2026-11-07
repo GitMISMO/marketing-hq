@@ -156,7 +156,7 @@ function renderImages(){
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
-      (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
+      (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-arcsel">'+([...IM.sel].every(i=>S.images[i]&&S.images[i].archived)?'Bring Back ':'Archive ')+IM.sel.size+' Selected</button><button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
           '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgSrc(im)?'<img src="'+esc(imgSrc(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
@@ -184,6 +184,11 @@ function renderImages(){
   $$("[data-imsel]",el).forEach(c=>c.onchange=()=>{ if(c.checked) IM.sel.add(c.dataset.imsel); else IM.sel.delete(c.dataset.imsel); renderImages(); });
   const z=$("#im-zip",el); if(z) z.onclick=()=>{ const pick=IM.sel.size ? [...IM.sel].map(i=>S.images[i]) : list; const ced=IM.ed&&S.editions[IM.ed]; downloadZip(pick, "MISMO Images"+(IM.camp?" - "+IMG_CAMP[IM.camp]:"")+(ced?" - "+monthName(ced.month):"")); };
   const zc=$("#im-clr",el); if(zc) zc.onclick=()=>{ IM.sel.clear(); renderImages(); };
+  /* archive (or bring back) the ticked pictures in one go: they leave the library but stay on file (Nov 7, 2026) */
+  const za=$("#im-arcsel",el); if(za) za.onclick=async()=>{ const ids=[...IM.sel].filter(i=>S.images[i]); const back=ids.every(i=>S.images[i].archived);
+    if(!za.dataset.sure){ za.dataset.sure="1"; za.textContent="Press Again to "+(back?"Bring Back ":"Archive ")+ids.length; setTimeout(()=>{ if(za.isConnected){ delete za.dataset.sure; renderImages(); } },4000); return; }
+    for(const i of ids) await patch("images", i, {archived:!back});
+    IM.sel.clear(); toast((back?"Brought back ":"Archived ")+ids.length+" picture"+(ids.length===1?"":"s")+(back?"":". Tick Show Archived to see them again.")); renderImages(); };
   $$("[data-imdl]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); downloadImage(S.images[b.dataset.imdl]); });
   $$("[data-imcp]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); copyImageLink(S.images[b.dataset.imcp]); });
   $$(".imcard",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
