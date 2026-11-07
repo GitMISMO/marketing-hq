@@ -14,31 +14,31 @@ function peopleIndex(){
   Object.keys(PEOPLE_LISTS).forEach(l=>audienceRows(l).forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists[l]=true; if(r.l && r.l>p.last) p.last=r.l; if(r.d && r.d>p.last) p.last=r.d; if(r.x) r.x.forEach(x=>{ if(!p.x.includes(x)) p.x.push(x); }); p.c+=(+r.c||0); }));
   vals("signups").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
-    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=String(r.at||"").slice(0,10); if(d>p.last) p.last=d; });
+    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=localDay(r.at); if(d>p.last) p.last=d; });
   /* anyone who unsubscribed on MISMO's page comes off the subscriber lists automatically */
   const U=unsubMap();
   Object.values(U).forEach(u=>{ const e=u.e.toLowerCase(); const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
-    if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=String(u.at||"").slice(0,10); if(d>p.last) p.last=d; } });
+    if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=localDay(u.at); if(d>p.last) p.last=d; } });
   return Object.values(map);
 }
 /* sign-ups from the website form, newest first */
 function signupsSorted(){ const U=unsubMap(); return vals("signups").filter(s=>!isUnsubbed(s.e, s.at, U)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
 const HLST = {added:["In Higher Logic","ok"], pending:["Not in Higher Logic Yet","review"], failed:["Higher Logic Refused","changes"]};
-function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),String(s.at||"").slice(0,10)].map(q).join(","))).join("\n"); }
+function signupCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Email,First Name,Last Name,Company,Job Title,Topics,Signed Up"].concat(list.map(s=>[s.e,s.first,s.last,s.o,s.t,(s.topics||[]).join("; "),localDay(s.at)].map(q).join(","))).join("\n"); }
 function signupsCard(){
-  const list=signupsSorted(), t=T(), wk=list.filter(s=>String(s.at||"").slice(0,10)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
+  const list=signupsSorted(), t=T(), wk=list.filter(s=>localDay(s.at)>=add(t,-6)).length, notHL=list.filter(s=>s.hl!=="added");
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Website Sign-Ups</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/subscribe/</span><div class="r"><a class="btn sm" href="'+SUBSCRIBE_URL+'" target="_blank" rel="noopener">Open Subscribe Form&nbsp;↗</a><button class="btn sm" type="button" id="su-link">Copy Form Link</button>'+(notHL.length?'<button class="btn sm" type="button" id="su-csv">Copy '+notHL.length+' for Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Signed Up</th><th>Name</th><th>Email</th><th>Company</th><th>Interests</th><th>Higher Logic</th></tr></thead><tbody>'+
-      list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(String(s.at||"").slice(0,10)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
+      list.slice(0,25).map(s=>'<tr class="click" data-pe="'+esc(s.e)+'"><td><b>'+esc(fS(localDay(s.at)))+'</b></td><td>'+esc(s.n||"")+(s.t?'<span class="t2">'+esc(s.t)+'</span>':'')+'</td><td>'+esc(s.e)+'</td><td>'+esc(s.o||"")+'</td><td class="note">'+esc((s.topics||[]).join(", "))+'</td><td>'+chip(HLST,s.hl||"pending")+'</td></tr>').join("")+'</tbody></table></div>'
     :'<div class="empty">Sign-ups from the new Subscribe form land here the moment someone presses Subscribe, marked Pending until they are added to the MISMO Matters list in Higher Logic.</div>')+'</div>';
 }
 const UNST = {pending:["Still in Higher Logic","review"], removed:["Removed in Higher Logic","ok"]};
 function unsubsCard(){
-  const list=unsubsSorted(), t=T(), wk=list.filter(u=>String(u.at||"").slice(0,10)>=add(t,-6)).length, todo=list.filter(u=>unsubHL(u)==="pending");
+  const list=unsubsSorted(), t=T(), wk=list.filter(u=>localDay(u.at)>=add(t,-6)).length, todo=list.filter(u=>unsubHL(u)==="pending");
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Unsubscribes</h2><span class="cnt">'+list.length+'</span><span class="note">'+wk+' this week · from resources.mismo.org/forms/unsubscribe/</span><div class="r"><a class="btn sm" href="'+UNSUB_URL+'" target="_blank" rel="noopener">Open Unsubscribe Page&nbsp;↗</a>'+
       (todo.length?'<button class="btn sm" type="button" id="un-csv">Copy '+todo.length+' for Higher Logic</button><button class="btn sm pri" type="button" id="un-done">Mark Removed in Higher Logic</button>':'')+'</div></div>'+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Unsubscribed</th><th>Email</th><th>Name</th><th>Why</th><th>Higher Logic</th></tr></thead><tbody>'+
-      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(String(u.at||"").slice(0,10)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||"—")+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
+      list.slice(0,25).map(u=>{ const s=vals("signups").find(x=>(x.e||"").toLowerCase()===u.e); return '<tr class="click" data-pe="'+esc(u.e)+'"><td><b>'+esc(fS(localDay(u.at)))+'</b></td><td>'+esc(u.e)+'</td><td>'+esc(s&&s.n||"")+'</td><td class="note">'+esc((u.reasons||[]).join(", ")||"—")+'</td><td>'+chip(UNST,unsubHL(u))+'</td></tr>'; }).join("")+'</tbody></table></div>'
     :'<div class="empty">Anyone who uses the Unsubscribe link at the bottom of MISMO Matters lands here and comes off the subscriber list right away.</div>')+
     (todo.length?'<div class="cb"><div class="hint">Until Higher Logic\'s marketing API is connected, opt these people out in Informz before the next send: Copy for Higher Logic, import them as unsubscribes, then press Mark Removed.</div></div>':'')+'</div>';
 }

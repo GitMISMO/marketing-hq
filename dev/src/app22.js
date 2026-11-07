@@ -50,11 +50,79 @@ document.addEventListener("keydown", e=>{
 function dateWarnings(){
   const t=T(), soon=add(t,120), out=[];
   const lastHol=Object.keys(HOLIDAYS||{}).sort().slice(-1)[0];
-  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays so schedules skip them.");
+  if(lastHol && lastHol<soon) out.push("The holiday list ends "+fL(lastHol)+". Add next year's MISMO holidays on Help > Dates and Settings so schedules skip them.");
   const lastSum=(SUMMITS||[]).map(x=>x.end||x.start).sort().slice(-1)[0];
-  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits.");
+  if(lastSum && lastSum<soon) out.push("The last summit on file ends "+fL(lastSum)+". Add the next summits on Help > Dates and Settings.");
   return out;
 }
+/* ---------- how full each data file is ----------
+   The save relay takes files up to about 940 KB. Each collection (all episode kits, all sections...) is one
+   file, so this watches them and warns at 70%, long before a save could fail. */
+const FILE_MAX = 940000;
+function fileSizes(){
+  const F=(window.__hqRelay && window.__hqRelay.files) || {};
+  return Object.keys(F).filter(k=>F[k].loaded && F[k].server && !/^audience-|^own-index$/.test(k))
+    .map(k=>{ const n=JSON.stringify(F[k].server,null,2).length; return {name:k, kb:Math.round(n/1024), pct:Math.round(n/FILE_MAX*100)}; })
+    .sort((a,b)=>b.pct-a.pct);
+}
+let SIZE_WARNED=false;
+function sizeWatch(){
+  if(SIZE_WARNED || !LIVE) return; const big=fileSizes().filter(f=>f.pct>=70);
+  if(big.length){ SIZE_WARNED=true; toast("MISMO Media's "+big.map(f=>f.name).join(", ")+" records are "+big[0].pct+"% of the most one save can hold. See Help > System Health.", 8000); }
+}
+
+/* ---------- Dates and Settings (a Help topic, Nov 7, 2026) ----------
+   The holidays the schedule skips, the summits, and the day the new website goes live used to be written into
+   the code. They now live in one settings record (settings/dates) that staff edit on Help > Dates and Settings;
+   until someone saves it, the lists written into the code stand. */
+const DEF_DATES = {holidays:Object.assign({}, HOLIDAYS), summits:SUMMITS.map(s=>Object.assign({}, s)), siteLive:CERT_SITE_LIVE};
+let SET_SIG = "";
+function datesNow(){ const d=(S.settings||{}).dates; return d && d.holidays ? d : DEF_DATES; }
+function siteLive(){ return datesNow().siteLive || CERT_SITE_LIVE; }
+function applySettings(){
+  const d=datesNow(), sig=JSON.stringify(d); if(sig===SET_SIG) return; SET_SIG=sig;
+  Object.keys(HOLIDAYS).forEach(k=>delete HOLIDAYS[k]); Object.assign(HOLIDAYS, d.holidays||{});
+  SUMMITS.length=0; (d.summits||[]).forEach(s=>SUMMITS.push(Object.assign({}, s)));
+  if(!SUMMITS.length) DEF_DATES.summits.forEach(s=>SUMMITS.push(Object.assign({}, s)));
+}
+const DS = {draft:null};
+function datesHtml(){
+  const d = DS.draft || (DS.draft = JSON.parse(JSON.stringify(datesNow())));
+  const hol = Object.keys(d.holidays).sort();
+  const t=T(), warn=dateWarnings();
+  return '<p class="lead">The dates MISMO Media plans around. Change them here and every schedule, countdown and link follows.</p>'+
+    (warn.length?'<div class="ds-warn">'+warn.map(w=>esc(w)).join("<br>")+'</div>':'')+
+    '<h3>New Website</h3><div class="ds-row"><label for="ds-live">Goes live on</label><input type="date" id="ds-live" value="'+esc(d.siteLive||"")+'"><span class="hint">Newsletter links point to www.mismo.org for editions sent on or after this day, and to collaborate.mismo.org before it.</span></div>'+
+    '<h3>Holidays</h3><p class="hint">MISMO Media moves deadlines off these days and weekends.</p>'+
+    '<table class="tbl ds-tbl"><thead><tr><th>Date</th><th>Holiday</th><th></th></tr></thead><tbody>'+
+      hol.map((k,i)=>'<tr'+(k<t?' class="past"':'')+'><td><input type="date" data-hd="'+i+'" value="'+esc(k)+'" aria-label="Holiday date"></td><td><input type="text" data-hn="'+i+'" value="'+esc(d.holidays[k])+'" aria-label="Holiday name"></td><td><button class="btn sm" type="button" data-hx="'+i+'" aria-label="Remove '+esc(d.holidays[k])+'">Remove</button></td></tr>').join("")+
+    '</tbody></table><p><button class="btn sm" type="button" id="ds-addh">Add a Holiday</button></p>'+
+    '<h3>Summits</h3><table class="tbl ds-tbl"><thead><tr><th>Summit</th><th>Starts</th><th>Ends</th><th>Where</th><th></th></tr></thead><tbody>'+
+      d.summits.map((s,i)=>'<tr'+((s.end||s.start)<t?' class="past"':'')+'><td><input type="text" data-sn="'+i+'" value="'+esc(s.name)+'" aria-label="Summit name"></td><td><input type="date" data-ss="'+i+'" value="'+esc(s.start)+'" aria-label="Start"></td><td><input type="date" data-se="'+i+'" value="'+esc(s.end)+'" aria-label="End"></td><td><input type="text" data-sw="'+i+'" value="'+esc(s.where||"")+'" aria-label="Where"></td><td><button class="btn sm" type="button" data-sx="'+i+'" aria-label="Remove '+esc(s.name)+'">Remove</button></td></tr>').join("")+
+    '</tbody></table><p><button class="btn sm" type="button" id="ds-adds">Add a Summit</button></p>'+
+    '<p class="ds-save"><button class="btn pri" type="button" id="ds-save">Save Dates</button> <button class="btn" type="button" id="ds-reset">Undo My Changes</button> <span class="note" id="ds-msg">'+(((S.settings||{}).dates||{}).updatedBy?"Last saved by "+esc(S.settings.dates.updatedBy)+", "+esc(fD(localDay(S.settings.dates.updatedAt))):"Showing the dates built into MISMO Media; nobody has changed them yet.")+'</span></p>';
+}
+function wireDates(el){
+  const d=DS.draft, hol=Object.keys(d.holidays).sort(), redraw=()=>renderHelp();
+  const syncH=()=>{ const out={}; hol.forEach((k,i)=>{ const dt=$('[data-hd="'+i+'"]',el), nm=$('[data-hn="'+i+'"]',el); if(dt && dt.value) out[dt.value]=(nm&&nm.value.trim())||"Holiday"; }); d.holidays=out; };
+  const syncS=()=>{ d.summits.forEach((s,i)=>{ const g=a=>$('[data-'+a+'="'+i+'"]',el); s.name=(g("sn")||{}).value||s.name; s.start=(g("ss")||{}).value||""; s.end=(g("se")||{}).value||s.start; s.where=(g("sw")||{}).value||""; }); };
+  const sync=()=>{ syncH(); syncS(); const l=$("#ds-live",el); if(l) d.siteLive=l.value; };
+  $$("input",el).forEach(i=>{ if(i.closest(".helpbody")) i.addEventListener("change", sync); });
+  $$("[data-hx]",el).forEach(b=>b.onclick=()=>{ sync(); delete d.holidays[hol[+b.dataset.hx]]; redraw(); });
+  $$("[data-sx]",el).forEach(b=>b.onclick=()=>{ sync(); d.summits.splice(+b.dataset.sx,1); redraw(); });
+  const ah=$("#ds-addh",el); if(ah) ah.onclick=()=>{ sync(); let k=add(T(),1); while(d.holidays[k]) k=add(k,1); d.holidays[k]="New holiday"; redraw(); };
+  const as=$("#ds-adds",el); if(as) as.onclick=()=>{ sync(); const y=new Date().getFullYear()+1; d.summits.push({id:"summit-"+Date.now().toString(36), name:y+" Summit", start:"", end:"", where:""}); redraw(); };
+  const rs=$("#ds-reset",el); if(rs) rs.onclick=()=>{ DS.draft=null; redraw(); };
+  const sv=$("#ds-save",el); if(sv) sv.onclick=async()=>{
+    sync();
+    const bad=d.summits.find(s=>!s.name || !s.start || (s.end && s.end<s.start));
+    if(bad){ $("#ds-msg",el).textContent="Each summit needs a name and a start date, and can't end before it starts."; return; }
+    d.summits.forEach(s=>{ if(!s.id) s.id="summit-"+Date.now().toString(36); if(!s.end) s.end=s.start; });
+    d.summits.sort((a,b)=>a.start<b.start?-1:1);
+    try{ await put("settings","dates",{holidays:d.holidays, summits:d.summits, siteLive:d.siteLive||CERT_SITE_LIVE}); DS.draft=null; SET_SIG=""; applySettings(); toast("Dates saved"); renderHelp(); }catch(e){}
+  };
+}
+HELP.push({id:"dates", t:"Dates and Settings", g:"System", b:""});
 
 /* ---------- System Health (a Help topic) ---------- */
 const TRASH_NAMES = {sections:"Newsletter section", episodes:"Mic'd Up episode", pieces:"Post", news:"In the News item", lists:"List", kits:"Episode kit", requests:"Request"};
@@ -76,6 +144,8 @@ function systemHtml(){
     (jobs.length?'<h3>Background Jobs</h3><table class="tbl"><thead><tr><th>Job</th><th>Last ran</th><th>Status</th></tr></thead><tbody>'+
       jobs.map(j=>'<tr><td>'+esc(j.name)+'</td><td>'+esc(ago(j.lastRun))+'</td><td>'+(j.lastErr && j.lastErrAt>j.lastOk?'<b class="bad">'+esc(j.lastErr)+'</b> · next try at '+esc(new Date(j.next).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"})):"OK")+'</td></tr>').join("")+'</tbody></table>':'')+
     (warn.length?'<h3>Dates to Add</h3><ul>'+warn.map(w=>'<li>'+esc(w)+'</li>').join("")+'</ul>':'')+
+    (()=>{ const fs=fileSizes(); return fs.length?'<h3>Room Left in Each Data File</h3><p>Each kind of record is saved as one file, and one save can hold about 940 KB. Anything over 70% needs splitting before it fills.</p><table class="tbl"><thead><tr><th>Records</th><th class="n">Size</th><th class="n">Full</th></tr></thead><tbody>'+
+      fs.slice(0,12).map(f=>'<tr><td>'+esc(f.name)+'</td><td class="n">'+f.kb+' KB</td><td class="n">'+(f.pct>=70?'<b class="bad">'+f.pct+'%</b>':f.pct+'%')+'</td></tr>').join("")+'</tbody></table>':''; })()+
     '<h3>Recently Deleted</h3>'+(trash.length?'<p>Delete puts things aside instead of erasing them. Bring any of these back with one click.</p><table class="tbl"><thead><tr><th>What</th><th>Deleted</th><th></th></tr></thead><tbody>'+
       trash.slice(0,60).map((x,i)=>'<tr><td><b>'+esc(trashLabel(x.c,x.r))+'</b><span class="t2">'+esc(TRASH_NAMES[x.c]||x.c)+'</span></td><td>'+esc(fD(String(x.r._deletedAt).slice(0,10)))+(x.r._deletedBy?' · '+esc(x.r._deletedBy):'')+'</td><td><button class="btn sm" type="button" data-restore="'+i+'">Bring Back</button></td></tr>').join("")+'</tbody></table>':'<p class="note">Nothing has been deleted since this was switched on.</p>')+
     '<h3>Download All Data</h3><p>One file with every MISMO Media record (editions, sections, episodes, kits, posts, lists, requests and the subscriber lists), for safekeeping. It holds personal emails, so keep it somewhere private.</p>'+

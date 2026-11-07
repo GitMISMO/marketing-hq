@@ -184,7 +184,7 @@ function hmStudio(){
       '<div class="st-top"><span class="st-onair'+(live?" lit":"")+'">'+(live?"On Air":"Next on Air")+'</span><span class="st-lab">MISMO Mic\'d Up</span></div>'+
       '<div class="wave" aria-hidden="true">'+[...Array(64)].map((_,i)=>'<i style="--d:'+((i*37)%17)/10+'s;--h:'+(28+((i*53)%61))+'%"></i>').join("")+'</div>'+
       '<div class="mic-row"><div class="mic-ep"><b>'+esc(epTag(ne))+(ne.title?": "+esc(ne.title):"")+'</b><span>'+esc([ne.guests,ne.company].filter(Boolean).join(" · ")||"Guest to come")+'</span></div>'+
-      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'T08:30:00"></div></div>'+
+      '<div class="mic-cd" id="hm-cd" data-at="'+esc(ne.airDate)+'"></div></div>'+
       '<div class="mic-steps">'+steps.map(s=>'<span class="'+(s[1]?"on":"")+'">'+(s[1]?"✓ ":"")+esc(s[0])+'</span>').join("")+'</div>'+
     '</button>'; }
   else mic='<button type="button" class="st-tile st-mic k-micdup" data-hgo="micdup"><div class="st-top"><span class="st-onair">Off Air</span><span class="st-lab">MISMO Mic\'d Up</span></div><div class="wave quiet" aria-hidden="true">'+[...Array(44)].map(()=>'<i></i>').join("")+'</div><div class="mic-ep"><b>No episode booked</b><span>Add the next Friday</span></div></button>';
@@ -282,7 +282,7 @@ function hmStudioLive(el){
   if(HM.timer){ clearInterval(HM.timer); HM.timer=null; }
   const cd=$("#hm-cd",el);
   const tick=()=>{ if(!cd || !document.body.contains(cd)){ clearInterval(HM.timer); HM.timer=null; return; }
-    const at=new Date(cd.dataset.at), ms=at-new Date();
+    const at=etAt(cd.dataset.at,"08:30"), ms=at-new Date();
     if(ms<=0){ cd.innerHTML='<span class="cd-live">Live now · Friday 8:30 AM ET</span>'; return; }
     const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4), s=Math.floor(ms%6e4/1e3);
     cd.innerHTML=[[d,"days"],[h,"hrs"],[m,"min"],[s,"sec"]].map(([v,l])=>'<span><b>'+String(v).padStart(2,"0")+'</b><small>'+l+'</small></span>').join("");

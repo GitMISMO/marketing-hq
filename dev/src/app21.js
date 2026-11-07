@@ -13,13 +13,13 @@ const CERT_PROGRAMS = [
   {k:"evault",     slug:"evault-certified-providers",   name:"eVault Certified Systems",      title:"MISMO Certified eVault Systems",         what:"system"},
   {k:"ron",        slug:"ron-certified-providers",      name:"RON Certified Providers",       title:"MISMO Certified RON Providers",          what:"provider"}
 ];
-const CERT_SITE_LIVE = "2026-11-16";
+const CERT_SITE_LIVE = "2026-11-16";   /* the default; Help > Dates and Settings can change it (siteLive) */
 const CERT = {busy:false, at:0, err:""};
 function certProg(k){ return CERT_PROGRAMS.find(p=>p.k===k) || null; }
 function isCertSpot(s){ return s.k==="cert" && !!certProg(s.doc.certProgram) && (s.doc.certItems||[]).length>0; }
 /* the website address for a page, as it will be when the edition goes out */
 function certSite(ed, path){ const day=(ed && ed.dates && ed.dates.publish) || T();
-  return (day>=CERT_SITE_LIVE ? "https://www.mismo.org/" : "https://collaborate.mismo.org/mismowebsite/") + String(path||"").replace(/^\/+/,""); }
+  return (day>=(typeof siteLive==="function"?siteLive():CERT_SITE_LIVE) ? "https://www.mismo.org/" : "https://collaborate.mismo.org/mismowebsite/") + String(path||"").replace(/^\/+/,""); }
 
 /* ask the uploader page on the website for a program's list */
 async function certAsk(slug){

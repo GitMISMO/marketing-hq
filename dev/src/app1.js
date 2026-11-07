@@ -108,6 +108,16 @@ const iso = d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const P = s=>{ if(!s||typeof s!=="string") return null; const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?new Date(+m[1],+m[2]-1,+m[3]):null; };
 const today = ()=>{ const d=new Date(); d.setHours(0,0,0,0); return d; };
 const T = ()=>iso(today());
+/* the local calendar day of a saved time stamp ("2026-11-07T02:30:00Z" is Nov 6 in the evening in Eastern time) */
+const localDay = ts=>{ const s=String(ts||""); if(!/T\d/.test(s)) return s.slice(0,10); const d=new Date(s); return isNaN(d)?s.slice(0,10):iso(d); };
+/* a wall-clock time in Eastern time (Mic'd Up goes live Friday 8:30 AM ET wherever the viewer is) */
+function etAt(day, hm){
+  const guess=new Date(day+"T"+hm+":00Z");
+  const f=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hourCycle:"h23",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  const p=Object.fromEntries(f.formatToParts(guess).map(x=>[x.type,x.value]));
+  const asET=Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);
+  return new Date(guess.getTime()-(asET-guess.getTime()));
+}
 const add = (s,n)=>{ const d=P(s)||today(); d.setDate(d.getDate()+n); return iso(d); };
 const diff = (a,b)=>Math.round((P(a)-P(b))/864e5);
 const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -142,8 +152,8 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}};
-let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const BOOT=Date.now(), HOST_AT_BOOT=!!(window.claude && window.claude.use);
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}};
+let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
   for(let i=0;i<40 && !(window.claude && window.claude.use);i++) await new Promise(r=>setTimeout(r,100));
@@ -511,9 +521,9 @@ staleCheck(); setInterval(staleCheck, 3*60*1000);
 document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState==="visible") staleCheck(); });
 /* the background jobs (episode files, sponsor logos, certified lists) run from here, but through runJob:
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
-function renderAll(){ applyPosted(); renderTab(TAB); badges();
+function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
   if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); }
-  if(typeof a11yRows==="function") a11yRows(); }
+  if(typeof a11yRows==="function") a11yRows(); if(typeof sizeWatch==="function" && FIRST_LOAD && Date.now()-FIRST_LOAD>20000) sizeWatch(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],

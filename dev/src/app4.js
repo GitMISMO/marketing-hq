@@ -31,13 +31,5 @@ function wireLanes(el){
   });
 }
 const RING_COL={auto:"#3987e5",waiting:"rgba(255,255,255,.16)",in:"#74bfeb",review:"#e0a83c",changes:"#f08579",approved:"#4fc79b"};
-function ringHtml(on){
-  const n=on.length||1, R=80, r=56, cx=90, cy=90, gap=0.035;
-  const arc=(a0,a1)=>{ const p=(a,rad)=>[cx+rad*Math.sin(a), cy-rad*Math.cos(a)]; const [x0,y0]=p(a0,R),[x1,y1]=p(a1,R),[x2,y2]=p(a1,r),[x3,y3]=p(a0,r); const lg=(a1-a0)>Math.PI?1:0;
-    return 'M'+x0.toFixed(2)+' '+y0.toFixed(2)+' A'+R+' '+R+' 0 '+lg+' 1 '+x1.toFixed(2)+' '+y1.toFixed(2)+' L'+x2.toFixed(2)+' '+y2.toFixed(2)+' A'+r+' '+r+' 0 '+lg+' 0 '+x3.toFixed(2)+' '+y3.toFixed(2)+'Z'; };
-  const segs=on.map((s,i)=>{ const a0=i/n*2*Math.PI+gap, a1=(i+1)/n*2*Math.PI-gap; const st=s.meta.auto?"auto":(s.doc.status||"waiting"); return '<path d="'+arc(a0,a1)+'" fill="'+RING_COL[st]+'" data-rk="'+esc(s.k)+'"><title>'+esc((s.doc.name||s.meta.name)+" · "+(s.meta.auto?"Automatic":SSTAT[st][0]))+'</title></path>'; }).join("");
-  const inN=on.filter(s=>s.meta.auto||s.doc.status!=="waiting").length;
-  return '<div class="ring"><svg viewBox="0 0 180 180" role="img" aria-label="'+inN+' of '+on.length+' sections in">'+segs+'</svg><div class="rc"><b>'+inN+'/'+on.length+'</b><span>Sections In</span><small>'+on.filter(s=>s.doc.status==="approved").length+' approved</small></div></div>';
-}
 function ringLegend(){ return '<div class="rlegend">'+[["waiting","Waiting"],["in","Content In"],["review","With Amy"],["changes","Changes"],["approved","Approved"],["auto","Automatic"]].map(([k,l])=>'<span><i style="background:'+RING_COL[k]+'"></i>'+l+'</span>').join("")+'</div>'; }
 function waveHtml(live){ let h=''; for(let i=0;i<48;i++){ const v=0.25+0.75*Math.abs(Math.sin(i*0.55)*Math.cos(i*0.17)); h+='<i style="--h:'+(v*100).toFixed(0)+'%;--d:'+(-(i*0.09)%1.2).toFixed(2)+'s"></i>'; } return '<div class="wave'+(live?"":" idle")+'" aria-hidden="true">'+h+'</div>'; }

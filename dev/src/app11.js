@@ -107,7 +107,7 @@ async function kitSync(){
       // which episode? read the folder name for the number
       let info; try{ info=await DRIVE().list(fid); }catch(e){ continue; }
       const n=parseFolder(info.name).num; if(!n) continue;
-      let ep=epByNum(n, String(m.at||"").slice(0,10)||T());
+      let ep=epByNum(n, localDay(m.at)||T());
       if(!ep){ const id=epNewId(n); await put("episodes", id, {num:n, season:epNewSeason(), airDate:"", title:"", guests:"", company:""}); ep=S.episodes[id]; }
       await kitPullFolder(ep.id, fid, m.id);
     }
@@ -123,7 +123,7 @@ async function kitSync(){
       if(!msgIsPost(m) || vals("kits").some(k=>k.postChatId===m.id)) continue;
       const said=String(m.text||"").match(/ep(?:isode)?\.?\s*#?\s*(\d{1,3})/i);
       let target=null;
-      if(said){ const ep=epByNum(said[1], String(m.at||"").slice(0,10)||T()); if(ep && kitOf(ep.id)) target=ep.id; }
+      if(said){ const ep=epByNum(said[1], localDay(m.at)||T()); if(ep && kitOf(ep.id)) target=ep.id; }
       if(!target){ // the newest folder Brian posted before this, still waiting for its post
         const cands=vals("kits").filter(k=>!k.brianPost && k.chatId).map(k=>({k, at:(S.chat[k.chatId]||{}).at||k.pulledAt||""})).filter(x=>x.at<=String(m.at||"9")).sort((a,b)=>b.at.localeCompare(a.at));
         if(cands[0]) target=cands[0].k.id;
@@ -199,7 +199,6 @@ async function kitLoadTranscript(epId){
 const LI_STAT = {draft:["Draft","in"], review:["With Amy","review"], changes:["Changes Requested","changes"], approved:["Approved by Amy","ok"], edits:["Amy Replied with Edits","review"]};
 function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'?d Up\s*(Season\s*\d+,\s*)?(Episode|Ep\.)\s*\d+\s*:\s*/i,"").trim(); t=liLabel(e)+": "+t; return t.length>75 ? t.slice(0,72).replace(/\s+\S*$/,"")+"…" : t; }
 const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};
-const MEDIA_URL = "https://resources.mismo.org/marketing-hq/#micdup";
 /* the "approval needed" email to Amy: plain, branded, works in Outlook */
 function liAmyEmail(e, k, name, desc, from, rev){
   const F='font-family:Arial,Helvetica,sans-serif;';

@@ -71,7 +71,7 @@ const HELP = [
   </ul>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
-  <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which. November goes out Thursday, Nov 19, after the new website launches Nov 16.</p>
+  <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which.</p>
   <div class="hflow">
    <div><span>2 weeks before</span><b>Content Due</b><small>Contributors send copy to Kelly</small></div>
    <div><span>Next day</span><b>Sections In</b><small>Kelly drops each piece into its section</small></div>
@@ -127,7 +127,7 @@ const HELP = [
    <div><span>2–3 Weeks Ahead</span><b>Guest Form</b><small>The guest fills in bio, topics and questions</small></div>
    <div><span>1–2 Weeks Ahead</span><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>
    <div><span>Same Day</span><b>Into SharePoint</b><small>Video, thumbnails and transcript in the episode folder</small></div>
-   <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile; Spotify at 6:30 AM</small></div>
+   <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile</small></div>
    <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with the written description and proofed captions</small></div>
    <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
@@ -142,14 +142,13 @@ const HELP = [
   <p>Each Season 2 episode gets its own folder by itself, in Q Drive › MISMO › Active Documents › Marketing › MISMO Mic'd Up › Season 2, named like <i>S2 Ep 01 - Xactus</i>. <b>Open the Folder</b> in the episode or the kit goes straight there. Brian drops in the final video, the thumbnails and the transcript (.txt). Every ten minutes MISMO Media checks folders that are still missing something and pulls the files in: the largest video is the episode, other videos are clips, pictures go to the Image Library, and the Recorded On date fills itself in.</p>
   <h3>Release Week</h3>
   <ol>
-   <li><b>Friday morning:</b> tick <b>On Spotify</b> and paste its link (step 6 of the kit).</li>
    <li><b>Friday afternoon:</b> work the YouTube Kit (below) and upload. Title: <i>MISMO Mic'd Up Season 2, Ep. N: Title</i>, the way the channel has always done it. Upload the proofed captions; never burn captions into the video.</li>
    <li><b>Monday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
-   <li><b>Clips:</b> <b>Plan the Clip Posts</b> puts four LinkedIn posts on the schedule (4, 7, 11 and 14 days later, 9:00 AM, Vanessa) with captions already written.</li>
+   <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips, so the clip steps are hidden for now.</li>
    <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
-   <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube. Spotify plays go in the episode's Results and add up on the Results page.</li>
+   <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube.</li>
   </ol>
-  <p>The checks on The Weekly Run are Recorded, Captions, Spotify, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
+  <p>The checks on The Weekly Run are Recorded, Captions, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
   <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late or missing anything. Everything from Episode 51 on is tracked.</p>`},
  {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
   <p>Everything Vanessa needs to post an episode is filled in for her. The writing follows MISMO's Mic'd Up house style, taken from the published episodes on YouTube, Spotify, Apple Podcasts and MISMO's and Brian's LinkedIn posts: the same voice and shape, with the guest's title and company always included, the search words up front, chapters, topic-matched hashtags, takeaways and a subscribe line added. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>. Once Brian's files are in the SharePoint folder, the episode's card appears by itself; <b>Check the Folder</b> looks again right away.</p>
@@ -160,9 +159,8 @@ const HELP = [
    <li><b>Transcript:</b> <b>Check</b> lists misspelled names and MISMO terms (MISMO, Mic'd Up, Vieaux, eNote, eClose, eVault, SMART Doc, the guest's name and more). Untick anything that's right as it is, then <b>Download Corrected Transcript</b> and upload it to YouTube as the captions.</li>
    <li><b>Titles, Descriptions and Posts:</b> press <b>Write Everything</b>. In about 20 seconds, the "MISMO Media - Writer" prompt reads the transcript and the guest's answers and writes title options, the YouTube title and description, chapters, a longer description, Brian's promo post, the LinkedIn Live event name and description, the MISMO Matters blurb, a post for the guest and clip captions. Copy what you need. <b>Write Again</b> asks for a new version; <b>Draft Article</b> writes a 600–800 word viewpoint piece in Brian's voice.</li>
    <li><b>YouTube:</b> post it, then paste the link. The kit also notices it by itself once the channel lists it.</li>
-   <li><b>Spotify:</b> paste the Spotify link and save.</li>
    <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Monday.</li>
-   <li><b>Clips:</b> download any clip files from the folder, with their written captions. <b>Plan the Clip Posts</b> puts four on the LinkedIn schedule.</li>
+   <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips.</li>
    <li><b>Guest share kit:</b> copy the guest's post, <b>Email the Guest</b>, then <b>Mark as Sent</b>.</li>
   </ol>
   <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. YouTube titles read "MISMO Mic'd Up Season 2, Ep. 1: …" and MISMO's LinkedIn Live events "MISMO Mic'd Up S2 Ep. 1: …". Older Season 1 episodes that came through Google Drive keep their Drive buttons.</p>
@@ -389,10 +387,11 @@ function renderHelp(){
   el.innerHTML='<div class="phead"><div><div class="eyebrow">How to Use MISMO Media</div><h1>Help</h1><div class="sub">Everything about the system: what each page does, the monthly and weekly runs, who does what, and how saving works.</div></div></div>'+
     '<div class="helpwrap"><nav class="helpnav" aria-label="Help topics"><input type="search" class="plain" id="hp-q" placeholder="Search help" value="'+esc(HL.q)+'" autocomplete="off">'+
       groups.map(g=>{ const hs=list.filter(h=>h.g===g); return hs.length?'<div class="hg">'+esc(g)+'</div>'+hs.map(h=>'<button type="button" data-hp="'+h.id+'"'+(h.id===HL.id?' aria-current="true"':'')+'>'+esc(h.t)+'</button>').join(""):""; }).join("")+(list.length?'':'<div class="note" style="padding:8px">Nothing matches.</div>')+
-    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.b)+
+    '</nav><article class="card helpbody"><div class="cb"><div class="eyebrow">'+esc(cur.g)+'</div><h2>'+esc(cur.t)+'</h2>'+(cur.id==="system"&&typeof systemHtml==="function"?systemHtml():cur.id==="dates"&&typeof datesHtml==="function"?datesHtml():cur.b)+
       '<div class="helpnext">'+(()=>{ const i=HELP.indexOf(cur); return (i>0?'<button class="btn" type="button" data-hp="'+HELP[i-1].id+'">← '+esc(HELP[i-1].t)+'</button>':'<span></span>')+(i<HELP.length-1?'<button class="btn" type="button" data-hp="'+HELP[i+1].id+'">'+esc(HELP[i+1].t)+' →</button>':''); })()+'</div>'+
     '</div></article></div>';
   if(cur.id==="system" && typeof wireSystem==="function") wireSystem(el);
+  if(cur.id==="dates" && typeof wireDates==="function") wireDates(el);
   $$("[data-hp]",el).forEach(b=>b.onclick=()=>{ HL.id=b.dataset.hp; renderHelp(); const a=$(".helpbody"); if(a) a.scrollIntoView({block:"start"}); });
   const qi=$("#hp-q",el); qi.oninput=()=>{ HL.q=qi.value; clearTimeout(HL._t); HL._t=setTimeout(()=>{ const first=HELP.find(h=>!HL.q.trim()||(h.t+" "+strip(h.b)).toLowerCase().includes(HL.q.trim().toLowerCase())); if(first) HL.id=first.id; renderHelp(); const n=$("#hp-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },200); };
 }

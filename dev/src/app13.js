@@ -73,7 +73,7 @@ async function kitPullSP(epId, quiet){
       thumbs, pulledAt:new Date().toISOString()});
     if(!kit.thumbPick && thumbs.length===1) kit.thumbPick=thumbs[0].img;
     await put("kits", epId, kit);
-    const part={}; if(c.video && !e.recordDate) part.recordDate=String(c.video.modified||"").slice(0,10)||T();
+    const part={}; if(c.video && !e.recordDate) part.recordDate=localDay(c.video.modified)||T();
     if(c.video && !e.fileIn) part.fileIn=true;
     if(Object.keys(part).length) await patch("episodes", epId, part);
     MU.pulled[epId]=Date.now();
