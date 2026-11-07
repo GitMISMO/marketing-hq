@@ -7,7 +7,7 @@ Newest first. One line per change people would notice, plus anything that change
 - Out-of-date tabs are noticed within 3 minutes (was 10) and pause saving until refreshed.
 - Delete now puts things aside; Help > System Health lists them with Bring Back.
 - New Help > System Health: version, saving status, background jobs and their last errors, date lists running out, Download All Data.
-- Home: Waiting on Approval lists everything waiting on someone's OK and for how long.
+- Home: newsletter sections and posts waiting on Amy's OK appear in her On Your Plate list, alongside the Mic'd Up wording.
 - Background jobs run in one tab per browser, at most once a minute, pausing longer after each failure.
 - Newsletter: every build carries a version on its first line and in Preview, to check against Informz.
 - Newsletter: Copy Link beside Back to Top in every section; Vieaux Point button reads Continue Reading and picks up where the newsletter stops.
