@@ -33,8 +33,8 @@ const r=await p.evaluate(async()=>{
   const html=buildEmail(curEdition()); out.versionStamp=/^<!-- MISMO Matters .* version [0-9A-Z]{7} -->/.test(html);
   // 9. System Health renders, with the deleted list and export
   await remove("pieces","ptest"); await wait(80);
-  go("settings"); SET.sub="system"; renderSettings(); await wait(50);
-  const h=document.querySelector("#page-settings").textContent; out.system = /System Health/.test(h) && /Recently Deleted/.test(h) && /New one/.test(h) && /Download All Data/.test(h);
+  hhOpen(); await wait(80);
+  const h=document.querySelector("#hh-modal").textContent; out.system = /Everything Is Working|Working, With a Warning|Something Needs Attention/.test(h) && /Storage/.test(h) && /Recently Deleted/.test(h) && /New one/.test(h) && /Download All Data/.test(h) && !!document.querySelector("#hh-btn .hh-dot");
   // 10. bring back from System Health
   document.querySelector("[data-restore]").click(); await wait(120); out.restoreBtn = !!S.pieces.ptest;
   // 11. approvals show in On Your Plate for Amy (no separate card)
@@ -49,12 +49,14 @@ const r=await p.evaluate(async()=>{
   await put("settings","dates",{holidays:Object.assign({}, HOLIDAYS, {"2028-01-17":"MLK Jr. Birthday"}), summits:SUMMITS.map(s=>Object.assign({},s)).concat([{id:"t",name:"2028 Winter Summit",start:"2028-01-10",end:"2028-01-13",where:"Test"}]), siteLive:"2026-12-01"}); await wait(80);
   renderAll(); await wait(30);
   out.dates = HOLIDAYS["2028-01-17"]==="MLK Jr. Birthday" && SUMMITS.some(s=>s.name==="2028 Winter Summit") && siteLive()==="2026-12-01" && certSite({dates:{publish:"2026-11-19"}},"x")==="https://collaborate.mismo.org/mismowebsite/x";
-  go("settings"); SET.sub="dates"; renderSettings(); await wait(30); out.datesPage = /Holidays/.test(document.querySelector("#page-settings").textContent) && !!document.querySelector('.hq nav button[data-hq="settings"]') && document.querySelectorAll("[data-hd]").length>10;
+  go("help"); HL.id="dates"; renderHelp(); await wait(30); out.datesPage = /Holidays and Key Dates/.test(document.querySelector("#page-help").textContent) && document.querySelectorAll("[data-hd]").length>10 && !document.querySelector('.hq nav button[data-hq="settings"]') && document.querySelectorAll("[data-hd]").length>10;
   // 15. Eastern-time countdown and local days
   out.et = etAt("2026-11-13","08:30").toISOString()==="2026-11-13T13:30:00.000Z" && localDay("2026-11-07")==="2026-11-07";
   out.sizes = typeof fileSizes==="function";
+  // 16. errors are caught and shown in System Health
+  setTimeout(()=>{ throw new Error("test boom"); },0); await wait(50); hhRun(); out.errCaught = (window.__mmErrs||[]).some(e=>/test boom/.test(e.msg)) && HH.last.rows.some(r=>r.key==="err" && r.level==="warn");
   out.leader = LEADER; out.jobs = Object.keys(JOBS);
   return out;
 });
-console.log(JSON.stringify(r,null,1)); console.log('errors',errs);
+console.log(JSON.stringify(r,null,1)); console.log("errors",errs.filter(e=>!/test boom/.test(e)));
 await b.close();})();
