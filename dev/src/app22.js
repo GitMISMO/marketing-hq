@@ -127,13 +127,13 @@ HELP.push({id:"dates", t:"Holidays and Key Dates", g:"Setup", b:""});
    Built the way Summit HQ's is (Jonna liked it): a System Health button in the top bar with a dot
    (green, amber, red), a panel of checks, a red bar across the top when something needs attention,
    and a team error log so a problem on anyone's screen reaches one place. Checks every 5 minutes
-   while MISMO Media is open. Nothing here changes data except the log (feeds/health-log). */
+   while MISMO Media is open. Nothing here changes data except the log (healthlog/log). */
 const HH = {last:null, running:null, modal:null, btn:null, dot:null, bar:null, started:false, shippedUpTo:0, shipT:null};
-const HH_LOG="health-log", HH_KEEP=30, HH_MAX=150;
+const HH_LOG="log", HH_KEEP=30, HH_MAX=150;
 const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
 const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
 const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
-const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings"};
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log"};
 const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
 function hhSaving(){
@@ -181,6 +181,12 @@ function hhWebNews(){
   if(hrs>36) return hhRow("webnews","In the News Web Search","warn","Last searched "+hhWhen(r.at)+", more than a day ago. The \"In the News web search\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
   return hhRow("webnews","In the News Web Search","ok","Last searched "+hhWhen(r.at)+". "+n+" stor"+(n===1?"y":"ies")+" found this month.");
 }
+function hhResults(){
+  const f=feed("youtube"); if(!f || !f.updated) return LOADED.has("feeds")? hhRow("feed","Results Feed","off","Hasn't run yet. It runs every morning; the first run starts it.") : null;
+  const hrs=(Date.now()-Date.parse(f.updated))/36e5, n=Object.keys(f.videos||{}).length;
+  if(hrs>36) return hhRow("feed","Results Feed","warn","YouTube numbers last came in "+hhWhen(f.updated)+", more than a day ago. The \"Results feed\" workflow in marketing-hq-data may be paused.");
+  return hhRow("feed","Results Feed","ok","YouTube views for "+n+" video"+(n===1?"":"s")+", updated "+hhWhen(f.updated)+".");
+}
 function hhDates(){
   const w=dateWarnings(); if(!w.length) return null;
   return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
@@ -193,7 +199,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 function hhPlace(){
@@ -228,7 +234,7 @@ function hhReport(){
     .concat(HH.last.rows.map(r=>(r.level==="ok"?"OK":r.level==="warn"?"WARNING":r.level==="bad"?"PROBLEM":"NOT CHECKED")+" | "+r.title+": "+r.line+(r.list.length?"\n - "+r.list.join("\n - "):"")))
     .concat(["","Errors on this page:"].concat((window.__mmErrs||[]).slice(-15).map(e=>" "+e.at+" "+e.kind+" x"+e.n+" "+e.msg+(e.src?" ["+e.src+"]":"")))).join("\n");
 }
-async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("feeds").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
+async function hhTeamLog(){ if(!DB) return null; try{ const s=await DB.collection("healthlog").doc(HH_LOG).get(); const d=s&&s.exists?s.data():null; return (d&&Array.isArray(d.entries))?d.entries:[]; }catch(e){ return null; } }
 function hhTrash(){ const t=[]; Object.keys(TRASH).forEach(c=>Object.values(TRASH[c]||{}).forEach(r=>t.push({c,r}))); return t.sort((a,b)=>String(b.r._deletedAt).localeCompare(String(a.r._deletedAt))); }
 async function hhDraw(){
   if(!HH.modal || !HH.last) return;
@@ -270,7 +276,7 @@ async function hhShip(){
     const who=window.__hqWho||"", cur=await hhTeamLog(); const keep=Date.now()-HH_KEEP*864e5;
     let entries=(cur||[]).filter(x=>Date.parse(x.at)>keep);
     fresh.forEach(e=>entries.push({at:e.at, who, kind:e.kind, msg:e.msg, src:e.src||"", n:e.n, tab:e.tab||""}));
-    await DB.collection("feeds").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
+    await DB.collection("healthlog").doc(HH_LOG).set({updatedAt:new Date().toISOString(), entries:entries.slice(-HH_MAX)});
     HH.shippedUpTo=Math.max.apply(null, fresh.map(e=>Date.parse(e.at)));
   }catch(e){}
 }

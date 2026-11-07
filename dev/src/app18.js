@@ -20,7 +20,7 @@ function mnTasks(per){
       link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-li"},
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
-      why:'Views, watch time and likes for each Mic\'d Up episode.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
+      why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
     {k:"mc", t:"Mailchimp", feed:"mailchimp",
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
       why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mc"},

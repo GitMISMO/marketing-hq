@@ -345,13 +345,14 @@ const HELP = [
    <li>Uploading images and "Write the LinkedIn Post" work in the Claude version today and will come to resources.mismo.org when the relay supports them.</li>
   </ul>`},
  {id:"automation", t:"Daily Stats from Power Automate", g:"Behind the Scenes", b:`
-  <p>Once MISMO Media is saving on resources.mismo.org, a scheduled Power Automate flow can bring the numbers in every morning instead of anyone importing them. The flow writes one file, <code>data/feeds.json</code>, into marketing-hq-data, the same way the Member 360 email flow writes its results file. MISMO Media reads it and fills in Results, the edition stats and the episode views on its own. Typed or imported numbers always win over the feed.</p>
-  <table class="t"><thead><tr><th>Source</th><th>Daily?</th><th>How the Flow Gets It</th></tr></thead><tbody>
-   <tr><td>MISMO Matters (Higher Logic)</td><td>Yes</td><td>HTTP call to Higher Logic's marketing (Informz) API for each mailing: sent, delivered, unique opens, unique clicks, unsubscribes, bounces. Needs an API user from Higher Logic.</td></tr>
-   <tr><td>YouTube</td><td>Yes</td><td>HTTP call to the YouTube Data API with a Google API key for views, likes and comments. Power Automate's own YouTube connector only announces new uploads; it has no view counts.</td></tr>
-   <tr><td>Mailchimp</td><td>Yes</td><td>HTTP call to Mailchimp's reports API with a Mailchimp API key.</td></tr>
-   <tr><td>LinkedIn</td><td>Not yet</td><td>Power Automate has no LinkedIn analytics action. Page analytics need a LinkedIn developer app approved for organization data. Until then, drop the monthly export on Results.</td></tr>
-   <tr><td>Website subscribers</td><td>As they happen</td><td>MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td></tr>
+  <p>Where each number comes from today (Nov 7, 2026). The daily ones are written into one file, <code>data/feeds.json</code> in marketing-hq-data, which MISMO Media reads to fill in Results, the edition stats and the episode views. Typed or imported numbers always win over the feed. The rest stay on the monthly checklist at the top of Results, and each line there ticks itself once its numbers arrive.</p>
+  <table class="t"><thead><tr><th>Source</th><th>How It Comes In</th><th>What's Needed</th></tr></thead><tbody>
+   <tr><td>YouTube</td><td><b>Every morning, by itself.</b> The <b>Results feed</b> workflow in marketing-hq-data reads views and likes for every video from the channel's public pages.</td><td>Nothing. Watch time and other Studio numbers still come from the monthly YouTube Studio export, if wanted.</td></tr>
+   <tr><td>MISMO Matters (Informz)</td><td>Typed in from Higher Logic's report with <b>Record Stats</b>, once a month.</td><td>To make it automatic: an Informz API user from Higher Logic support. With it, the Results feed can read sent, delivered, opens, clicks, unsubscribes and bounces every morning.</td></tr>
+   <tr><td>Mailchimp</td><td>The monthly campaigns export dropped on Results.</td><td>Being retired now that MISMO Matters goes through Informz; a Mailchimp API key would make it automatic in the meantime.</td></tr>
+   <tr><td>LinkedIn</td><td>The monthly export dropped on Results (Vanessa).</td><td>LinkedIn doesn't let outside tools read page analytics without an approved developer app, so this stays by hand.</td></tr>
+   <tr><td>In the News</td><td><b>Every morning, by itself.</b> The <b>In the News web search</b> workflow searches Google News and Bing News for MISMO; Brittney's FYI emails come in as they're sent.</td><td>Nothing.</td></tr>
+   <tr><td>Website subscribers</td><td>As they happen. MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td><td>Nothing.</td></tr>
   </tbody></table>
   <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
   <h3>What the File Looks Like</h3>
