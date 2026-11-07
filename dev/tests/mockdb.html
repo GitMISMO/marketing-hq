@@ -1,0 +1,20 @@
+<script>
+/* in-memory stand-in for the save relay: records every write so tests can see exactly what was sent */
+(function(){
+  const D=JSON.parse(JSON.stringify(window.__D||{})), L={}, W=[];
+  const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
+  const fire=c=>(L[c]||[]).forEach(cb=>cb({docs:Object.keys(D[c]||{}).map(id=>({id, data:()=>clone(D[c][id])}))}));
+  const coll=c=>({
+    onSnapshot(cb){ (L[c]=L[c]||[]).push(cb); setTimeout(()=>cb({docs:Object.keys(D[c]||{}).map(id=>({id, data:()=>clone(D[c][id])}))}),0); return ()=>{}; },
+    doc(id){ return {
+      set(d){ W.push({c,id,op:"set",d:clone(d)}); (D[c]=D[c]||{})[id]=clone(d); setTimeout(()=>fire(c),0); return Promise.resolve(); },
+      update(d){ W.push({c,id,op:"update",d:clone(d)}); if(!(D[c]||{})[id]){ const e=new Error("nf"); e.code="not-found"; return Promise.reject(e); } D[c][id]=Object.assign({},D[c][id],clone(d)); setTimeout(()=>fire(c),0); return Promise.resolve(); },
+      merge(d,base){ W.push({c,id,op:"merge",d:clone(d),base:clone(base)}); const cur=(D[c]||{})[id]; if(base && !cur){ const e=new Error(window.__hqMerge.GONE); e.code="not-found"; return Promise.reject(e); } (D[c]=D[c]||{})[id]=base?window.__hqMerge.merge(cur,clone(d),clone(base)):clone(d); setTimeout(()=>fire(c),0); return Promise.resolve(); },
+      delete(){ W.push({c,id,op:"delete"}); delete (D[c]||{})[id]; setTimeout(()=>fire(c),0); return Promise.resolve(); } }; }
+  });
+  window.__MOCK={D,W,
+    /* someone else saving: change the stored record directly */
+    other(c,id,part){ D[c][id]=Object.assign({},D[c][id],part); fire(c); }};
+  window.claude={use:async k=>k==="db"?{collection:coll}:null};
+})();
+</script>
