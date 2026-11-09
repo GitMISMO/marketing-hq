@@ -63,7 +63,7 @@ function mdEmail(s, pStyle, aStyle, opt){
       if(opt.h3 && b.lines.length===1 && RT_HEAD.test(b.lines[0].trim())) return '<h3 style="'+opt.h3+'">'+mdInline(b.lines[0].trim().replace(RT_HEAD,"$1"),aStyle)+'</h3>';
       return '<p style="'+pStyle+'">'+b.lines.map(l=>mdInline(l,aStyle)).join("<br>")+'</p>';
     }
-    return '<'+b.t+' style="'+pStyle+';padding-left:24px">'+b.items.map(i=>'<li style="'+(opt.li||"margin:0 0 6px")+'">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>';
+    return '<'+b.t+' style="'+pStyle+';margin-left:24px;padding-left:0">'+b.items.map(i=>'<li style="'+(opt.li||"margin:0 0 6px")+'">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</li>').join("")+'</'+b.t+'>';
   }).join("");
 }
 /* Plain text, for places that can't show formatting (LinkedIn, text copies, short snippets). */

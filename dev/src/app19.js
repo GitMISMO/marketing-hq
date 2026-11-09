@@ -27,7 +27,7 @@ function logoGroups(list){ const g=[]; list.forEach(l=>{ const k=(l.group||"").t
 /* ---------- the email ---------- */
 function logoWall(ed, s, preview){
   const cfg=LOGO_SECS[s.k], d=s.doc, list=logoPicks(ed,s.k);
-  const F="font-family:'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif;", M="font-family:'IBM Plex Mono',Consolas,Menlo,monospace;";
+  const F=EM_F, M="font-family:'IBM Plex Mono',Consolas,monospace;";
   const navy="#0d314c", ink="#1d2b36", dark=s.k==="welcome";
   const eyeC=dark?"#74bfeb":"#2477b8", headC=dark?"#ffffff":navy, txtC=dark?"#cfe6f6":ink, grpC=dark?"#a9d8f3":"#5d7d95", cardB=dark?"#ffffff":"#dde9f2";
   const intro=d.body ? mdEmail(d.body, F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC, 'color:'+(dark?"#ffffff":"#14486e")+';font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:16px;line-height:1.65;margin:0 0 12px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
@@ -63,14 +63,14 @@ function logoWall(ed, s, preview){
   if(!dark){ const body=groups.map(g=>{ const T=TIERS[tierOf(g.k)];
       return (many && g.k ? '<div style="'+M+'font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:12px 0 3px;text-align:center"><span style="color:'+T.c+'">&#9632;</span>&nbsp;'+esc(g.k)+'</div>' : '')+gridC(g.items,T); }).join("");
     const introC=d.body ? mdEmail(d.body, F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC, 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
-    const ctaC = d.ctaUrl ? '<p style="margin:14px 0 2px;text-align:center"><a href="'+esc(safeHref(d.ctaUrl))+'" style="'+F+'display:inline-block;background:'+navy+';color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;line-height:1;padding:12px 20px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
-    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
+    const ctaC = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff', {center:true, size:14, pad:"12px 20px"}), 14, 2, true) : '';
+    return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
       '<div style="'+M+'font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 6px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
       '<div style="'+F+'font-size:23px;line-height:1.2;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 6px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+
-      '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>'; }
+      '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>', 0, 22); }
   const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
   const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
-  const cta = d.ctaUrl ? '<p style="margin:18px 0 4px;text-align:center"><a href="'+esc(safeHref(d.ctaUrl))+'" style="'+F+'display:inline-block;background:'+(dark?'#1a8fe3':navy)+';color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;line-height:1;padding:14px 24px;border-radius:3px;white-space:nowrap">'+esc(d.ctaText||"Learn More")+'&nbsp;&rarr;</a></p>' : '';
+  const cta = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', dark?'#1a8fe3':navy, '#ffffff', {center:true}), 18, 4, true) : '';
   const box = dark
     ? 'bgcolor="'+navy+'" style="background:'+navy+';background-image:linear-gradient(180deg,#0d314c 0%,#0d314c 38%,#123f63 74%,#17507a 100%);border-radius:8px;padding:14px 12px 24px;text-align:center"'
     : 'bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:28px 12px 22px;text-align:center"';
@@ -78,10 +78,10 @@ function logoWall(ed, s, preview){
      Outlook shows its first frame, which is a finished picture on its own */
   const burst = dark ? '<img src="'+HDR2_BASE+'welcome-burst.gif" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto 6px;border:0" border="0">' : '';
   const outro = dark ? '<div style="'+F+'font-size:14px;line-height:1.55;color:#a9d8f3;margin:18px 0 0;padding:0 10px">Say hello when you see them in a workgroup or at the next MISMO Summit.</div>' : '';
-  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px"><tr><td align="center" '+box+'>'+burst+
+  return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" '+box+'>'+burst+
     '<div style="'+M+'font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 10px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
     '<div style="'+F+'font-size:26px;line-height:1.22;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 10px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+rule+
-    '<div style="padding:8px 14px 0;max-width:470px;margin:0 auto">'+intro+'</div>'+body+outro+cta+'</td></tr></table>';
+    '<div style="padding:8px 14px 0;max-width:470px;margin:0 auto">'+intro+'</div>'+body+outro+cta+'</td></tr></table>', 0, 22);
 }
 function logoWallText(ed, s){
   const cfg=LOGO_SECS[s.k], d=s.doc, out=[d.headline||cfg.head, d.body?mdPlain(d.body):cfg.intro];
