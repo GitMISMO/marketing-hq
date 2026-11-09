@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-09
+- MISMO Matters looks right in the Outlook desktop app: buttons are real buttons (color and padding on a table cell; the Subscribe button lost its stray border), a small picture beside the text keeps a gap, section header pictures, the masthead and the footer logo and icons are no longer clipped, and boxes (quotes, sponsor walls, certified lists) keep their space above and below. Bulleted lists indent inside the column. Slightly shorter font lists keep the email nearer Gmail's 102 KB clipping limit.
+
 ## 2026-11-07 (evening)
 - Thank You to Our Sponsors: a custom Series package from the Sponsorship Portal (record.custom, one line per summit) is thanked only at the summits it lists, at that summit's tier; a Spring & Fall package no longer shows in Winter. New test for it.
 - MISMO Matters: Copy HTML lists any running section Amy hasn't approved yet and asks before copying (fine for a test; the real send waits for her OK).
