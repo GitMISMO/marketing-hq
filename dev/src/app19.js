@@ -37,11 +37,11 @@ function logoWall(ed, s, preview){
       ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0"'+(hl||src?'':' data-mmimg="'+esc(l.id)+'"')+'>'
       : '<div style="'+F+'font-size:18px;line-height:1.3;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
     const linked = safeHref(l.url) ? '<a href="'+esc(safeHref(l.url))+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
-    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="112" style="background:#ffffff;border:1px solid '+cardB+';'+(dark?'border-top:3px solid #74bfeb;':'')+'border-radius:6px;padding:16px 10px;height:112px;text-align:center">'+linked+'</td></tr></table>'; };
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="112" style="background:#ffffff;border:1px solid '+cardB+';'+(dark?'border-top:3px solid #74bfeb;':'')+'border-radius:6px;padding:16px 10px;height:112px;text-align:center">'+linked+'</td></tr></table>'; };
   const grid=items=>{ let rows=''; for(let i=0;i<items.length;i+=2){ const a=items[i], b=items[i+1];
       rows+= b ? '<tr><td width="50%" valign="top" style="padding:5px">'+logo(a)+'</td><td width="50%" valign="top" style="padding:5px">'+logo(b)+'</td></tr>'
-               : '<tr><td colspan="2" align="center" style="padding:6px"><table role="presentation" width="50%" cellpadding="0" cellspacing="0" border="0" style="width:50%;margin:0 auto"><tr><td>'+logo(a)+'</td></tr></table></td></tr>'; }
-    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+rows+'</table>'; };
+               : '<tr><td colspan="2" align="center" style="padding:6px"><table role="presentation" width="50%" cellpadding="0" cellspacing="0" style="width:50%;margin:0 auto"><tr><td>'+logo(a)+'</td></tr></table></td></tr>'; }
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+rows+'</table>'; };
   /* sponsors: a compact wall, several logos across, sized and colored by tier (Platinum largest), so even a long
      sponsor list stays short. The last row of a tier is centered. */
   const TIERS={platinum:{m:4,h:78,lh:44,lw:120,c:"#9fb0be"}, gold:{m:3,h:72,lh:42,lw:132,c:"#d4a92e"}, silver:{m:4,h:66,lh:36,lw:112,c:"#aab4bd"},
@@ -53,10 +53,10 @@ function logoWall(ed, s, preview){
       ? '<img src="'+esc(src)+'" alt="'+esc(l.name||im.name||"")+'" width="'+w+'" style="display:block;margin:0 auto;width:'+w+'px;max-width:100%;height:auto;border:0'+(hl?'':';outline:2px dashed #e0a440;outline-offset:3px')+'" border="0">'
       : '<div style="'+F+'font-size:13px;line-height:1.25;font-weight:700;color:'+navy+'">'+esc(l.name||im.name||"")+'</div>';
     const linked = safeHref(l.url) ? '<a href="'+esc(safeHref(l.url))+'" style="text-decoration:none;display:block">'+inner+'</a>' : inner;
-    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="'+T.h+'" style="background:#ffffff;border:1px solid #dde9f2;border-top:3px solid '+T.c+';border-radius:5px;padding:8px 6px;height:'+T.h+'px;text-align:center">'+linked+'</td></tr></table>'; };
+    return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" valign="middle" bgcolor="#ffffff" height="'+T.h+'" style="background:#ffffff;border:1px solid #dde9f2;border-top:3px solid '+T.c+';border-radius:5px;padding:8px 6px;height:'+T.h+'px;text-align:center">'+linked+'</td></tr></table>'; };
   const gridC=(items,T)=>{ const n=items.length, rows=Math.ceil(n/T.m), c=Math.max(Math.ceil(n/rows), Math.min(T.m,3)); let out='';
     for(let i=0;i<n;i+=c){ const row=items.slice(i,i+c), pct=(100/row.length).toFixed(2), tw=Math.round(row.length/c*100);
-      out+='<table role="presentation" align="center" width="'+tw+'%" cellpadding="0" cellspacing="0" border="0" style="width:'+tw+'%;margin:0 auto"><tr>'+
+      out+='<table role="presentation" align="center" width="'+tw+'%" cellpadding="0" cellspacing="0" style="width:'+tw+'%;margin:0 auto"><tr>'+
         row.map(l=>'<td width="'+pct+'%" valign="top" style="padding:3px;width:'+pct+'%">'+logoC(l,T)+'</td>').join("")+'</tr></table>'; }
     return out; };
   const groups=logoGroups(list), many=groups.length>1 || (groups[0] && groups[0].k);
@@ -64,12 +64,12 @@ function logoWall(ed, s, preview){
       return (many && g.k ? '<div style="'+M+'font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:12px 0 3px;text-align:center"><span style="color:'+T.c+'">&#9632;</span>&nbsp;'+esc(g.k)+'</div>' : '')+gridC(g.items,T); }).join("");
     const introC=d.body ? mdEmail(d.body, F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC, 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
     const ctaC = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff', {center:true, size:14, pad:"12px 20px"}), 14, 2, true) : '';
-    return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
+    return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
       '<div style="'+M+'font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 6px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
       '<div style="'+F+'font-size:23px;line-height:1.2;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 6px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+
       '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>', 0, 22); }
   const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
-  const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
+  const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
   const cta = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', dark?'#1a8fe3':navy, '#ffffff', {center:true}), 18, 4, true) : '';
   const box = dark
     ? 'bgcolor="'+navy+'" style="background:'+navy+';background-image:linear-gradient(180deg,#0d314c 0%,#0d314c 38%,#123f63 74%,#17507a 100%);border-radius:8px;padding:14px 12px 24px;text-align:center"'
@@ -78,7 +78,7 @@ function logoWall(ed, s, preview){
      Outlook shows its first frame, which is a finished picture on its own */
   const burst = dark ? '<img src="'+HDR2_BASE+'welcome-burst.gif" alt="" width="520" style="display:block;width:100%;max-width:520px;height:auto;margin:0 auto 6px;border:0" border="0">' : '';
   const outro = dark ? '<div style="'+F+'font-size:14px;line-height:1.55;color:#a9d8f3;margin:18px 0 0;padding:0 10px">Say hello when you see them in a workgroup or at the next MISMO Summit.</div>' : '';
-  return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" '+box+'>'+burst+
+  return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" '+box+'>'+burst+
     '<div style="'+M+'font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 10px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
     '<div style="'+F+'font-size:26px;line-height:1.22;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 10px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+rule+
     '<div style="padding:8px 14px 0;max-width:470px;margin:0 auto">'+intro+'</div>'+body+outro+cta+'</td></tr></table>', 0, 22);

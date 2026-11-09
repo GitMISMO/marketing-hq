@@ -70,7 +70,7 @@ function certSpotlight(ed, s, bodyFn){
   const title=d.headline||p.title;
   const name=i=>{ const u=i.path?certSite(ed,i.path):""; return u ? '<a href="'+esc(u)+'" style="color:'+navy+';text-decoration:none">'+esc(i.name)+'</a>' : esc(i.name); };
   const row=i=>'<tr><td width="14" valign="top" style="padding:7px 0 7px;'+F+'font-size:11px;line-height:20px;color:#74bfeb">&#11042;</td><td style="padding:7px 0 7px 6px;border-bottom:1px solid '+line+';'+F+'font-size:15px;line-height:20px;font-weight:600;color:'+navy+'">'+name(i)+'</td></tr>';
-  const list=xs=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+xs.map(row).join("")+'</table>';
+  const list=xs=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+xs.map(row).join("")+'</table>';
   const md=t=>!String(t||"").trim() ? "" : (bodyFn ? bodyFn(t) : mdEmail(t, F+'font-size:16px;line-height:1.65;margin:0 0 16px;color:#1d2b36', 'color:#14486e;font-weight:600;text-decoration:underline', {}));
   const [before, after]=certSplit(d.body);
   const count=items.length+' '+(p.what==="system"?"system":p.what==="provider"?"provider":"organization")+(items.length===1?"":"s");
@@ -83,12 +83,12 @@ function certSpotlight(ed, s, bodyFn){
     card='<tr><td width="38%" align="center" valign="middle" style="padding:22px 8px 22px 16px">'+badge+'</td><td width="62%" valign="middle" style="padding:22px 22px 22px 10px">'+eye+head+list(items)+more+'</td></tr>';
   } else {
     const half=Math.ceil(items.length/2);
-    card='<tr><td colspan="2" style="padding:22px 22px 6px">'+(badge?'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td width="130" valign="middle" style="padding-right:16px">'+badge.replace(/width="170"/,'width="120"').replace(/width:170px/,'width:120px')+'</td><td valign="middle">'+eye+head+'</td></tr></table>':eye+head)+'</td></tr>'+
+    card='<tr><td colspan="2" style="padding:22px 22px 6px">'+(badge?'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="130" valign="middle" style="padding-right:16px">'+badge.replace(/width="170"/,'width="120"').replace(/width:170px/,'width:120px')+'</td><td valign="middle">'+eye+head+'</td></tr></table>':eye+head)+'</td></tr>'+
       '<tr><td width="50%" valign="top" style="padding:0 10px 0 22px">'+list(items.slice(0,half))+'</td><td width="50%" valign="top" style="padding:0 22px 0 10px">'+list(items.slice(half))+'</td></tr>'+
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
   const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
-  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+md(after)+cta;
+  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+md(after)+cta;
 }
 function certSpotlightText(ed, s){
   const d=s.doc, p=certProg(d.certProgram), out=[];

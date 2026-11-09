@@ -233,15 +233,16 @@ const EMAIL_FONTS='<!--[if !mso]><!--><link href="https://fonts.googleapis.com/c
 const EM_F="font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;";
 function emBtn(href, label, bg, color, o){
   o=o||{}; const fs=o.size||15, pad=o.pad||"14px 24px";
-  return '<table role="presentation" cellpadding="0" cellspacing="0" border="0"'+(o.center?' align="center" style="margin:0 auto"':'')+'><tr><td bgcolor="'+bg+'" style="background:'+bg+';border-radius:3px;padding:'+pad+';'+EM_F+'font-size:'+fs+'px;line-height:1.2;font-weight:700"><a href="'+href+'" style="'+EM_F+'color:'+color+';text-decoration:none;font-weight:700;font-size:'+fs+'px;line-height:1.2;white-space:nowrap">'+label+'</a></td></tr></table>';
+  return '<table role="presentation" cellpadding="0" cellspacing="0"'+(o.center?' align="center" style="margin:0 auto"':'')+'><tr><td bgcolor="'+bg+'" style="background:'+bg+';border-radius:3px;padding:'+pad+';'+EM_F+'font-size:'+fs+'px;line-height:1.2;font-weight:700"><a href="'+href+'" style="'+EM_F+'color:'+color+';text-decoration:none;font-weight:700;font-size:'+fs+'px;line-height:1.2;white-space:nowrap">'+label+'</a></td></tr></table>';
 }
-function emGap(inner, top, bottom, center){ return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td'+(center?' align="center"':'')+' style="padding:'+(top||0)+'px 0 '+(bottom||0)+'px'+(center?';text-align:center':'')+'">'+inner+'</td></tr></table>'; }
+function emGap(inner, top, bottom, center){ return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td'+(center?' align="center"':'')+' style="padding:'+(top||0)+'px 0 '+(bottom||0)+'px'+(center?';text-align:center':'')+'">'+inner+'</td></tr></table>'; }
 function buildEmail(ed, preview, opt){
   opt = opt || hdrOpt(ed);
   /* Laid out like the hand-built November edition: a 600px column, full-width section header
      images edge to edge, roomy 16px type, and every block in tables so Outlook keeps it. */
   const F=EM_F, M="font-family:'IBM Plex Mono',Consolas,monospace;";
   const navy="#0d314c", ink="#1d2b36", link="#14486e", mute="#56718a", soft="#f6fafd", line="#dde9f2";
+  const FOOT_A=F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap';
   const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
   const A='color:'+link+';font-weight:600;text-decoration:underline';
   /* subheads always start below a small picture beside the text, never beside it */
@@ -257,8 +258,8 @@ function buildEmail(ed, preview, opt){
     (top?'<div style="'+M+'font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:'+mute+';font-weight:600;margin:0 0 6px">'+top+'</div>':'')+
     (href?'<a href="'+esc(href)+'" style="'+F+'font-size:16px;line-height:1.45;color:'+link+';font-weight:700;text-decoration:none">'+main+'</a>':'<div style="'+F+'font-size:16px;line-height:1.45;color:'+navy+';font-weight:700">'+main+'</div>')+
     (sub?'<div style="'+F+'font-size:14.5px;line-height:1.5;color:#456179;margin:5px 0 0">'+sub+'</div>':'')+'</td></tr>';
-  const cards=list=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px">'+list.join('<tr><td height="8" style="font-size:0;line-height:0;height:8px">&nbsp;</td></tr>')+'</table>';
-  const imgBox=t=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px"><tr><td bgcolor="'+soft+'" style="background:'+soft+';border:1px dashed #9db6c9;color:#456179;'+F+'font-size:12px;padding:20px;text-align:center">'+t+'</td></tr></table>';
+  const cards=list=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 6px">'+list.join('<tr><td height="8" style="font-size:0;line-height:0;height:8px">&nbsp;</td></tr>')+'</table>';
+  const imgBox=t=>'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 18px"><tr><td bgcolor="'+soft+'" style="background:'+soft+';border:1px dashed #9db6c9;color:#456179;'+F+'font-size:12px;padding:20px;text-align:center">'+t+'</td></tr></table>';
   const on=edSections(ed).filter(s=>s.on);
   const blocks=[], toc=[];
   on.forEach(s=>{
@@ -288,7 +289,7 @@ function buildEmail(ed, preview, opt){
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       const isz=leadSize(d, lib);
-      const img=src=> isz==="small" ? '<table role="presentation" align="left" cellpadding="0" cellspacing="0" border="0" style="float:left"><tr><td style="padding:4px 22px 14px 0"><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0"></td></tr></table>'
+      const img=src=> isz==="small" ? '<table role="presentation" align="left" cellpadding="0" cellspacing="0" style="float:left"><tr><td style="padding:4px 22px 14px 0"><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0"></td></tr></table>'
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
@@ -296,7 +297,7 @@ function buildEmail(ed, preview, opt){
       else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
       inner+=body(d.body);
       if(isz==="small" && (hl||(preview&&local))) inner+='<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>';
-      if(d.quote) inner+=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
+      if(d.quote) inner+=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+=emGap(emBtn(esc(full), esc(fullArticleLabel(s.k))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
       if(d.ctaUrl) inner+=emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff'), 2, 18);
@@ -309,24 +310,24 @@ function buildEmail(ed, preview, opt){
       '<tr><td style="padding:28px 28px 4px">'+inner+'</td></tr>'+
       /* the foot of every section: Copy Link on the left (the section's own address on the web version, like the
          Axios editions had), Back to Top on the right */
-      '<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
-        '<td align="left" valign="middle" style="text-align:left"><a href="'+esc(mmWebUrl(ed)+"#"+anchor)+'" data-mm-copy="'+anchor+'" title="Link to this section" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap"><img src="'+HDR2_BASE+'ic-link.png" alt="" width="12" height="12" style="display:inline-block;width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;&nbsp;<span data-mm-label>Copy Link</span></a></td>'+
-        '<td align="right" valign="middle" style="text-align:right"><a href="#mm-top" style="'+F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap">Back to Top&nbsp;&uarr;</a></td>'+
+      '<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'+
+        '<td><a href="'+esc(mmWebUrl(ed)+"#"+anchor)+'" data-mm-copy="'+anchor+'" style="'+FOOT_A+'"><img src="'+HDR2_BASE+'ic-link.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;&nbsp;<span data-mm-label>Copy Link</span></a></td>'+
+        '<td align="right"><a href="#mm-top" style="'+FOOT_A+'">Back to Top&nbsp;&uarr;</a></td>'+
       '</tr></table></td></tr>');
   });
   /* In This Issue: two columns, numbered down the left column first */
   const half=Math.ceil(toc.length/2), tl=(i)=>{ const t=toc[i]; if(!t) return ''; return '<a href="#'+t[0]+'" style="text-decoration:none;color:'+navy+';'+F+'font-size:14px;font-weight:600"><span style="'+M+'color:#2477b8;font-size:12px;font-weight:500">'+String(i+1).padStart(2,"0")+'</span>&nbsp;&nbsp;'+esc(t[1])+'</a>'; };
   let tocRows=''; for(let r=0;r<half;r++){ const last=r===half-1; tocRows+='<tr><td width="50%" valign="top" style="padding:0 10px '+(last?0:9)+'px 0">'+tl(r)+'</td><td width="50%" valign="top" style="padding:0 0 '+(last?0:9)+'px 10px">'+tl(r+half)+'</td></tr>'; }
-  const out = EMAIL_FONTS+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
-    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8e5ef">'+
+  const out = EMAIL_FONTS+'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f6fa;margin:0;padding:0"><tr><td align="center" style="padding:24px 12px">'+
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%;max-width:600px;background:#ffffff;border:1px solid #d8e5ef">'+
     '<tr><td style="padding:0"><a name="mm-top" id="mm-top" style="display:block;text-decoration:none"><img src="'+MAST_IMG+'" alt="MISMO Matters" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;vertical-align:top" border="0"></a></td></tr>'+
     /* the band under the masthead lines up with the masthead picture: the month starts under the MISMO logo and
        "Where" starts under the M of "MISMO Matters" (316 of the picture's 600px, so it holds on a phone too) */
-    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:13px 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+    '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:13px 0 14px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'+
       '<td width="316" valign="middle" style="width:52.67%;padding:0 0 0 35px;'+M+'font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#a9d8f3;white-space:nowrap">'+esc(monthName(ed.month))+'</td>'+
       '<td valign="middle" align="left" style="padding:0 16px 0 0;text-align:left;'+F+'font-size:12.5px;line-height:1.4;color:#9fc0d6">Where Our Industry Builds What&rsquo;s Next</td></tr></table></td></tr>'+
     '<tr><td bgcolor="#74bfeb" style="background:#74bfeb;font-size:0;line-height:0;height:4px">&nbsp;</td></tr>'+
-    (toc.length?'<tr><td bgcolor="'+soft+'" style="background:'+soft+';padding:20px 28px 16px;border-bottom:1px solid '+line+'"><div style="'+F+'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:'+mute+';font-weight:700;margin:0 0 13px">In This Issue</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">'+tocRows+'</table></td></tr>':'')+
+    (toc.length?'<tr><td bgcolor="'+soft+'" style="background:'+soft+';padding:20px 28px 16px;border-bottom:1px solid '+line+'"><div style="'+F+'font-size:11px;letter-spacing:.17em;text-transform:uppercase;color:'+mute+';font-weight:700;margin:0 0 13px">In This Issue</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+tocRows+'</table></td></tr>':'')+
     blocks.join("")+
     '<tr><td bgcolor="'+navy+'" style="background:'+navy+';padding:30px 28px"><div style="'+F+'font-size:19px;line-height:1.45;color:#ffffff;font-weight:700;margin:0 0 8px;letter-spacing:-.008em">Engage With MISMO to Shape the Future of the Mortgage Industry</div><div style="'+F+'font-size:15.5px;line-height:1.6;color:#a9d8f3;margin:0">We have a chair at the table waiting for you.</div>'+emGap(emBtn(SUBSCRIBE_URL, 'Subscribe to MISMO Matters&nbsp;&rarr;', opt==="2"?'#1a8fe3':'#74bfeb', opt==="2"?'#ffffff':navy), 20, 0)+'</td></tr>'+
     emailFooter(F)+
@@ -344,14 +345,14 @@ function emailFooter(F){
     '<div style="margin:8px 0 0;'+F+'font-size:12.5px;line-height:1.4;color:#456179">Where Our Industry Builds What&rsquo;s Next</div>';
   const icon=(href,src,alt,padL)=>'<td style="padding:8px 0 0 '+padL+'px"><a href="'+href+'" style="text-decoration:none"><img src="'+I+src+'" alt="'+alt+'" width="30" height="30" style="display:block;width:30px;height:30px;border:0" border="0"></a></td>';
   const right='<div style="'+F+'font-size:12.5px;line-height:1.55;color:#456179">1919 M Street NW, 5th Floor<br>Washington, DC 20036<br><img src="'+I+'ic-mail.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></div>'+
-    '<table role="presentation" align="right" cellpadding="0" cellspacing="0" border="0"><tr>'+
+    '<table role="presentation" align="right" cellpadding="0" cellspacing="0"><tr>'+
       icon("https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","ic-li.png","MISMO on LinkedIn",0)+
       icon("https://www.youtube.com/@MISMOStandards","ic-yt.png","MISMO on YouTube",8)+'</tr></table>';
   return '<tr><td bgcolor="#f4f7f9" style="background:#f4f7f9;padding:18px 24px 12px;border-top:1px solid #e5eef5">'+
-    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'+
+    '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'+
       '<td width="50%" valign="middle" align="left" style="padding:0 10px 0 0;text-align:left">'+left+'</td>'+
       '<td width="50%" valign="middle" align="right" style="padding:0;text-align:right">'+right+'</td></tr></table>'+
-    emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="border-top:1px solid #e3ebf1;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a name="Unsubscribe" data-informz-link-type="Unsubscribe_Web_Page" href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></td></tr></table>', 14, 0)+'</td></tr>';
+    emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e3ebf1;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a name="Unsubscribe" data-informz-link-type="Unsubscribe_Web_Page" href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></td></tr></table>', 14, 0)+'</td></tr>';
 }
 function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
