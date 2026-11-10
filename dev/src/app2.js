@@ -289,7 +289,11 @@ function buildEmail(ed, preview, opt){
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       const isz=leadSize(d, lib);
-      const img=src=> isz==="small" ? '<table role="presentation" align="left" width="162" cellpadding="0" cellspacing="0" style="float:left;width:162px"><tr><td width="140" valign="top" style="width:140px;padding:4px 0 14px"><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0"></td><td width="22" style="width:22px;font-size:1px;line-height:1px">&nbsp;</td></tr></table>'
+      const img=src=> isz==="small" ? (()=>{ const im='<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0">';
+          /* beside the text everywhere but Outlook on Windows, which clips the first letters of text wrapped around a
+             picture; there it sits just above the text */
+          return '<!--[if !mso]><!--><table role="presentation" align="left" cellpadding="0" cellspacing="0" style="float:left"><tr><td style="padding:4px 22px 14px 0">'+im+'</td></tr></table><!--<![endif]-->'+
+            '<!--[if mso]><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding:4px 0 16px">'+im+'</td></tr></table><![endif]-->'; })()
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
