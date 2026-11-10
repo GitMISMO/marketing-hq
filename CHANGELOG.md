@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-10 (afternoon)
+- Mic'd Up LinkedIn: pasting the LinkedIn post or event link once its Monday has come counts it as done, so it leaves Past Due (episode pane and the kit's Save Event Link both tick it). Short lnkd.in links are accepted. New test for it.
+
 ## 2026-11-10
 - Work Product Downloads: everyone who fills in the website's Before You Download form and accepts the licence is filed automatically (sign-up workflow, form = work-product-download, data/wpdl.json) and listed on Lists & Unsubscribes with what they downloaded, a search and Copy as CSV. They count as downloaders under Subscribers; downloading never signs anyone up for MISMO Matters. System Health shows when the last download arrived. New test for it.
 

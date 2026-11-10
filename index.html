@@ -2686,7 +2686,7 @@ function allEvents(){
     if(!ep.airDate) return;
     const old=!owes(ep);
     if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up "+epTag(ep)+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
-    const l=liDate(ep); if(l && (!old || ep.linkedinDone)) ev.push({date:l, k:"linkedin", label:(ep.liCanceled?"Canceled · ":"")+"LinkedIn · Mic'd Up "+epTag(ep), done:liClosed(ep), x:!!ep.liCanceled, who:"Vanessa", go:()=>openEpisode(ep.id)});
+    const l=liDate(ep); if(l && (!old || liDone(ep))) ev.push({date:l, k:"linkedin", label:(ep.liCanceled?"Canceled · ":"")+"LinkedIn · Mic'd Up "+epTag(ep), done:liClosed(ep), x:!!ep.liCanceled, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
   fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.status==="canceled"?"Canceled · ":"")+(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), x:p.status==="canceled", done:pClosed(p)||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
@@ -5145,7 +5145,7 @@ function wireKit(el){
     if(u && !/^https?:\/\/([a-z]+\.)?linkedin\.com\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
     KIT.bpEdit=null; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u})); toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
-  const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(www\.)?linkedin\.com\//i.test(u)){ toast("Paste the LinkedIn event link."); return; } await patch("episodes", eid, {linkedinUrl:u, liEventSet:true}); toast("Event saved"); renderMicdup(); };
+  const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That isn't a LinkedIn link. Paste the event or post link."); return; } const ran=liDate(e) && liDate(e)<=T(); await patch("episodes", eid, ran?{linkedinUrl:u, liEventSet:true, linkedinDone:true}:{linkedinUrl:u, liEventSet:true}); toast(ran?"Link saved; marked as streamed":"Event saved"); renderMicdup(); };
   wireCx(el, ()=>renderMicdup());
   const ld=$("#kit-lidone",el); if(ld) ld.onclick=async()=>{ await patch("episodes", eid, {linkedinDone:!e.linkedinDone}); renderMicdup(); };
   $$("[data-kcover]",el).forEach(b=>b.onclick=()=>downloadImage(S.images[b.dataset.kcover]));
@@ -6356,7 +6356,10 @@ function rtState(w){
      episodes: liCanceled, liCancelReason, liCanceledOn  (the Monday LinkedIn post / Live) */
 function pOpen(p){ return p.status!=="done" && p.status!=="canceled"; }
 function pClosed(p){ return !pOpen(p); }
-function liClosed(e){ return !!(e && (e.linkedinDone || e.liCanceled)); }
+/* the Monday LinkedIn post or Live counts as done once it's ticked, or once its link is in and its day has come
+   (pasting the link after it ran is how people record it; Nov 10, 2026) */
+function liDone(e){ return !!(e && (e.linkedinDone || (e.linkedinUrl && liDate(e) && liDate(e)<=T()))); }
+function liClosed(e){ return !!(e && (liDone(e) || e.liCanceled)); }
 
 /* the control: kind "piece" or "ep", the record's id, and what to call the thing */
 function cxBox(kind, id, what){
@@ -6987,7 +6990,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-10 12:33 ET · cb1f62b";
+const BUILD = "2026-11-10 12:55 ET · 8b28057";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -7426,7 +7429,7 @@ function openEpisode(id, seed){
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
-    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); await put("episodes",nid,Object.assign({},e,v)); },
+    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); },
     del: id ? async()=>remove("episodes",id) : null,
     after:b=>{ wireCx(b); wireGuestPane(b, id); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
       const pa=$("#ep-paste",b); if(pa) pa.addEventListener("input",()=>{ const txt=pa.value; const urls=txt.match(/https?:\/\/[^\s<>"')\]]+/g)||[]; const drive=urls.find(u=>/drive\.google|docs\.google|sharepoint|onedrive|1drv/.test(u))||urls[0];
@@ -7497,7 +7500,7 @@ function wirePieceRows(el){
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
   const own=vals("pieces").filter(p=>p.channel==="linkedin");
-  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||e.linkedinDone)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", cancelReason:e.liCancelReason||"", status:e.linkedinDone?"done":e.liCanceled?"canceled":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
+  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||liDone(e))).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", cancelReason:e.liCancelReason||"", status:liDone(e)?"done":e.liCanceled?"canceled":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
   const upcoming=all.filter(p=>pOpen(p) && p.date && p.date<=add(t,45)).sort((a,b)=>a.date<b.date?-1:1);
