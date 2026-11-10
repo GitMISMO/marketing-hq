@@ -290,10 +290,10 @@ function buildEmail(ed, preview, opt){
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       const isz=leadSize(d, lib);
       const img=src=> isz==="small" ? (()=>{ const im='<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0">';
-          /* beside the text everywhere but Outlook on Windows, which clips the first letters of text wrapped around a
-             picture; there it sits just above the text */
+          /* beside the text with a gap: a floated table elsewhere; Outlook on Windows clips text wrapped around a
+             table, so it gets the picture floated on its own with a white border as the gap */
           return '<!--[if !mso]><!--><table role="presentation" align="left" cellpadding="0" cellspacing="0" style="float:left"><tr><td style="padding:4px 22px 14px 0">'+im+'</td></tr></table><!--<![endif]-->'+
-            '<!--[if mso]><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="padding:4px 0 16px">'+im+'</td></tr></table><![endif]-->'; })()
+            '<!--[if mso]><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" style="width:140px;height:auto;border-right:22px solid #ffffff;border-bottom:12px solid #ffffff" border="0"><![endif]-->'; })()
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
@@ -301,7 +301,7 @@ function buildEmail(ed, preview, opt){
       else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
       inner+=body(d.body);
       if(isz==="small" && (hl||(preview&&local))) inner+='<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>';
-      if(d.quote) inner+=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#74bfeb" width="4" style="background:#74bfeb;width:4px;font-size:0;line-height:0">&nbsp;</td><td bgcolor="#f4f9fd" style="background:#f4f9fd;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
+      if(d.quote) inner+=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+=emGap(emBtn(esc(full), esc(fullArticleLabel(s.k))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
       if(d.ctaUrl) inner+=emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff'), 2, 18);
