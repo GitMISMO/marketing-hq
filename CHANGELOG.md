@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-10
+- Work Product Downloads: everyone who fills in the website's Before You Download form and accepts the licence is filed automatically (sign-up workflow, form = work-product-download, data/wpdl.json) and listed on Lists & Unsubscribes with what they downloaded, a search and Copy as CSV. They count as downloaders under Subscribers; downloading never signs anyone up for MISMO Matters. System Health shows when the last download arrived. New test for it.
+
 ## 2026-11-09
 - MISMO Matters looks right in the Outlook desktop app: buttons are real buttons (color and padding on a table cell; the Subscribe button lost its stray border), a small picture beside the text keeps a gap, section header pictures, the masthead and the footer logo and icons are no longer clipped, and boxes (quotes, sponsor walls, certified lists) keep their space above and below. Bulleted lists indent inside the column. Slightly shorter font lists keep the email nearer Gmail's 102 KB clipping limit.
 

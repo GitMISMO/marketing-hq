@@ -2469,7 +2469,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2850,7 +2850,7 @@ function renderAll(){ applyPosted(); if(typeof applySettings==="function") apply
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */
 const TAB_NEEDS = {home:["episodes","editions","sections","pieces","kits","guests"], overview:["episodes","editions","pieces"], matters:["editions","sections"], micdup:["episodes","kits","guests"],
   youtube:["episodes"], linkedin:["pieces","episodes"], mailchimp:["pieces"], summits:["pieces"], news:["news","newsin","newsweb"], results:["episodes","pieces","editions"], requests:["inbox","requests"],
-  orders:["orders"], branding:["branding"], images:["images"], people:["audience","signups"], lists:["lists"]};
+  orders:["orders"], branding:["branding"], images:["images"], people:["audience","signups","wpdl"], lists:["lists","wpdl"]};
 /* the 8-second "draw anyway" allowance starts when records begin arriving (after sign-in), not when the page opens */
 function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true; if(FIRST_LOAD && Date.now()-FIRST_LOAD>8000) return true; return (TAB_NEEDS[t]||[]).every(c=>LOADED.has(c)); }
 function renderTab(t){
@@ -3478,11 +3478,39 @@ function peopleIndex(){
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists[l]=true; if(r.l && r.l>p.last) p.last=r.l; if(r.d && r.d>p.last) p.last=r.d; if(r.x) r.x.forEach(x=>{ if(!p.x.includes(x)) p.x.push(x); }); p.c+=(+r.c||0); }));
   vals("signups").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=localDay(r.at); if(d>p.last) p.last=d; });
+  /* downloads from the website pop-up count as downloaders, with what they downloaded */
+  vals("wpdl").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
+    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.downloaders=true; const w=r.product||r.pid||r.file; if(w && !p.x.includes(w)) p.x.push(w); p.c+=(+r.times||1); const d=localDay(r.at); if(d>p.last) p.last=d; });
   /* anyone who unsubscribed on MISMO's page comes off the subscriber lists automatically */
   const U=unsubMap();
   Object.values(U).forEach(u=>{ const e=u.e.toLowerCase(); const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=localDay(u.at); if(d>p.last) p.last=d; } });
   return Object.values(map);
+}
+/* Work-product downloads from the website's "Before You Download" pop-up (data/wpdl.json, written only by the
+   sign-up workflow; form = work-product-download). One record per person per work product; "times" counts repeats.
+   Downloading never signs anyone up for MISMO Matters. */
+function dlSorted(){ return vals("wpdl").filter(d=>d.e).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
+function dlCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Downloaded,First Name,Last Name,Email,Company,Title,Work Product,File,Times,First Download"].concat(list.map(d=>[localDay(d.at),d.first,d.last,d.e,d.o,d.t,d.product||d.pid,d.file,d.times||1,localDay(d.firstAt||d.at)].map(q).join(","))).join("\n"); }
+let DLQ={q:"", limit:25};
+function downloadsCard(){
+  const all=dlSorted(), t=T(), wk=all.filter(d=>localDay(d.at)>=add(t,-6)), mo=all.filter(d=>String(d.at||"").slice(0,7)===t.slice(0,7));
+  const q=DLQ.q.trim().toLowerCase(), list=q?all.filter(d=>[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q)):all;
+  const people=new Set(all.map(d=>d.e)).size, tops={}; all.forEach(d=>{ const k=d.product||d.pid||d.file||"—"; tops[k]=(tops[k]||0)+(+d.times||1); });
+  const top=Object.entries(tops).sort((a,b)=>b[1]-a[1])[0];
+  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Work Product Downloads</h2><span class="cnt">'+all.length.toLocaleString()+'</span><span class="note">'+wk.length+' this week · '+mo.length+' this month · '+people.toLocaleString()+' people'+(top?' · most downloaded: '+esc(top[0]):'')+'</span><div class="r" style="align-items:center">'+
+      (all.length?'<input type="search" class="plain" id="dl-q" placeholder="Name, email, company or work product" value="'+esc(DLQ.q)+'" style="width:240px"><button class="btn sm" type="button" id="dl-csv">Copy as CSV</button>':'')+'</div></div>'+
+    (list.length?'<div class="tw"><table class="t"><thead><tr><th>Downloaded</th><th>Name</th><th>Email</th><th>Company</th><th>Work Product</th><th class="n">Times</th></tr></thead><tbody>'+
+      list.slice(0,DLQ.limit).map(d=>'<tr class="click" data-dl="'+esc(d.id)+'"><td><b>'+esc(fS(localDay(d.at)))+'</b></td><td>'+esc(d.n||"—")+(d.t?'<span class="t2">'+esc(d.t)+'</span>':'')+'</td><td>'+esc(d.e)+'</td><td>'+esc(d.o||"")+'</td><td>'+esc(d.product||d.pid||d.file||"")+'</td><td class="n">'+(+d.times||1)+'</td></tr>').join("")+
+      '</tbody></table></div>'+(list.length>DLQ.limit?'<div class="cb"><button class="btn sm" type="button" id="dl-more">Show More ('+(list.length-DLQ.limit).toLocaleString()+' left)</button></div>':'')
+    :'<div class="empty">'+(all.length?"Nobody matches that.":"Everyone who fills in the website's Before You Download form (and accepts the licence) lands here the moment they press Accept and Download, with what they downloaded.")+'</div>')+'</div>';
+}
+function wireDownloads(el, redraw){
+  const qi=$("#dl-q",el); if(qi) qi.oninput=()=>{ DLQ.q=qi.value; DLQ.limit=25; clearTimeout(DLQ._t); DLQ._t=setTimeout(()=>{ redraw(); const n=$("#dl-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
+  const cv=$("#dl-csv",el); if(cv) cv.onclick=()=>{ const q=DLQ.q.trim().toLowerCase(); copyText(dlCSV(dlSorted().filter(d=>!q||[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q))),"Work product downloads (CSV)"); };
+  const mo=$("#dl-more",el); if(mo) mo.onclick=()=>{ DLQ.limit+=100; redraw(); };
+  $$("[data-dl]",el).forEach(r=>r.onclick=()=>{ const d=S.wpdl[r.dataset.dl]; if(!d) return;
+    openPane({eye:"Work Product Downloads", title:d.n||d.e, data:{}, fields:[{k:"_d",type:"html",html:()=>'<dl class="kv"><dt>Email</dt><dd>'+esc(d.e)+'</dd><dt>Company</dt><dd>'+esc(d.o||"—")+'</dd><dt>Title</dt><dd>'+esc(d.t||"—")+'</dd><dt>Work Product</dt><dd>'+esc(d.product||d.pid||"—")+'</dd>'+(d.file?'<dt>File</dt><dd>'+esc(d.file)+'</dd>':'')+'<dt>Licence</dt><dd>'+(d.accepted?"Accepted":"—")+(d.licence?' · '+esc(d.licence):'')+'</dd><dt>Downloaded</dt><dd>'+esc(fS(localDay(d.at)))+((+d.times||1)>1?' · '+(+d.times)+' times since '+esc(fS(localDay(d.firstAt||d.at))):'')+'</dd>'+(d.page?'<dt>From</dt><dd>'+esc(d.page)+'</dd>':'')+'</dl>'}]}); });
 }
 /* sign-ups from the website form, newest first */
 function signupsSorted(){ const U=unsubMap(); return vals("signups").filter(s=>!isUnsubbed(s.e, s.at, U)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
@@ -3914,6 +3942,7 @@ const HELP = [
    <li><b>Look someone up</b> by typing any part of a name, email, organization or title. Pick a list to narrow it. Click a person for their details and everything they've downloaded.</li>
    <li><b>Load a List</b> takes an Excel or CSV export: the website subscriber export, the downloader export, a prospect list, the MISMO Matters group, or an unsubscribe list. Columns are matched by name. People already there are kept and updated; new people are added.</li>
    <li>The first lists loaded are Kelly's website subscribers (64) and downloaders (764) from May 1 to September 8, 2026. New subscribers from the website form are added on their own (see <b>The Subscribe Form</b>).</li>
+   <li><b>Work product downloads</b> come in on their own: everyone who fills in the website's <b>Before You Download</b> form (email, name, company, title) and accepts the licence is listed under <b>Lists &amp; Unsubscribes › Work Product Downloads</b> with what they downloaded, and counts as a downloader here. Downloading never adds anyone to MISMO Matters. Behind the scenes it uses the same Power Automate flow as the Subscribe form with <code>form</code> = <code>work-product-download</code>; the workflow files it in <code>data/wpdl.json</code> (only the workflow writes there).</li>
    <li>This page holds names and email addresses. Share it only with the MISMO team.</li>
   </ul>`},
  {id:"subscribe", t:"The Subscribe Form", g:"Audience", b:`
@@ -6958,7 +6987,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-09 19:27 ET · 9804181";
+const BUILD = "2026-11-10 12:33 ET · cb1f62b";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -7087,7 +7116,7 @@ const HH_LOG="log", HH_KEEP=30, HH_MAX=150;
 const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
 const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
 const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
-const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log"};
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log",wpdl:"Work Product Downloads"};
 const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
 function hhSaving(){
@@ -7125,6 +7154,10 @@ function hhSignups(){
   const L=vals("signups").map(s=>s.at).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("sign","Website Sign-Ups","ok","Last sign-up arrived "+hhWhen(L[L.length-1])+".");
 }
+function hhDownloads(){
+  const L=vals("wpdl").map(d=>d.at).filter(Boolean).sort(); if(!L.length) return LOADED.has("wpdl")? hhRow("dl","Work Product Downloads","off","None yet. They arrive from the website's Before You Download form.") : null;
+  return hhRow("dl","Work Product Downloads","ok","Last download arrived "+hhWhen(L[L.length-1])+".");
+}
 function hhNews(){
   const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
@@ -7153,7 +7186,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -7630,6 +7663,7 @@ function renderLists(){
       '<div class="tile"><div class="v'+(missing.length?" hot":"")+'">'+missing.length+'</div><div class="k">Still Needed</div><div class="s">lists not received</div></div>'+
       '<div class="tile"><div class="v">Nov</div><div class="k">Next Refresh</div><div class="s">Ciara Durkan, MBA</div></div>'+
     '</div></div>'+
+    downloadsCard()+
     '<div class="card"><div class="ch"><h2>The Compound</h2><span class="cnt">'+lists.length+'</span></div>'+(lists.length?'<div class="tw"><table class="t"><thead><tr><th>List</th><th>From</th><th class="n">Rows</th><th class="n">Unique Emails</th><th>Covers</th><th>Notes</th></tr></thead><tbody>'+
       lists.map(l=>'<tr class="click" data-ls="'+esc(l.id)+'"><td><b>'+esc(l.name)+'</b></td><td>'+esc(l.source||"")+'</td><td class="n">'+(+l.rows?(+l.rows).toLocaleString():"—")+'</td><td class="n">'+(+l.unique?(+l.unique).toLocaleString():'<span class="chip changes">Not received</span>')+'</td><td>'+esc(l.covers||"")+'</td><td class="note">'+esc(mdPlain(l.notes))+'</td></tr>').join("")+
       '</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("lists")?"Loading…":"No lists logged.")+'</div>')+'</div>'+
@@ -7641,11 +7675,12 @@ function renderLists(){
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>Feeds to Automate</h2></div><div class="checks">'+
       '<div class="chk"><span class="ct"><b>Website subscribers</b><small>The website\'s Subscribe button is a Smartsheet form today. Kelly has been pulling the list by hand.</small></span></div>'+
-      '<div class="chk"><span class="ct"><b>Website downloaders</b><small>Standards downloaders since the last refresh (1,498 rows May–September).</small></span></div>'+
+      '<div class="chk"><span class="ct"><b>Website downloaders</b><small>Automatic from the website\'s Before You Download form (see Work Product Downloads above). Earlier: 1,498 rows May–September.</small></span></div>'+
       '<div class="chk"><span class="ct"><b>Prospects</b><small>Come straight from Member 360 instead of a separate list from Kelly.</small></span></div>'+
       '<div class="chk"><span class="ct"><b>Segments from Aptify</b><small>e.g. three years of MBA compliance conference attendees, or anyone with "marketing" in their title, for targeted sends.</small></span></div>'+
     '</div></div></div>'+
-    '<p class="foot">Counts come from the attachments on Kelly\'s two "MISMO compound lists" emails (Ciara Durkan\'s September 2–3 update and Kelly\'s September 8 subscriber and downloader lists). No names or addresses are kept on this page.</p>';
+    '<p class="foot">Counts come from the attachments on Kelly\'s two "MISMO compound lists" emails (Ciara Durkan\'s September 2–3 update and Kelly\'s September 8 subscriber and downloader lists). Work Product Downloads holds names and email addresses; share this page only with the MISMO team.</p>';
+  wireDownloads(el, renderLists);
   $("#ls-new",el).onclick=()=>openList(null);
   $$("[data-ls]",el).forEach(r=>r.onclick=()=>openList(r.dataset.ls));
 }
