@@ -291,9 +291,9 @@ function buildEmail(ed, preview, opt){
       const isz=leadSize(d, lib);
       const img=src=> isz==="small" ? (()=>{ const im='<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" style="display:block;width:140px;height:auto;border:0;border-radius:4px" border="0">';
           /* beside the text with a gap: a floated table elsewhere; Outlook on Windows clips text wrapped around a
-             table, so it gets the picture floated on its own with a white border as the gap */
+             table, so it gets the picture floated on its own, with Outlook's own spacing (hspace) as the gap */
           return '<!--[if !mso]><!--><table role="presentation" align="left" cellpadding="0" cellspacing="0" style="float:left"><tr><td style="padding:4px 22px 14px 0">'+im+'</td></tr></table><!--<![endif]-->'+
-            '<!--[if mso]><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" style="width:140px;height:auto;border-right:22px solid #ffffff;border-bottom:12px solid #ffffff" border="0"><![endif]-->'; })()
+            '<!--[if mso]><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" hspace="12" vspace="4" style="width:140px;height:auto" border="0"><![endif]-->'; })()
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
       if(hl) inner+=img(hl);
