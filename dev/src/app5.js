@@ -15,11 +15,39 @@ function peopleIndex(){
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists[l]=true; if(r.l && r.l>p.last) p.last=r.l; if(r.d && r.d>p.last) p.last=r.d; if(r.x) r.x.forEach(x=>{ if(!p.x.includes(x)) p.x.push(x); }); p.c+=(+r.c||0); }));
   vals("signups").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.subscribers=true; p.signup=r; const d=localDay(r.at); if(d>p.last) p.last=d; });
+  /* downloads from the website pop-up count as downloaders, with what they downloaded */
+  vals("wpdl").forEach(r=>{ const e=(r.e||"").toLowerCase(); if(!e) return; const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
+    ["n","o","t"].forEach(k=>{ if(!p[k] && r[k]) p[k]=r[k]; }); p.lists.downloaders=true; const w=r.product||r.pid||r.file; if(w && !p.x.includes(w)) p.x.push(w); p.c+=(+r.times||1); const d=localDay(r.at); if(d>p.last) p.last=d; });
   /* anyone who unsubscribed on MISMO's page comes off the subscriber lists automatically */
   const U=unsubMap();
   Object.values(U).forEach(u=>{ const e=u.e.toLowerCase(); const p=map[e]||(map[e]={e, n:"", o:"", t:"", lists:{}, last:"", x:[], c:0});
     if(isUnsubbed(e, p.signup && p.signup.at, U)){ delete p.lists.subscribers; delete p.lists.matters; p.lists.unsubscribed=true; p.unsub=u; const d=localDay(u.at); if(d>p.last) p.last=d; } });
   return Object.values(map);
+}
+/* Work-product downloads from the website's "Before You Download" pop-up (data/wpdl.json, written only by the
+   sign-up workflow; form = work-product-download). One record per person per work product; "times" counts repeats.
+   Downloading never signs anyone up for MISMO Matters. */
+function dlSorted(){ return vals("wpdl").filter(d=>d.e).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
+function dlCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Downloaded,First Name,Last Name,Email,Company,Title,Work Product,File,Times,First Download"].concat(list.map(d=>[localDay(d.at),d.first,d.last,d.e,d.o,d.t,d.product||d.pid,d.file,d.times||1,localDay(d.firstAt||d.at)].map(q).join(","))).join("\n"); }
+let DLQ={q:"", limit:25};
+function downloadsCard(){
+  const all=dlSorted(), t=T(), wk=all.filter(d=>localDay(d.at)>=add(t,-6)), mo=all.filter(d=>String(d.at||"").slice(0,7)===t.slice(0,7));
+  const q=DLQ.q.trim().toLowerCase(), list=q?all.filter(d=>[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q)):all;
+  const people=new Set(all.map(d=>d.e)).size, tops={}; all.forEach(d=>{ const k=d.product||d.pid||d.file||"—"; tops[k]=(tops[k]||0)+(+d.times||1); });
+  const top=Object.entries(tops).sort((a,b)=>b[1]-a[1])[0];
+  return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Work Product Downloads</h2><span class="cnt">'+all.length.toLocaleString()+'</span><span class="note">'+wk.length+' this week · '+mo.length+' this month · '+people.toLocaleString()+' people'+(top?' · most downloaded: '+esc(top[0]):'')+'</span><div class="r" style="align-items:center">'+
+      (all.length?'<input type="search" class="plain" id="dl-q" placeholder="Name, email, company or work product" value="'+esc(DLQ.q)+'" style="width:240px"><button class="btn sm" type="button" id="dl-csv">Copy as CSV</button>':'')+'</div></div>'+
+    (list.length?'<div class="tw"><table class="t"><thead><tr><th>Downloaded</th><th>Name</th><th>Email</th><th>Company</th><th>Work Product</th><th class="n">Times</th></tr></thead><tbody>'+
+      list.slice(0,DLQ.limit).map(d=>'<tr class="click" data-dl="'+esc(d.id)+'"><td><b>'+esc(fS(localDay(d.at)))+'</b></td><td>'+esc(d.n||"—")+(d.t?'<span class="t2">'+esc(d.t)+'</span>':'')+'</td><td>'+esc(d.e)+'</td><td>'+esc(d.o||"")+'</td><td>'+esc(d.product||d.pid||d.file||"")+'</td><td class="n">'+(+d.times||1)+'</td></tr>').join("")+
+      '</tbody></table></div>'+(list.length>DLQ.limit?'<div class="cb"><button class="btn sm" type="button" id="dl-more">Show More ('+(list.length-DLQ.limit).toLocaleString()+' left)</button></div>':'')
+    :'<div class="empty">'+(all.length?"Nobody matches that.":"Everyone who fills in the website's Before You Download form (and accepts the licence) lands here the moment they press Accept and Download, with what they downloaded.")+'</div>')+'</div>';
+}
+function wireDownloads(el, redraw){
+  const qi=$("#dl-q",el); if(qi) qi.oninput=()=>{ DLQ.q=qi.value; DLQ.limit=25; clearTimeout(DLQ._t); DLQ._t=setTimeout(()=>{ redraw(); const n=$("#dl-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
+  const cv=$("#dl-csv",el); if(cv) cv.onclick=()=>{ const q=DLQ.q.trim().toLowerCase(); copyText(dlCSV(dlSorted().filter(d=>!q||[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q))),"Work product downloads (CSV)"); };
+  const mo=$("#dl-more",el); if(mo) mo.onclick=()=>{ DLQ.limit+=100; redraw(); };
+  $$("[data-dl]",el).forEach(r=>r.onclick=()=>{ const d=S.wpdl[r.dataset.dl]; if(!d) return;
+    openPane({eye:"Work Product Downloads", title:d.n||d.e, data:{}, fields:[{k:"_d",type:"html",html:()=>'<dl class="kv"><dt>Email</dt><dd>'+esc(d.e)+'</dd><dt>Company</dt><dd>'+esc(d.o||"—")+'</dd><dt>Title</dt><dd>'+esc(d.t||"—")+'</dd><dt>Work Product</dt><dd>'+esc(d.product||d.pid||"—")+'</dd>'+(d.file?'<dt>File</dt><dd>'+esc(d.file)+'</dd>':'')+'<dt>Licence</dt><dd>'+(d.accepted?"Accepted":"—")+(d.licence?' · '+esc(d.licence):'')+'</dd><dt>Downloaded</dt><dd>'+esc(fS(localDay(d.at)))+((+d.times||1)>1?' · '+(+d.times)+' times since '+esc(fS(localDay(d.firstAt||d.at))):'')+'</dd>'+(d.page?'<dt>From</dt><dd>'+esc(d.page)+'</dd>':'')+'</dl>'}]}); });
 }
 /* sign-ups from the website form, newest first */
 function signupsSorted(){ const U=unsubMap(); return vals("signups").filter(s=>!isUnsubbed(s.e, s.at, U)).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }

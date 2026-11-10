@@ -133,7 +133,7 @@ const HH_LOG="log", HH_KEEP=30, HH_MAX=150;
 const hhWhen=ts=>{ const d=new Date(ts); if(isNaN(d)) return ""; const t=d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"}); return new Date().toDateString()===d.toDateString()? t : d.toLocaleDateString("en-US",{month:"short",day:"numeric"})+" at "+t; };
 const hhRow=(key,title,level,line,list,extra)=>({key,title,level,line,list:list||[],extra:extra||""});
 const hhWorst=rows=>rows.some(r=>r.level==="bad")?"bad":rows.some(r=>r.level==="warn")?"warn":"ok";
-const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log"};
+const HH_NICE={sections:"Newsletter Sections",editions:"Editions",episodes:"Mic'd Up Episodes",kits:"Episode Kits",pieces:"Posts",images:"Image Library",news:"In the News",newsin:"In the News (Emails)",newsweb:"In the News (Web Search)",requests:"Requests",inbox:"Request Inbox",feeds:"Feeds",signups:"Sign-Ups",unsubs:"Unsubscribes",lists:"Lists",orders:"Orders",branding:"Rebranding",guests:"Guests",chat:"Chat Links",approvals:"Approvals",monthly:"Monthly Results",settings:"Settings",healthlog:"Team Error Log",wpdl:"Work Product Downloads"};
 const hhNice=n=>HH_NICE[n]||String(n).replace(/-/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 
 function hhSaving(){
@@ -171,6 +171,10 @@ function hhSignups(){
   const L=vals("signups").map(s=>s.at).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("sign","Website Sign-Ups","ok","Last sign-up arrived "+hhWhen(L[L.length-1])+".");
 }
+function hhDownloads(){
+  const L=vals("wpdl").map(d=>d.at).filter(Boolean).sort(); if(!L.length) return LOADED.has("wpdl")? hhRow("dl","Work Product Downloads","off","None yet. They arrive from the website's Before You Download form.") : null;
+  return hhRow("dl","Work Product Downloads","ok","Last download arrived "+hhWhen(L[L.length-1])+".");
+}
 function hhNews(){
   const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
@@ -199,7 +203,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */

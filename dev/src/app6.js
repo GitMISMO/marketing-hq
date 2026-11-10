@@ -236,6 +236,7 @@ const HELP = [
    <li><b>Look someone up</b> by typing any part of a name, email, organization or title. Pick a list to narrow it. Click a person for their details and everything they've downloaded.</li>
    <li><b>Load a List</b> takes an Excel or CSV export: the website subscriber export, the downloader export, a prospect list, the MISMO Matters group, or an unsubscribe list. Columns are matched by name. People already there are kept and updated; new people are added.</li>
    <li>The first lists loaded are Kelly's website subscribers (64) and downloaders (764) from May 1 to September 8, 2026. New subscribers from the website form are added on their own (see <b>The Subscribe Form</b>).</li>
+   <li><b>Work product downloads</b> come in on their own: everyone who fills in the website's <b>Before You Download</b> form (email, name, company, title) and accepts the licence is listed under <b>Lists &amp; Unsubscribes › Work Product Downloads</b> with what they downloaded, and counts as a downloader here. Downloading never adds anyone to MISMO Matters. Behind the scenes it uses the same Power Automate flow as the Subscribe form with <code>form</code> = <code>work-product-download</code>; the workflow files it in <code>data/wpdl.json</code> (only the workflow writes there).</li>
    <li>This page holds names and email addresses. Share it only with the MISMO team.</li>
   </ul>`},
  {id:"subscribe", t:"The Subscribe Form", g:"Audience", b:`

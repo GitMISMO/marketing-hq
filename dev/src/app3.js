@@ -332,6 +332,7 @@ function renderLists(){
       '<div class="tile"><div class="v'+(missing.length?" hot":"")+'">'+missing.length+'</div><div class="k">Still Needed</div><div class="s">lists not received</div></div>'+
       '<div class="tile"><div class="v">Nov</div><div class="k">Next Refresh</div><div class="s">Ciara Durkan, MBA</div></div>'+
     '</div></div>'+
+    downloadsCard()+
     '<div class="card"><div class="ch"><h2>The Compound</h2><span class="cnt">'+lists.length+'</span></div>'+(lists.length?'<div class="tw"><table class="t"><thead><tr><th>List</th><th>From</th><th class="n">Rows</th><th class="n">Unique Emails</th><th>Covers</th><th>Notes</th></tr></thead><tbody>'+
       lists.map(l=>'<tr class="click" data-ls="'+esc(l.id)+'"><td><b>'+esc(l.name)+'</b></td><td>'+esc(l.source||"")+'</td><td class="n">'+(+l.rows?(+l.rows).toLocaleString():"—")+'</td><td class="n">'+(+l.unique?(+l.unique).toLocaleString():'<span class="chip changes">Not received</span>')+'</td><td>'+esc(l.covers||"")+'</td><td class="note">'+esc(mdPlain(l.notes))+'</td></tr>').join("")+
       '</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("lists")?"Loading…":"No lists logged.")+'</div>')+'</div>'+
@@ -343,11 +344,12 @@ function renderLists(){
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>Feeds to Automate</h2></div><div class="checks">'+
       '<div class="chk"><span class="ct"><b>Website subscribers</b><small>The website\'s Subscribe button is a Smartsheet form today. Kelly has been pulling the list by hand.</small></span></div>'+
-      '<div class="chk"><span class="ct"><b>Website downloaders</b><small>Standards downloaders since the last refresh (1,498 rows May–September).</small></span></div>'+
+      '<div class="chk"><span class="ct"><b>Website downloaders</b><small>Automatic from the website\'s Before You Download form (see Work Product Downloads above). Earlier: 1,498 rows May–September.</small></span></div>'+
       '<div class="chk"><span class="ct"><b>Prospects</b><small>Come straight from Member 360 instead of a separate list from Kelly.</small></span></div>'+
       '<div class="chk"><span class="ct"><b>Segments from Aptify</b><small>e.g. three years of MBA compliance conference attendees, or anyone with "marketing" in their title, for targeted sends.</small></span></div>'+
     '</div></div></div>'+
-    '<p class="foot">Counts come from the attachments on Kelly\'s two "MISMO compound lists" emails (Ciara Durkan\'s September 2–3 update and Kelly\'s September 8 subscriber and downloader lists). No names or addresses are kept on this page.</p>';
+    '<p class="foot">Counts come from the attachments on Kelly\'s two "MISMO compound lists" emails (Ciara Durkan\'s September 2–3 update and Kelly\'s September 8 subscriber and downloader lists). Work Product Downloads holds names and email addresses; share this page only with the MISMO team.</p>';
+  wireDownloads(el, renderLists);
   $("#ls-new",el).onclick=()=>openList(null);
   $$("[data-ls]",el).forEach(r=>r.onclick=()=>openList(r.dataset.ls));
 }
