@@ -6,7 +6,10 @@
      episodes: liCanceled, liCancelReason, liCanceledOn  (the Monday LinkedIn post / Live) */
 function pOpen(p){ return p.status!=="done" && p.status!=="canceled"; }
 function pClosed(p){ return !pOpen(p); }
-function liClosed(e){ return !!(e && (e.linkedinDone || e.liCanceled)); }
+/* the Monday LinkedIn post or Live counts as done once it's ticked, or once its link is in and its day has come
+   (pasting the link after it ran is how people record it; Nov 10, 2026) */
+function liDone(e){ return !!(e && (e.linkedinDone || (e.linkedinUrl && liDate(e) && liDate(e)<=T()))); }
+function liClosed(e){ return !!(e && (liDone(e) || e.liCanceled)); }
 
 /* the control: kind "piece" or "ep", the record's id, and what to call the thing */
 function cxBox(kind, id, what){

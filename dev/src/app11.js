@@ -426,7 +426,7 @@ function wireKit(el){
     if(u && !/^https?:\/\/([a-z]+\.)?linkedin\.com\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
     KIT.bpEdit=null; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u})); toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
-  const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(www\.)?linkedin\.com\//i.test(u)){ toast("Paste the LinkedIn event link."); return; } await patch("episodes", eid, {linkedinUrl:u, liEventSet:true}); toast("Event saved"); renderMicdup(); };
+  const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That isn't a LinkedIn link. Paste the event or post link."); return; } const ran=liDate(e) && liDate(e)<=T(); await patch("episodes", eid, ran?{linkedinUrl:u, liEventSet:true, linkedinDone:true}:{linkedinUrl:u, liEventSet:true}); toast(ran?"Link saved; marked as streamed":"Event saved"); renderMicdup(); };
   wireCx(el, ()=>renderMicdup());
   const ld=$("#kit-lidone",el); if(ld) ld.onclick=async()=>{ await patch("episodes", eid, {linkedinDone:!e.linkedinDone}); renderMicdup(); };
   $$("[data-kcover]",el).forEach(b=>b.onclick=()=>downloadImage(S.images[b.dataset.kcover]));

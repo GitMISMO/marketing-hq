@@ -95,7 +95,7 @@ function openEpisode(id, seed){
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
-    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); await put("episodes",nid,Object.assign({},e,v)); },
+    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); },
     del: id ? async()=>remove("episodes",id) : null,
     after:b=>{ wireCx(b); wireGuestPane(b, id); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
       const pa=$("#ep-paste",b); if(pa) pa.addEventListener("input",()=>{ const txt=pa.value; const urls=txt.match(/https?:\/\/[^\s<>"')\]]+/g)||[]; const drive=urls.find(u=>/drive\.google|docs\.google|sharepoint|onedrive|1drv/.test(u))||urls[0];
@@ -166,7 +166,7 @@ function wirePieceRows(el){
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
   const own=vals("pieces").filter(p=>p.channel==="linkedin");
-  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||e.linkedinDone)).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", cancelReason:e.liCancelReason||"", status:e.linkedinDone?"done":e.liCanceled?"canceled":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
+  const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||liDone(e))).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", cancelReason:e.liCancelReason||"", status:liDone(e)?"done":e.liCanceled?"canceled":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
   const upcoming=all.filter(p=>pOpen(p) && p.date && p.date<=add(t,45)).sort((a,b)=>a.date<b.date?-1:1);
