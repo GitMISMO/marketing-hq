@@ -2860,22 +2860,23 @@ function renderTab(t){
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
+/* the numbers in the left menu show only what's wrong: items past due, or an order at risk (Jonna, Nov 10, 2026).
+   Nothing is shown for work that's simply coming up or waiting. */
 function badges(){
   if(!tabReady("home")) return;   /* counts wait until the records are in, so they don't flicker */
-  const ev=allEvents(); const over=ev.filter(isOver).length;
-  badge("overview", over, true);
-  const ed=curEdition(); badge("matters", ed? edSections(ed).filter(s=>s.on && s.doc.status==="review").length : 0);
-  const wk=add(T(),7);
-  badge("micdup", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1) + kitsWithAmy().length, false);
-  badge("linkedin", ev.filter(e=>e.k==="linkedin" && !e.done && e.date<=wk).length);
-  badge("youtube", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length);
-  badge("requests", requests().filter(r=>r.status==="new").length, true);
+  const ev=allEvents(), late=ev.filter(isOver), lateBy=(...ks)=>late.filter(e=>ks.includes(e.k)).length;
+  badge("overview", late.length, true);
+  badge("matters", lateBy("matters"), true);
+  badge("micdup", lateBy("micdup"), true);
+  badge("linkedin", lateBy("linkedin"), true);
+  badge("youtube", lateBy("micdup"), true);
+  badge("requests", lateBy("request"), true);
   badge("orders", vals("orders").filter(o=>!o.archived && orRisk(o)).length, true);
-  badge("branding", vals("branding").filter(b=>!b.archived && b.status==="old").length);
-  badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && pOpen(p) && p.date && p.date<=wk).length);
-  badge("summits", vals("pieces").filter(p=>p.channel==="summit" && pOpen(p) && p.date && p.date<=add(T(),14)).length);
-  if(typeof mnOpen==="function" && (LOADED.has("monthly") || !LIVE)) badge("results", mnOpen(mnPeriod()).length, true);
-  badge("news", newsAll().filter(n=>!n.linkedinDone && n.date>=add(T(),-30)).length);
+  badge("branding", 0);
+  badge("mailchimp", lateBy("mailchimp"), true);
+  badge("summits", lateBy("summit"), true);
+  badge("results", lateBy("results"), true);
+  badge("news", 0);
 }
 
 /* ================= Schedule (overview) ================= */
@@ -3724,7 +3725,7 @@ const HELP = [
   <p class="lead">MISMO Media is Strategic Growth's one place for marketing and communications. Every MISMO Matters edition, Mic'd Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push lives here, on one schedule, so nothing gets missed and everyone can see what's happening.</p>
   <h3>Finding Your Way</h3>
   <ul>
-   <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. The small number beside a page is what needs attention there (red means past due).</li>
+   <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. A red number beside a page appears only when something there is past due or wrong (an order at risk). No number means nothing is late.</li>
    <li><b>Search</b> at the top of the menu finds sections, episodes, posts, articles and help topics. Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd>+<kbd>K</kbd> on a Mac) from anywhere.</li>
    <li><b>Narrow the menu</b> with the arrow at its top, or press <kbd>\\</kbd>. Your choice is remembered.</li>
    <li><b>Dark Mode</b> is at the foot of the menu. It carries across every MISMO tool.</li>
@@ -6990,7 +6991,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-10 12:55 ET · 8b28057";
+const BUILD = "2026-11-10 14:55 ET · 3e1e663";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails

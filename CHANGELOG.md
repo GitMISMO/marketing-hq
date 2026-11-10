@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-10 (late afternoon)
+- Left menu numbers show only what's wrong: a red count of past-due items on each page (or orders at risk). Nothing shows for work that's just coming up or waiting.
+
 ## 2026-11-10 (afternoon)
 - Mic'd Up LinkedIn: pasting the LinkedIn post or event link once its Monday has come counts it as done, so it leaves Past Due (episode pane and the kit's Save Event Link both tick it). Short lnkd.in links are accepted. New test for it.
 
