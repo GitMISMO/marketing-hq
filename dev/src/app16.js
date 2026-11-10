@@ -66,7 +66,7 @@ function mdEmail(s, pStyle, aStyle, opt){
     /* lists are drawn as a two-column table (marker, text): Outlook on Windows adds its own indent to real lists */
     const cs=String(opt.li||pStyle).replace(/(^|;)\s*margin:[^;]*/g,"$1").replace(/;;+/g,";");
     return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+b.items.map((i,n)=>
-      '<tr><td width="22" valign="top" style="'+cs+';width:22px;padding:0 0 8px 2px">'+(b.t==="ol"?(n+1)+'.':'&bull;')+'</td><td valign="top" style="'+cs+';padding:0 0 8px">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</td></tr>').join("")+'</table>', 0, 6);
+      '<tr><td width="22" valign="top" style="'+cs.replace(/font-family:[^;]*;?/,"")+';width:22px;padding:0 0 8px 2px">'+(b.t==="ol"?(n+1)+'.':'&bull;')+'</td><td valign="top" style="'+cs+';padding:0 0 8px">'+mdInline(i,aStyle).replace(/\n/g,"<br>")+'</td></tr>').join("")+'</table>', 0, 6);
   }).join("");
 }
 /* Plain text, for places that can't show formatting (LinkedIn, text copies, short snippets). */
