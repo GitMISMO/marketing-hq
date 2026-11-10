@@ -544,22 +544,23 @@ function renderTab(t){
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
+/* the numbers in the left menu show only what's wrong: items past due, or an order at risk (Jonna, Nov 10, 2026).
+   Nothing is shown for work that's simply coming up or waiting. */
 function badges(){
   if(!tabReady("home")) return;   /* counts wait until the records are in, so they don't flicker */
-  const ev=allEvents(); const over=ev.filter(isOver).length;
-  badge("overview", over, true);
-  const ed=curEdition(); badge("matters", ed? edSections(ed).filter(s=>s.on && s.doc.status==="review").length : 0);
-  const wk=add(T(),7);
-  badge("micdup", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length + (epOn(nextDow(T(),5))?0:1) + kitsWithAmy().length, false);
-  badge("linkedin", ev.filter(e=>e.k==="linkedin" && !e.done && e.date<=wk).length);
-  badge("youtube", vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=T() && !e.youtubeDone).length);
-  badge("requests", requests().filter(r=>r.status==="new").length, true);
+  const ev=allEvents(), late=ev.filter(isOver), lateBy=(...ks)=>late.filter(e=>ks.includes(e.k)).length;
+  badge("overview", late.length, true);
+  badge("matters", lateBy("matters"), true);
+  badge("micdup", lateBy("micdup"), true);
+  badge("linkedin", lateBy("linkedin"), true);
+  badge("youtube", lateBy("micdup"), true);
+  badge("requests", lateBy("request"), true);
   badge("orders", vals("orders").filter(o=>!o.archived && orRisk(o)).length, true);
-  badge("branding", vals("branding").filter(b=>!b.archived && b.status==="old").length);
-  badge("mailchimp", vals("pieces").filter(p=>p.channel==="mailchimp" && pOpen(p) && p.date && p.date<=wk).length);
-  badge("summits", vals("pieces").filter(p=>p.channel==="summit" && pOpen(p) && p.date && p.date<=add(T(),14)).length);
-  if(typeof mnOpen==="function" && (LOADED.has("monthly") || !LIVE)) badge("results", mnOpen(mnPeriod()).length, true);
-  badge("news", newsAll().filter(n=>!n.linkedinDone && n.date>=add(T(),-30)).length);
+  badge("branding", 0);
+  badge("mailchimp", lateBy("mailchimp"), true);
+  badge("summits", lateBy("summit"), true);
+  badge("results", lateBy("results"), true);
+  badge("news", 0);
 }
 
 /* ================= Schedule (overview) ================= */

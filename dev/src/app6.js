@@ -18,7 +18,7 @@ const HELP = [
   <p class="lead">MISMO Media is Strategic Growth's one place for marketing and communications. Every MISMO Matters edition, Mic'd Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push lives here, on one schedule, so nothing gets missed and everyone can see what's happening.</p>
   <h3>Finding Your Way</h3>
   <ul>
-   <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. The small number beside a page is what needs attention there (red means past due).</li>
+   <li><b>The menu on the left</b> has a page for each channel. <b>Schedule</b> is the overview. A red number beside a page appears only when something there is past due or wrong (an order at risk). No number means nothing is late.</li>
    <li><b>Search</b> at the top of the menu finds sections, episodes, posts, articles and help topics. Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd>+<kbd>K</kbd> on a Mac) from anywhere.</li>
    <li><b>Narrow the menu</b> with the arrow at its top, or press <kbd>\\</kbd>. Your choice is remembered.</li>
    <li><b>Dark Mode</b> is at the foot of the menu. It carries across every MISMO tool.</li>
