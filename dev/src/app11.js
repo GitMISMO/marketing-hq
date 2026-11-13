@@ -129,6 +129,8 @@ async function kitSync(){
     // Amy's email replies to "approval needed" (data/approvals.json, filed by the workflow)
     if(LOADED.has("approvals")) for(const a of vals("approvals").sort((x,y)=>String(x.at).localeCompare(String(y.at)))){
       const k=kitOf(a.ref); if(!k || (k.liReplyIds||[]).includes(a.id)) continue;
+      /* a reply to wording that was taken back (Edit the Wording) or re-sent since doesn't count */
+      if(k.liStatus!=="review" || (k.liSentAt && String(a.at||"")<String(k.liSentAt))){ await put("kits", a.ref, Object.assign({}, k, {liReplyIds:(k.liReplyIds||[]).concat([a.id])})); continue; }
       const seen=(k.liReplyIds||[]).concat([a.id]);
       if(a.decision==="approved") await put("kits", a.ref, Object.assign({}, k, {liStatus:"approved", liApprovedAt:a.at, liApprovedBy:"Amy (email reply)", liNote:String(a.text||"").replace(/^(approved?|looks good|good to go|all good|yes)[.!,:\s-]*/i,"").trim(), liReplyId:a.id, liReplyIds:seen}));
       else await put("kits", a.ref, Object.assign({}, k, {liStatus:"edits", liNote:a.text||"", liReplyId:a.id, liReplyIds:seen}));

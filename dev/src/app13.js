@@ -98,8 +98,8 @@ async function muSync(){
     await muAuto(e.id);
   }
 }
-/* Autopilot: once the transcript is in the folder, MISMO Media writes everything and sends the LinkedIn Live
-   wording to Amy by itself, so Vanessa opens a finished kit. Each step runs once;
+/* Autopilot: once the transcript is in the folder, MISMO Media writes everything, so Vanessa opens a finished kit.
+   It never sends anything to Amy by itself. Each step runs once;
    a claim on the kit keeps two open browsers from doing the same step twice. */
 const AUTO_HOLD = 30*60*1000;
 function autoClaimed(k, key){ const t=k[key]; return t && Date.now()-Date.parse(t) < AUTO_HOLD; }
@@ -112,13 +112,8 @@ async function muAuto(epId){
     await kitWriteAll(epId, true);
     k=kitOf(epId)||{}; if(!k.written) return;
   }
-  const ep=S.episodes[epId];
-  if(!k.liStatus && !k.liAutoSent && ep.linkedinCopy){
-    const name=ep.liEventName || liEventName((k.written||{}).title, ep);
-    await put("kits", epId, Object.assign({}, k, {liStatus:"review", liSentAt:new Date().toISOString(), liNote:"", liAutoSent:true}));
-    await liSendAmy(ep, kitOf(epId), name, ep.linkedinCopy);
-    k=kitOf(epId)||{};
-  }
+  /* Nothing goes to Amy by itself: the LinkedIn Live wording is sent only when someone presses Send to Amy for Approval
+     (Jonna, Nov 13, 2026, after an automatic send went out with wording nobody had checked). */
   /* Clip posts are not planned by themselves: Amy decides whether MISMO posts clips. */
 }
 
