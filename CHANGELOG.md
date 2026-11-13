@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13 (night)
+- MISMO Matters: every section's button now has its own Button Text (blank means Learn More) and a Show It As choice: A Button, A Text Link, or Nothing. The Vieaux Point and Workgroup Highlights website button can have its own words too, or be left out.
+- Mic'd Up: MISMO's LinkedIn post is now Brian's own LinkedIn post retold from MISMO's side (same guest, same topics, third person); the transcript only fills in detail. It isn't written until his post's words are pasted in. The guest named in Brian's Drive folder always counts, even when the transcript misspells the name. Season 2 Episode 2's wording was redone from Brian's post with Rich Swerbinsky.
+
 ## 2026-11-13 (late)
 - Mic'd Up: nothing goes to Amy by itself any more. Autopilot still writes the kit, but the LinkedIn Live wording is sent only when someone presses Send to Amy for Approval (Jonna's rule after an automatic send went out with wording nobody had checked). Amy's reply to wording that was taken back or re-sent since is ignored. Season 2 Episode 2's wording was taken back to draft.
 
