@@ -246,8 +246,8 @@ function buildEmail(ed, preview, opt){
   const FOOT_A=F+'font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:'+mute+';text-decoration:none;font-weight:600;white-space:nowrap';
   const P=F+'font-size:16px;line-height:1.7;margin:0 0 14px;color:'+ink;
   const A='color:'+link+';font-weight:600;text-decoration:underline';
-  /* subheads always start below a small picture beside the text, never beside it */
-  const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700;clear:both;padding-top:6px';
+  /* subheads flow beside a small picture like the rest of the text, so there's no empty space beside a headshot (Nov 13, 2026) */
+  const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700;padding-top:6px';
   const pic=b=>{ const r=rtImgInfo(b.ref), half=b.size==="half", w=half?272:544;
     const tag=(src,extra)=>'<img src="'+esc(src)+'" alt="'+esc(b.alt||"")+'" width="'+w+'"'+(extra||'')+' style="display:block;width:'+(half?'50%':'100%')+';max-width:'+w+'px;height:auto;margin:'+(half?'4px auto 18px':'4px 0 18px')+';border:0'+(r.hl?'':';outline:2px dashed #e0a440;outline-offset:-2px')+'" border="0">';
     /* a picture in the text starts below a small picture beside the text, so a centered one is centered on the
