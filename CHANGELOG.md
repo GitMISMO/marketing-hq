@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13
+- Mic'd Up: Brian's Drive folder links from the Teams chat are pulled in again for Season 2. Folder names that start with the season ("S2 Ep 02 - …", "Season 2 Ep 1 …") were not recognized, so the links sat unused; now they match the right season and episode. A link that can't be pulled in (not shared, no episode number) shows on System Health with the reason instead of being skipped silently.
+
 ## 2026-11-10 (late afternoon)
 - Left menu numbers show only what's wrong: a red count of past-due items on each page (or orders at risk). Nothing shows for work that's just coming up or waiting.
 
