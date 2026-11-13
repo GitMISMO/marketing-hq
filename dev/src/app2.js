@@ -164,11 +164,12 @@ function imageField(d){
 function wireImage(b, doc, setId){
   const up=$("#img-up",b), f=$("#img-file",b), rm=$("#img-rm",b), lb=$("#img-lib",b), strip=$("#img-strip",b);
   const redraw=()=>{ if(PANE) PANE.dirty=true; $("#f-_img",b).innerHTML=imageField(doc); wireImage(b,doc,setId); };
-  const use=im=>{ doc.imageLib=im.id; setId(im.assetId||""); const u=$("#f-imageUrl",b); if(u && !u.value && im.hlUrl) u.value=im.hlUrl; const a=$("#f-imageAlt",b); if(a && !a.value && im.alt) a.value=im.alt; redraw(); };
+  /* a new picture brings its own Higher Logic link, so the old picture's link can't linger and keep the old picture in the email */
+  const use=im=>{ const changed=doc.imageLib!==im.id; doc.imageLib=im.id; setId(im.assetId||""); const u=$("#f-imageUrl",b); if(u && (changed || !u.value)) u.value=im.hlUrl||""; const a=$("#f-imageAlt",b); if(a && !a.value && im.alt) a.value=im.alt; redraw(); };
   if(up) up.onclick=()=>f.click();
   if(f) f.onchange=async()=>{ const file=f.files[0]; if(!file) return; const made=await addImages([file],{campaign:"matters", edition:doc.month||""}); if(made[0]){ use(made[0]); toast("Image added to the section and the Image Library. Press Save to keep it."); } };
   if(lb) lb.onclick=()=>{ strip.hidden=!strip.hidden; if(!strip.hidden){ strip.innerHTML=libraryStrip(S.editions[doc.month]||curEdition()); $$("[data-pick]",strip).forEach(p=>p.onclick=()=>{ const im=S.images[p.dataset.pick]; if(im) use(im); }); } };
-  if(rm) rm.onclick=()=>{ doc.imageLib=""; setId(""); redraw(); };
+  if(rm) rm.onclick=()=>{ doc.imageLib=""; setId(""); const u=$("#f-imageUrl",b); if(u) u.value=""; redraw(); };
 }
 function openEdition(ed){
   const fields=[{sec:"Dates"}].concat(MILES.map(([k,l,w])=>({k:"d_"+k,label:l,type:"date",get:d=>d.dates&&d.dates[k],hint:w})))
@@ -283,11 +284,12 @@ function buildEmail(ed, preview, opt){
       }
     } else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){
       inner+=logoWall(ed, s, preview);
-    } else if(isCertSpot(s)){
-      inner+=certSpotlight(ed, s, body);
     } else {
-      if(!d.headline && !d.body && !d.quote) return;
-      if(d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
+      /* the Certifications spotlight has its own layout, but its lead picture and quote still show, after the
+         highlighted company's text (Nov 13, 2026: they were left out) */
+      const cert=isCertSpot(s);
+      if(!cert && !d.headline && !d.body && !d.quote) return;
+      if(!cert && d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
       const isz=leadSize(d, lib);
@@ -298,15 +300,20 @@ function buildEmail(ed, preview, opt){
             '<!--[if mso]><img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="140" align="left" hspace="12" vspace="4" style="width:140px;height:auto" border="0"><![endif]-->'; })()
         : isz==="half" ? '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="272" style="display:block;width:272px;max-width:100%;height:auto;margin:0 auto 18px;border:0" border="0">'
         : '<img src="'+esc(src)+'" alt="'+esc(d.imageAlt||"")+'" width="544" style="display:block;width:100%;max-width:544px;height:auto;margin:0 0 18px;border:0" border="0">';
-      if(hl) inner+=img(hl);
-      else if(preview && local) inner+=img(local).replace('border:0"','border:0;outline:2px dashed #e0a440;outline-offset:-2px"')+'<div style="font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-12px 0 18px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</div>';
-      else if(d.imageId||d.imageLib||d.imageNote) inner+=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
-      inner+=body(d.body);
-      if(isz==="small" && (hl||(preview&&local))) inner+='<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>';
-      if(d.quote) inner+=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
+      let pic='';
+      if(hl) pic=img(hl);
+      else if(preview && local) pic=img(local).replace('border:0"','border:0;outline:2px dashed #e0a440;outline-offset:-2px"')+'<div style="font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-12px 0 18px">Preview only. Before you copy the HTML, add this picture to the Higher Logic image library and paste its link into the section\'s Image Link in Higher Logic.</div>';
+      else if(d.imageId||d.imageLib||d.imageNote) pic=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
+      const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
+      let quote='';
+      if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
+      if(cert){ inner+=certSpotlight(ed, s, body, pic+clear+quote); }
+      else {
+      inner+=pic+body(d.body)+clear+quote;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+=emGap(emBtn(esc(full), esc(fullArticleLabel(s.k))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
       if(d.ctaUrl) inner+=emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff'), 2, 18);
+      }
     }
     const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
     toc.push([anchor,name]);

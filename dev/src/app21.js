@@ -62,7 +62,7 @@ async function certSync(){
 /* where the list goes: on the line "[Certified List]" in the body if there is one, otherwise after the body */
 const CERT_MARK = /^\s*\[Certified List\]\s*$/im;
 function certSplit(md){ md=String(md||""); const m=md.match(CERT_MARK); return m ? [md.slice(0,m.index), md.slice(m.index+m[0].length)] : [md, ""]; }
-function certSpotlight(ed, s, bodyFn){
+function certSpotlight(ed, s, bodyFn, extra){
   const d=s.doc, p=certProg(d.certProgram), items=d.certItems||[];
   const F=EM_F, M="font-family:'IBM Plex Mono',Consolas,monospace;";
   const navy="#0d314c", line="#dde9f2";
@@ -88,7 +88,7 @@ function certSpotlight(ed, s, bodyFn){
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
   const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
-  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+md(after)+cta;
+  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+md(after)+(extra||"")+cta;
 }
 function certSpotlightText(ed, s){
   const d=s.doc, p=certProg(d.certProgram), out=[];
