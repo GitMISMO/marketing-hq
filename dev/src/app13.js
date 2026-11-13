@@ -69,7 +69,7 @@ async function kitPullSP(epId, quiet){
     }
     const kit=Object.assign({}, old, {source:"sp", spFolder:e.spFolder, folderName:e.spFolder.split("/").pop(), folderUrl:spFolderUrl(e.spFolder),
       files:files.map(f=>({name:f.name,size:f.size,path:f.path})), video:c.video?{name:c.video.name,size:c.video.size,path:c.video.path}:null,
-      clips:c.clips.map(f=>({name:f.name,size:f.size,path:f.path})), transcriptPath:c.transcript?c.transcript.path:"", transcriptName:c.transcript?c.transcript.name:"",
+      clips:c.clips.map(f=>({name:f.name,size:f.size,path:f.path})), transcriptPath:old.txUploaded?old.transcriptPath:(c.transcript?c.transcript.path:""), transcriptName:old.txUploaded?old.transcriptName:(c.transcript?c.transcript.name:""),
       thumbs, pulledAt:new Date().toISOString()});
     if(!kit.thumbPick && thumbs.length===1) kit.thumbPick=thumbs[0].img;
     await put("kits", epId, kit);

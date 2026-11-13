@@ -201,6 +201,25 @@ function txFixed(text, issues, skip){
   const rx=new RegExp("(^|[^A-Za-z'’])("+keys.map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")(?=[^A-Za-z]|$)","g");
   return text.replace(rx,(m,p,w)=>p+(map[w]||w));
 }
+/* a corrected transcript, uploaded straight into the kit: saved to SharePoint with the other Mic'd Up files and used
+   from then on instead of the one in the folder (Pull Again keeps it). The earlier one stays listed in txHistory. */
+async function kitUploadTranscript(epId, f){
+  const sp=window.__hqImages; if(!sp || !sp.save){ toast("Uploading works on resources.mismo.org."); return; }
+  if(!/\.(txt|srt|vtt)$/i.test(f.name) && !/^text\//.test(f.type||"")){ toast("Upload the transcript as a .txt (or .srt or .vtt) file.", 5000); return; }
+  if(f.size>5*1048576){ toast("That file is too big for a transcript.", 5000); return; }
+  const text=await f.text(); if(text.trim().length<200){ toast("That file looks empty. Pick the full transcript.", 5000); return; }
+  const e=S.episodes[epId]||{}, k=kitOf(epId)||{};
+  try{
+    toast("Uploading the corrected transcript…", 60000);
+    const saved=await sp.save(new File([text], f.name, {type:"text/plain"}), "Micd-Up-"+epTag(e).replace(/[^A-Za-z0-9]+/g,"-")+"-transcript-"+f.name);
+    const hist=(k.txHistory||[]).concat((k.transcriptPath||k.transcriptId)?[{path:k.transcriptPath||"", driveId:k.transcriptPath?"":(k.transcriptId||""), name:k.transcriptName||"", replacedAt:new Date().toISOString()}]:[]).slice(-10);
+    await put("kits", epId, Object.assign({}, k, {transcriptPath:saved.id, transcriptName:f.name, txUploaded:true, txUploadedAt:new Date().toISOString(), txUploadedBy:window.__hqWho||"", txHistory:hist, txOk:false}));
+    delete KIT.tx[epId]; delete KIT.txIssues[epId];
+    await kitLoadTranscript(epId);
+    toast("Corrected transcript is in and checked. Press Write Again from the Transcript to redo the wording from it.", 7000);
+  }catch(err){ toast("Couldn't upload it: "+(err.message||"try again"), 6000); }
+  renderMicdup();
+}
 async function kitLoadTranscript(epId){
   const k=kitOf(epId); if(!k||!(k.transcriptId||k.transcriptPath)||!window.__hqImages) return null;
   if(KIT.tx[epId]!=null) return KIT.tx[epId];
@@ -283,6 +302,7 @@ function liBrianHtml(e,k,liText){
   const open=k.brianPostUrl?'<a class="btn sm" href="'+esc(k.brianPostUrl)+'" target="_blank" rel="noopener">Open on LinkedIn ↗</a>':'';
   if(!k.brianPost || KIT.bpEdit===k.id) return '<div class="kli-bp"><div class="kcopy-h"><span>Brian\'s LinkedIn Post</span>'+open+'</div>'+
     '<textarea id="kit-bp" rows="6" placeholder="Paste Brian\'s LinkedIn post about this episode">'+esc(k.brianPost||"")+'</textarea>'+
+    (k.brianPostUrl&&!k.brianPost?'<div class="hint">Link saved. LinkedIn doesn\'t let other sites read a post from its link, so open it (Open on LinkedIn), copy the words of the post and paste them above, then press Bring It In.</div>':'')+
     '<input type="url" id="kit-bpurl" placeholder="Link to his post or LinkedIn Live (optional)" value="'+esc(k.brianPostUrl||"")+'">'+
     '<div class="kbtns"><button class="btn sm" type="button" id="kit-bpsave">Bring It In</button>'+(k.brianPost?'<button class="btn sm" type="button" id="kit-bpcancel">Cancel</button>':'')+'</div></div>';
   const fl=liFlags(e,k,liText);
@@ -339,10 +359,12 @@ function kitCardHtml(){
   const body =
     step(++n,"Download the Final Video", !!k.video, k.video ? '<div class="kfile"><span class="kic">▶</span><div><b>'+esc(k.video.name)+'</b><small>'+esc(mb(k.video.size))+' · the largest video in the folder</small></div>'+vidLink+'</div>' : '<div class="hint">'+(sp?'Waiting for the final video in the episode folder.':'No .mp4 in the folder yet.')+'</div>')+
     step(++n,"Thumbnail"+(thumbs.length>1?" · pick the one to use":""), !!k.thumbPick, thumbs.length ? '<div class="kthumbs">'+thumbs.map(t=>{ const im=S.images[t.img]; return '<div class="kthumb'+(k.thumbPick===t.img?" on":"")+'"><button type="button" class="kthumb-i" data-kpick="'+esc(t.img)+'" title="Use this one"><img data-kimg="'+esc(t.img)+'" src="'+esc(imgSrc(im))+'" alt=""></button><div class="kthumb-f"><span>'+esc(t.name)+'</span>'+(k.thumbPick===t.img?'<b class="chip ok">Using This One</b>':'<button class="btn sm" type="button" data-kpick="'+esc(t.img)+'">Use This One</button>')+'<button class="btn sm" type="button" data-kdl="'+esc(t.img)+'">Download</button></div></div>'; }).join("")+'</div>' : '<div class="hint">No thumbnails in the folder yet.</div>')+
-    step(++n,"Check the Transcript", !!k.txOk, !hasTx ? '<div class="hint">No transcript in the folder yet. Riverside\'s transcript as a .txt works best.</div>' :
+    step(++n,"Check the Transcript", !!k.txOk, (k.txUploaded?'<div class="hint">Using the corrected transcript '+esc(k.transcriptName||"")+', uploaded '+esc(fS(localDay(k.txUploadedAt)))+(k.txUploadedBy?' by '+esc(k.txUploadedBy):'')+'.</div>':'')+
+      '<div class="kbtns"><button class="btn sm" type="button" id="kit-txup">'+(hasTx?"Upload a Corrected Transcript":"Upload the Transcript")+'</button><input type="file" id="kit-txup-f" accept=".txt,.srt,.vtt,text/plain" hidden></div>'+
+      (!hasTx ? '<div class="hint">No transcript in the folder yet. Riverside\'s transcript as a .txt works best.</div>' :
       (tx==null ? '<button class="btn sm" type="button" id="kit-tx">Check '+esc(k.transcriptName||"the transcript")+'</button>' :
         '<div class="ktx">'+(iss.length ? '<div class="ktx-h"><b>'+iss.length+' thing'+(iss.length===1?"":"s")+' to fix</b><span class="hint">Untick any that are right as they are.</span></div><div class="ktx-l">'+iss.map((x,i)=>'<label class="ktx-r"><input type="checkbox" data-ktx="'+i+'" checked> <s>'+esc(x.found)+'</s> → <b>'+esc(x.fix)+'</b> <small>'+x.n+'× · '+esc(x.why)+'</small></label>').join("")+'</div>' : '<div class="ktx-ok">No misspelled names or MISMO terms found.</div>')+
-        '<div class="kbtns"><button class="btn sm pri" type="button" id="kit-txdl">Download '+(iss.length?"Corrected ":"")+'Transcript (.txt)</button><button class="btn sm" type="button" id="kit-txok">'+(k.txOk?"Checked ✓":"Mark as Checked")+'</button><label class="hint ktx-add">Other names to check: <input type="text" id="kit-names" value="'+esc(k.extraNames||"")+'" placeholder="e.g. Dave Savage, Homebase"></label></div></div>'))+
+        '<div class="kbtns"><button class="btn sm pri" type="button" id="kit-txdl">Download '+(iss.length?"Corrected ":"")+'Transcript (.txt)</button><button class="btn sm" type="button" id="kit-txok">'+(k.txOk?"Checked ✓":"Mark as Checked")+'</button><label class="hint ktx-add">Other names to check: <input type="text" id="kit-names" value="'+esc(k.extraNames||"")+'" placeholder="e.g. Dave Savage, Homebase"></label></div></div>')))+
     step(++n,"Titles, Descriptions and Posts", !!(w.title||w.desc), (w.title||w.desc) ?
         copyBox("kit-title","YouTube Title",e.ytTitle||w.title)+copyBox("kit-desc","YouTube Description",w.desc+(w.chapters?"\n\n"+w.chapters:""),8)+
         (fromTx ? '<details class="kmore"><summary>More copy from the transcript</summary>'+
@@ -384,6 +406,7 @@ function wireKit(el){
   $$("[data-kpick]",el).forEach(b=>b.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {thumbPick:b.dataset.kpick})); renderMicdup(); });
   $$("[data-kdl]",el).forEach(b=>b.onclick=()=>downloadImage(S.images[b.dataset.kdl]));
   $$("img[data-kimg]",el).forEach(i=>{ const im=S.images[i.dataset.kimg]; if(im && !i.getAttribute("src")) imgEnsure(im).then(()=>{ i.src=imgSrc(im); }); });
+  const tu=$("#kit-txup",el), tf=$("#kit-txup-f",el); if(tu&&tf){ tu.onclick=()=>tf.click(); tf.onchange=async ev=>{ const f=ev.target.files[0]; ev.target.value=""; if(f) await kitUploadTranscript(eid, f); }; }
   const txb=$("#kit-tx",el); if(txb) txb.onclick=async()=>{ txb.disabled=true; txb.textContent="Reading…"; await kitLoadTranscript(eid); renderMicdup(); };
   const nm=$("#kit-names",el); if(nm) nm.onchange=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {extraNames:nm.value})); KIT.txIssues[eid]=txCheck(KIT.tx[eid]||"", eid); renderMicdup(); };
   const dl=$("#kit-txdl",el); if(dl) dl.onclick=()=>{ const skip={}; $$("[data-ktx]",el).forEach(c=>{ if(!c.checked) skip[c.dataset.ktx]=true; }); const out=txFixed(KIT.tx[eid]||"", KIT.txIssues[eid]||[], skip);
@@ -435,8 +458,10 @@ function wireKit(el){
   const bpc=$("#kit-bpcancel",el); if(bpc) bpc.onclick=()=>{ KIT.bpEdit=null; renderMicdup(); };
   const bps=$("#kit-bpsave",el); if(bps) bps.onclick=async()=>{ let t=($("#kit-bp",el).value||"").trim(), u=($("#kit-bpurl",el).value||"").trim();
     const li=(t.match(/https?:\/\/[^\s]*linkedin\.com[^\s]*/i)||[""])[0]; if(li){ t=t.replace(li,"").trim(); if(!u) u=li; }
-    if(t.length<40){ toast("Paste Brian's whole LinkedIn post."); return; }
-    if(u && !/^https?:\/\/([a-z]+\.)?linkedin\.com\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
+    if(u && !/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
+    /* only a link: keep it, and say plainly that the words have to be pasted (LinkedIn doesn't let other sites read a post) */
+    if(t.length<40){ if(u){ KIT.bpEdit=eid; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPostUrl:u})); toast("Link saved. Now paste the words of Brian's post too: LinkedIn doesn't let MISMO Media read a post from its link.", 8000); renderMicdup(); return; }
+      toast("Paste the words of Brian's LinkedIn post (the whole post).", 6000); return; }
     KIT.bpEdit=null; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u})); toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
   const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That isn't a LinkedIn link. Paste the event or post link."); return; } const ran=liDate(e) && liDate(e)<=T(); await patch("episodes", eid, ran?{linkedinUrl:u, liEventSet:true, linkedinDone:true}:{linkedinUrl:u, liEventSet:true}); toast(ran?"Link saved; marked as streamed":"Event saved"); renderMicdup(); };
