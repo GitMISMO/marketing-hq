@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13 (afternoon)
+- Mic'd Up YouTube Kit: Upload a Corrected Transcript (.txt, .srt or .vtt). It's saved with the Mic'd Up files and used from then on, even after Pull Again; the earlier one stays listed (txHistory). New test for it.
+- Brian's LinkedIn post: pasting only the link now saves the link and says plainly that the words have to be pasted too (LinkedIn doesn't let other sites read a post), instead of a brief message that was easy to miss. lnkd.in links accepted.
+- Season 2 thumbnails ("Episode Thumbnail.png") are picked up; a picture in a MISMO Matters section centers on the full column below a headshot.
+
 ## 2026-11-13
 - Mic'd Up: Brian's Drive folder links from the Teams chat are pulled in again for Season 2. Folder names that start with the season ("S2 Ep 02 - …", "Season 2 Ep 1 …") were not recognized, so the links sat unused; now they match the right season and episode. A link that can't be pulled in (not shared, no episode number) shows on System Health with the reason instead of being skipped silently.
 
