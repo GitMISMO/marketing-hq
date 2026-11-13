@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13 (late)
+- Mic'd Up: nothing goes to Amy by itself any more. Autopilot still writes the kit, but the LinkedIn Live wording is sent only when someone presses Send to Amy for Approval (Jonna's rule after an automatic send went out with wording nobody had checked). Amy's reply to wording that was taken back or re-sent since is ignored. Season 2 Episode 2's wording was taken back to draft.
+
 ## 2026-11-13 (evening)
 - Mic'd Up Writer: the guest named in Brian's folder ("Season 2 Ep 2 Rich Swerbinsky") is used, and an episode is called solo only if the transcript clearly has Brian alone (an unmatched old plan no longer makes it "solo").
 - Saving from an out-of-date tab: Brian's post and a corrected transcript no longer say "saved" when the save was refused; the "refresh to keep saving" message stays the last word.

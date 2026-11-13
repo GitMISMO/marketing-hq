@@ -3870,7 +3870,7 @@ const HELP = [
   <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late or missing anything. Everything from Episode 51 on is tracked.</p>`},
  {id:"kit", t:"The Mic'd Up YouTube Kit", g:"Channels", b:`
   <p>Everything Vanessa needs to post an episode is filled in for her. The writing follows MISMO's Mic'd Up house style, taken from the published episodes on YouTube, Spotify, Apple Podcasts and MISMO's and Brian's LinkedIn posts: the same voice and shape, with the guest's title and company always included, the search words up front, chapters, topic-matched hashtags, takeaways and a subscribe line added. It's on the <b>MISMO Mic'd Up</b> page, under <b>YouTube Kit</b>. Once Brian's files are in the SharePoint folder, the episode's card appears by itself; <b>Check the Folder</b> looks again right away.</p>
-  <p><b>Autopilot:</b> as soon as the transcript lands in the folder, MISMO Media does two things by itself, once per episode: it runs <b>Write Everything</b> and emails the LinkedIn Live wording to Amy for approval. Clip posts are only planned when someone presses <b>Plan the Clip Posts</b>. So when Vanessa opens the kit, the copy is written and Amy's approval is already on its way. Anything can still be rewritten or changed by hand.</p>
+  <p><b>Autopilot:</b> as soon as the transcript lands in the folder, MISMO Media runs <b>Write Everything</b> by itself, once per episode. Nothing goes to Amy until someone reads the wording and presses <b>Send to Amy for Approval</b>. Clip posts are only planned when someone presses <b>Plan the Clip Posts</b>. If wording was sent and you take it back with <b>Edit the Wording</b>, Amy's reply to the old version is ignored. Anything can still be rewritten or changed by hand.</p>
   <ol>
    <li><b>Video:</b> <b>Download</b> the final video from SharePoint, or <b>Watch</b> it there.</li>
    <li><b>Thumbnail:</b> when there are two, press <b>Use This One</b> on the one to use, then <b>Download</b> it.</li>
@@ -4858,6 +4858,8 @@ async function kitSync(){
     // Amy's email replies to "approval needed" (data/approvals.json, filed by the workflow)
     if(LOADED.has("approvals")) for(const a of vals("approvals").sort((x,y)=>String(x.at).localeCompare(String(y.at)))){
       const k=kitOf(a.ref); if(!k || (k.liReplyIds||[]).includes(a.id)) continue;
+      /* a reply to wording that was taken back (Edit the Wording) or re-sent since doesn't count */
+      if(k.liStatus!=="review" || (k.liSentAt && String(a.at||"")<String(k.liSentAt))){ await put("kits", a.ref, Object.assign({}, k, {liReplyIds:(k.liReplyIds||[]).concat([a.id])})); continue; }
       const seen=(k.liReplyIds||[]).concat([a.id]);
       if(a.decision==="approved") await put("kits", a.ref, Object.assign({}, k, {liStatus:"approved", liApprovedAt:a.at, liApprovedBy:"Amy (email reply)", liNote:String(a.text||"").replace(/^(approved?|looks good|good to go|all good|yes)[.!,:\s-]*/i,"").trim(), liReplyId:a.id, liReplyIds:seen}));
       else await put("kits", a.ref, Object.assign({}, k, {liStatus:"edits", liNote:a.text||"", liReplyId:a.id, liReplyIds:seen}));
@@ -5459,8 +5461,8 @@ async function muSync(){
     await muAuto(e.id);
   }
 }
-/* Autopilot: once the transcript is in the folder, MISMO Media writes everything and sends the LinkedIn Live
-   wording to Amy by itself, so Vanessa opens a finished kit. Each step runs once;
+/* Autopilot: once the transcript is in the folder, MISMO Media writes everything, so Vanessa opens a finished kit.
+   It never sends anything to Amy by itself. Each step runs once;
    a claim on the kit keeps two open browsers from doing the same step twice. */
 const AUTO_HOLD = 30*60*1000;
 function autoClaimed(k, key){ const t=k[key]; return t && Date.now()-Date.parse(t) < AUTO_HOLD; }
@@ -5473,13 +5475,8 @@ async function muAuto(epId){
     await kitWriteAll(epId, true);
     k=kitOf(epId)||{}; if(!k.written) return;
   }
-  const ep=S.episodes[epId];
-  if(!k.liStatus && !k.liAutoSent && ep.linkedinCopy){
-    const name=ep.liEventName || liEventName((k.written||{}).title, ep);
-    await put("kits", epId, Object.assign({}, k, {liStatus:"review", liSentAt:new Date().toISOString(), liNote:"", liAutoSent:true}));
-    await liSendAmy(ep, kitOf(epId), name, ep.linkedinCopy);
-    k=kitOf(epId)||{};
-  }
+  /* Nothing goes to Amy by itself: the LinkedIn Live wording is sent only when someone presses Send to Amy for Approval
+     (Jonna, Nov 13, 2026, after an automatic send went out with wording nobody had checked). */
   /* Clip posts are not planned by themselves: Amy decides whether MISMO posts clips. */
 }
 
@@ -7045,7 +7042,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-13 15:33 ET · 06345fe";
+const BUILD = "2026-11-13 15:37 ET · 89091df";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
