@@ -175,6 +175,13 @@ function hhDownloads(){
   const L=vals("wpdl").map(d=>d.at).filter(Boolean).sort(); if(!L.length) return LOADED.has("wpdl")? hhRow("dl","Work Product Downloads","off","None yet. They arrive from the website's Before You Download form.") : null;
   return hhRow("dl","Work Product Downloads","ok","Last download arrived "+hhWhen(L[L.length-1])+".");
 }
+function hhChatLinks(){
+  if(!LOADED.has("chat")) return null;
+  const L=vals("chat").map(m=>m.at).filter(Boolean).sort(), sk=Object.entries((typeof KIT!=="undefined"&&KIT.skipped)||{});
+  if(!L.length) return hhRow("chat","Brian's Teams Folder Links","off","None yet. They arrive when Brian posts a Google Drive folder link in the MISMO MIC'D UP chat.");
+  if(sk.length) return hhRow("chat","Brian's Teams Folder Links","warn",sk.length+" folder link"+(sk.length>1?"s":"")+" from the chat couldn't be pulled in.", sk.map(([id,x])=>hhWhen(x.at)+": "+x.why));
+  return hhRow("chat","Brian's Teams Folder Links","ok","Last link arrived "+hhWhen(L[L.length-1])+". Pulled into the YouTube Kit while MISMO Media is open.");
+}
 function hhNews(){
   const L=vals("newsin").map(n=>n.at||n.date).filter(Boolean).sort(); if(!L.length) return null;
   return hhRow("news","In the News Emails Flow","ok","Last item filed "+hhWhen(L[L.length-1])+".");
@@ -203,7 +210,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
