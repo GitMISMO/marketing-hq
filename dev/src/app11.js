@@ -33,7 +33,8 @@ function epForFolder(info, near){
 }
 function epIdForFolder(info){ return info.season ? (info.season>1?"s"+info.season:"")+"ep"+String(info.num).padStart(3,"0") : epNewId(info.num); }
 function kitVideo(files){ return (files||[]).filter(f=>/\.mp4$/i.test(f.name)||/video\/mp4/i.test(f.type)).sort((a,b)=>(b.size||0)-(a.size||0))[0]||null; }
-function kitThumbFiles(files){ return (files||[]).filter(f=>/^generated-image/i.test(f.name)&&/\.(png|jpe?g|webp)$/i.test(f.name)); }
+/* thumbnails: "generated-image…" (Season 1) or "Episode Thumbnail.png" (Season 2); failing those, any picture in the folder */
+function kitThumbFiles(files){ const img=(files||[]).filter(f=>/\.(png|jpe?g|webp)$/i.test(f.name)); const named=img.filter(f=>/^generated-image|thumbnail|thumb\b/i.test(f.name)); return named.length?named:img; }
 function kitTranscriptFile(files){ return (files||[]).find(f=>/^untitled\.txt$/i.test(f.name)) || (files||[]).find(f=>/\.txt$/i.test(f.name)) || null; }
 const driveView = id=>"https://drive.google.com/file/d/"+id+"/view";
 const driveFolderUrl = id=>"https://drive.google.com/drive/folders/"+id;
@@ -111,7 +112,8 @@ async function kitSync(){
     const msgs=chatMsgs();
     for(const m of msgs){
       const fid=msgFolder(m); if(!fid) continue;
-      if(vals("kits").some(k=>k.folderId===fid && (k.files||[]).length) || KIT.tried[fid]) continue;
+      /* done once the kit has its files, unless a picture in the folder never became a thumbnail (Nov 13, 2026) */
+      if(vals("kits").some(k=>k.folderId===fid && (k.files||[]).length && ((k.thumbs||[]).length || !kitThumbFiles(k.files).length)) || KIT.tried[fid]) continue;
       KIT.tried[fid]=true;
       // which episode? read the folder name for the number
       let info; try{ info=await DRIVE().list(fid); }catch(e){ KIT.skipped[fid]={at:m.at, why:"Google couldn't open it ("+(e.message||"no access")+"). Brian may need to share it with jycritchley@gmail.com."}; continue; }
