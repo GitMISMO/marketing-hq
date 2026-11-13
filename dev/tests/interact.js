@@ -23,7 +23,7 @@ await run('MISMO Matters email builds (HTML + text)', ()=>{ const ed=curEdition(
 await run('open an image', async()=>{ const i=vals('images')[0]; if(!i) return {skip:1}; await openImage(i.id); closePane(true); return {ok:1}; });
 await run('help topics all open', async()=>{ show('help'); const bad=[]; for(const h of HELP){ HL.id=h.id; renderHelp(); if(!document.querySelector('.helpbody')) bad.push(h.id); } return {n:HELP.length, bad, fail:bad.length>0}; });
 await run('LinkedIn Live label/names', ()=>{ const e={season:2,num:1}; const a=liLabel(e), n=liEventName("MISMO Mic'd Up Season 2, Ep. 1: Credit Data Early", e); const e1={season:1,num:52}; return {a,n,s1:liLabel(e1), fail:a!=="MISMO Mic'd Up S2 Ep. 1"||!/^MISMO Mic'd Up S2 Ep\. 1: Credit Data Early$/.test(n)}; });
-await run('autopilot: writes once, sends Amy once, no clip posts', async()=>{
+await run('autopilot: writes once, never sends to Amy by itself, no clip posts', async()=>{
   const id='autotest'; S.episodes[id]={id,season:2,num:9,airDate:add(T(),10),guests:'Pat Test',company:'Acme'}; S.kits[id]={id,transcriptPath:'/x.txt'};
   let tasks=[], amy=0; window.__hqImages=window.__hqImages||{}; const ow=window.__hqImages.writer, og=window.__hqImages.get, on=window.__hqImages.notify;
   window.__hqImages.writer=async(t,m)=>{ tasks.push(t); return JSON.stringify({titles:['A','B','C'],title:'A',youtubeTitle:"MISMO Mic'd Up Season 2, Ep. 9: A",youtubeDescription:'d',longDescription:'l',promoPost:'p',liEventName:"MISMO Mic'd Up S2 Ep. 9: A",liEventDescription:'li',mattersBlurb:'m',guestPost:'g',clipCaptions:['1','2'],chapters:''}); };
@@ -37,7 +37,7 @@ await run('autopilot: writes once, sends Amy once, no clip posts', async()=>{
   const res={writes:tasks.length, amy, liStatus:k.liStatus, written:!!k.written, clips, ytTitle:S.episodes[id].ytTitle, liName:S.episodes[id].liEventName,
     brief:/senior B2B content writer/.test(task) && /#MISMOMatters #MISMOMicdUp #MortgageTech/.test(task) && /never invent|Never invent/i.test(task)};
   delete S.episodes[id]; delete S.kits[id]; window.__hqImages.writer=ow; window.__hqImages.get=og; window.__hqImages.notify=on; window.__hqImages.mkdir=om;
-  res.fail = res.writes!==1 || res.amy!==1 || res.liStatus!=='review' || res.clips!==before || !res.brief; return res; });
+  res.fail = res.writes!==1 || res.amy!==0 || !!res.liStatus || res.clips!==before || !res.brief; return res; });
 await run('autopilot skips past episodes', async()=>{ const id='autopast'; S.episodes[id]={id,season:2,num:8,airDate:add(T(),-3)}; S.kits[id]={id,transcriptPath:'/x.txt'}; let w=0; const ow=window.__hqImages.writer; window.__hqImages.writer=async()=>{w++;return '{}';}; await muAuto(id); window.__hqImages.writer=ow; delete S.episodes[id]; delete S.kits[id]; return {w, fail:w!==0}; });
 await run('QR Codes page outside resources shows link, no frame', ()=>{ show('qr'); return {frame:!!document.getElementById('qr-frame'), link:/resources\.mismo\.org\/qr/.test(document.getElementById('page-qr').innerText)}; });
 await p.close();
