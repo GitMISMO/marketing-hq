@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13 (evening)
+- Mic'd Up Writer: the guest named in Brian's folder ("Season 2 Ep 2 Rich Swerbinsky") is used, and an episode is called solo only if the transcript clearly has Brian alone (an unmatched old plan no longer makes it "solo").
+- Saving from an out-of-date tab: Brian's post and a corrected transcript no longer say "saved" when the save was refused; the "refresh to keep saving" message stays the last word.
+
 ## 2026-11-13 (late afternoon)
 - MISMO Matters Certifications: the section's lead picture and quote now show in the email, after the highlighted company's text (they were left out). Replacing or removing a lead picture also replaces its Higher Logic link, so an old picture can't linger. New test for it.
 
