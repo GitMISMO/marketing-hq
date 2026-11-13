@@ -63,14 +63,14 @@ function logoWall(ed, s, preview){
   if(!dark){ const body=groups.map(g=>{ const T=TIERS[tierOf(g.k)];
       return (many && g.k ? '<div style="'+M+'font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:12px 0 3px;text-align:center"><span style="color:'+T.c+'">&#9632;</span>&nbsp;'+esc(g.k)+'</div>' : '')+gridC(g.items,T); }).join("");
     const introC=d.body ? mdEmail(d.body, F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC, 'color:#14486e;font-weight:600;text-decoration:underline', {}) : '<p style="'+F+'font-size:15px;line-height:1.55;margin:0 0 4px;color:'+txtC+'">'+esc(cfg.intro).replace(/'/g,"&rsquo;")+'</p>';
-    const ctaC = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff', {center:true, size:14, pad:"12px 20px"}), 14, 2, true) : '';
+    const ctaC = ctaMode(d,"button") ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(ctaWords(d))+'&nbsp;&rarr;', navy, '#ffffff', {center:true, size:14, pad:"12px 20px"}), 14, 2, true) : '';
     return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:20px 10px 14px;text-align:center">'+
       '<div style="'+M+'font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:'+eyeC+';font-weight:600;margin:0 0 6px">&#9670;&nbsp;&nbsp;'+esc(cfg.eye)+'&nbsp;&nbsp;&#9670;</div>'+
       '<div style="'+F+'font-size:23px;line-height:1.2;letter-spacing:-.014em;color:'+headC+';font-weight:700;margin:0 0 6px;padding:0 8px">'+esc(d.headline||cfg.head)+'</div>'+
       '<div style="padding:0 14px;max-width:500px;margin:0 auto">'+introC+'</div>'+body+ctaC+'</td></tr></table>', 0, 22); }
   const body=groups.map(g=>(many && g.k ? '<div style="'+M+'font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:'+grpC+';font-weight:600;margin:18px 0 4px;text-align:center">'+esc(g.k)+(s.k==="welcome"?'&nbsp;&middot;&nbsp;'+g.items.length:'')+'</div>' : '')+grid(g.items)).join("");
   const rule='<table role="presentation" align="center" cellpadding="0" cellspacing="0" style="margin:6px auto 4px"><tr><td width="48" height="3" bgcolor="#74bfeb" style="width:48px;height:3px;background:#74bfeb;font-size:0;line-height:0">&nbsp;</td></tr></table>';
-  const cta = d.ctaUrl ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', dark?'#1a8fe3':navy, '#ffffff', {center:true}), 18, 4, true) : '';
+  const cta = ctaMode(d,"button") ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(ctaWords(d))+'&nbsp;&rarr;', dark?'#1a8fe3':navy, '#ffffff', {center:true}), 18, 4, true) : '';
   const box = dark
     ? 'bgcolor="'+navy+'" style="background:'+navy+';background-image:linear-gradient(180deg,#0d314c 0%,#0d314c 38%,#123f63 74%,#17507a 100%);border-radius:8px;padding:14px 12px 24px;text-align:center"'
     : 'bgcolor="#f4f9fd" style="background:#f4f9fd;border:1px solid #dde9f2;border-top:4px solid #74bfeb;border-radius:8px;padding:28px 12px 22px;text-align:center"';
@@ -86,7 +86,7 @@ function logoWall(ed, s, preview){
 function logoWallText(ed, s){
   const cfg=LOGO_SECS[s.k], d=s.doc, out=[d.headline||cfg.head, d.body?mdPlain(d.body):cfg.intro];
   logoGroups(logoPicks(ed,s.k)).forEach(g=>{ if(g.k) out.push(g.k+":"); g.items.forEach(l=>out.push("• "+(l.name||(S.images[l.id]||{}).name||"")+(l.url?" – "+l.url:""))); });
-  if(d.ctaUrl) out.push((d.ctaText||"Learn more")+": "+d.ctaUrl);
+  if(ctaMode(d,"button")) out.push(ctaWords(d)+": "+d.ctaUrl);
   return out;
 }
 

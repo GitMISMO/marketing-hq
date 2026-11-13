@@ -108,8 +108,9 @@ function openSection(ed,k,isNew){
       {k:"headline",label:"Headline",wide:true,ph:L.head,hint:"Leave blank for: "+L.head},
       {k:"body",label:"Intro",type:"rich",rows:3,ph:L.intro},
       {sec:"Logos"},{k:"_logos",type:"html",wide:true,html:()=>'<div id="lg-box"></div>'},
-      {k:"ctaText",label:"Button Text (optional)",ph:k==="welcome"?"e.g. Become a Member":"e.g. Become a Sponsor"},
-      {k:"ctaUrl",label:"Button Link",type:"url",ph:"https://"});
+      {k:"ctaText",label:"Button Text",ph:k==="welcome"?"e.g. Become a Member":"e.g. Become a Sponsor",hint:"Leave blank for: Learn More"},
+      {k:"ctaUrl",label:"Button Link",type:"url",ph:"https://",hint:"No link, no button."},
+      {k:"ctaStyle",label:"Show It As",type:"select",opts:[["","A Button"],["none","Nothing (Leave It Out)"]]});
   } else {
     if(k==="cert") fields.push({sec:"Certification Spotlight"},
       {k:"certProgram",label:"Certification to Highlight",type:"select",wide:true,opts:[["","None: write the section myself"]].concat(CERT_PROGRAMS.map(p=>[p.k,p.name]))},
@@ -119,9 +120,13 @@ function openSection(ed,k,isNew){
       {k:"body",label:"Body Copy",type:"rich",rows:12,img:ed.month,ph:"Type or paste the copy as it should run. Pasting from Word keeps bold, links and bullets. Add pictures anywhere with the picture button."},
       {k:"quote",label:"Quote",type:"rich",rows:3,ph:"Sponsor and member highlights usually carry a quote"},
       {k:"quoteBy",label:"Quote Attribution",ph:"Name, Title, Company"},
-      ...(FULL_ARTICLE[k] ? [{k:"_full",type:"html",html:d=>'<div class="ro">'+esc(fullArticleLabel(k))+' goes to <a href="'+esc(fullArticleUrl(ed,k,d))+'" target="_blank" rel="noopener">'+esc(fullArticleUrl(ed,k,d).replace(/^https:\/\//,""))+' ↗</a>, the '+esc(monthName(ed.month))+' article on the website.</div>'},{k:"noFull",label:"Leave out the "+fullArticleLabel(k)+" button",type:"cb"}] : []),
-      {k:"ctaText",label:"Link Text",ph:"e.g. Register for the Winter Summit"},
-      {k:"ctaUrl",label:"Link",type:"url",ph:"https://"});
+      ...(FULL_ARTICLE[k] ? [{sec:"Website Article Button"},{k:"_full",type:"html",html:d=>'<div class="ro">The button goes to <a href="'+esc(fullArticleUrl(ed,k,d))+'" target="_blank" rel="noopener">'+esc(fullArticleUrl(ed,k,d).replace(/^https:\/\//,""))+' ↗</a>, the '+esc(monthName(ed.month))+' article on the website.</div>'},
+        {k:"fullText",label:"Button Text",ph:fullArticleLabel(k),hint:"Leave blank for: "+fullArticleLabel(k)},
+        {k:"noFull",label:"No button: leave it out",type:"cb"}] : []),
+      {sec:"Button"},
+      {k:"ctaText",label:"Button Text",ph:"Learn More",hint:"Leave blank for: Learn More"},
+      {k:"ctaUrl",label:"Button Link",type:"url",ph:"https://",hint:"No link, no button."},
+      {k:"ctaStyle",label:"Show It As",type:"select",opts:k==="cert"?[["","A Text Link"],["button","A Button"],["none","Nothing (Leave It Out)"]]:[["","A Button"],["link","A Text Link"],["none","Nothing (Leave It Out)"]]});
   }
   if(!isLogoSec(k)) fields.push({sec:"Lead Picture (Under the Headline)"},{k:"_imgh",type:"html",html:()=>auto?'':'<div class="hint">For more pictures, or a picture anywhere in the text, put your cursor in the Body Copy and press the picture button in its toolbar.</div>'},
     {k:"_img",type:"html",html:d=>imageField(d)},
@@ -232,6 +237,11 @@ const EMAIL_FONTS='<!--[if !mso]><!--><link href="https://fonts.googleapis.com/c
    line-height 0. So buttons are table cells with the color and padding on the cell, space around boxes sits on a
    wrapping cell, and picture rows keep a normal line height. */
 const EM_F="font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif;";
+/* how a section's own link shows: "" (button), "link" (a text link) or "none" (left out), and its words.
+   Jonna, Nov 13, 2026: she wants to set the button's words and choose button or no button. */
+function ctaMode(d, def){ if(!d || !d.ctaUrl || d.ctaStyle==="none") return ""; return d.ctaStyle||def||"button"; }
+function ctaWords(d){ return String((d&&d.ctaText)||"").trim()||"Learn More"; }
+function fullWords(k, d){ return String((d&&d.fullText)||"").trim()||fullArticleLabel(k); }
 function emBtn(href, label, bg, color, o){
   o=o||{}; const fs=o.size||15, pad=o.pad||"14px 24px";
   return '<table role="presentation" cellpadding="0" cellspacing="0"'+(o.center?' align="center" style="margin:0 auto"':'')+'><tr><td bgcolor="'+bg+'" style="background:'+bg+';border-radius:3px;padding:'+pad+';'+EM_F+'font-size:'+fs+'px;line-height:1.2;font-weight:700"><a href="'+href+'" style="'+EM_F+'color:'+color+';text-decoration:none;font-weight:700;font-size:'+fs+'px;line-height:1.2;white-space:nowrap">'+label+'</a></td></tr></table>';
@@ -311,8 +321,10 @@ function buildEmail(ed, preview, opt){
       else {
       inner+=pic+body(d.body)+clear+quote;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
-      if(full) inner+=emGap(emBtn(esc(full), esc(fullArticleLabel(s.k))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
-      if(d.ctaUrl) inner+=emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(d.ctaText||"Learn More")+'&nbsp;&rarr;', navy, '#ffffff'), 2, 18);
+      if(full) inner+=emGap(emBtn(esc(full), esc(fullWords(s.k, d))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
+      const cm=ctaMode(d, "button");
+      if(cm==="button") inner+=emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(ctaWords(d))+'&nbsp;&rarr;', navy, '#ffffff'), 2, 18);
+      else if(cm==="link") inner+='<p style="margin:2px 0 18px;'+F+'font-size:15.5px;line-height:1.5"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(ctaWords(d))+'&nbsp;&rarr;</a></p>';
       }
     }
     const hdr = (opt==="2" && HDR2_KEYS.includes(s.k)) ? HDR2_BASE+(s.k==="micdup"?"micdup.gif":s.k+".jpg") : (d.hdrUrl||s.meta.hdr);
@@ -375,7 +387,7 @@ function buildText(ed){
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
     else if(isCertSpot(s)){ body=certSpotlightText(ed,s); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullArticleLabel(s.k)+": "+full); if(d.ctaUrl) body.push((d.ctaText||"Learn more")+": "+d.ctaUrl); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullWords(s.k, d)+": "+full); if(ctaMode(d,"button")) body.push(ctaWords(d)+": "+d.ctaUrl); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"Unsubscribe: "+UNSUB_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");

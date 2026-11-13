@@ -220,7 +220,7 @@ async function kitUploadTranscript(epId, f){
     if(await put("kits", epId, Object.assign({}, kitOf(epId)||k, {transcriptPath:saved.id, transcriptName:f.name, txUploaded:true, txUploadedAt:new Date().toISOString(), txUploadedBy:window.__hqWho||"", txHistory:hist, txOk:false}))===false) return;
     delete KIT.tx[epId]; delete KIT.txIssues[epId];
     await kitLoadTranscript(epId);
-    toast("Corrected transcript is in and checked. Press Write Again from the Transcript to redo the wording from it.", 7000);
+    toast("Corrected transcript is in and checked. Press Write Again to redo the wording from it.", 7000);
   }catch(err){ toast("Couldn't upload it: "+(err.message||"try again"), 6000); }
   renderMicdup();
 }
@@ -375,7 +375,7 @@ function kitCardHtml(){
           (w.titles&&w.titles.length?'<div class="hint">Other title ideas: '+w.titles.map(esc).join(" · ")+'</div>':'')+
           copyBox("kit-long","Long Description"+(MU_PAUSED.spotify?" (LinkedIn Live event)":" (LinkedIn Live event and Spotify)"),w.long,8)+copyBox("kit-promo","Brian\'s Promo Post",w.promo,4)+copyBox("kit-matters","MISMO Matters Blurb",w.matters,3)+
           (k.article?copyBox("kit-article","Viewpoint Article Draft (for Brian)",k.article,10):'')+'</details>' : '')+
-        '<div class="kbtns">'+(hasTx?'<button class="btn sm" type="button" id="kit-writeall">Write Again from the Transcript</button>':'<button class="btn sm" type="button" id="kit-rewrite">Write Again</button>')+(hasTx?'<button class="btn sm" type="button" id="kit-article">'+(k.article?"Redraft":"Draft")+' Brian\'s Viewpoint Article</button>':'')+'<span class="hint">'+(fromTx?'Written in MISMO\'s voice from the transcript.':'Written in MISMO\'s voice from Brian\'s LinkedIn post.')+'</span></div>'
+        '<div class="kbtns">'+(hasTx?'<button class="btn sm" type="button" id="kit-writeall">Write Again</button>':'<button class="btn sm" type="button" id="kit-rewrite">Write Again</button>')+(hasTx?'<button class="btn sm" type="button" id="kit-article">'+(k.article?"Redraft":"Draft")+' Brian\'s Viewpoint Article</button>':'')+'<span class="hint">'+(k.brianPost?'MISMO\'s post retells Brian\'s LinkedIn post from MISMO\'s side'+(fromTx?'; the transcript fills in detail.':'.'):'Paste Brian\'s LinkedIn post above first: MISMO\'s post is written from his.')+'</span></div>'
       : (hasTx ? '<button class="btn sm pri" type="button" id="kit-writeall">Write Everything from the Transcript</button><span class="hint"> YouTube title and description, the long description, Brian\'s post, MISMO\'s LinkedIn Live wording, the MISMO Matters blurb'+(MU_PAUSED.clips?'':' and clip captions')+'.</span>'
         : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Once the transcript is in the folder, it\'s all written from that. Or paste Brian\'s LinkedIn post:</div><textarea id="kit-post" rows="3" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm" type="button" id="kit-postgo">Write It</button></div>')))+
     step(++n,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+

@@ -88,7 +88,9 @@ function certSpotlight(ed, s, bodyFn, extra, lead){
       '<tr><td width="50%" valign="top" style="padding:0 10px 0 22px">'+list(items.slice(0,half))+'</td><td width="50%" valign="top" style="padding:0 22px 0 10px">'+list(items.slice(half))+'</td></tr>'+
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
-  const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
+  const cm=ctaMode(d, "link");
+  const cta = cm==="button" ? emGap(emBtn(esc(safeHref(d.ctaUrl)), esc(ctaWords(d))+'&nbsp;&rarr;', '#0d314c', '#ffffff'), 2, 18)
+    : cm==="link" ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(ctaWords(d))+'</a></p>' : '';
   return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+(lead||"")+md(after)+(extra||"")+cta;
 }
 function certSpotlightText(ed, s){
@@ -99,7 +101,7 @@ function certSpotlightText(ed, s){
   (d.certItems||[]).forEach(i=>out.push("• "+i.name+(i.path?" – "+certSite(ed,i.path):"")));
   out.push("See the full list: "+certSite(ed, d.certPage||("standards-resources/"+p.slug)));
   if(after.trim()) out.push(mdPlain(after));
-  if(d.ctaUrl) out.push((d.ctaText||"Learn more")+": "+d.ctaUrl);
+  if(ctaMode(d,"link")) out.push(ctaWords(d)+": "+d.ctaUrl);
   return out;
 }
 

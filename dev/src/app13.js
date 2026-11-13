@@ -145,7 +145,8 @@ function kitGuestLine(e,g,tx){
   const fg=(typeof parseFolder==="function" && typeof kitOf==="function") ? parseFolder((kitOf(e.id)||{}).folderName||"").guests : "";
   const t0=String(tx||"").toLowerCase();
   /* Brian's folder names the guest ("Season 2 Ep 2 Rich Swerbinsky"); that wins over an older plan (Nov 13, 2026) */
-  if(fg && (!e.guests || (t0.length>=400 && t0.includes(fg.split(/\s+/).pop().toLowerCase())))) return "Guest(s): "+fg+". This is a conversation between Brian Vieaux and "+fg+"; never describe it as a solo episode.";
+  /* the folder name always wins: a transcript often misspells the guest's name (Nov 13, 2026: Ep 2 came out "solo") */
+  if(fg) return "Guest(s): "+fg+". This is a conversation between Brian Vieaux and "+fg+"; never describe it as a solo episode.";
   const who=[e.guests||(g&&g.n)||"", g&&g.title, e.company||(g&&g.company)].filter(Boolean);
   if(!who.length) return "Guest(s): not listed. If the transcript shows a second speaker, it is a conversation with a guest: describe it that way and name the guest only if the transcript names them. Call it a solo episode only if the transcript clearly has Brian alone.";
   const names=[e.guests||(g&&g.n)||"", e.company||(g&&g.company)||""].join(",").split(/,|&|\band\b/).map(x=>x.trim()).filter(x=>x.length>2);
@@ -154,19 +155,22 @@ function kitGuestLine(e,g,tx){
     return "Guest(s): the episode was planned with "+who.join(", ")+", but they are not named in the transcript, so do not mention them. If the transcript shows a second speaker, it is a conversation with a guest: describe it that way and name the guest only if the transcript names them. Call it a solo episode only if the transcript clearly has Brian alone.";
   return "Guest(s): "+who.join(", ");
 }
+/* MISMO's post is Brian's own LinkedIn post retold from MISMO's side (Jonna, Nov 13, 2026): same guest, same topics,
+   same facts, in the third person. The transcript only fills in detail. */
+const MU_FROM_BRIAN="MISMO's company-page post is Brian's own LinkedIn post retold from MISMO's standpoint: the same guest (named in full), the same topics and the same facts as his post, written in the third person (\"MISMO President Brian Vieaux\" and the guest by name), never \"I\" or \"me\". Do not add topics his post doesn't raise. Brian's post is right about who the guest is and what they talked about; if the transcript disagrees (it often misspells names), follow his post.";
 /* MISMO's LinkedIn Live description only, redone from the transcript and Brian's post, with a note on what to fix */
 async function kitRewriteLi(epId, note){
   const e=S.episodes[epId], k=kitOf(epId)||{}; if(!e) return "";
   try{
     toast("Rewriting MISMO's LinkedIn Live description…", 90000);
     const tx=txPlain(await kitLoadTranscript(epId)||""), g=guestFor(e);
-    if(tx.length<400 && !k.brianPost){ toast("The transcript or Brian's post is needed to rewrite it.", 5000); return ""; }
+    if(!String(k.brianPost||"").trim()){ toast("Paste the words of Brian's LinkedIn post first (Brian's LinkedIn Post, then Bring It In). MISMO's post is written from his.", 8000); return ""; }
     const material=["EPISODE: MISMO Mic'd Up "+epWord(e), kitGuestLine(e,g,tx),
-      k.brianPost?"Brian's own LinkedIn post about it (the facts and framing to match):\n"+k.brianPost:"",
+      "BRIAN'S OWN LINKEDIN POST (the source to retell from MISMO's side):\n"+k.brianPost,
       e.linkedinCopy?"The current description, which needs fixing:\n"+e.linkedinCopy:"",
       note?"What to fix: "+note:"",
       "TRANSCRIPT:\n"+tx.slice(0,60000)].filter(Boolean).join("\n\n");
-    const raw=await writer(MU_STYLE+"\n\nRewrite MISMO's company-page post and LinkedIn Live event description for this episode, exactly as the LINKEDIN, MISMO COMPANY PAGE rules say, including the hashtag line. Use only facts from the transcript and Brian's post. Return ONLY a JSON object: {\"text\": the description}.", material);
+    const raw=await writer(MU_STYLE+"\n\nRewrite MISMO's company-page post and LinkedIn Live event description for this episode, exactly as the LINKEDIN, MISMO COMPANY PAGE rules say, including the hashtag line. "+MU_FROM_BRIAN+" Use only facts from Brian's post and the transcript. Return ONLY a JSON object: {\"text\": the description}.", material);
     const o=parseJson(raw), t=o && typeof o.text==="string" ? o.text.trim() : "";
     if(!t){ toast("The Writer sent back something unexpected. Try again.", 5000); return ""; }
     toast("Rewritten. Read it over, then send it to Amy.", 4000); return t;
@@ -183,10 +187,10 @@ async function kitWriteAll(epId, quiet){
     const g=guestFor(e), season=+e.season||1, word=epWord(e);
     const material=["EPISODE: MISMO Mic'd Up "+word, kitGuestLine(e,g,tx),
       "Goes live: "+(e.airDate?fD(e.airDate):"Friday")+" 8:30 AM ET (LinkedIn Live on Brian Vieaux's profile, "+(MU_PAUSED.spotify?"":"Spotify, ")+"YouTube). MISMO's LinkedIn Live: "+fD(liDate(e))+" "+(e.linkedinTime||"1:00 PM ET")+".",
-      g&&g.bio?"Guest bio: "+g.bio:"", k.brianPost?"Brian's own LinkedIn post about it:\n"+k.brianPost:"",
+      g&&g.bio?"Guest bio: "+g.bio:"", k.brianPost?"BRIAN'S OWN LINKEDIN POST (right about who the guest is and what they talked about):\n"+k.brianPost:"",
       styleSamples(e)?"Earlier episodes, for style only (do not reuse their facts):\n"+styleSamples(e):"",
       "TRANSCRIPT:\n"+tx.slice(0,60000)].filter(Boolean).join("\n\n");
-    const task=MU_STYLE+"\n\nNow write the full promotion pack for this episode from the material. Return ONLY a JSON object with these keys:\n"+
+    const task=MU_STYLE+(k.brianPost?"\n\nBrian's own LinkedIn post is the authority on who the guest is and what the episode covers: every piece below must name the same guest and the same topics. Where the transcript disagrees (it often misspells names), follow his post.":"")+"\n\nNow write the full promotion pack for this episode from the material. Return ONLY a JSON object with these keys:\n"+
       "\"titles\": an array of 3 short, specific episode title options (no episode number);\n"+
       "\"title\": the best of them;\n"+
       "\"youtubeTitle\": \"MISMO Mic'd Up "+(season>1?"Season "+season+", ":"")+"Ep. "+(e.num||"")+": \" + the title, as on the channel (for example \"MISMO Mic'd Up Ep. 48: Down Payment Assistance Needs a Common Language\"), 100 characters at most;\n"+
@@ -194,7 +198,7 @@ async function kitWriteAll(epId, quiet){
       "\"longDescription\": the long description exactly as the PODCAST / LINKEDIN LIVE LONG DESCRIPTION rules say, 2,000 to 3,800 characters;\n"+
       "\"promoPost\": Brian's own LinkedIn post, exactly as the LINKEDIN, BRIAN'S OWN POSTS rules say;\n"+
       "\"liEventName\": the event name for MISMO's LinkedIn Live, starting \""+liLabel(e)+": \" then the short title, 75 characters at most;\n"+
-      "\"liEventDescription\": MISMO's company-page post and LinkedIn Live event description, exactly as the LINKEDIN, MISMO COMPANY PAGE rules say, including the hashtag line;\n"+
+      "\"liEventDescription\": "+(k.brianPost?"MISMO's company-page post and LinkedIn Live event description, exactly as the LINKEDIN, MISMO COMPANY PAGE rules say, including the hashtag line. "+MU_FROM_BRIAN:"an empty string (MISMO's post is written only from Brian's own post, which isn't in yet)")+";\n"+
       "\"mattersBlurb\": 2 to 3 sentences for the MISMO Matters newsletter;\n"+
       "\"guestPost\": a 3 sentence LinkedIn post the guest can share, first person as the guest, thanking Brian and MISMO and saying what they talked about, ending with #MISMOMicdUp;\n"+
       "\"clipCaptions\": an array of 4 short LinkedIn captions (1 to 2 sentences each) for 30 to 60 second clips, each built on a different strong moment, quoting the guest only with words that appear in the transcript;\n"+
