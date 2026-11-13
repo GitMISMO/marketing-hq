@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-13 (late afternoon)
+- MISMO Matters Certifications: the section's lead picture and quote now show in the email, after the highlighted company's text (they were left out). Replacing or removing a lead picture also replaces its Higher Logic link, so an old picture can't linger. New test for it.
+
 ## 2026-11-13 (afternoon)
 - Mic'd Up YouTube Kit: Upload a Corrected Transcript (.txt, .srt or .vtt). It's saved with the Mic'd Up files and used from then on, even after Pull Again; the earlier one stays listed (txHistory). New test for it.
 - Brian's LinkedIn post: pasting only the link now saves the link and says plainly that the words have to be pasted too (LinkedIn doesn't let other sites read a post), instead of a brief message that was easy to miss. lnkd.in links accepted.
