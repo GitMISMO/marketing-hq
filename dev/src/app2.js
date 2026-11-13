@@ -307,7 +307,7 @@ function buildEmail(ed, preview, opt){
       const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
       let quote='';
       if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
-      if(cert){ inner+=certSpotlight(ed, s, body, pic+clear+quote); }
+      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote, pic) : certSpotlight(ed, s, body, pic+clear+quote); }
       else {
       inner+=pic+body(d.body)+clear+quote;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
