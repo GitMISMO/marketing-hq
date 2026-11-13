@@ -10,7 +10,9 @@
 const KIT = {ep:"", busy:{}, tx:{}, txIssues:{}, tried:{}, skipped:{}};
 const DRIVE = ()=> (window.__hqImages && window.__hqImages.drive) || null;
 const FOLDER_RX = /drive\.google\.com\/drive\/(?:u\/\d+\/)?folders\/([A-Za-z0-9_-]{10,})/;
-function chatMsgs(){ return vals("chat").sort((a,b)=>String(a.at||"").localeCompare(String(b.at||""))); }
+/* Teams sometimes repeated a link in lower case (Nov 11, 2026); Drive ids are case-sensitive, so that copy is left out */
+function chatMsgs(){ const all=vals("chat"), ids=all.map(m=>msgFolder(m)).filter(Boolean);
+  return all.filter(m=>{ const f=msgFolder(m); return !(f && f===f.toLowerCase() && ids.some(o=>o!==f && o.toLowerCase()===f)); }).sort((a,b)=>String(a.at||"").localeCompare(String(b.at||""))); }
 function msgFolder(m){ const l=[].concat(m.links||[], [m.text||""]).join(" "); const x=l.match(FOLDER_RX); return x?x[1]:""; }
 function isBrian(m){ return /vieaux|brian/i.test(m.from||""); }
 function msgIsPost(m){ return isBrian(m) && !msgFolder(m) && ( (m.links||[]).some(u=>/linkedin\.com/i.test(u)) || String(m.text||"").length>220 ); }
