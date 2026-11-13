@@ -249,7 +249,9 @@ function buildEmail(ed, preview, opt){
   const H3=F+'font-size:17.5px;line-height:1.35;color:'+navy+';margin:24px 0 10px;font-weight:700;clear:both;padding-top:6px';
   const pic=b=>{ const r=rtImgInfo(b.ref), half=b.size==="half", w=half?272:544;
     const tag=(src,extra)=>'<img src="'+esc(src)+'" alt="'+esc(b.alt||"")+'" width="'+w+'"'+(extra||'')+' style="display:block;width:'+(half?'50%':'100%')+';max-width:'+w+'px;height:auto;margin:'+(half?'4px auto 18px':'4px 0 18px')+';border:0'+(r.hl?'':';outline:2px dashed #e0a440;outline-offset:-2px')+'" border="0">';
-    const wrap=x=>half?'<div style="text-align:center">'+x+'</div>':x;
+    /* a picture in the text starts below a small picture beside the text, so a centered one is centered on the
+       whole column, not squeezed into the space beside the headshot (Nov 13, 2026) */
+    const wrap=x=>'<!--[if mso]><br clear="all"><![endif]--><div style="clear:both'+(half?';text-align:center':'')+'">'+x+'</div>';
     if(r.hl) return wrap(tag(r.hl));
     if(preview && r.im) return wrap(tag(r.src, r.src?'':' data-mmimg="'+esc(r.id)+'"'))+'<div style="font:600 11px/1.3 Arial,Helvetica,sans-serif;color:#9a5b00;background:#fff4e0;border:1px dashed #e0a440;padding:6px 8px;margin:-12px 0 18px">Preview only. Add this picture to Higher Logic\'s image library, then paste its link on the picture in MISMO Media\'s Image Library.</div>';
     return imgBox('PICTURE: '+esc(b.alt||r.name||"from MISMO Media")+' &mdash; add it to Higher Logic and paste its link on the picture in the Image Library'); };
