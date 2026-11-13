@@ -21,4 +21,5 @@ out=$(node sponsors.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || 
 out=$(node downloads.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node lilink.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node txupload.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node certpic.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
