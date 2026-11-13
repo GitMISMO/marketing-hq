@@ -147,12 +147,16 @@ function styleSamples(e){
 /* the guest line comes from the episode plan. When the transcript is in and never names the planned guest or
    company, Brian recorded it on his own, so the Writer is told to leave them out. */
 function kitGuestLine(e,g,tx){
+  const fg=(typeof parseFolder==="function" && typeof kitOf==="function") ? parseFolder((kitOf(e.id)||{}).folderName||"").guests : "";
+  const t0=String(tx||"").toLowerCase();
+  /* Brian's folder names the guest ("Season 2 Ep 2 Rich Swerbinsky"); that wins over an older plan (Nov 13, 2026) */
+  if(fg && (!e.guests || (t0.length>=400 && t0.includes(fg.split(/\s+/).pop().toLowerCase())))) return "Guest(s): "+fg+". This is a conversation between Brian Vieaux and "+fg+"; never describe it as a solo episode.";
   const who=[e.guests||(g&&g.n)||"", g&&g.title, e.company||(g&&g.company)].filter(Boolean);
-  if(!who.length) return "Guest(s): none. Brian Vieaux on his own.";
+  if(!who.length) return "Guest(s): not listed. If the transcript shows a second speaker, it is a conversation with a guest: describe it that way and name the guest only if the transcript names them. Call it a solo episode only if the transcript clearly has Brian alone.";
   const names=[e.guests||(g&&g.n)||"", e.company||(g&&g.company)||""].join(",").split(/,|&|\band\b/).map(x=>x.trim()).filter(x=>x.length>2);
   const t=String(tx||"").toLowerCase();
   if(t.length>=400 && names.length && !names.some(n=>t.includes(n.toLowerCase()) || t.includes(n.split(/\s+/).pop().toLowerCase())))
-    return "Guest(s): none. Brian Vieaux recorded this one on his own. The episode was planned with "+who.join(", ")+", but they are not in the transcript, so do not mention them anywhere.";
+    return "Guest(s): the episode was planned with "+who.join(", ")+", but they are not named in the transcript, so do not mention them. If the transcript shows a second speaker, it is a conversation with a guest: describe it that way and name the guest only if the transcript names them. Call it a solo episode only if the transcript clearly has Brian alone.";
   return "Guest(s): "+who.join(", ");
 }
 /* MISMO's LinkedIn Live description only, redone from the transcript and Brian's post, with a note on what to fix */

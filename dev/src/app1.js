@@ -244,7 +244,7 @@ function saveBlocked(){
   return false;
 }
 async function put(col,id,data){
-  if(saveBlocked()) return;
+  if(saveBlocked()) return false;   /* false = not saved (out-of-date tab or view-only); callers stop before saying "saved" */
   const clean = Object.assign({}, data); delete clean.id;
   clean.updatedAt = new Date().toISOString(); const by=WHO(); if(by) clean.updatedBy=by;
   const M=window.__hqMerge, k=col+"/"+id, was=baseOf(col,id), now=SEEN[col] && SEEN[col][id];

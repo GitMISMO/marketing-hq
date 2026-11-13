@@ -24,7 +24,9 @@ function parseFolder(name){
   const m=s.match(/^\s*(?:(?:s|season)\s*(\d{1,2})\s*[,\-–:.]?\s*)?ep(?:isode)?\.?\s*#?\s*(\d{1,3})\s*[-–:.]?\s*/i);
   const rest=m?s.slice(m[0].length):s;
   const parts=rest.split(/\s+[-–]\s+/).map(x=>x.trim()).filter(Boolean);
-  return {season:m&&m[1]?+m[1]:0, num:m?+m[2]:0, topic:parts[0]||"", guests:parts.slice(1).join(" and ")};
+  /* "Season 2 Ep 2 Rich Swerbinsky": a name on its own is the guest */
+  const person=parts.length===1 && /^[A-Z][a-z'’.-]+(\s+[A-Z][A-Za-z'’.-]+){1,2}$/.test(parts[0]) && !/^(MISMO|Update|Recap|Year|Season|Special)\b/i.test(parts[0]) && !/\b(Update|Recap|Review|Outlook|Preview)$/i.test(parts[0]);
+  return {season:m&&m[1]?+m[1]:0, num:m?+m[2]:0, topic:person?"":(parts[0]||""), guests:person?parts[0]:parts.slice(1).join(" and ")};
 }
 /* the episode a folder belongs to: by season and number when the folder names its season */
 function epForFolder(info, near){
@@ -213,7 +215,7 @@ async function kitUploadTranscript(epId, f){
     toast("Uploading the corrected transcript…", 60000);
     const saved=await sp.save(new File([text], f.name, {type:"text/plain"}), "Micd-Up-"+epTag(e).replace(/[^A-Za-z0-9]+/g,"-")+"-transcript-"+f.name);
     const hist=(k.txHistory||[]).concat((k.transcriptPath||k.transcriptId)?[{path:k.transcriptPath||"", driveId:k.transcriptPath?"":(k.transcriptId||""), name:k.transcriptName||"", replacedAt:new Date().toISOString()}]:[]).slice(-10);
-    await put("kits", epId, Object.assign({}, k, {transcriptPath:saved.id, transcriptName:f.name, txUploaded:true, txUploadedAt:new Date().toISOString(), txUploadedBy:window.__hqWho||"", txHistory:hist, txOk:false}));
+    if(await put("kits", epId, Object.assign({}, kitOf(epId)||k, {transcriptPath:saved.id, transcriptName:f.name, txUploaded:true, txUploadedAt:new Date().toISOString(), txUploadedBy:window.__hqWho||"", txHistory:hist, txOk:false}))===false) return;
     delete KIT.tx[epId]; delete KIT.txIssues[epId];
     await kitLoadTranscript(epId);
     toast("Corrected transcript is in and checked. Press Write Again from the Transcript to redo the wording from it.", 7000);
@@ -460,9 +462,9 @@ function wireKit(el){
     const li=(t.match(/https?:\/\/[^\s]*linkedin\.com[^\s]*/i)||[""])[0]; if(li){ t=t.replace(li,"").trim(); if(!u) u=li; }
     if(u && !/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That link isn't a LinkedIn link."); return; }
     /* only a link: keep it, and say plainly that the words have to be pasted (LinkedIn doesn't let other sites read a post) */
-    if(t.length<40){ if(u){ KIT.bpEdit=eid; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPostUrl:u})); toast("Link saved. Now paste the words of Brian's post too: LinkedIn doesn't let MISMO Media read a post from its link.", 8000); renderMicdup(); return; }
+    if(t.length<40){ if(u){ KIT.bpEdit=eid; if(await put("kits", eid, Object.assign({}, kitOf(eid), {brianPostUrl:u}))===false) return; toast("Link saved. Now paste the words of Brian's post too: LinkedIn doesn't let MISMO Media read a post from its link.", 8000); renderMicdup(); return; }
       toast("Paste the words of Brian's LinkedIn post (the whole post).", 6000); return; }
-    KIT.bpEdit=null; await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u})); toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
+    if(await put("kits", eid, Object.assign({}, kitOf(eid), {brianPost:t, brianPostUrl:u}))===false) return; KIT.bpEdit=null; toast("Brian's post is in. It sits beside MISMO's description.", 4000); renderMicdup(); };
   const lre=$("#kit-lireopen",el); if(lre) lre.onclick=async()=>{ await put("kits", eid, Object.assign({}, kitOf(eid), {liStatus:"draft"})); renderMicdup(); };
   const lu=$("#kit-liurl-save",el); if(lu) lu.onclick=async()=>{ const u=$("#kit-liurl",el).value.trim(); if(!/^https?:\/\/(([a-z]+\.)?linkedin\.com|lnkd\.in)\//i.test(u)){ toast("That isn't a LinkedIn link. Paste the event or post link."); return; } const ran=liDate(e) && liDate(e)<=T(); await patch("episodes", eid, ran?{linkedinUrl:u, liEventSet:true, linkedinDone:true}:{linkedinUrl:u, liEventSet:true}); toast(ran?"Link saved; marked as streamed":"Event saved"); renderMicdup(); };
   wireCx(el, ()=>renderMicdup());
