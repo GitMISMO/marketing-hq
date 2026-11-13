@@ -3300,7 +3300,7 @@ function buildEmail(ed, preview, opt){
       const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
       let quote='';
       if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
-      if(cert){ inner+=certSpotlight(ed, s, body, pic+clear+quote); }
+      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote, pic) : certSpotlight(ed, s, body, pic+clear+quote); }
       else {
       inner+=pic+body(d.body)+clear+quote;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
@@ -6968,7 +6968,8 @@ async function certSync(){
 /* where the list goes: on the line "[Certified List]" in the body if there is one, otherwise after the body */
 const CERT_MARK = /^\s*\[Certified List\]\s*$/im;
 function certSplit(md){ md=String(md||""); const m=md.match(CERT_MARK); return m ? [md.slice(0,m.index), md.slice(m.index+m[0].length)] : [md, ""]; }
-function certSpotlight(ed, s, bodyFn, extra){
+/* lead: a small headshot that sits beside the highlighted company's text; extra: what follows that text */
+function certSpotlight(ed, s, bodyFn, extra, lead){
   const d=s.doc, p=certProg(d.certProgram), items=d.certItems||[];
   const F=EM_F, M="font-family:'IBM Plex Mono',Consolas,monospace;";
   const navy="#0d314c", line="#dde9f2";
@@ -6994,7 +6995,7 @@ function certSpotlight(ed, s, bodyFn, extra){
       '<tr><td colspan="2" style="padding:0 22px 22px">'+more+'</td></tr>';
   }
   const cta = d.ctaUrl ? '<p style="margin:4px 0 16px;'+F+'font-size:15px"><a href="'+esc(safeHref(d.ctaUrl))+'" style="color:#14486e;font-weight:700;text-decoration:underline">'+esc(d.ctaText||"Learn More")+'</a></p>' : '';
-  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+md(after)+(extra||"")+cta;
+  return md(before)+emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f9fd;border:1px solid '+line+';border-top:4px solid #74bfeb;border-radius:8px" bgcolor="#f4f9fd">'+card+'</table>', 6, 22)+(lead||"")+md(after)+(extra||"")+cta;
 }
 function certSpotlightText(ed, s){
   const d=s.doc, p=certProg(d.certProgram), out=[];
@@ -7038,7 +7039,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-13 14:54 ET · b57ec24";
+const BUILD = "2026-11-13 15:00 ET · 507a1ae";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
