@@ -52,11 +52,11 @@ function renderRequests(){
   const late=all.filter(r=>rqDue(r)==="late").length, soon=all.filter(r=>rqDue(r)==="soon").length;
   const month=t.slice(0,7), doneMo=all.filter(r=>r.status==="done" && String(r.doneOn||r.updatedAt||"").slice(0,7)===month).length;
   const q=(RQ.q||"").toLowerCase().trim();
-  const match=r=>(!RQ.type||r.type===RQ.type) && (!q||[r.title,r.details,r.n,r.e,r.group,r.event,rqTypeName(r),r.owner].join(" ").toLowerCase().indexOf(q)>=0);
+  const match=r=>(!RQ.type||r.type===RQ.type) && (!q||[r.title,r.details,r.n,r.e,r.group,r.event,rqTypeName(r),r.owner,r.ytTitle,r.ytPlaylist].join(" ").toLowerCase().indexOf(q)>=0);
   const list=all.filter(match);
   const card=r=>{ const due=rqDue(r), ln=rqLinked(r.id).length;
     return '<button type="button" class="rqc'+(r.status==="new"?" fresh":"")+'" data-rq="'+esc(r.id)+'">'+
-      '<span class="rqc-top"><span class="rqt">'+esc(rqTypeName(r))+'</span>'+(r.status==="info"?'<span class="chip wait">Need Info</span>':'')+(r.priority==="high"?'<span class="chip changes">High</span>':'')+'</span>'+
+      '<span class="rqc-top"><span class="rqt">'+esc(rqTypeName(r))+'</span>'+(r.status==="info"?'<span class="chip wait">Need Info</span>':'')+(r.priority==="high"?'<span class="chip changes">High</span>':'')+(r.auto==="member-360"?'<span class="chip in" title="Made by MISMO Media from Member 360\'s new member logos">Automatic · Member 360</span>':'')+((r.files||[]).length?'<span class="chip">'+(r.files||[]).length+' picture'+((r.files||[]).length===1?'':'s')+'</span>':'')+'</span>'+
       '<b class="rqc-t">'+esc(r.title||"Untitled request")+'</b>'+
       (r.details?'<span class="rqc-d">'+esc(mdPlain(r.details).slice(0,120))+(mdPlain(r.details).length>120?"…":"")+'</span>':'')+
       '<span class="rqc-by">'+esc(r.n||"Someone")+(r.role?' · '+esc(r.role):'')+(r.group?' · '+esc(r.group):'')+'</span>'+
@@ -89,6 +89,19 @@ function renderRequests(){
   $$("[data-rqcol]",el).forEach(b=>b.onclick=()=>{ const c=$(".rq-"+b.dataset.rqcol,el); if(c) c.scrollIntoView({behavior:"smooth",block:"nearest",inline:"nearest"}); });
 }
 
+/* MISMO's YouTube playlists, for video requests (the request form has the same list, plus Other) */
+const YT_PLAYLISTS=["MISMO Mic'd Up","Webinars","MISMO FRAME","MISMO Initiatives","MISMO Link","Mortgage Compliance Dataset (MCD) Learning Series"];
+/* pictures sent with the request form are in SharePoint (MISMO Media Requests); show them in the pane */
+function rqPicsHtml(r){
+  const fs=(r.files||[]).filter(x=>x&&x.path); if(!fs.length) return '';
+  return '<div class="rqa-r"><span>Pictures</span><div class="rq-pics">'+fs.map((x,i)=>'<figure data-rqpic="'+esc(x.path)+'"><div class="rq-pic-ph">Loading…</div><figcaption>'+esc(x.name||("Picture "+(i+1)))+'</figcaption></figure>').join("")+'</div></div>';
+}
+function rqPicsLoad(b){
+  $$("[data-rqpic]",b).forEach(fig=>{ const p=fig.dataset.rqpic, get=window.__hqImages&&window.__hqImages.get; if(!get) return;
+    get(p).then(blob=>{ const u=URL.createObjectURL(blob), ph=fig.querySelector(".rq-pic-ph"), name=(fig.querySelector("figcaption")||{}).textContent||"picture";
+      const a=document.createElement("a"); a.href=u; a.download=name; a.title="Download "+name; a.innerHTML='<img alt="">'; a.firstChild.src=u; if(ph) ph.replaceWith(a); })
+    .catch(()=>{ const ph=fig.querySelector(".rq-pic-ph"); if(ph) ph.textContent="Couldn't open it"; }); });
+}
 function rqAsked(r){
   const row=(l,v)=>v?'<div class="rqa-r"><span>'+esc(l)+'</span><div>'+v+'</div></div>':'';
   const links=String(r.links||"").split(/\s+/).filter(x=>/^https?:\/\//i.test(x)).map(u=>'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(u.length>60?u.slice(0,58)+"…":u)+'</a>').join("<br>");
@@ -98,6 +111,8 @@ function rqAsked(r){
     row("Role", esc([r.role,r.group].filter(Boolean).join(" · ")))+
     row("Needed By", r.neededBy?esc(fD(r.neededBy))+(r.firm?' <b>(firm date)</b>':''):"")+
     row("Audience", esc(r.audience||""))+row("Event", esc(r.event||""))+row("Links and Files", links)+
+    ((r.ytTitle||r.ytDescription||r.ytPlaylist)?'<div class="rqa-sec">For YouTube</div>'+row("Video Title", esc(r.ytTitle||""))+row("Description", esc(r.ytDescription||"").replace(/\n/g,"<br>"))+row("Playlist", esc(r.ytPlaylist||"")):'')+
+    rqPicsHtml(r)+
     '</div>';
 }
 function openRequest(id){
@@ -113,7 +128,12 @@ function openRequest(id){
     {k:"n",label:"Requested By"},{k:"e",label:"Their Email",ph:"name@mismo.org"},
     {k:"role",label:"Role",type:"select",opts:RQ_ROLES},{k:"group",label:"Team or Workgroup"},
     {k:"audience",label:"Audience"},{k:"event",label:"Related Event"},
-    {k:"links",label:"Links and Files",wide:true,ph:"SharePoint or Drive links, one per line"}];
+    {k:"links",label:"Links and Files",wide:true,ph:"SharePoint or Drive links, one per line"},
+    {sec:"For YouTube (Video Requests)"},
+    {k:"ytTitle",label:"Video Title",wide:true,ph:"The title as it should appear on YouTube"},
+    {k:"ytDescription",label:"Description",type:"textarea",rows:5,wide:true,ph:"The description as it should appear under the video"},
+    {k:"ytPlaylist",label:"Playlist",type:"select",blank:true,opts:YT_PLAYLISTS.map(p=>[p,p]).concat((r.ytPlaylist&&!YT_PLAYLISTS.includes(r.ytPlaylist))?[[r.ytPlaylist,r.ytPlaylist+" (new)"]]:[]).concat([["__other","Other (a new playlist)"]])},
+    {k:"ytPlaylistOther",label:"New Playlist Name",ph:"Only if you picked Other"}];
   const fields=asked.concat([{sec:"Review"},
     {k:"status",label:"Status",type:"select",opts:RQ_ORDER.map(k=>[k,RQ_STAT[k][0]])},
     {k:"owner",label:"Owner",type:"select",blank:true,opts:PEOPLE},
@@ -128,6 +148,7 @@ function openRequest(id){
     extra:(linked.length?'<div class="fsec">On the Schedule</div><div class="brorders">'+linked.map(x=>'<button type="button" class="lnk" data-rql="'+x.k+':'+esc(x.id)+'"><b>'+esc(x.label)+'</b>'+(x.done?' · Done':'')+'</button>').join("")+'</div>':''),
     save:async v=>{
       if(isNew && !v.title){ toast("Say what's needed."); throw new Error("title"); }
+      if(v.ytPlaylist==="__other"){ v.ytPlaylist=String(v.ytPlaylistOther||"").trim(); } delete v.ytPlaylistOther;
       const rid=id||uid("rq");
       if(v.status==="done" && r.status!=="done") v.doneOn=T();
       if(!["new"].includes(v.status) && !r.firstLook) v.firstLook=T();
@@ -139,15 +160,15 @@ function openRequest(id){
       window.open("mailto:"+encodeURIComponent(r.e)+"?subject="+encodeURIComponent("Your MISMO request: "+(r.title||""))+"&body="+encodeURIComponent(body.trim()),"_blank");
       if(v.reply!==(r.reply||"")) await rqSave(id,{reply:v.reply||""});
     }}]:[]).concat([{label:makeLabel, run:async v=>{
-      const rid=id; const seedNote=[r.details, r.n?"Requested by "+r.n+(r.e?" ("+r.e+")":""):"", r.links].filter(Boolean).join("\n\n");
+      const rid=id; const seedNote=[r.details, r.n?"Requested by "+r.n+(r.e?" ("+r.e+")":""):"", r.links, r.ytPlaylist?"YouTube playlist: "+r.ytPlaylist:"", (r.files||[]).length?"Pictures sent with the request: "+(r.files||[]).map(x=>x.name).join(", ")+" (Q Drive > MISMO > Active Documents > Marketing > MISMO Media Requests)":""].filter(Boolean).join("\n\n");
       await rqSave(rid, Object.assign({}, v, {status:["new","review","info"].includes(v.status)?"approved":v.status, firstLook:r.firstLook||T()}));
       closePane(true);
       const when = v.target || r.neededBy || T();
       if(dest.order) openOrder(null,{name:r.title||"", kind:dest.order, neededBy:r.neededBy||"", eventName:r.event||"", event:r.event?"other":"", notes:seedNote, owner:v.owner||"", request:rid});
-      else newPiece(dest.piece, {title:(t[0]==="matters"?"MISMO Matters: ":"")+(r.title||""), date:when, owner:v.owner||"", copy:(dest.piece==="linkedin"||dest.piece==="youtube")?mdPlain(r.details):(r.details||""), notes:seedNote, request:rid, touch:dest.touch?{[dest.touch]:true}:undefined});
+      else newPiece(dest.piece, {title:(t[0]==="matters"?"MISMO Matters: ":"")+((dest.piece==="youtube"&&r.ytTitle)||r.title||""), date:when, owner:v.owner||"", copy:(dest.piece==="youtube"&&r.ytDescription)?r.ytDescription:(dest.piece==="linkedin"||dest.piece==="youtube")?mdPlain(r.details):(r.details||""), notes:seedNote, request:rid, touch:dest.touch?{[dest.touch]:true}:undefined});
     }}]) : [],
     after:b=>{
-      if(fromForm){ const box=document.createElement("div"); box.innerHTML=rqAsked(r); b.insertBefore(box.firstChild, b.firstChild); }
+      if(fromForm){ const box=document.createElement("div"); box.innerHTML=rqAsked(r); b.insertBefore(box.firstChild, b.firstChild); rqPicsLoad(b); }
       $$("[data-rql]",b).forEach(x=>x.onclick=()=>{ const [k,xid]=x.dataset.rql.split(":"); closePane(true); if(k==="order"){ go("orders"); openOrder(xid); } else openPiece(xid); });
     },
     del: id ? async()=>{ await rqSave(id,{archived:true}); } : null, delLabel:"Archive"

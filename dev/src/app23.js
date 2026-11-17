@@ -37,7 +37,7 @@ async function nmImport(){if(NM_BUSY||!DB||typeof addImages!=="function")return;
   for(const month of Object.keys(touched)){const rid="rq-newmembers-"+month,cur=(S.requests||{})[rid];
     const logos=((S.sections||{})[month+"__welcome"]||{}).logos||[],ed=vals("editions").find(e=>e.month===month)||{};
     const need=(ed.dates&&(ed.dates.publish||ed.dates.approve))||(month+"-15");
-    await put("requests",rid,Object.assign({status:"review",role:"MISMO Staff",type:"linkedin",n:"Member 360",e:"",group:"Membership",owner:"",neededBy:need,at:new Date().toISOString()},cur||{},{
+    await put("requests",rid,Object.assign({status:"new",role:"MISMO Staff",type:"linkedin",n:"Member 360",e:"",group:"Membership",owner:"",neededBy:need,at:new Date().toISOString()},cur||{},{
       title:"New Member Announcement: "+monthName(month),
       details:"LinkedIn post welcoming MISMO's new members, to go with the "+monthName(month)+" MISMO Matters: "+logos.map(l=>l.name).join(", ")+". Their logos are attached below and are in the Image Library under Logos.",
       images:logos.map(l=>l.id),links:logos.map(l=>l.name+(l.url?" · "+l.url:"")).join("\n"),auto:"member-360"}));}
