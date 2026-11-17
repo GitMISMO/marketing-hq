@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-17 (later)
+- MISMO Matters: the footer logo links to www.mismo.org now that the new website is live. The November edition's links were moved to the new website's addresses.
+
 ## 2026-11-17
 - Requests: the request form takes pictures and thumbnails by drag and drop (saved in Q Drive > MISMO > Active Documents > Marketing > MISMO Media Requests), and a Video or YouTube request asks for the Video Title, Description and Playlist (with Other for a new one). The request pane shows them, and Add to the Schedule carries them over.
 - Requests: a new request emails Jonna, Amy, Kelly and Vanessa, and sends the requester a branded thank-you (MISMO and MBA addresses). The monthly New Member Announcement made from Member 360 is marked Automatic · Member 360 and starts in New.
