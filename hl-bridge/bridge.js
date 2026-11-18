@@ -1,5 +1,5 @@
 /* MISMO Media → Higher Logic uploader (GitMISMO/marketing-hq, hl-bridge/bridge.js), loaded by the hidden
-   website page collaborate.mismo.org/mismowebsite/mismo-media-uploader.
+   website page www.mismo.org/mismo-media-uploader (collaborate.mismo.org/mismowebsite/... before Nov 16, 2026).
    MISMO Media (https://resources.mismo.org/marketing-hq/) loads this page out of sight, or in a small
    window, and sends pictures to it. It saves each one in the Higher Logic file library folder
    MISMO_Matters_Logos with the signed-in person's own Higher Logic session, and sends back the public link.
@@ -65,7 +65,8 @@
      only pages under /mismowebsite/standards-resources/. */
   function certs(slug) {
     if (!/^[a-z0-9-]{3,80}$/.test(String(slug || ""))) return Promise.reject(new Error("bad page"));
-    var path = "/mismowebsite/standards-resources/" + slug;
+    /* the website moved from collaborate.mismo.org/mismowebsite/ to www.mismo.org/ on Nov 16, 2026 */
+    var path = (location.hostname === "www.mismo.org" ? "" : "/mismowebsite") + "/standards-resources/" + slug;
     return fetch(path, { credentials: "same-origin" }).then(function (r) { if (!r.ok) throw new Error("the website said " + r.status); return r.text(); })
       .then(function (html) {
         var doc = new DOMParser().parseFromString(html, "text/html"), m = doc.querySelector("#MPContentArea") || doc.body;
