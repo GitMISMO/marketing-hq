@@ -379,6 +379,33 @@ function emailFooter(F){
       '<td width="50%" valign="middle" align="right" style="padding:0;text-align:right">'+right+'</td></tr></table>'+
     emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #e3ebf1;padding:10px 0 0;text-align:center;'+F+'font-size:11px;line-height:1.5;color:#56718a">You&rsquo;re getting MISMO Matters because you subscribed or take part in MISMO.&nbsp; <a name="Unsubscribe" data-informz-link-type="Unsubscribe_Web_Page" href="'+UNSUB_URL+'" style="color:#456179;text-decoration:underline;white-space:nowrap">Unsubscribe</a></td></tr></table>', 14, 0)+'</td></tr>';
 }
+/* The email as it goes into Informz: a whole document, smaller so Gmail doesn't clip it (Gmail clips over 102 KB,
+   and Informz's click tracking adds about 140 characters to every link). The font and the most repeated styles
+   become short class names with one <style> block in the head; everything else stays inline, so it looks the same.
+   The web version and the preview still use buildEmail as is. (Jonna, Nov 17, 2026) */
+const EM_CLASSES=[["mp","font-size:16px;line-height:1.7;margin:0 0 14px;color:#1d2b36"],
+  ["mf","font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#56718a;text-decoration:none;font-weight:600;white-space:nowrap"],
+  ["ml","color:#14486e;font-weight:600;text-decoration:underline"],
+  ["me","font-family:'IBM Plex Mono',Consolas,monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:#56718a;font-weight:600;margin:0 0 6px"],
+  ["mn","font-family:'IBM Plex Mono',Consolas,monospace;color:#2477b8;font-size:12px;font-weight:500"],
+  ["mi","display:block;width:100%;max-width:600px;height:auto;border:0;vertical-align:top"],
+  ["mh","font-size:17.5px;line-height:1.35;color:#0d314c;margin:24px 0 10px;font-weight:700;padding-top:6px"],
+  ["mt","text-decoration:none;color:#0d314c;font-size:14px;font-weight:600"]];
+function emailCompact(h){
+  const FF=EM_F.replace(/;$/,"");
+  return h.replace(/ style="([^"]*)"/g,(m,st)=>{
+    const cls=[]; let s=st;
+    if(s.includes(FF)){ s=s.split(EM_F).join("").split(FF).join("").replace(/^;+|;+$/g,""); cls.push("f"); }
+    const hit=EM_CLASSES.find(([c,v])=>v===s); if(hit){ cls.push(hit[0]); s=""; }
+    return (cls.length?' class="'+cls.join(" ")+'"':"")+(s?' style="'+s+'"':"");
+  });
+}
+function emailForSend(ed){
+  const css=".f{"+EM_F.replace(/;$/,"")+"}"+EM_CLASSES.map(([c,s])=>"."+c+"{"+s+"}").join("");
+  return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'+
+    '<meta http-equiv="X-UA-Compatible" content="IE=edge">\n<title>MISMO Matters | '+esc(monthName(ed.month))+'</title>\n<style type="text/css">'+css+'</style>\n</head>\n'+
+    '<body style="margin:0;padding:0;background:#ffffff;-webkit-text-size-adjust:100%;">\n'+emailCompact(buildEmail(ed))+'\n</body>\n</html>\n';
+}
 function buildText(ed){
   const on=edSections(ed).filter(s=>s.on); const out=["MISMO MATTERS — "+monthName(ed.month).toUpperCase(),""];
   on.forEach(s=>{ const d=s.doc, name=(d.name||s.meta.name).toUpperCase();
@@ -396,7 +423,7 @@ function buildText(ed){
 function previewView(ed){
   return '<div class="card"><div class="ch"><h2>How It Will Look</h2><div class="r"><div class="subtabs" style="margin:0" role="group" aria-label="Section header style"><button type="button" data-hs="1" aria-pressed="'+(hdrOpt(ed)==="1")+'">Option 1 · Original</button><button type="button" data-hs="2" aria-pressed="'+(hdrOpt(ed)==="2")+'">Option 2 · New</button></div><div class="subtabs" style="margin:0" role="group" aria-label="Preview size"><button type="button" data-dev="desk" aria-pressed="true">Desktop</button><button type="button" data-dev="phone" aria-pressed="false">Phone</button></div><button class="btn" type="button" id="pv-text">Copy Plain Text</button><button class="btn pri" type="button" id="pv-html">Copy HTML for Higher Logic</button></div></div>'+
     '<div class="cb"><div class="mailwrap"><div class="mail" id="pv-mail">'+buildEmail(ed,true)+'</div></div>'+
-    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard to paste into Higher Logic\'s HTML block. Each section has its own link, so a reader can share one story, and every section has a way back to the top. This build is version <b>'+esc(emailVersion(buildEmail(ed)))+'</b>; the same number is on the first line of the HTML, so you can check that Informz has the latest before sending.</p></div></div>';
+    '<p class="foot">Only sections that are running and have content appear. "Copy HTML" puts the whole email on your clipboard, ready to replace everything in the HTML tab of the Informz message; it\'s trimmed so Gmail doesn\'t clip it. Each section has its own link, so a reader can share one story, and every section has a way back to the top. This build is version <b>'+esc(emailVersion(buildEmail(ed)))+'</b>; the same number is on the first line of the HTML, so you can check that Informz has the latest before sending.</p></div></div>';
 }
 function copyText(s, what){
   const done=()=>toast(what+" copied");
@@ -416,7 +443,7 @@ function wirePreview(el,ed){
      copying anyway is allowed, with a clear question first (Nov 7, 2026, from the application review) */
   $("#pv-html",el).onclick=()=>{ const wait=edSections(ed).filter(x=>x.on && !x.meta.auto && x.doc.status!=="approved").map(x=>x.doc.name||x.meta.name);
     if(wait.length && !window.confirm(wait.length+" section"+(wait.length===1?" isn't":"s aren't")+" approved yet:\n\n• "+wait.join("\n• ")+"\n\nCopy the HTML anyway? (Fine for a test; the real send should wait for Amy's OK.)")) return;
-    copyText(buildEmail(ed),"HTML"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
+    copyText(emailForSend(ed),"HTML (the whole email: in Informz, replace everything in the HTML tab)"); const need=edSections(ed).filter(x=>x.on && !x.doc.imageUrl && !(x.doc.imageLib&&S.images[x.doc.imageLib]&&S.images[x.doc.imageLib].hlUrl) && (x.doc.imageLib||x.doc.imageId)).length + bodyPicsNeedingLinks(ed) + logosNeedingLinks(ed); if(need) setTimeout(()=>toast("HTML copied. "+need+" picture"+(need===1?" still needs":"s still need")+" a Higher Logic image link, so "+(need===1?"it shows":"they show")+" as a placeholder box.", 7000), 900); };
   $("#pv-text",el).onclick=()=>copyText(buildText(ed),"Plain text");
   /* in the preview, Copy Link copies the section's web address rather than leaving MISMO Media */
   $("#pv-mail",el).addEventListener("click",e=>{ const a=e.target.closest("a[data-mm-copy]"); if(!a) return; e.preventDefault(); copyText(a.href,"Section link"); });

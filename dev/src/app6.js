@@ -92,7 +92,7 @@ const HELP = [
    <li><b>Reminding Amy:</b> when anything is waiting on her, Home's On Your Plate box shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
    <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
    <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
-   <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b> and paste it into the email's HTML block. <b>Copy Plain Text</b> is the text-only version.</li>
+   <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b>, open the message in Informz, and replace everything in its HTML tab with it. <b>Copy Plain Text</b> is the text-only version.</li>
    <li><b>Work the Send Checklist</b> and tick each step: lists refreshed, unsubscribes removed, links tested, test send reviewed, and the rest.</li>
    <li><b>Mark the milestones.</b> Click a date in the strip under the band to mark it done (click again to undo).</li>
    <li><b>Record the stats</b> a week later under <b>Stats</b>, unless the daily feed is filling them in.</li>
@@ -120,7 +120,7 @@ const HELP = [
   <ul>
    <li>The preview only shows sections that are running and have content.</li>
    <li>Every section has its own link, an "In This Issue" list at the top jumps to each one, and every section has "Back to top," so readers can share one story.</li>
-   <li><b>Copy HTML for Higher Logic</b> copies the whole email. Paste it into Higher Logic's HTML block. If copying is blocked, a box opens with the HTML selected so you can copy it yourself.</li>
+   <li><b>Copy HTML for Higher Logic</b> copies the whole email as a full page (head and body), ready to replace everything in the Informz HTML tab. It's trimmed so Gmail doesn't clip it: Gmail cuts off emails over 102 KB, and Informz's link tracking adds about 140 characters to every link. The font and the most repeated styles sit once in the head instead of on every line, so it looks the same. If copying is blocked, a box opens with the HTML selected so you can copy it yourself.</li>
    <li>If any section that's running hasn't been approved by Amy yet, <b>Copy HTML</b> lists them and asks before copying. Copying anyway is fine for a test; the real send waits for her OK.</li>
    <li>Images that haven't been uploaded to Higher Logic show as a placeholder saying which image goes there.</li>
    <li>The header graphics currently load from the October edition's copies. Moving them into Higher Logic is on the setup list.</li>
