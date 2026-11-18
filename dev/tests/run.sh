@@ -24,4 +24,5 @@ out=$(node txupload.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || 
 out=$(node certpic.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node ctabtn.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node rqyt.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node emsize.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
