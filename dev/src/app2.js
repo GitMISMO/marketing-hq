@@ -369,7 +369,7 @@ function emailFooter(F){
   const left='<a href="https://www.mismo.org/home" style="text-decoration:none"><img src="'+FOOT_LOGO+'" alt="MISMO" width="124" height="19" style="display:block;width:124px;height:19px;border:0" border="0"></a>'+
     '<div style="margin:8px 0 0;'+F+'font-size:12.5px;line-height:1.4;color:#456179">Where Our Industry Builds What&rsquo;s Next</div>';
   const icon=(href,src,alt,padL)=>'<td style="padding:8px 0 0 '+padL+'px"><a href="'+href+'" style="text-decoration:none"><img src="'+I+src+'" alt="'+alt+'" width="30" height="30" style="display:block;width:30px;height:30px;border:0" border="0"></a></td>';
-  const right='<div style="'+F+'font-size:12.5px;line-height:1.55;color:#456179">1919 M Street NW, 5th Floor<br>Washington, DC 20036<br><img src="'+I+'ic-mail.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></div>'+
+  const right='<div style="'+F+'font-size:12.5px;line-height:1.55;color:#456179">1919&zwnj; M&zwnj; Street&zwnj; NW, 5th&zwnj; Floor<br>Washington,&zwnj; DC&zwnj; 20036<br><img src="'+I+'ic-mail.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;<a href="mailto:info@mismo.org" style="color:'+navy+';text-decoration:none;white-space:nowrap">info@mismo.org</a></div>'+
     '<table role="presentation" align="right" cellpadding="0" cellspacing="0"><tr>'+
       icon("https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","ic-li.png","MISMO on LinkedIn",0)+
       icon("https://www.youtube.com/@MISMOStandards","ic-yt.png","MISMO on YouTube",8)+'</tr></table>';
@@ -396,12 +396,17 @@ function emailCompact(h){
   return h.replace(/ style="([^"]*)"/g,(m,st)=>{
     const cls=[]; let s=st;
     if(s.includes(FF)){ s=s.split(EM_F).join("").split(FF).join("").replace(/^;+|;+$/g,""); cls.push("f"); }
-    const hit=EM_CLASSES.find(([c,v])=>v===s); if(hit){ cls.push(hit[0]); s=""; }
+    /* a link keeps its color and underline setting inline too: some email apps drop the head styles and
+       would underline every link (Jonna, Nov 17, 2026) */
+    const hit=EM_CLASSES.find(([c,v])=>v===s); if(hit){ cls.push(hit[0]); s=(hit[1].match(/(?:^|;)(?:color|text-decoration):[^;]+/g)||[]).filter(()=>/text-decoration/.test(hit[1])).map(x=>x.replace(/^;/,"")).join(";"); }
     return (cls.length?' class="'+cls.join(" ")+'"':"")+(s?' style="'+s+'"':"");
   });
 }
 function emailForSend(ed){
-  const css=".f{"+EM_F.replace(/;$/,"")+"}"+EM_CLASSES.map(([c,s])=>"."+c+"{"+s+"}").join("");
+  /* the last two rules stop iPhone Mail and Outlook's phone app turning the street address into an underlined link */
+  const css=".f{"+EM_F.replace(/;$/,"")+"}"+EM_CLASSES.map(([c,s])=>"."+c+"{"+s+"}").join("")+
+    "a[x-apple-data-detectors]{color:inherit!important;text-decoration:none!important;font-size:inherit!important;font-family:inherit!important;font-weight:inherit!important;line-height:inherit!important}"+
+    "#MessageViewBody a{color:inherit;text-decoration:none;font-size:inherit;font-family:inherit;font-weight:inherit;line-height:inherit}";
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n'+
     '<meta http-equiv="X-UA-Compatible" content="IE=edge">\n<title>MISMO Matters | '+esc(monthName(ed.month))+'</title>\n<style type="text/css">'+css+'</style>\n</head>\n'+
     '<body style="margin:0;padding:0;background:#ffffff;-webkit-text-size-adjust:100%;">\n'+emailCompact(buildEmail(ed))+'\n</body>\n</html>\n';

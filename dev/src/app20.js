@@ -4,13 +4,14 @@
    pickers alone (the logo wall has its own picker).
 
    Higher Logic: emails can only show pictures with a public link. MISMO Media hands each logo that has no
-   link yet to a small uploader page on collaborate.mismo.org (HL_BRIDGE), loaded out of sight, which puts
+   link yet to a small uploader page on www.mismo.org (HL_BRIDGE), loaded out of sight, which puts
    it in Higher Logic's file library (MISMO_Matters_Logos folder) using the session of whoever is signed in
    to Higher Logic, and sends back the public link. SVG logos are turned into PNGs first, because Gmail and
    Outlook don't show SVGs. It runs on its own whenever someone signed in to Higher Logic opens MISMO Media;
    "Send to Higher Logic" does the same in a small window for anyone whose browser keeps the hidden one out. */
-const HL_BRIDGE = "https://collaborate.mismo.org/mismowebsite/mismo-media-uploader";   // the hidden website page that loads hl-bridge/bridge.js
-const HL_ORIGIN = "https://collaborate.mismo.org";
+/* the website moved to www.mismo.org on Nov 16, 2026, and Higher Logic sign-ins with it (Jonna, Nov 17, 2026) */
+const HL_BRIDGE = "https://www.mismo.org/mismo-media-uploader";   // the hidden website page that loads hl-bridge/bridge.js
+const HL_ORIGIN = "https://www.mismo.org";
 const HLB = {state:"idle", last:"", busy:false, frame:null, win:null, ready:null, waits:{}, n:0, tried:false};
 
 function isLogo(im){ return !!im && im.campaign==="logos"; }
@@ -102,11 +103,11 @@ function hlNote(){
   if(!HL_BRIDGE) return n ? '<div class="lgs-note warn"><b>'+n+' waiting for Higher Logic.</b> They show in the email preview with a dashed outline until they have a Higher Logic link.</div>' : '';
   if(HLB.state==="working") return '<div class="lgs-note"><b>Putting '+n+' in Higher Logic…</b></div>';
   if(!n) return '<div class="lgs-note ok"><b>All in Higher Logic.</b> Every logo has its public link, so the email shows them.</div>';
-  const why = HLB.state==="signin" ? 'Sign in to the MISMO website (collaborate.mismo.org) in this browser, then press Send to Higher Logic.'
+  const why = HLB.state==="signin" ? 'Sign in to the MISMO website (www.mismo.org) in this browser, then press Send to Higher Logic.'
     : HLB.state==="blocked" ? 'This browser kept the uploader from loading. Press Send to Higher Logic to do it in a small window.'
     : HLB.state==="partial" ? 'Some didn\'t go ('+esc(HLB.last)+'). Press Send to Higher Logic to try again.'
     : 'They go in on their own the next time someone signed in to Higher Logic opens MISMO Media.';
-  return '<div class="lgs-note warn"><b>'+n+' waiting for Higher Logic.</b> '+why+' <button class="btn sm pri" type="button" id="hl-send">Send to Higher Logic</button>'+(HLB.state==="signin"?' <a class="btn sm" href="https://collaborate.mismo.org/mismowebsite/home" target="_blank" rel="noopener">Sign In&nbsp;↗</a>':'')+'</div>';
+  return '<div class="lgs-note warn"><b>'+n+' waiting for Higher Logic.</b> '+why+' <button class="btn sm pri" type="button" id="hl-send">Send to Higher Logic</button>'+(HLB.state==="signin"?' <a class="btn sm" href="https://www.mismo.org/home" target="_blank" rel="noopener">Sign In&nbsp;↗</a>':'')+'</div>';
 }
 function hlPaint(){ const n=$("#lgs-note"); if(n){ n.innerHTML=hlNote(); const b=$("#hl-send",n); if(b) b.onclick=()=>hlRun(true); } }
 
