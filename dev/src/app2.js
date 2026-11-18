@@ -216,6 +216,9 @@ const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","mic
 const FULL_ARTICLE = {vieaux:["about-mismo/vieaux-point","vp","Continue Reading"], workgroup:["about-mismo/workgroup-highlights","wg","Read the Full Article"]};
 /* Every edition also lives on the web at its own address, so a reader can link to one section (Copy Link). */
 const MM_WEB_BASE="https://resources.mismo.org/marketing-hq/matters/";
+/* Copy Link is off for now (Jonna, Nov 18, 2026: "take out copy link on all pages for now and we'll address next edition").
+   Set back to true to bring it back at the foot of every section. */
+const MM_COPY_LINK=false;
 function mmWebUrl(ed){ return MM_WEB_BASE+(ed&&ed.month||"")+"/"; }
 function buildWebPage(ed){
   const t="MISMO Matters | "+monthName(ed.month);
@@ -338,7 +341,7 @@ function buildEmail(ed, preview, opt){
       /* the foot of every section: Copy Link on the left (the section's own address on the web version, like the
          Axios editions had), Back to Top on the right */
       '<tr><td style="padding:14px 28px 22px;border-top:1px solid #e5eef5"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'+
-        '<td><a href="'+esc(mmWebUrl(ed)+"#"+anchor)+'" data-mm-copy="'+anchor+'" style="'+FOOT_A+'"><img src="'+HDR2_BASE+'ic-link.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;&nbsp;<span data-mm-label>Copy Link</span></a></td>'+
+        (MM_COPY_LINK ? '<td><a href="'+esc(mmWebUrl(ed)+"#"+anchor)+'" data-mm-copy="'+anchor+'" style="'+FOOT_A+'"><img src="'+HDR2_BASE+'ic-link.png" alt="" width="12" height="12" style="width:12px;height:12px;border:0;vertical-align:-1px" border="0">&nbsp;&nbsp;<span data-mm-label>Copy Link</span></a></td>' : '')+
         '<td align="right"><a href="#mm-top" style="'+FOOT_A+'">Back to Top&nbsp;&uarr;</a></td>'+
       '</tr></table></td></tr>');
   });
