@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-17 (evening)
+- MISMO Matters: Copy HTML now gives the whole email as a full page, trimmed so Gmail does not clip it (the font and the most repeated styles become short class names in the head; it looks the same). Replace everything in the Informz HTML tab with it.
+
 ## 2026-11-17 (later)
 - MISMO Matters: the footer logo links to www.mismo.org now that the new website is live. The November edition's links were moved to the new website's addresses.
 
