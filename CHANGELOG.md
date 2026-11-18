@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-18 (afternoon)
+- MISMO Matters: Copy Link is off at the foot of every section, in the email and the web version, for now. Back to Top stays. It comes back by setting MM_COPY_LINK to true.
+
 ## 2026-11-18
 - MISMO Matters web version: each edition's web page (where Copy Link points) now tells search engines not to list it. Anyone with the link can still open it.
 
