@@ -220,6 +220,8 @@ function mmWebUrl(ed){ return MM_WEB_BASE+(ed&&ed.month||"")+"/"; }
 function buildWebPage(ed){
   const t="MISMO Matters | "+monthName(ed.month);
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(t)+'</title>'+
+    /* anyone with the link can open it, but it stays out of search results (Jonna, Nov 18, 2026) */
+    '<meta name="robots" content="noindex,nofollow">'+
     '<meta property="og:title" content="'+esc(t)+'"><meta property="og:image" content="'+esc(MAST_IMG)+'">'+
     '<style>html{scroll-behavior:smooth}body{margin:0;background:#f1f6fa}a[name]{scroll-margin-top:12px}a[data-mm-copy].ok{color:#0f7b5c!important}</style></head><body>'+
     buildEmail(ed,false,hdrOpt(ed))+
