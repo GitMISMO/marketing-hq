@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-18
+- MISMO Matters web version: each edition's web page (where Copy Link points) now tells search engines not to list it. Anyone with the link can still open it.
+
 ## 2026-11-17 (night)
 - MISMO Matters email: links in the table of contents, Copy Link and Back to Top keep their color and no-underline setting on the link itself, so email apps that drop the head styles no longer underline them. The footer street address no longer turns into an underlined map link on phones.
 - Pictures for Higher Logic: the uploader now uses the new website (www.mismo.org/mismo-media-uploader), where Higher Logic sign-ins live since the move on Nov 16. The certification list reader follows the new page addresses too.
