@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (later still)
+- LinkedIn: post thumbnails stay square in a narrow window instead of shrinking to slivers.
+
 ## 2026-11-19 (late night)
 - LinkedIn: the MISMO Matters as LinkedIn Posts card folds up. Click its title to close or open it; MISMO Media remembers your choice in your browser.
 - The post panel now says why Approve and Don't Post are greyed out for anyone but Amy.
