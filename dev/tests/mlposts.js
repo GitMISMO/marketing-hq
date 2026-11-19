@@ -23,14 +23,23 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   out.links=posts.every(x=>/^https?:\/\//.test(x.link));
   /* only Amy can approve */
   renderLinkedin(); await wait(200);
-  const okBtn=document.querySelector("[data-mlok]"); out.lockedForOthers=!!okBtn && okBtn.disabled;
+  out.rows=document.querySelectorAll("#ml-card tr[data-mlrow]").length===secs.length && !document.querySelector("#ml-make");
+  document.querySelector('#ml-card tr[data-mlrow="'+posts[0].fromSec+'"]').click(); await wait(300);
+  const okBtn=document.querySelector('#pane-body [data-mla="ok"]'); out.lockedForOthers=!!okBtn && okBtn.disabled && !!document.querySelector("#pane-body #f-copy");
   await mlApprove(posts[0].id); out.notApprovedByOthers=S.pieces[posts[0].id].status==="review";
   window.ResourcesSession={current:()=>({name:"Amy Moses",email:"amoses@mismo.org"}), token:()=>"tok"};
-  renderLinkedin(); await wait(200);
-  out.amyCan=!document.querySelector("[data-mlok]").disabled;
+  closePane(true); renderLinkedin(); await wait(200);
+  mlOpen(ed, posts[0].fromSec); await wait(300);
+  out.amyCan=!document.querySelector('#pane-body [data-mla="ok"]').disabled; closePane(true);
   await mlApprove(posts[0].id); out.approved=S.pieces[posts[0].id].status==="ready" && S.pieces[posts[0].id].approvedBy==="Amy Moses";
+  /* Don't Post: Amy only, shows as Not Posting, can be brought back, and isn't remade */
+  await mlSkip(posts[1].id); out.skipped=S.pieces[posts[1].id].status==="canceled";
+  renderLinkedin(); await wait(200); out.notPostingShown=/Not Posting/.test(document.querySelector("#ml-card").innerText);
+  mlOpen(ed, posts[1].fromSec); await wait(300); out.backBtn=!!document.querySelector('#pane-body [data-mla="back"]'); closePane(true);
+  await mlUnskip(posts[1].id); out.backAgain=S.pieces[posts[1].id].status==="review";
+  await mlSkip(posts[1].id);
   /* running it again makes nothing new */
-  const before=tasks.length; await mlMakeAll(ed, true); out.noDupes=tasks.length===before && mlPosts(ed).length===secs.length;
+  const before=tasks.length; await mlMakeAll(ed, true); out.noDupes=tasks.length===before && mlPosts(ed).length===secs.length && S.pieces[posts[1].id].status==="canceled";
   out.ok=Object.values(out).every(v=>v===true);
   return out;
 });
