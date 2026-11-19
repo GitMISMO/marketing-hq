@@ -7,7 +7,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const tasks=[];
   window.__hqImages=Object.assign(window.__hqImages||{}, {mkdir:async()=>({}), writer:async(task,material)=>{ tasks.push({task,material});
     return JSON.stringify({post:"MISMO Matters is out. "+material.split("\n")[1]+"\n\nRead more: "+(material.match(/LINK: (\S+)/)||[])[1]+"\n\n#MISMOMatters #Mortgage", teaser:"The one line that matters."}); }});
-  const ed=curEdition(); out.hasEdition=!!ed;
+  const ed=mlEdition(); out.hasEdition=!!ed;
   const secs=mlSections(ed); out.sections=secs.length>0;
   go("linkedin"); await wait(300);
   out.card=!!document.querySelector("#ml-card") && /as LinkedIn Posts/.test(document.querySelector("#ml-card").innerText);
