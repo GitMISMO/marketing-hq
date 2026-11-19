@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (night)
+- LinkedIn posts from MISMO Matters are now a compact list like the other pages: one row per section with its graphic, the start of the post and its status. Click a row to see the graphic and the post in the panel on the right, edit it, and Approve it.
+- Amy can mark a post Don't Post (shows as Not Posting; Bring It Back undoes it).
+- The edition list starts with November 2026, and Make the Missing Posts only shows when a section has no post.
+
 ## 2026-11-19 (evening)
 - LinkedIn posts from MISMO Matters: a photo or square logo now sits beside the headline, and a wide logo sits centered under it, so the graphics have no empty corners. New Redraw Graphic button makes a fresh graphic and keeps the words.
 
