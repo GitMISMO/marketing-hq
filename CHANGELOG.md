@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-18 (late evening)
+- Press Releases: Brittney Prophete's address (bprophete@mba.org) is built in for the MBA newsroom copy and shows on each release. MBA Newsroom Contact can still change it.
+- Help: Press Releases now covers the page, each button, who can do what, and that nothing follows up by itself. Who Does What adds Perry, and Amy's and Vanessa's press release parts.
+
 ## 2026-11-18 (evening)
 - New Press Releases tab. Each MMS announcement (release, call for participation, comment period) starts a release with a first draft in Perry's house style, matched to the work-product catalog. Gaps are left in [BRACKETS]; nothing is made up.
 - Every name and company is checked against the MMS leaders list (Brian Vieaux's spelling too), with American spelling checks.
