@@ -184,6 +184,7 @@ function renderLinkedin(){
       '<div class="tile"><div class="v">'+postedMonth+'</div><div class="k">Posted This Month</div><div class="s">'+esc(MONL[today().getMonth()])+'</div></div>'+
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>Coming Up</h2><span class="cnt">'+upcoming.length+'</span></div>'+(upcoming.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Post</th><th>Kind</th><th>Owner</th><th>Status</th></tr></thead><tbody>'+pieceRows(upcoming,["kind"])+'</tbody></table></div>':'<div class="empty">Nothing scheduled. Mic\'d Up posts appear here by themselves once an episode is added.</div>')+'</div>'+
+    (typeof mlCardHtml==="function"?mlCardHtml():"")+
     '<div class="grid2" style="margin-top:22px"><div class="card"><div class="ch"><h2>Ready to Reuse from MISMO Matters</h2><span class="cnt">'+reuse.length+'</span></div>'+(reuse.length?'<div class="checks">'+reuse.map(s=>'<div class="chk"><span class="ct"><b>'+esc(s.doc.headline||s.meta.name)+'</b><small>'+esc(s.meta.name)+' · '+esc(monthName(ed.month))+'</small></span><button class="btn sm" type="button" data-mk="'+esc(s.id)+'">Make a Post</button></div>').join("")+'</div>':'<div class="empty">Tick <b>LinkedIn</b> under "Also Use It In" on a MISMO Matters section and it lands here.</div>')+'</div>'+
     '<div class="card"><div class="ch"><h2>News to Share</h2><span class="cnt">'+newsTodo.length+'</span></div>'+(newsTodo.length?'<div class="checks">'+newsTodo.map(n=>'<div class="chk"><span class="ct"><b>'+esc(n.headline||"")+'</b><small>'+esc((n.outlet||"")+" · "+fS(n.date))+'</small></span><button class="btn sm" type="button" data-nw="'+esc(n.id)+'">Make a Post</button></div>').join("")+'</div>':'<div class="empty">Articles added on the In the News page that haven\'t been shared show up here.</div>')+'</div></div>'+
     '<div class="card" style="margin-top:22px"><div class="ch"><h2>'+(posted.some(p=>p.status==="canceled")?"Posted and Canceled":"Posted")+'</h2><span class="cnt">'+posted.length+'</span></div>'+(posted.length?'<div class="tw"><table class="t"><thead><tr><th>Date</th><th>Post</th><th>Kind</th><th>Owner</th><th>Status</th></tr></thead><tbody>'+pieceRows(posted,["kind"])+'</tbody></table></div>':'<div class="empty">Nothing marked posted yet.</div>')+'</div>';
@@ -191,6 +192,7 @@ function renderLinkedin(){
   mnWire(el,"li"); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="linkedin") mnPopup("linkedin"); },400);
   wireLinkedinHero(el);
   wirePieceRows(el);
+  if(typeof mlWire==="function") mlWire(el);
   $$("[data-mk]",el).forEach(b=>b.onclick=()=>{ const sd=S.sections[b.dataset.mk]||{}; newPiece("linkedin",{title:sd.headline||"", copy:sd.body?mdPlain(sd.body).slice(0,600):"", kind:(SEC[sd.key]||{}).name||"MISMO Matters", imageNote:sd.imageNote||"", date:add(T(),1), touch:{matters:true}}); });
   $$("[data-nw]",el).forEach(b=>b.onclick=()=>{ const n=newsGet(b.dataset.nw); newPiece("linkedin",{title:(n.outlet?n.outlet+": ":"")+(n.headline||""), link:n.url||"", kind:"In the News", date:add(T(),1), touch:{matters:true}, notes:"news:"+n.id}); });
 }
