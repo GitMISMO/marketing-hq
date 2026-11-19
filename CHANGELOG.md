@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (afternoon)
+- LinkedIn: MISMO Matters as LinkedIn Posts. One press makes a post for every section of the edition, each with its own 1080 x 1080 graphic (the section's header banner, headline and picture or key line, MISMO logo). Claude writes each post from the section's own words and links only. Posts start as Ready for Review with no date; only Amy can approve them; nothing posts by itself. Graphics are saved in the Image Library under LinkedIn.
+
 ## 2026-11-19
 - Requests: when a request is saved as Done, the requester gets an email saying it's done, with the Note to the Requester and an It's Not Done Yet button that emails Jonna, Amy, Kelly and Vanessa. It goes only when "email the requester" is ticked (it is by default) and only to @mismo.org and @mba.org addresses, and only once.
 - Requests: a press release request shows whether it's for a MISMO work product (the request form now asks); Perry is copied on the new-request alert for those.
