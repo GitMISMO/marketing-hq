@@ -2145,6 +2145,15 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .ml-pv img{width:100%;max-width:420px;border-radius:6px;display:block;border:1px solid var(--border)}
 .ml-pst{display:flex;align-items:center;gap:8px;margin:12px 0 8px;flex-wrap:wrap}
 .ml-acts{display:flex;flex-wrap:wrap;gap:6px}
+.ml-who{font-size:12px;margin-top:8px}
+.ml-tog{display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;margin:0;cursor:pointer;color:inherit;font:inherit;text-align:left;border-radius:4px}
+.ml-tog h2{margin:0}
+.ml-tog .chev{width:16px;height:16px;flex:none;color:var(--ink-3);transition:transform .15s}
+.ml-tog:hover .chev{color:var(--ink)}
+.ml-tog:focus-visible{outline:2px solid var(--sky,#74bfeb);outline-offset:3px}
+#ml-card.closed .ml-tog .chev{transform:rotate(-90deg)}
+#ml-card.closed #ml-body{display:none}
+@media (prefers-reduced-motion:reduce){ .ml-tog .chev{transition:none} }
 
 .pr-btns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .pr-help,.pr-mini{font-size:12px;color:var(--ink-3);margin:0 0 10px;line-height:1.5}
@@ -4063,7 +4072,7 @@ const HELP = [
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
    <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
    <li><b>MISMO Matters as LinkedIn Posts</b> turns every section of the current edition into its own post with its own graphic. Press <b>Make a Post for Every Section</b>. If one doesn't work, or a section gets added later, a <b>Make the Missing Posts</b> button appears for just those; once every section has its post, there's no button. The edition list starts with November 2026. For each section Claude writes the post from that section's own words and links, never adding facts, and MISMO Media draws a 1080 x 1080 graphic: the section's header banner from the newsletter, the headline, and the section's picture or logo (or its key line when there's no picture). The graphic is saved in the Image Library under LinkedIn.</li>
-   <li>Each section is one row: its graphic, the start of the post and where it stands. Every post starts as <b>Ready for Review</b> with no date. Click a row to open it in the panel on the right: the graphic, the words (change them and press Save), the link, the post date and the owner. There <b>Amy</b> presses <b>Approve</b>, or <b>Don't Post</b> if that section shouldn't go on LinkedIn (it shows as Not Posting, and <b>Bring It Back</b> undoes it); only she can do either. <b>Copy Post</b> and <b>Download Graphic</b> are for posting; <b>Write It Again</b> redoes the post and its graphic (it goes back to Amy) and <b>Redraw Graphic</b> makes a new graphic and keeps the words. Once approved, give it a date when you're ready to post; nothing goes on LinkedIn by itself.</li>
+   <li>Each section is one row: its graphic, the start of the post and where it stands. Every post starts as <b>Ready for Review</b> with no date. Click a row to open it in the panel on the right: the graphic, the words (change them and press Save), the link, the post date and the owner. There <b>Amy</b> presses <b>Approve</b>, or <b>Don't Post</b> if that section shouldn't go on LinkedIn (it shows as Not Posting, and <b>Bring It Back</b> undoes it); only she can do either. <b>Copy Post</b> and <b>Download Graphic</b> are for posting; <b>Write It Again</b> redoes the post and its graphic (it goes back to Amy) and <b>Redraw Graphic</b> makes a new graphic and keeps the words. Once approved, give it a date when you're ready to post; nothing goes on LinkedIn by itself. Click the card's title to fold it up or open it again; MISMO Media remembers which way you left it.</li>
    <li><b>Ready to Reuse from MISMO Matters</b>: any section with LinkedIn ticked under "Also Use It In." <b>Make a Post</b> starts one with its headline and copy.</li>
    <li><b>News to Share</b>: articles from In the News not yet posted. <b>Make a Post</b> starts one with the link.</li>
    <li><b>Make a Post</b> starts a draft here in MISMO Media. It does not put anything on LinkedIn by itself.</li>
@@ -7288,7 +7297,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-19 15:18 ET · 089f2d6";
+const BUILD = "2026-11-19 15:59 ET · 466c5bf";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8360,14 +8369,17 @@ function mlCardHtml(){
       '<td class="ml-tcell">'+(im?'<img class="ml-tn" alt="" data-mlimg="'+esc(id)+'" src="'+esc(imgSrc(im)||"")+'">':'<span class="ml-tn ml-tn0">'+esc(o.x.s.meta.ab||"")+'</span>')+'</td>'+
       '<td><b>'+esc(o.x.name)+'</b><span class="t2 ml-one">'+esc(p ? String(p.copy||"").split("\n")[0] : mlHeadline(ed,o.x))+'</span></td>'+
       '<td>'+st+'</td><td>'+esc(p&&p.date?fS(p.date):"")+'</td></tr>'; };
-  return '<div class="card" id="ml-card" style="margin-top:22px"><div class="ch"><h2>'+esc(monthName(ed.month))+' MISMO Matters as LinkedIn Posts</h2><span class="cnt">'+made+' of '+secs.length+'</span>'+
+  /* the card folds up to its header; each person's choice is remembered in their own browser */
+  const open=mlOpenState();
+  return '<div class="card'+(open?'':' closed')+'" id="ml-card" style="margin-top:22px"><div class="ch"><button class="ml-tog" type="button" id="ml-tog" aria-expanded="'+(open?'true':'false')+'" aria-controls="ml-body"><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg><h2>'+esc(monthName(ed.month))+' MISMO Matters as LinkedIn Posts</h2></button><span class="cnt">'+made+' of '+secs.length+'</span>'+
     '<div class="r ml-tools">'+(mlEditions().length>1?'<select class="plain" id="ml-ed" aria-label="Edition">'+mlEditions().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       /* the button only shows while a section has no post yet: the first time, or one that didn't work */
       (made<secs.length?'<button class="btn pri" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the "+(secs.length-made)+" Missing Post"+(secs.length-made===1?"":"s"):"Make a Post for Every Section")+'</button>':'')+'</div></div>'+
-    '<div class="ml-sub">'+(made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved'+(skipped?', <b>'+skipped+'</b> not posting':'')+'. Click a post to read it, see its graphic and approve it. Nothing posts by itself.'
+    '<div id="ml-body"><div class="ml-sub">'+(made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved'+(skipped?', <b>'+skipped+'</b> not posting':'')+'. Click a post to read it, see its graphic and approve it. Nothing posts by itself.'
       :'Each section becomes its own post with a 1080 x 1080 graphic, written from the section\'s own words and links. Nothing posts by itself.')+'</div>'+
-    '<div class="tw"><table class="t"><thead><tr><th style="width:56px"></th><th>Post</th><th>Status</th><th>Date</th></tr></thead><tbody>'+posts.map(row).join("")+'</tbody></table></div></div>';
+    '<div class="tw"><table class="t"><thead><tr><th style="width:56px"></th><th>Post</th><th>Status</th><th>Date</th></tr></thead><tbody>'+posts.map(row).join("")+'</tbody></table></div></div></div>';
 }
+function mlOpenState(){ try{ return localStorage.getItem("mmhq.mlOpen")!=="0"; }catch(e){ return true; } }
 /* the post in the panel on the right: the graphic, the words, and what Amy and the team can do */
 function mlOpen(ed, k){
   const x=mlSections(ed).find(y=>y.k===k); if(!x) return;
@@ -8383,7 +8395,8 @@ function mlOpen(ed, k){
     '<button class="btn sm" type="button" data-mla="copy">Copy Post</button>'+
     (im?'<button class="btn sm" type="button" data-mla="dl">Download Graphic</button>':'')+
     '<button class="btn sm" type="button" data-mla="draw">Redraw Graphic</button>'+
-    '<button class="btn sm" type="button" data-mla="redo">Write It Again</button></div>';
+    '<button class="btn sm" type="button" data-mla="redo">Write It Again</button></div>'+
+    (amy||!["review","ready","canceled"].includes(p.status)?'':'<div class="t2 ml-who">Approve and Don\'t Post are Amy\'s calls, so they\'re greyed out for everyone else.</div>');
   openPane({eye:"LinkedIn Post · "+monthName(ed.month)+" MISMO Matters", title:x.name, data:Object.assign({}, p), noFocus:true,
     fields:[{k:"_g",type:"html",html:()=>'<div class="ml-pv">'+(im?'<img alt="" id="ml-pvimg" src="'+esc(imgSrc(im)||"")+'">':'<div class="ro">No graphic yet. Press Redraw Graphic.</div>')+'</div>'+
         '<div class="ml-pst">'+st+(p.approvedBy?'<span class="t2">Approved by '+esc(p.approvedBy)+'</span>':'')+'</div>'+acts},
@@ -8410,6 +8423,8 @@ function mlWire(el){
   const ed=mlEdition(); if(!ed || !$("#ml-card",el)) return;
   const pick=$("#ml-ed",el); if(pick) pick.onchange=()=>{ ML.ed=pick.value; renderLinkedin(); };
   const mk=$("#ml-make",el); if(mk) mk.onclick=()=>mlMakeAll(ed, true);
+  const tog=$("#ml-tog",el); if(tog) tog.onclick=()=>{ const card=$("#ml-card",el), open=card.classList.toggle("closed")===false;
+    tog.setAttribute("aria-expanded", open?"true":"false"); try{ localStorage.setItem("mmhq.mlOpen", open?"1":"0"); }catch(e){} };
   $$("[data-mlrow]",el).forEach(r=>r.onclick=()=>mlOpen(ed, r.dataset.mlrow));
 }
 

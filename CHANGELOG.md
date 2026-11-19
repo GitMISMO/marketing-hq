@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (late night)
+- LinkedIn: the MISMO Matters as LinkedIn Posts card folds up. Click its title to close or open it; MISMO Media remembers your choice in your browser.
+- The post panel now says why Approve and Don't Post are greyed out for anyone but Amy.
+
 ## 2026-11-19 (night)
 - LinkedIn posts from MISMO Matters are now a compact list like the other pages: one row per section with its graphic, the start of the post and its status. Click a row to see the graphic and the post in the panel on the right, edit it, and Approve it.
 - Amy can mark a post Don't Post (shows as Not Posting; Bring It Back undoes it).
