@@ -15,7 +15,7 @@ SHIM=first('resources/shim.html','shim.html'); LOGO=first('dev/logo.txt','logo.t
 OUT_PLAIN=B+('index.html' if LOCAL else 'out/plain.html'); OUT_SITE=B+('resources/index.html' if LOCAL else 'out/site.html')
 os.makedirs(os.path.dirname(OUT_SITE), exist_ok=True)
 head=open(B+'src/head.html').read(); body=open(B+'src/body.html').read(); logo=open(LOGO).read()
-ORDER=['app1.js','app2.js','app4.js','app5.js','app6.js','app7.js','app8.js','app9.js','app10.js','app11.js','app12.js','app13.js','app14.js','app15.js','app16.js','app17.js','app18.js','app19.js','app20.js','app21.js','app22.js','app23.js','app3.js']
+ORDER=['app1.js','app2.js','app4.js','app5.js','app6.js','app7.js','app8.js','app9.js','app10.js','app11.js','app12.js','app13.js','app14.js','app15.js','app16.js','app17.js','app18.js','app19.js','app20.js','app21.js','app22.js','app23.js','app24.js','app3.js']
 app=''.join(open(B+'src/'+f).read() for f in ORDER)
 # the version shown on Help > System Health: build date (Eastern) + a short fingerprint of the code
 et=datetime.datetime.now(ZoneInfo('America/New_York'))
@@ -56,7 +56,7 @@ CSP = "; ".join([
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: blob: https:",
   "connect-src 'self' data: blob: https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com https://higherlogicdownload.s3.amazonaws.com https://cdn.sheetjs.com",
-  "frame-src 'self' blob: https://collaborate.mismo.org",
+  "frame-src 'self' blob: https://collaborate.mismo.org https://www.mismo.org",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
