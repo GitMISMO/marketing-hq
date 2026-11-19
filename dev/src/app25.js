@@ -70,25 +70,33 @@ async function mlCard(ed, x, teaser){
   const pic=await mlPicture(ed, x.s), head=own || teaser || mlHeadline(ed, x);
   if(!own && teaser) teaser="";
   const footY=N-118, areaTop=top+44, areaBot=footY-40, avail=areaBot-areaTop;
-  const fit=(text, weight, from, to, maxH, lhK)=>{ let sz=from, ls=[]; for(; sz>=to; sz-=2){ g.font=weight+' '+sz+'px '+F; ls=mlWrap(g, text, W); if(ls.length*sz*lhK<=maxH) break; }
-    sz=Math.max(sz,to); g.font=weight+' '+sz+'px '+F; ls=mlWrap(g, text, W); const max=Math.max(1,Math.floor(maxH/(sz*lhK)));
+  const fit=(text, weight, from, to, maxH, lhK, width)=>{ const ww=width||W; let sz=from, ls=[]; for(; sz>=to; sz-=2){ g.font=weight+' '+sz+'px '+F; ls=mlWrap(g, text, ww); if(ls.length*sz*lhK<=maxH) break; }
+    sz=Math.max(sz,to); g.font=weight+' '+sz+'px '+F; ls=mlWrap(g, text, ww); const max=Math.max(1,Math.floor(maxH/(sz*lhK)));
     if(ls.length>max){ ls=ls.slice(0,max); ls[max-1]=ls[max-1].replace(/\s*\S*$/,"")+"…"; } return {sz, ls, lh:Math.round(sz*lhK)}; };
-  /* the headline as large as fits; then either the section's picture on a white panel, or the teaser line */
-  const H=fit(head, "700", pic?66:78, 40, avail*(pic?0.38:0.56), 1.14);
-  const T=(!pic && teaser) ? fit(teaser, "400", 42, 28, avail-H.ls.length*H.lh-70, 1.38) : null;
-  /* the picture panel hugs the picture, so a wide logo doesn't leave an empty white box */
-  let P=null; if(pic){ const pad=34, maxH=avail-H.ls.length*H.lh-70, sc=Math.min((W-2*pad)/pic.naturalWidth, (maxH-2*pad)/pic.naturalHeight, 3);
-    const dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc; P={dw, dh, pw:Math.max(Math.min(W, dw+2*pad), 360), ph:Math.max(dh+2*pad, 200)}; }
-  const block=H.ls.length*H.lh + 70 + (P ? P.ph : (T ? T.ls.length*T.lh : 0));
-  let y = areaTop + Math.max(0, Math.round((avail-block)/2));
-  g.fillStyle="#ffffff"; g.textBaseline="alphabetic"; g.font='700 '+H.sz+'px '+F;
-  H.ls.forEach(l=>{ g.fillText(l, M, y+H.sz); y+=H.lh; });
-  y+=26; g.fillStyle="#74bfeb"; g.fillRect(M,y,110,6); y+=6+38;
-  if(P){
-    g.fillStyle="#ffffff"; mlRound(g,M,y,P.pw,P.ph,16); g.fill();
-    g.save(); mlRound(g,M,y,P.pw,P.ph,16); g.clip(); g.drawImage(pic, M+(P.pw-P.dw)/2, y+(P.ph-P.dh)/2, P.dw, P.dh); g.restore();
-  } else if(T){
-    g.fillStyle="#a9d8f3"; g.font='400 '+T.sz+'px '+F; T.ls.forEach(l=>{ g.fillText(l, M, y+T.sz); y+=T.lh; });
+  const drawText=(H, T, x0, y0)=>{ let y=y0; g.fillStyle="#ffffff"; g.textBaseline="alphabetic"; g.font='700 '+H.sz+'px '+F;
+    H.ls.forEach(l=>{ g.fillText(l, x0, y+H.sz); y+=H.lh; }); y+=26; g.fillStyle="#74bfeb"; g.fillRect(x0,y,110,6); y+=6+38;
+    if(T){ g.fillStyle="#a9d8f3"; g.font='400 '+T.sz+'px '+F; T.ls.forEach(l=>{ g.fillText(l, x0, y+T.sz); y+=T.lh; }); } return y; };
+  const panel=(px, py, pw, ph, dw, dh)=>{ g.fillStyle="#ffffff"; mlRound(g,px,py,pw,ph,16); g.fill();
+    g.save(); mlRound(g,px,py,pw,ph,16); g.clip(); g.drawImage(pic, px+(pw-dw)/2, py+(ph-dh)/2, dw, dh); g.restore(); };
+  const tall = pic && pic.naturalWidth/pic.naturalHeight < 1.3;
+  if(tall){
+    /* a photo or square logo sits beside the words, so the card has no empty corner */
+    const pad=16, maxW=400, sc=Math.min((maxW-2*pad)/pic.naturalWidth, (avail*0.92-2*pad)/pic.naturalHeight), dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc;
+    const pw=dw+2*pad, ph=dh+2*pad, tw=W-pw-48;
+    const H=fit(head, "700", 64, 36, avail*0.62, 1.14, tw);
+    const T=teaser ? fit(teaser, "400", 36, 24, avail-H.ls.length*H.lh-70, 1.38, tw) : null;
+    const th=H.ls.length*H.lh+70+(T?T.ls.length*T.lh:0), bh=Math.max(th, ph), y0=areaTop+Math.max(0,Math.round((avail-bh)/2));
+    drawText(H, T, M, y0+Math.round((bh-th)/2));
+    panel(M+W-pw, y0+Math.round((bh-ph)/2), pw, ph, dw, dh);
+  } else {
+    /* the headline as large as fits; then a wide picture or logo on a white panel that hugs it, or the teaser line */
+    const H=fit(head, "700", pic?66:78, 40, avail*(pic?0.38:0.56), 1.14);
+    const T=(!pic && teaser) ? fit(teaser, "400", 42, 28, avail-H.ls.length*H.lh-70, 1.38) : null;
+    let P=null; if(pic){ const pad=34, maxH=avail-H.ls.length*H.lh-70, sc=Math.min((W-2*pad)/pic.naturalWidth, (maxH-2*pad)/pic.naturalHeight, 3);
+      const dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc; P={dw, dh, pw:Math.max(Math.min(W, dw+2*pad), 360), ph:Math.max(dh+2*pad, 200)}; }
+    const block=H.ls.length*H.lh + 70 + (P ? P.ph : (T ? T.ls.length*T.lh : 0));
+    const y=drawText(H, P?null:T, M, areaTop + Math.max(0, Math.round((avail-block)/2)));
+    if(P) panel(M+Math.round((W-P.pw)/2), y, P.pw, P.ph, P.dw, P.dh);
   }
   /* the foot: edition on the left, the logo on a white plate on the right (the lockup needs a light ground) */
   g.fillStyle="rgba(116,191,235,.35)"; g.fillRect(M,footY,W,2);
@@ -132,6 +140,16 @@ async function mlMakeOne(ed, x){
     return true;
   } finally { delete ML.busy[id]; }
 }
+/* a new graphic for a post that's already written (the section's picture changed, or the design did); the words stay */
+async function mlRedraw(ed, k){
+  const p=mlPostFor(ed,k), x=mlSections(ed).find(y=>y.k===k); if(!p||!x) return false;
+  const blob=await mlCard(ed, x, p.teaser||""); if(!blob) return false;
+  const made=await addImages([new File([blob], "MISMO-Matters-"+ed.month+"-"+k+"-linkedin.png", {type:"image/png"})], {name:"LinkedIn: "+x.name+" ("+monthName(ed.month)+" MISMO Matters)", campaign:"linkedin", edition:ed.id, alt:mlHeadline(ed,x)}, true);
+  if(!made[0]) return false;
+  const old=p.imageId; await put("pieces", p.id, Object.assign({}, S.pieces[p.id], {imageId:made[0].id}));
+  if(old && S.images[old]) await put("images", old, Object.assign({}, S.images[old], {archived:true}));
+  return true;
+}
 async function mlMakeAll(ed, onlyMissing){
   const list=mlSections(ed).filter(x=>!onlyMissing || !mlPostFor(ed,x.k));
   if(!list.length){ toast("Every section already has its post.", 3500); return; }
@@ -163,6 +181,7 @@ function mlCardHtml(){
         (p?'<div class="ml-copy">'+esc(p.copy||"")+'</div>':'<div class="ml-copy ml-none">'+esc(mlHeadline(ed,o.x))+'</div>')+
         '<div class="ml-btns">'+(p?'<button class="btn sm" type="button" data-mlopen="'+esc(id)+'">Open and Edit</button>'+
           (im?'<button class="btn sm" type="button" data-mldl="'+esc(id)+'">Download Graphic</button>':'')+
+          '<button class="btn sm" type="button" data-mldraw="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Redraw Graphic</button>'+
           '<button class="btn sm" type="button" data-mlcopy="'+esc(id)+'">Copy Post</button>'+
           (p.status==="review"?'<button class="btn sm pri" type="button" data-mlok="'+esc(id)+'"'+(mlIsAmy()?'':' disabled title="Only Amy can approve"')+'>Approve</button>':'')+
           '<button class="btn sm" type="button" data-mlredo="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Write It Again</button>'
@@ -183,6 +202,7 @@ function mlWire(el){
     try{ await mlMakeOne(ed, x); toast("Done. It's waiting for Amy.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); }
     renderLinkedin(); });
   $$("[data-mlopen]",el).forEach(b=>b.onclick=()=>openPiece(b.dataset.mlopen));
+  $$("[data-mldraw]",el).forEach(b=>b.onclick=async()=>{ toast("Drawing a new graphic…", 30000); try{ toast(await mlRedraw(ed, b.dataset.mldraw) ? "New graphic saved." : "It didn't work. Try again.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } renderLinkedin(); });
   $$("[data-mlok]",el).forEach(b=>b.onclick=()=>mlApprove(b.dataset.mlok));
   $$("[data-mlcopy]",el).forEach(b=>b.onclick=()=>{ const p=S.pieces[b.dataset.mlcopy]; if(p) copyText(p.copy||"","The post"); });
   $$("[data-mldl]",el).forEach(b=>b.onclick=async()=>{ const p=S.pieces[b.dataset.mldl], im=p&&S.images[p.imageId]; if(!im) return;
