@@ -7,7 +7,8 @@
 const ML = {busy:{}, ed:""};
 const ML_SIZE = 1080;
 /* which edition: the one picked, else the newest one already sent, else the one being built */
-function mlEditions(){ return vals("editions").filter(e=>e && e.month && e.dates && e.dates.publish && e.dates.publish<=T()).sort((a,b)=>a.month<b.month?1:-1); }
+/* starts with November 2026, the first edition this was built for (Jonna, Nov 19, 2026) */
+function mlEditions(){ return vals("editions").filter(e=>e && e.month && e.month>="2026-11" && e.dates && e.dates.publish && e.dates.publish<=T()).sort((a,b)=>a.month<b.month?1:-1); }
 function mlEdition(){ return (ML.ed && S.editions[ML.ed]) || mlEditions()[0] || curEdition(); }
 function mlId(ed, k){ return "li-mm-"+ed.month+"-"+k; }
 function mlPosts(ed){ return vals("pieces").filter(p=>p.channel==="linkedin" && p.fromEdition===ed.id && !p.archived); }
@@ -166,45 +167,82 @@ async function mlApprove(id){
   toast("Approved. Set a post date when it's going up.", 3500); renderLinkedin();
 }
 
+/* Amy can also decide a section shouldn't go on LinkedIn at all (Nov 19, 2026); it can be brought back */
+async function mlSkip(id){
+  if(!mlIsAmy()){ toast("Only Amy can decide that.", 3500); return; }
+  const p=S.pieces[id]; if(!p) return;
+  await put("pieces", id, Object.assign({}, p, {status:"canceled", cancelReason:"Not posting (Amy)", skippedBy:"Amy Moses", skippedAt:new Date().toISOString(), autoPost:false}));
+  toast("Marked Not Posting.", 3000); renderLinkedin();
+}
+async function mlUnskip(id){
+  if(!mlIsAmy()){ toast("Only Amy can decide that.", 3500); return; }
+  const p=S.pieces[id]; if(!p) return;
+  await put("pieces", id, Object.assign({}, p, {status:"review", cancelReason:"", skippedBy:"", skippedAt:""}));
+  toast("Back to Ready for Review.", 3000); renderLinkedin();
+}
 /* ---------- the card on the LinkedIn page ---------- */
 function mlCardHtml(){
   const ed=mlEdition(); if(!ed) return "";
   const secs=mlSections(ed), posts=secs.map(x=>({x, p:mlPostFor(ed,x.k)})), made=posts.filter(o=>o.p).length;
-  const waiting=posts.filter(o=>o.p && o.p.status==="review").length, approved=posts.filter(o=>o.p && ["ready","staged","done"].includes(o.p.status)).length;
+  const waiting=posts.filter(o=>o.p && o.p.status==="review").length, approved=posts.filter(o=>o.p && ["ready","staged","done"].includes(o.p.status)).length, skipped=posts.filter(o=>o.p && o.p.status==="canceled").length;
   const busy=Object.keys(ML.busy).length;
+  /* one row per section, like the other lists: click it to see and work on the post in the panel on the right */
   const row=o=>{ const p=o.p, id=mlId(ed,o.x.k), im=p&&p.imageId&&S.images&&S.images[p.imageId];
     if(im) imgEnsure(im).then(()=>{ const t=document.querySelector('[data-mlimg="'+id+'"]'); if(t && imgSrc(im)) t.src=imgSrc(im); }).catch(()=>{});
-    const st=!p ? (ML.busy[id]?'<span class="chip in">Writing…</span>':'<span class="chip wait">Not Made</span>') : chip(PSTAT,p.status||"review");
-    return '<div class="ml-row">'+
-      '<div class="ml-thumb">'+(im?'<img alt="" data-mlimg="'+esc(id)+'" src="'+esc(imgSrc(im)||"")+'">':'<span>'+esc(o.x.s.meta.ab||"")+'</span>')+'</div>'+
-      '<div class="ml-body"><div class="ml-top"><b>'+esc(o.x.name)+'</b>'+st+(p&&p.date?'<span class="ml-date">'+esc(fS(p.date))+'</span>':'')+'</div>'+
-        (p?'<div class="ml-copy">'+esc(p.copy||"")+'</div>':'<div class="ml-copy ml-none">'+esc(mlHeadline(ed,o.x))+'</div>')+
-        '<div class="ml-btns">'+(p?'<button class="btn sm" type="button" data-mlopen="'+esc(id)+'">Open and Edit</button>'+
-          (im?'<button class="btn sm" type="button" data-mldl="'+esc(id)+'">Download Graphic</button>':'')+
-          '<button class="btn sm" type="button" data-mldraw="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Redraw Graphic</button>'+
-          '<button class="btn sm" type="button" data-mlcopy="'+esc(id)+'">Copy Post</button>'+
-          (p.status==="review"?'<button class="btn sm pri" type="button" data-mlok="'+esc(id)+'"'+(mlIsAmy()?'':' disabled title="Only Amy can approve"')+'>Approve</button>':'')+
-          '<button class="btn sm" type="button" data-mlredo="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Write It Again</button>'
-          :'<button class="btn sm" type="button" data-mlredo="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Make This Post</button>')+'</div></div></div>'; };
+    const st=!p ? (ML.busy[id]?'<span class="chip in">Writing…</span>':'<span class="chip wait">Not Made</span>') : p.status==="canceled" ? '<span class="chip changes">Not Posting</span>' : chip(PSTAT,p.status||"review");
+    return '<tr class="click'+(p&&p.status==="canceled"?" cxrow":"")+'" data-mlrow="'+esc(o.x.k)+'">'+
+      '<td class="ml-tcell">'+(im?'<img class="ml-tn" alt="" data-mlimg="'+esc(id)+'" src="'+esc(imgSrc(im)||"")+'">':'<span class="ml-tn ml-tn0">'+esc(o.x.s.meta.ab||"")+'</span>')+'</td>'+
+      '<td><b>'+esc(o.x.name)+'</b><span class="t2 ml-one">'+esc(p ? String(p.copy||"").split("\n")[0] : mlHeadline(ed,o.x))+'</span></td>'+
+      '<td>'+st+'</td><td>'+esc(p&&p.date?fS(p.date):"")+'</td></tr>'; };
   return '<div class="card" id="ml-card" style="margin-top:22px"><div class="ch"><h2>'+esc(monthName(ed.month))+' MISMO Matters as LinkedIn Posts</h2><span class="cnt">'+made+' of '+secs.length+'</span>'+
-    '<div class="r">'+(mlEditions().length>1?'<select class="plain" id="ml-ed" aria-label="Edition">'+mlEditions().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+'<button class="btn'+(made?"":" pri")+'" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the Missing Posts":"Make a Post for Every Section")+'</button></div></div>'+
-    '<div class="ml-sub">Each section becomes its own post with a 1080 x 1080 graphic. Claude writes from the section\'s own words and links only. '+
-      (made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved. ':'')+'Approved posts get a date when the team is ready; nothing posts by itself.</div>'+
-    '<div class="ml-list">'+posts.map(row).join("")+'</div></div>';
+    '<div class="r ml-tools">'+(mlEditions().length>1?'<select class="plain" id="ml-ed" aria-label="Edition">'+mlEditions().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
+      /* the button only shows while a section has no post yet: the first time, or one that didn't work */
+      (made<secs.length?'<button class="btn pri" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the "+(secs.length-made)+" Missing Post"+(secs.length-made===1?"":"s"):"Make a Post for Every Section")+'</button>':'')+'</div></div>'+
+    '<div class="ml-sub">'+(made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved'+(skipped?', <b>'+skipped+'</b> not posting':'')+'. Click a post to read it, see its graphic and approve it. Nothing posts by itself.'
+      :'Each section becomes its own post with a 1080 x 1080 graphic, written from the section\'s own words and links. Nothing posts by itself.')+'</div>'+
+    '<div class="tw"><table class="t"><thead><tr><th style="width:56px"></th><th>Post</th><th>Status</th><th>Date</th></tr></thead><tbody>'+posts.map(row).join("")+'</tbody></table></div></div>';
+}
+/* the post in the panel on the right: the graphic, the words, and what Amy and the team can do */
+function mlOpen(ed, k){
+  const x=mlSections(ed).find(y=>y.k===k); if(!x) return;
+  const id=mlId(ed,k), p=mlPostFor(ed,k);
+  if(!p){ openPane({eye:"LinkedIn Post", title:x.name, fields:[{k:"_n",type:"html",html:()=>'<div class="ro">No post yet for this section. Claude writes it from the section\'s own words and links, with its graphic.</div>'}],
+    data:{}, buttons:[{label:"Make This Post", run:async()=>{ closePane(true); toast("Writing the "+x.name+" post…", 120000); try{ await mlMakeOne(ed,x); toast("Done. It's waiting for Amy.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } renderLinkedin(); mlOpen(ed,k); }}]}); return; }
+  const im=p.imageId&&S.images&&S.images[p.imageId], amy=mlIsAmy();
+  const st=p.status==="canceled" ? '<span class="chip changes">Not Posting</span>' : chip(PSTAT,p.status||"review");
+  const acts='<div class="ml-acts">'+
+    (p.status==="review"?'<button class="btn sm pri" type="button" data-mla="ok"'+(amy?'':' disabled title="Only Amy can approve"')+'>Approve</button>':'')+
+    (["review","ready"].includes(p.status)?'<button class="btn sm" type="button" data-mla="skip"'+(amy?'':' disabled title="Only Amy can decide this"')+'>Don\'t Post</button>':'')+
+    (p.status==="canceled"?'<button class="btn sm" type="button" data-mla="back"'+(amy?'':' disabled title="Only Amy can decide this"')+'>Bring It Back</button>':'')+
+    '<button class="btn sm" type="button" data-mla="copy">Copy Post</button>'+
+    (im?'<button class="btn sm" type="button" data-mla="dl">Download Graphic</button>':'')+
+    '<button class="btn sm" type="button" data-mla="draw">Redraw Graphic</button>'+
+    '<button class="btn sm" type="button" data-mla="redo">Write It Again</button></div>';
+  openPane({eye:"LinkedIn Post · "+monthName(ed.month)+" MISMO Matters", title:x.name, data:Object.assign({}, p), noFocus:true,
+    fields:[{k:"_g",type:"html",html:()=>'<div class="ml-pv">'+(im?'<img alt="" id="ml-pvimg" src="'+esc(imgSrc(im)||"")+'">':'<div class="ro">No graphic yet. Press Redraw Graphic.</div>')+'</div>'+
+        '<div class="ml-pst">'+st+(p.approvedBy?'<span class="t2">Approved by '+esc(p.approvedBy)+'</span>':'')+'</div>'+acts},
+      {k:"copy",label:"Post",type:"textarea",rows:12,wide:true},
+      {k:"link",label:"Link in the Post",type:"url",wide:true},
+      {k:"date",label:"Post Date",type:"date"},{k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true}],
+    save:async v=>{ await put("pieces", id, Object.assign({}, S.pieces[id], v)); renderLinkedin(); },
+    after:b=>{
+      if(im) imgEnsure(im).then(()=>{ const t=$("#ml-pvimg",b); if(t && imgSrc(im)) t.src=imgSrc(im); }).catch(()=>{});
+      const go2=async fn=>{ await fn(); closePane(true); renderLinkedin(); mlOpen(ed,k); };
+      $$("[data-mla]",b).forEach(btn=>btn.onclick=async()=>{ const a=btn.dataset.mla;
+        if(a==="ok") return go2(()=>mlApprove(id));
+        if(a==="skip") return go2(()=>mlSkip(id));
+        if(a==="back") return go2(()=>mlUnskip(id));
+        if(a==="copy") return copyText($("#f-copy",b).value||p.copy||"","The post");
+        if(a==="dl"){ try{ await imgEnsure(im); const blob=await fetch(imgSrc(im)).then(r=>r.blob()); await saveBlob(blob, imgFileName(im)); }catch(e){ toast("Couldn't download it: "+(e.message||"try again"), 4000); } return; }
+        if(a==="draw"){ toast("Drawing a new graphic…", 30000); try{ toast(await mlRedraw(ed,k) ? "New graphic saved." : "It didn't work. Try again.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } closePane(true); renderLinkedin(); mlOpen(ed,k); return; }
+        if(a==="redo"){ if(["ready","staged","done"].includes(p.status) && !window.confirm("Amy already approved this post. Write it again and send it back to her?")) return;
+          closePane(true); toast("Writing the "+x.name+" post…", 120000); try{ await mlMakeOne(ed,x); toast("Done. It's waiting for Amy.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } renderLinkedin(); mlOpen(ed,k); }
+      });
+    }});
 }
 function mlWire(el){
   const ed=mlEdition(); if(!ed || !$("#ml-card",el)) return;
   const pick=$("#ml-ed",el); if(pick) pick.onchange=()=>{ ML.ed=pick.value; renderLinkedin(); };
-  $("#ml-make",el).onclick=()=>mlMakeAll(ed, true);
-  $$("[data-mlredo]",el).forEach(b=>b.onclick=async()=>{ const x=mlSections(ed).find(y=>y.k===b.dataset.mlredo); if(!x) return;
-    const p=mlPostFor(ed,x.k); if(p && ["ready","staged","done"].includes(p.status) && !window.confirm("Amy already approved this post. Write it again and send it back to her?")) return;
-    toast("Writing the "+x.name+" post…", 120000); renderLinkedin();
-    try{ await mlMakeOne(ed, x); toast("Done. It's waiting for Amy.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); }
-    renderLinkedin(); });
-  $$("[data-mlopen]",el).forEach(b=>b.onclick=()=>openPiece(b.dataset.mlopen));
-  $$("[data-mldraw]",el).forEach(b=>b.onclick=async()=>{ toast("Drawing a new graphic…", 30000); try{ toast(await mlRedraw(ed, b.dataset.mldraw) ? "New graphic saved." : "It didn't work. Try again.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } renderLinkedin(); });
-  $$("[data-mlok]",el).forEach(b=>b.onclick=()=>mlApprove(b.dataset.mlok));
-  $$("[data-mlcopy]",el).forEach(b=>b.onclick=()=>{ const p=S.pieces[b.dataset.mlcopy]; if(p) copyText(p.copy||"","The post"); });
-  $$("[data-mldl]",el).forEach(b=>b.onclick=async()=>{ const p=S.pieces[b.dataset.mldl], im=p&&S.images[p.imageId]; if(!im) return;
-    try{ await imgEnsure(im); const blob=await fetch(imgSrc(im)).then(r=>r.blob()); await saveBlob(blob, imgFileName(im)); }catch(e){ toast("Couldn't download it: "+(e.message||"try again"), 4000); } });
+  const mk=$("#ml-make",el); if(mk) mk.onclick=()=>mlMakeAll(ed, true);
+  $$("[data-mlrow]",el).forEach(r=>r.onclick=()=>mlOpen(ed, r.dataset.mlrow));
 }
