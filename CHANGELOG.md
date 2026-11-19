@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19
+- Requests: when a request is saved as Done, the requester gets an email saying it's done, with the Note to the Requester and an It's Not Done Yet button that emails Jonna, Amy, Kelly and Vanessa. It goes only when "email the requester" is ticked (it is by default) and only to @mismo.org and @mba.org addresses, and only once.
+- Requests: a press release request shows whether it's for a MISMO work product (the request form now asks); Perry is copied on the new-request alert for those.
+
 ## 2026-11-18 (late evening)
 - Press Releases: Brittney Prophete's address (bprophete@mba.org) is built in for the MBA newsroom copy and shows on each release. MBA Newsroom Contact can still change it.
 - Help: Press Releases now covers the page, each button, who can do what, and that nothing follows up by itself. Who Does What adds Perry, and Amy's and Vanessa's press release parts.
