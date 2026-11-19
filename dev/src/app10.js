@@ -29,6 +29,39 @@ const RQ_TYPES = [
 const RQ_TYPE = Object.fromEntries(RQ_TYPES.map(t=>[t[0],t]));
 const RQ_ROLES = ["MISMO Staff","Facilitator","Other"];
 const RQ = {q:"", type:"", declined:false};
+/* the team that gets each new request (the request form's flow emails them; Perry too for a press release
+   about a work product), and who "It's Not Done Yet" in the Done email goes back to */
+const RQ_TEAM = ["jcritchley@mismo.org","amoses@mismo.org","kbradshaw@mismo.org","vrios@mismo.org"];
+function rqInternal(e){ return /@(mismo|mba)\.org$/i.test(String(e||"").trim()); }
+/* the email a requester gets when their request is saved as Done (Jonna, Nov 19, 2026). It goes only when the
+   person marking it Done leaves "Email the requester" ticked and presses Save, and only to MISMO or MBA addresses. */
+function rqDoneEmail(r, note, from){
+  const F='font-family:Arial,Helvetica,sans-serif;';
+  const notDone="mailto:"+RQ_TEAM.join(",")+"?subject="+encodeURIComponent("Not done yet: "+(r.title||"my MISMO Media request"))+"&body="+encodeURIComponent("Hi team,\n\nMy request \""+(r.title||"")+"\" isn't finished yet. What's still needed:\n\n");
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1f6fa;padding:24px 0"><tr><td align="center">'+
+    '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #d5e2ed">'+
+    '<tr><td style="background:#0d314c;padding:18px 28px;'+F+'color:#ffffff;font-size:13px;letter-spacing:2px;font-weight:bold">MISMO MEDIA <span style="color:#74bfeb;font-weight:normal">· REQUEST DONE</span></td></tr>'+
+    '<tr><td style="padding:28px 28px 8px;'+F+'color:#0d314c"><div style="font-size:22px;font-weight:bold;line-height:1.3;margin:0 0 10px">Your request is done</div>'+
+      '<div style="font-size:15px;line-height:1.6">Hi '+esc(String(r.n||"").split(" ")[0]||"there")+',</div>'+
+      '<div style="font-size:15px;line-height:1.6;margin:10px 0 0">The Strategic Growth team has marked your request as done:</div>'+
+      '<div style="font-size:16px;font-weight:bold;color:#0d314c;border-left:4px solid #74bfeb;padding:8px 12px;background:#f6fafd;margin:12px 0 0">'+esc(r.title||"Your request")+'</div>'+
+      (note?'<div style="font-size:15px;line-height:1.6;margin:14px 0 0">'+esc(note).replace(/\n/g,"<br>")+'</div>':'')+
+    '</td></tr>'+
+    '<tr><td style="padding:22px 28px 6px;'+F+'"><div style="font-size:15px;line-height:1.6;color:#0d314c;margin:0 0 12px">If it isn&rsquo;t finished, or something still needs to change, let us know.</div>'+
+      '<table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border:1.5px solid #1a8fe3;border-radius:6px"><a href="'+esc(notDone)+'" style="display:inline-block;padding:12px 22px;'+F+'font-size:15px;font-weight:bold;color:#1a8fe3;text-decoration:none">It&rsquo;s Not Done Yet</a></td></tr></table>'+
+      '<div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:10px">The button opens an email to the team (Jonna, Amy, Kelly and Vanessa). Say what&rsquo;s still needed and press Send.</div></td></tr>'+
+    '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5;margin-top:16px">Sent from MISMO Media'+(from?' by '+esc(from):'')+'. Thank you for your request.</td></tr>'+
+    '</table></td></tr></table>';
+}
+/* sends before the save, so the request is saved once with the email noted on it */
+async function rqSendDone(id, v){
+  const r=Object.assign({}, rqGet(id)||{}, v||{}), note=(v&&v.reply)||""; if(!r.e) return false;
+  if(!rqInternal(r.e)){ toast("Saved. "+r.e+" isn't a MISMO or MBA address, so no Done email went out. Use Email the Requester instead.", 7000); return false; }
+  const n=window.__hqImages && window.__hqImages.notify; if(!n){ toast("Saved. The Done email only sends from resources.mismo.org.", 6000); return false; }
+  try{ await n(r.e, "Done: your MISMO Media request \u2013 "+(r.title||""), rqDoneEmail(r, note, window.__hqWho||"")); }
+  catch(err){ toast("Saved as Done, but the email to "+r.e+" didn't send: "+(err.message||"try again"), 7000); return false; }
+  return true;
+}
 
 /* the inbox copy (what was asked) with the team's review on top */
 function requests(){
@@ -109,6 +142,7 @@ function rqAsked(r){
     '<h3>'+esc(r.title||"Untitled request")+'</h3>'+(r.details?'<div class="rt-view">'+mdHtml(r.details)+'</div>':'')+
     row("From", esc(r.n||"")+(r.e?' · <a href="mailto:'+encodeURIComponent(r.e||"")+'?subject='+encodeURIComponent("Your request: "+(r.title||""))+'">'+esc(r.e)+'</a>':''))+
     row("Role", esc([r.role,r.group].filter(Boolean).join(" · ")))+
+    row("Work Product", r.workProduct==="yes" ? "Yes"+(r.workProductName?" · "+esc(r.workProductName):"")+" (Perry was copied on the alert)" : r.workProduct==="no" ? "No" : "")+
     row("Needed By", r.neededBy?esc(fD(r.neededBy))+(r.firm?' <b>(firm date)</b>':''):"")+
     row("Audience", esc(r.audience||""))+row("Event", esc(r.event||""))+row("Links and Files", links)+
     ((r.ytTitle||r.ytDescription||r.ytPlaylist)?'<div class="rqa-sec">For YouTube</div>'+row("Video Title", esc(r.ytTitle||""))+row("Description", esc(r.ytDescription||"").replace(/\n/g,"<br>"))+row("Playlist", esc(r.ytPlaylist||"")):'')+
@@ -139,21 +173,27 @@ function openRequest(id){
     {k:"owner",label:"Owner",type:"select",blank:true,opts:PEOPLE},
     {k:"priority",label:"Priority",type:"select",opts:[["normal","Normal"],["high","High"],["low","Low"]]},
     {k:"target",label:"Our Target Date",type:"date"},
-    {k:"reply",label:"Note to the Requester (sent with Email the Requester)",wide:true,ph:"e.g. Scheduled for LinkedIn on Nov 12; need the speaker's headshot"},
+    {k:"emailDone",label:"When I save this as Done, email the requester that it's done (with an It's Not Done Yet button)",type:"cb"},
+    {k:"reply",label:"Note to the Requester (sent with Email the Requester and the Done email)",wide:true,ph:"e.g. Scheduled for LinkedIn on Nov 12; need the speaker's headshot"},
     {k:"notes",label:"Team Notes",type:"rich",rows:3,ph:"Only the team sees these"}]);
   const linked = id ? rqLinked(id) : [];
   const t=RQ_TYPE[r.type]||RQ_TYPE.other, dest=t[2];
   const makeLabel = dest.order ? "Create an Order" : "Add to the Schedule";
-  openPane({eye:"Request", title:isNew?"Add a Request":(r.title||"Request"), fields, data:Object.assign({priority:"normal"}, r),
+  openPane({eye:"Request", title:isNew?"Add a Request":(r.title||"Request"), fields:(r.status==="done"||!r.e)?fields.filter(f=>f.k!=="emailDone"):fields, data:Object.assign({priority:"normal"}, r, {emailDone:r.status!=="done" && rqInternal(r.e)}),
     extra:(linked.length?'<div class="fsec">On the Schedule</div><div class="brorders">'+linked.map(x=>'<button type="button" class="lnk" data-rql="'+x.k+':'+esc(x.id)+'"><b>'+esc(x.label)+'</b>'+(x.done?' · Done':'')+'</button>').join("")+'</div>':''),
     save:async v=>{
       if(isNew && !v.title){ toast("Say what's needed."); throw new Error("title"); }
       if(v.ytPlaylist==="__other"){ v.ytPlaylist=String(v.ytPlaylistOther||"").trim(); } delete v.ytPlaylistOther;
       const rid=id||uid("rq");
-      if(v.status==="done" && r.status!=="done") v.doneOn=T();
+      const wantDone = !!v.emailDone; delete v.emailDone;
+      const nowDone = v.status==="done" && r.status!=="done";
+      if(nowDone) v.doneOn=T();
       if(!["new"].includes(v.status) && !r.firstLook) v.firstLook=T();
       if(isNew) Object.assign(v,{at:new Date().toISOString(), source:"team"});
+      const emailed = nowDone && wantDone && !isNew && await rqSendDone(rid, v);
+      if(emailed) Object.assign(v, {doneEmailAt:new Date().toISOString(), doneEmailTo:r.e});
       await rqSave(rid, Object.assign({archived:false}, v));
+      if(emailed) setTimeout(()=>toast("Saved as Done and emailed "+(r.n||r.e)+".", 4000), 300);
     },
     buttons: id ? [].concat(r.e?[{label:"Email the Requester", run:async v=>{
       const body=(v.reply||"")+"\n\n— Your request: "+(r.title||"")+(r.neededBy?" (needed "+fS(r.neededBy)+")":"");
@@ -161,6 +201,7 @@ function openRequest(id){
       if(v.reply!==(r.reply||"")) await rqSave(id,{reply:v.reply||""});
     }}]:[]).concat([{label:makeLabel, run:async v=>{
       const rid=id; const seedNote=[r.details, r.n?"Requested by "+r.n+(r.e?" ("+r.e+")":""):"", r.links, r.ytPlaylist?"YouTube playlist: "+r.ytPlaylist:"", (r.files||[]).length?"Pictures sent with the request: "+(r.files||[]).map(x=>x.name).join(", ")+" (Q Drive > MISMO > Active Documents > Marketing > MISMO Media Requests)":""].filter(Boolean).join("\n\n");
+      delete v.emailDone;
       await rqSave(rid, Object.assign({}, v, {status:["new","review","info"].includes(v.status)?"approved":v.status, firstLook:r.firstLook||T()}));
       closePane(true);
       const when = v.target || r.neededBy || T();
