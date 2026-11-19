@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (late afternoon)
+- LinkedIn: MISMO Matters as LinkedIn Posts opens on the newest edition that has gone out (November now), with a picker for other sent editions.
+
 ## 2026-11-19 (afternoon)
 - LinkedIn: MISMO Matters as LinkedIn Posts. One press makes a post for every section of the edition, each with its own 1080 x 1080 graphic (the section's header banner, headline and picture or key line, MISMO logo). Claude writes each post from the section's own words and links only. Posts start as Ready for Review with no date; only Amy can approve them; nothing posts by itself. Graphics are saved in the Image Library under LinkedIn.
 
