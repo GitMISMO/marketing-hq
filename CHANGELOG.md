@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-19 (evening)
+- LinkedIn posts from MISMO Matters: a photo or square logo now sits beside the headline, and a wide logo sits centered under it, so the graphics have no empty corners. New Redraw Graphic button makes a fresh graphic and keeps the words.
+
 ## 2026-11-19 (late afternoon)
 - LinkedIn: MISMO Matters as LinkedIn Posts opens on the newest edition that has gone out (November now), with a picker for other sent editions.
 
