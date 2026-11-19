@@ -2,6 +2,13 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-18 (evening)
+- New Press Releases tab. Each MMS announcement (release, call for participation, comment period) starts a release with a first draft in Perry's house style, matched to the work-product catalog. Gaps are left in [BRACKETS]; nothing is made up.
+- Every name and company is checked against the MMS leaders list (Brian Vieaux's spelling too), with American spelling checks.
+- Perry picks who to quote from 2 or 3 suggestions; Amy approves the source by email reply; Perry sends the quote request as himself (pwilliams@mismo.org, Amy copied) through the "MISMO Media - Send As Perry" flow, which checks that the sign-in is Perry's. Follow-up reminder after 3 business days.
+- A quote goes in only with the person's written approval, kept with the release. Perry gives final approval, then sends the MISMO Connect post to Vanessa, a copy to MBA, and offers it to MISMO Matters and LinkedIn. Nothing sends without a person clicking Send.
+- System Health shows the MMS Announcements Feed. The page safety list now allows the www.mismo.org uploader frame.
+
 ## 2026-11-18 (afternoon)
 - MISMO Matters: Copy Link is off at the foot of every section, in the email and the web version, for now. Back to Top stays. It comes back by setting MM_COPY_LINK to true.
 
