@@ -27,4 +27,5 @@ out=$(node rqyt.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail
 out=$(node emsize.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node press.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node rqdone.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node mlposts.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
