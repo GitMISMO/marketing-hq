@@ -6,6 +6,9 @@
    Nothing posts by itself: the team sets a date and posts once Amy has approved. */
 const ML = {busy:{}, ed:""};
 const ML_SIZE = 1080;
+/* which edition: the one picked, else the newest one already sent, else the one being built */
+function mlEditions(){ return vals("editions").filter(e=>e && e.month && e.dates && e.dates.publish && e.dates.publish<=T()).sort((a,b)=>a.month<b.month?1:-1); }
+function mlEdition(){ return (ML.ed && S.editions[ML.ed]) || mlEditions()[0] || curEdition(); }
 function mlId(ed, k){ return "li-mm-"+ed.month+"-"+k; }
 function mlPosts(ed){ return vals("pieces").filter(p=>p.channel==="linkedin" && p.fromEdition===ed.id && !p.archived); }
 function mlPostFor(ed, k){ const p=(S.pieces||{})[mlId(ed,k)]; return p && !p.archived ? p : null; }
@@ -147,7 +150,7 @@ async function mlApprove(id){
 
 /* ---------- the card on the LinkedIn page ---------- */
 function mlCardHtml(){
-  const ed=curEdition(); if(!ed) return "";
+  const ed=mlEdition(); if(!ed) return "";
   const secs=mlSections(ed), posts=secs.map(x=>({x, p:mlPostFor(ed,x.k)})), made=posts.filter(o=>o.p).length;
   const waiting=posts.filter(o=>o.p && o.p.status==="review").length, approved=posts.filter(o=>o.p && ["ready","staged","done"].includes(o.p.status)).length;
   const busy=Object.keys(ML.busy).length;
@@ -165,13 +168,14 @@ function mlCardHtml(){
           '<button class="btn sm" type="button" data-mlredo="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Write It Again</button>'
           :'<button class="btn sm" type="button" data-mlredo="'+esc(o.x.k)+'"'+(ML.busy[id]?' disabled':'')+'>Make This Post</button>')+'</div></div></div>'; };
   return '<div class="card" id="ml-card" style="margin-top:22px"><div class="ch"><h2>'+esc(monthName(ed.month))+' MISMO Matters as LinkedIn Posts</h2><span class="cnt">'+made+' of '+secs.length+'</span>'+
-    '<div class="r"><button class="btn'+(made?"":" pri")+'" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the Missing Posts":"Make a Post for Every Section")+'</button></div></div>'+
+    '<div class="r">'+(mlEditions().length>1?'<select class="plain" id="ml-ed" aria-label="Edition">'+mlEditions().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+'<button class="btn'+(made?"":" pri")+'" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the Missing Posts":"Make a Post for Every Section")+'</button></div></div>'+
     '<div class="ml-sub">Each section becomes its own post with a 1080 x 1080 graphic. Claude writes from the section\'s own words and links only. '+
       (made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved. ':'')+'Approved posts get a date when the team is ready; nothing posts by itself.</div>'+
     '<div class="ml-list">'+posts.map(row).join("")+'</div></div>';
 }
 function mlWire(el){
-  const ed=curEdition(); if(!ed || !$("#ml-card",el)) return;
+  const ed=mlEdition(); if(!ed || !$("#ml-card",el)) return;
+  const pick=$("#ml-ed",el); if(pick) pick.onchange=()=>{ ML.ed=pick.value; renderLinkedin(); };
   $("#ml-make",el).onclick=()=>mlMakeAll(ed, true);
   $$("[data-mlredo]",el).forEach(b=>b.onclick=async()=>{ const x=mlSections(ed).find(y=>y.k===b.dataset.mlredo); if(!x) return;
     const p=mlPostFor(ed,x.k); if(p && ["ready","staged","done"].includes(p.status) && !window.confirm("Amy already approved this post. Write it again and send it back to her?")) return;
