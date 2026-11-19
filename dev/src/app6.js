@@ -71,6 +71,31 @@ const HELP = [
    <li><b>Requests that come up in conversation:</b> press <b>+ Add a Request</b> to log it yourself.</li>
    <li><b>Behind the scenes:</b> the form uses the same Power Automate flow and GitHub workflow as the Subscribe form. The workflow files each request in <code>data/inbox.json</code> (only the workflow writes there), and the team's review is kept in <code>data/requests.json</code>. If a Higher Logic step is ever added to that flow, give it a condition so it only runs when <code>form</code> is <code>mismo-matters-subscribe</code>; otherwise requesters would be added to the MISMO Matters list.</li>
   </ul>`},
+ {id:"press", t:"Press Releases", g:"Pages", b:`
+  <p class="lead">Every announcement from the MMS becomes a press release here. <b>Perry Williams</b> owns them; <b>Amy Moses</b> approves who is quoted. Nothing is ever sent unless someone presses Send.</p>
+  <h3>Where the Facts Come From</h3>
+  <ul>
+   <li>The MMS Robot rebuilds <b>resources.mismo.org/mms/announcements.json</b> every 30 minutes: calls for participation, public comment periods and releases, with the work product, workgroup, status, dates, links and the workgroup leaders.</li>
+   <li>When the announcement has a website id, the work-product catalog (<b>resources.mismo.org/work-products/catalog.json</b>) adds the Resource Library summary.</li>
+   <li>Claude writes only from those facts. Anything the structure calls for that the MMS didn't give shows as a gap in [SQUARE BRACKETS] instead of being made up.</li>
+  </ul>
+  <h3>Step by Step</h3>
+  <ol>
+   <li><b>First draft.</b> A new entry in the feed starts a release, and Claude writes the first draft in MISMO's house style: headline, WASHINGTON, D.C. dateline, what it is, why it matters, [QUOTE], who built it, status and the standard close. Calls for participation also get the kickoff, who should participate, MISMO Connect and the sponsor ask.</li>
+   <li><b>Perry's review.</b> Perry edits the headline and release and sets the release date. Every name and company is checked against the MMS leaders list (a past release misspelled Brian Vieaux), along with British spellings and any gaps left.</li>
+   <li><b>Who to quote.</b> Claude suggests 2 or 3 people, each with a reason. Perry picks one and presses <b>Send to Amy for Approval</b>. Amy approves, or names someone else, by replying to that email (the same way she approves Mic'd Up LinkedIn wording); her reply shows on the release.</li>
+   <li><b>The quote request.</b> Claude drafts the email: the ask, a suggested quote they can edit or replace, and the draft release below. It goes from Perry's own address (pwilliams@mismo.org) with Amy copied, only when Perry presses <b>Send as Perry</b>. Replies come back to Perry's inbox. If there's no quote after 3 business days, the release turns red and shows on Perry's plate to follow up.</li>
+   <li><b>The approved quote.</b> A quote only goes in after the person has approved it in writing, Brian included. Perry pastes the quote exactly as approved and their approval email, with its date; both are kept with the release.</li>
+   <li><b>Final approval.</b> Perry presses <b>Give Final Approval</b> once the checklist is clear: quote in with its approval on file, release date set, no gaps, names matching the leaders list.</li>
+   <li><b>Distribution.</b> A branded HTML post for MISMO Connect goes to Vanessa Rios; a copy goes to Brittney Prophete for MBA's newsroom (her edits stay on her side); the release can be added to MISMO Matters (In the News) and to Requests as a LinkedIn post request. Each is its own button.</li>
+  </ol>
+  <h3>How It's Wired</h3>
+  <ul>
+   <li>Releases are saved in <b>data/releases.json</b> in the private marketing-hq-data repository, like every other record.</li>
+   <li>Amy's replies arrive through the <b>MISMO Media - Amy Replies</b> flow; the [MM:…] tag in the subject ties each reply to its release.</li>
+   <li>Emails sent as Perry go through the <b>MISMO Media - Send As Perry</b> flow, which checks the resources.mismo.org sign-in and sends only when the person signed in is Perry. Amy's approval request goes through MISMO Media's usual notice email.</li>
+   <li>Help &rsaquo; System Health shows when the MMS feed was last rebuilt and any release that couldn't get a first draft.</li>
+  </ul>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
   <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which.</p>
