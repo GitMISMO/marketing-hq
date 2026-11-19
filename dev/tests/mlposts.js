@@ -1,4 +1,4 @@
-// Each MISMO Matters section becomes its own LinkedIn post with a 1080 x 1080 graphic, waiting for Amy (Nov 19, 2026).
+// Each MISMO Matters section becomes its own LinkedIn post with a 1080 x 1080 graphic, waiting for Amy; the card folds up (Nov 19, 2026).
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -25,7 +25,13 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   renderLinkedin(); await wait(200);
   out.rows=document.querySelectorAll("#ml-card tr[data-mlrow]").length===secs.length && !document.querySelector("#ml-make");
   document.querySelector('#ml-card tr[data-mlrow="'+posts[0].fromSec+'"]').click(); await wait(300);
-  const okBtn=document.querySelector('#pane-body [data-mla="ok"]'); out.lockedForOthers=!!okBtn && okBtn.disabled && !!document.querySelector("#pane-body #f-copy");
+  const okBtn=document.querySelector('#pane-body [data-mla="ok"]'); out.lockedForOthers=!!okBtn && okBtn.disabled && !!document.querySelector("#pane-body #f-copy") && /Amy's calls/.test(document.querySelector("#pane-body .ml-who").innerText);
+  /* the card folds up to its header and stays that way after a redraw */
+  closePane(true); document.querySelector("#ml-tog").click(); await wait(100);
+  const folded=()=>{ const b=document.querySelector("#ml-body"); return document.querySelector("#ml-card").classList.contains("closed") && b && b.offsetHeight===0; };
+  out.folds=folded() && document.querySelector("#ml-tog").getAttribute("aria-expanded")==="false";
+  renderLinkedin(); await wait(200); out.staysFolded=folded();
+  document.querySelector("#ml-tog").click(); await wait(100); out.opens=!document.querySelector("#ml-card").classList.contains("closed") && document.querySelector("#ml-body").offsetHeight>0;
   await mlApprove(posts[0].id); out.notApprovedByOthers=S.pieces[posts[0].id].status==="review";
   window.ResourcesSession={current:()=>({name:"Amy Moses",email:"amoses@mismo.org"}), token:()=>"tok"};
   closePane(true); renderLinkedin(); await wait(200);
