@@ -42,8 +42,9 @@ const HELP = [
  {id:"who", t:"Who Does What", g:"Basics", b:`
   <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
    <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
-   <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
-   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, logs In the News, and records stats.</td></tr>
+   <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Approves who is quoted in each press release by replying to an email. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
+   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
+   <tr><td><b>Perry</b></td><td>Owns press releases: reviews Claude's first draft of each MMS announcement, picks who to quote, sends the quote request as himself, puts in the approved quote and gives final approval before it goes to MISMO Connect, MBA and MISMO Matters.</td></tr>
    <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
    <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
    <tr><td><b>Contributors</b></td><td>Facilitators (through Kathryn), sponsors and members send copy, quotes and headshots to Kelly. They don't need to log in.</td></tr>
@@ -72,28 +73,48 @@ const HELP = [
    <li><b>Behind the scenes:</b> the form uses the same Power Automate flow and GitHub workflow as the Subscribe form. The workflow files each request in <code>data/inbox.json</code> (only the workflow writes there), and the team's review is kept in <code>data/requests.json</code>. If a Higher Logic step is ever added to that flow, give it a condition so it only runs when <code>form</code> is <code>mismo-matters-subscribe</code>; otherwise requesters would be added to the MISMO Matters list.</li>
   </ul>`},
  {id:"press", t:"Press Releases", g:"Pages", b:`
-  <p class="lead">Every announcement from the MMS becomes a press release here. <b>Perry Williams</b> owns them; <b>Amy Moses</b> approves who is quoted. Nothing is ever sent unless someone presses Send.</p>
+  <p class="lead">Every announcement from the MMS becomes a press release here. <b>Perry Williams</b> owns them; <b>Amy Moses</b> approves who is quoted. Nothing is ever sent unless a person presses Send, and every email that goes out as Perry needs Perry's own sign-in.</p>
+  <h3>The Page</h3>
+  <ul>
+   <li><b>The boxes at the top</b> count releases at each stage: <b>Perry's Review</b> (first drafts to read over), <b>With Amy</b> (who to quote), <b>Waiting on a Quote</b> (turns red when a request is past 3 business days), <b>Ready for Final</b> and <b>Approved This Month</b>.</li>
+   <li><b>The feed line</b> under them says how many entries the MMS feed has and when it was last updated. <b>Check the Feed Now</b> reads it straight away instead of waiting for the next five-minute check.</li>
+   <li><b>Releases</b> lists each one with its type, workgroup, start date and status. Click a row to open it below. <b>Search releases</b> finds one by title or workgroup; finished releases are hidden until you show them.</li>
+   <li>If the MMS changes the facts after a release has started, the row says so, and the release shows what changed.</li>
+  </ul>
   <h3>Where the Facts Come From</h3>
   <ul>
    <li>The MMS Robot rebuilds <b>resources.mismo.org/mms/announcements.json</b> every 30 minutes: calls for participation, public comment periods and releases, with the work product, workgroup, status, dates, links and the workgroup leaders.</li>
    <li>When the announcement has a website id, the work-product catalog (<b>resources.mismo.org/work-products/catalog.json</b>) adds the Resource Library summary.</li>
-   <li>Claude writes only from those facts. Anything the structure calls for that the MMS didn't give shows as a gap in [SQUARE BRACKETS] instead of being made up.</li>
+   <li>Claude writes only from those facts. Anything the structure calls for that the MMS didn't give shows as a gap in [SQUARE BRACKETS] instead of being made up. Each release shows the facts it was written from under <b>Facts from the MMS</b>.</li>
   </ul>
   <h3>Step by Step</h3>
   <ol>
    <li><b>First draft.</b> A new entry in the feed starts a release, and Claude writes the first draft in MISMO's house style: headline, WASHINGTON, D.C. dateline, what it is, why it matters, [QUOTE], who built it, status and the standard close. Calls for participation also get the kickoff, who should participate, MISMO Connect and the sponsor ask.</li>
-   <li><b>Perry's review.</b> Perry edits the headline and release and sets the release date. Every name and company is checked against the MMS leaders list (a past release misspelled Brian Vieaux), along with British spellings and any gaps left.</li>
-   <li><b>Who to quote.</b> Claude suggests 2 or 3 people, each with a reason. Perry picks one and presses <b>Send to Amy for Approval</b>. Amy approves, or names someone else, by replying to that email (the same way she approves Mic'd Up LinkedIn wording); her reply shows on the release.</li>
-   <li><b>The quote request.</b> Claude drafts the email: the ask, a suggested quote they can edit or replace, and the draft release below. It goes from Perry's own address (pwilliams@mismo.org) with Amy copied, only when Perry presses <b>Send as Perry</b>. Replies come back to Perry's inbox. If there's no quote after 3 business days, the release turns red and shows on Perry's plate to follow up.</li>
-   <li><b>The approved quote.</b> A quote only goes in after the person has approved it in writing, Brian included. Perry pastes the quote exactly as approved and their approval email, with its date; both are kept with the release.</li>
+   <li><b>Perry's review.</b> Perry edits the headline and release and sets the release date. Every name and company is checked against the MMS leaders list (a past release misspelled Brian Vieaux), along with British spellings and any gaps left. Each problem is listed on the release until it's fixed.</li>
+   <li><b>Who to quote.</b> Claude suggests 2 or 3 people, each with a reason. Perry picks one (or types someone else), adds their email address and presses <b>Send to Amy for Approval</b>. Amy gets an email with <b>Approve</b> and <b>Choose Someone Else</b>; her reply shows on the release by itself (the same way she approves Mic'd Up LinkedIn wording). If she names someone else, Perry picks again and sends it back to her.</li>
+   <li><b>The quote request.</b> Once Amy approves, Claude drafts the email: the ask, a suggested quote they can edit or replace, and the draft release below. Perry can change any of it. It goes from Perry's own address (pwilliams@mismo.org) with Amy copied, only when Perry presses <b>Send as Perry</b>. Replies come back to Perry's inbox. If there's no quote after 3 business days, the release turns red and shows on Perry's plate. Nothing follows up by itself; Perry sends any reminder.</li>
+   <li><b>The approved quote.</b> A quote only goes in after the person has approved it in writing, Brian included. Perry pastes the quote exactly as approved, their approval email and its date, and presses <b>Put the Quote In</b>. It replaces [QUOTE] in the release, and the approval is kept with it. Without the approval text and date, the quote won't go in.</li>
    <li><b>Final approval.</b> Perry presses <b>Give Final Approval</b> once the checklist is clear: quote in with its approval on file, release date set, no gaps, names matching the leaders list.</li>
-   <li><b>Distribution.</b> A branded HTML post for MISMO Connect goes to Vanessa Rios; a copy goes to Brittney Prophete for MBA's newsroom (her edits stay on her side); the release can be added to MISMO Matters (In the News) and to Requests as a LinkedIn post request. Each is its own button.</li>
+   <li><b>Distribution.</b> Each is its own button, and each one is marked Done with its date:
+    <ul>
+     <li><b>MISMO Connect:</b> a branded HTML post sent as Perry to Vanessa Rios to post (<b>Copy Connect HTML</b> copies it too).</li>
+     <li><b>MBA newsroom:</b> a copy sent as Perry to Brittney Prophete (bprophete@mba.org). Her edits stay on her side. If MBA's contact changes, press <b>MBA Newsroom Contact</b> at the top of the page.</li>
+     <li><b>Offer to MISMO Matters:</b> adds the release to In the News for that month's edition.</li>
+     <li><b>Request a LinkedIn Post:</b> adds a LinkedIn post request to Requests.</li>
+    </ul></li>
   </ol>
+  <h3>Who Can Do What</h3>
+  <ul>
+   <li><b>Perry</b>, signed in as himself, is the only one who can send to Amy, send as Perry, and give final approval. Those buttons are greyed out for everyone else, Jonna included.</li>
+   <li><b>Anyone with Staff or Admin access</b> can read every release and help with the wording; every change is saved with who made it.</li>
+   <li><b>Amy</b> only needs her email: she approves by replying.</li>
+  </ul>
   <h3>How It's Wired</h3>
   <ul>
-   <li>Releases are saved in <b>data/releases.json</b> in the private marketing-hq-data repository, like every other record.</li>
+   <li>Releases are saved in <b>data/releases.json</b> in the private marketing-hq-data repository, like every other record. Each release keeps a history of who did what and when.</li>
    <li>Amy's replies arrive through the <b>MISMO Media - Amy Replies</b> flow; the [MM:…] tag in the subject ties each reply to its release.</li>
-   <li>Emails sent as Perry go through the <b>MISMO Media - Send As Perry</b> flow, which checks the resources.mismo.org sign-in and sends only when the person signed in is Perry. Amy's approval request goes through MISMO Media's usual notice email.</li>
+   <li>Emails sent as Perry (the quote request, the MISMO Connect post and the MBA newsroom copy) go through the <b>MISMO Media - Send As Perry</b> flow. It checks the resources.mismo.org sign-in and sends only when the person signed in is Perry; anyone else is refused. Amy's approval request goes through MISMO Media's usual notice email.</li>
+   <li>The MISMO Media page checks the feed every five minutes while it's open.</li>
    <li>Help &rsaquo; System Health shows when the MMS feed was last rebuilt and any release that couldn't get a first draft.</li>
   </ul>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`

@@ -15,6 +15,8 @@ const PR_FEED = "/mms/announcements.json", PR_CATALOG = "/work-products/catalog.
 const PR_OWNER = {name:"Perry Williams", first:"Perry", email:"pwilliams@mismo.org"};
 const PR_AMY = {name:"Amy Moses", first:"Amy", email:"amoses@mismo.org"};
 const PR_VANESSA = {name:"Vanessa Rios", first:"Vanessa", email:"vrios@mismo.org"};
+/* MBA newsroom contact (Jonna, Nov 18, 2026); MBA Newsroom Contact on the page can change it */
+const PR_BRITTNEY = {name:"Brittney Prophete", first:"Brittney", email:"bprophete@mba.org"};
 const PR_BRIAN = {name:"Brian Vieaux", title:"President", company:"MISMO"};
 /* the "MISMO Media - Send As Perry" flow: it checks the resources.mismo.org sign-in with the relay and sends only
    when the person signed in is Perry, from pwilliams@mismo.org (Jonna's Send As permission) */
@@ -317,7 +319,7 @@ function prConnectHtml(r){
     '<div style="padding:20px 22px 10px">'+prHtml(r)+
       (r.out&&r.out.link?'<p style="'+F+'font-size:15px;margin:6px 0 14px"><a href="'+esc(r.out.link)+'" style="color:#14486e;font-weight:bold">Read the release&nbsp;&rarr;</a></p>':'')+'</div></div>';
 }
-function prSettings(){ return (S.settings||{}).press||{}; }
+function prSettings(){ const s=(S.settings||{}).press||{}; return Object.assign({}, s, {brittney:String(s.brittney||"").trim()||PR_BRITTNEY.email}); }
 async function prSendVanessa(id){
   const r=prGet(id); if(!r) return;
   try{ toast("Sending to Vanessa as Perry…", 30000);
@@ -460,7 +462,7 @@ function prDetail(r){
         '<label class="pr-l">Link to the published release (MBA newsroom), once it\'s up<input type="url" id="pr-link" value="'+esc(o.link||"")+'"></label>'+
         '<div class="pr-dist">'+
           prDist("MISMO Connect post","Branded HTML post, sent to Vanessa Rios to post on MISMO Connect.",o.vanessaAt,'<button class="btn" type="button" id="pr-chtml">Copy Connect HTML</button><button class="btn pri" type="button" id="pr-van"'+(perry&&r.final?"":" disabled")+'>Send to Vanessa as Perry</button>')+
-          prDist("MBA newsroom","A copy for Brittney Prophete at MBA. Her edits stay on her side.",o.mbaAt,'<button class="btn pri" type="button" id="pr-brit"'+(perry&&r.final?"":" disabled")+'>Send to Brittney as Perry</button>'+(prSettings().brittney?'':'<span class="pr-mini">Add her address with MBA Newsroom Contact (top of the page).</span>'))+
+          prDist("MBA newsroom","A copy for Brittney Prophete at MBA ("+prSettings().brittney+"). Her edits stay on her side.",o.mbaAt,'<button class="btn pri" type="button" id="pr-brit"'+(perry&&r.final?"":" disabled")+'>Send to Brittney as Perry</button>')+
           prDist("MISMO Matters","Adds the release to In the News for that month's edition.",o.mattersAt,'<button class="btn" type="button" id="pr-mat"'+(r.final?"":" disabled")+'>'+(o.mattersAt?"Update in MISMO Matters":"Offer to MISMO Matters")+'</button>')+
           prDist("LinkedIn","Adds a LinkedIn post request to Requests.",o.linkedinAt,'<button class="btn" type="button" id="pr-li"'+(r.final?"":" disabled")+'>'+(o.linkedinAt?"Request Again":"Request a LinkedIn Post")+'</button>')+
         '</div>'+onlyPerry)+
