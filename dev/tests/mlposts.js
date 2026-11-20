@@ -46,6 +46,11 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   await mlSkip(posts[1].id);
   /* running it again makes nothing new */
   const before=tasks.length; await mlMakeAll(ed, true); out.noDupes=tasks.length===before && mlPosts(ed).length===secs.length && S.pieces[posts[1].id].status==="canceled";
+  /* company logos: the company the section names most, from the Image Library (Amy, Nov 20, 2026) */
+  S.images["img-acme-logo"]={id:"img-acme-logo", name:"AcmeLendingLogo", campaign:"matters", w:400, h:120};
+  S.images["img-other-logo"]={id:"img-other-logo", name:"Other Co Logo", company:"Other Co", campaign:"logos", w:400, h:120};
+  const fake=k=>({k, s:{doc:{}}, text:"A list: Other Co. This month we feature Acme Lending. Acme Lending helps lenders. Learn about Acme Lending."});
+  out.logoPicked=mlLogoPicks(ed, fake("sponsor")).map(i=>i.id).join()==="img-acme-logo" && mlLogoPicks(ed, fake("summit")).length===0;
   out.ok=Object.values(out).every(v=>v===true);
   return out;
 });
