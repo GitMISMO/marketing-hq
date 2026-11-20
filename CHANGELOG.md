@@ -2,6 +2,13 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20 (Results rebuilt)
+- Results leads with the numbers. The month's checklist folds to one line once everything is in, and Bring In the Numbers moves to the very bottom.
+- MISMO Matters shows everything Higher Logic gives: open, click and click-to-open rates, delivered, unsubscribes (Higher Logic and MISMO's page), total opens, forwards, the send-to-click funnel, each wave side by side, who it reached (hard bounces, blocked, soft bounces), the most-clicked links, where people opened it, and every edition.
+- Mailchimp shows every 2026 send: totals, a chart of each send's open rate (resends to non-openers marked), results by topic, the most-clicked links and a table of every send. 66 sends were brought in from Mailchimp's reports.
+- The tile that said Subscribers is now Website Sign-Ups (people who joined through the form on mismo.org), and a Who Is on Our Lists card shows the MISMO Matters list beside it.
+- Update Stats on MISMO Matters takes the extra numbers (waves, bounces, where people opened it, forwards); they're optional.
+
 ## 2026-11-20
 - LinkedIn graphics from MISMO Matters now carry company logos: a post about one company (Sponsor Highlight, Member Highlight, Certifications, Implementation Success) shows that company's logo under the picture, and Thank You to Our Sponsors shows every sponsor's logo. Logos come from the Image Library.
 
