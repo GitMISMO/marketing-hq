@@ -477,8 +477,14 @@ function statsView(ed){
 function openStats(ed){
   openPane({eye:monthName(ed.month)+" · MISMO Matters", title:"Edition Stats", data:ed.stats||{},
     fields:[{sec:"From Higher Logic's Report"},{k:"recipients",label:"Sent To",type:"number"},{k:"delivered",label:"Delivered",type:"number"},{k:"opens",label:"Unique Opens",type:"number"},{k:"clicks",label:"Unique Clicks",type:"number"},{k:"unsubs",label:"Unsubscribes",type:"number"},{k:"bounces",label:"Bounces",type:"number"},
-      {k:"topLinks",label:"Most-Clicked Links",type:"textarea",rows:5,ph:"One per line, e.g. Winter Summit registration — 212 clicks"}],
-    save:async v=>{ await patch("editions",ed.id,{stats:v}); const done=Object.assign({},ed.done||{}); done.stats=true; const checks=Object.assign({},ed.checks||{}); checks.stats=true; await patch("editions",ed.id,{done,checks}); }});
+      {k:"topLinks",label:"Most-Clicked Links",type:"textarea",rows:5,ph:"One per line, e.g. Winter Summit registration — 212 clicks"},
+      /* the extra numbers Results shows (Nov 20, 2026); all optional */
+      {sec:"More From the Report (Optional)"},{k:"totalOpens",label:"Total Opens",type:"number"},{k:"forwards",label:"Forwards",type:"number"},{k:"unsubsHL",label:"Unsubscribes in Higher Logic",type:"number"},{k:"unsubsPage",label:"Unsubscribes on MISMO's Page",type:"number"},
+      {k:"hard",label:"Hard Bounces",type:"number"},{k:"blocked",label:"Blocked",type:"number"},{k:"soft",label:"Soft Bounces",type:"number"},
+      {k:"cDesktop",label:"Opened on Desktop (%)",type:"number"},{k:"cMobile",label:"Opened on Mobile (%)",type:"number"},{k:"cWebmail",label:"Opened in Webmail (%)",type:"number"},{k:"cBrowser",label:"Opened in a Web Browser (%)",type:"number"},{k:"cUnknown",label:"Not Known (%)",type:"number"},
+      {sec:"Waves (Optional)"},{k:"w1Label",label:"Wave 1 Name",ph:"e.g. Recent Openers"},{k:"w1Sent",label:"Wave 1 Sent",type:"number"},{k:"w1Delivered",label:"Wave 1 Delivered",type:"number"},{k:"w1Opens",label:"Wave 1 Opens",type:"number"},{k:"w1Clicks",label:"Wave 1 Clicks",type:"number"},
+      {k:"w2Label",label:"Wave 2 Name",ph:"e.g. Everyone Else"},{k:"w2Sent",label:"Wave 2 Sent",type:"number"},{k:"w2Delivered",label:"Wave 2 Delivered",type:"number"},{k:"w2Opens",label:"Wave 2 Opens",type:"number"},{k:"w2Clicks",label:"Wave 2 Clicks",type:"number"}],
+    save:async v=>{ await patch("editions",ed.id,{stats:Object.assign({}, ed.stats||{}, v)}); const done=Object.assign({},ed.done||{}); done.stats=true; const checks=Object.assign({},ed.checks||{}); checks.stats=true; await patch("editions",ed.id,{done,checks}); }});
 }
 function archiveTable(){
   const list=editionsSorted().slice().reverse();
