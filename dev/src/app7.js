@@ -28,8 +28,20 @@ function imgEnsure(im){
    picture. The first time someone who can edit sees a big picture, MISMO Media makes the small copy, saves it to
    SharePoint next to the others and notes it on the picture (spThumb), so after that everyone gets the small one.
    Full-size pictures are still used for downloads, the newsletter, Higher Logic and anything that's sent. */
-const IMG_SMALL = {}, THUMB = {busy:{}, made:0};
+const IMG_SMALL = {}, THUMB = {busy:{}, made:0, chain:Promise.resolve(), queued:{}, pauseUntil:0};
 const THUMB_MIN_BYTES = 90000, THUMB_W = 640;
+/* Small copies are saved one at a time, a moment apart (Nov 20, 2026): opening a big grid used to fire dozens
+   of saves into the same SharePoint folder at once, and SharePoint turned most of them away ("Cannot open file",
+   45 failed runs of the Images flow in one minute). If SharePoint refuses one, no more are tried for 15 minutes;
+   the pictures still show full size meanwhile, and the copy is made the next time. */
+function thumbMake(im){
+  if(!im || THUMB.queued[im.id] || Date.now() < THUMB.pauseUntil) return Promise.resolve();
+  THUMB.queued[im.id]=1;
+  const p=THUMB.chain.then(()=>thumbMakeOne((S.images && S.images[im.id]) || im)).then(()=>new Promise(r=>setTimeout(r,400)))
+    .finally(()=>{ delete THUMB.queued[im.id]; });
+  THUMB.chain=p.catch(()=>{});
+  return p;
+}
 function imgThumb(im){ return (im && (IMG_SMALL[im.id] || imgSrc(im))) || ""; }
 function imgEnsureThumb(im){
   if(!im || isFile(im) || IMG_SMALL[im.id] || IMG_LOCAL[im.id]) return Promise.resolve();
@@ -40,9 +52,9 @@ function imgEnsureThumb(im){
   }
   return imgEnsure(im).then(()=>thumbMake(im));
 }
-async function thumbMake(im){
+async function thumbMakeOne(im){
   try{
-    if(!im || im.spThumb || im.thumbSkip || THUMB.busy["m"+im.id] || !IMG_LOCAL[im.id] || !SP_IMG() || !DB || !CANWRITE || (typeof LEADER!=="undefined" && !LEADER) || (typeof STALE!=="undefined" && STALE.on)) return;
+    if(!im || im.spThumb || im.thumbSkip || Date.now() < THUMB.pauseUntil || THUMB.busy["m"+im.id] || !IMG_LOCAL[im.id] || !SP_IMG() || !DB || !CANWRITE || (typeof LEADER!=="undefined" && !LEADER) || (typeof STALE!=="undefined" && STALE.on)) return;
     if(/svg/i.test(im.ext||"") || /\.svg$/i.test(im.file||"")) return;
     THUMB.busy["m"+im.id]=1;
     const full=await fetch(IMG_LOCAL[im.id]).then(r=>r.blob());
@@ -58,7 +70,7 @@ async function thumbMake(im){
     const saved=await SP_IMG().save(small, "thumb-"+base+(small.type==="image/webp"?".webp":".png"));
     if(saved && saved.id) await patch("images", im.id, {spThumb:saved.id, thumbW:w, thumbBytes:small.size});
     THUMB.made++;
-  }catch(e){ if(typeof jobNote==="function") jobNote("Picture thumbnails", e); }
+  }catch(e){ THUMB.pauseUntil=Date.now()+15*60000; if(typeof jobNote==="function") jobNote("Picture thumbnails", e); }
   finally{ if(im) delete THUMB.busy["m"+im.id]; }
 }
 const IMG_EXT = /\.(png|jpe?g|gif|svg|webp)$/i;
