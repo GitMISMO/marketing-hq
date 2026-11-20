@@ -49,6 +49,28 @@ async function mlPicture(ed, s){
   if(d.imageUrl) return mlLoadImg(d.imageUrl);
   return null;
 }
+/* the company logos a post's graphic carries (Amy, Nov 20, 2026): a sponsor or member wall with no picture of its own shows its
+   logos (the Winter Summit sponsors), and a section about one company (sponsor, member, certification, implementation) shows that
+   company's logo, found in the Image Library by the company's name in the section's words */
+const ML_ONE_CO=["sponsor","member","cert","impl"];
+function mlLogoKey(im){ return String(im.company || String(im.name||"").replace(/([a-z])([A-Z])/g,"$1 $2").replace(/[-_]+/g," ").replace(/\blogo\b/ig,"")).replace(/\s+/g," ").trim(); }
+function mlLogoPicks(ed, x){
+  const d=x.s.doc||{}, hasPic=!!(d.imageLib||d.imageId||d.imageUrl);
+  if(typeof isLogoSec==="function" && isLogoSec(x.k)) return hasPic ? [] : logoPicks(ed,x.k).map(l=>S.images[l.id]).filter(im=>im && !im.archived);
+  if(!ML_ONE_CO.includes(x.k)) return [];
+  const text=String(x.text||"").toLowerCase(), best={};
+  vals("images").filter(im=>im && !im.archived && (im.campaign==="logos" || /logo/i.test(im.name||""))).forEach(im=>{
+    const key=mlLogoKey(im).toLowerCase(); if(key.length<4) return;
+    const re=new RegExp("(^|[^a-z0-9])"+key.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"([^a-z0-9]|$)","g"), hits=text.match(re); if(!hits) return;
+    const at=text.search(re), sz=(+im.w||0)*(+im.h||0), cur=best[key]; if(!cur || sz>cur.sz) best[key]={im, at, sz, n:hits.length}; });
+  /* the company the section is about is the one it names most (a certification list names others once) */
+  const first=Object.values(best).sort((a,b)=>b.n-a.n || a.at-b.at)[0];
+  return first ? [first.im] : [];
+}
+async function mlLogos(ed, x){
+  const out=[]; for(const im of mlLogoPicks(ed,x).slice(0,12)){ try{ await imgEnsure(im); }catch(e){} const i=await mlLoadImg(imgSrc(im)); if(i) out.push(i); }
+  return out;
+}
 function mlWrap(ctx, text, maxW){
   const words=String(text||"").split(/\s+/).filter(Boolean), lines=[]; let line="";
   words.forEach(w=>{ const t=line?line+" "+w:w; if(ctx.measureText(t).width>maxW && line){ lines.push(line); line=w; } else line=t; });
@@ -68,7 +90,9 @@ async function mlCard(ed, x, teaser){
   else { g.fillStyle="#0d314c"; g.fillRect(0,0,N,200); g.fillStyle="#74bfeb"; g.font='700 64px '+F; g.fillText(x.name,M,128); g.fillRect(0,194,N,6); top=200; }
   /* a section without its own headline (sponsor, welcome) leads with Claude's teaser line instead of its first sentence */
   const own=x.s.doc&&x.s.doc.headline ? mdPlain(x.s.doc.headline).trim() : "";
-  const pic=await mlPicture(ed, x.s), head=own || teaser || mlHeadline(ed, x);
+  let pic=await mlPicture(ed, x.s), logos=await mlLogos(ed, x); const head=own || teaser || mlHeadline(ed, x);
+  if(!pic && logos.length===1){ pic=logos[0]; logos=[]; }
+  const logo1 = pic && logos.length===1 ? logos[0] : null, wall = !pic && logos.length>1 ? logos : null;
   if(!own && teaser) teaser="";
   const footY=N-118, areaTop=top+44, areaBot=footY-40, avail=areaBot-areaTop;
   const fit=(text, weight, from, to, maxH, lhK, width)=>{ const ww=width||W; let sz=from, ls=[]; for(; sz>=to; sz-=2){ g.font=weight+' '+sz+'px '+F; ls=mlWrap(g, text, ww); if(ls.length*sz*lhK<=maxH) break; }
@@ -77,13 +101,27 @@ async function mlCard(ed, x, teaser){
   const drawText=(H, T, x0, y0)=>{ let y=y0; g.fillStyle="#ffffff"; g.textBaseline="alphabetic"; g.font='700 '+H.sz+'px '+F;
     H.ls.forEach(l=>{ g.fillText(l, x0, y+H.sz); y+=H.lh; }); y+=26; g.fillStyle="#74bfeb"; g.fillRect(x0,y,110,6); y+=6+38;
     if(T){ g.fillStyle="#a9d8f3"; g.font='400 '+T.sz+'px '+F; T.ls.forEach(l=>{ g.fillText(l, x0, y+T.sz); y+=T.lh; }); } return y; };
+  /* the picture on a white panel; with a company logo, the logo sits under the picture on the same panel, past a thin rule */
+  const LB=logo1 ? 132 : 0;
   const panel=(px, py, pw, ph, dw, dh)=>{ g.fillStyle="#ffffff"; mlRound(g,px,py,pw,ph,16); g.fill();
-    g.save(); mlRound(g,px,py,pw,ph,16); g.clip(); g.drawImage(pic, px+(pw-dw)/2, py+(ph-dh)/2, dw, dh); g.restore(); };
+    const ih=ph-LB; g.save(); mlRound(g,px,py,pw,ph,16); g.clip(); g.drawImage(pic, px+(pw-dw)/2, py+(ih-dh)/2, dw, dh); g.restore();
+    if(logo1){ g.fillStyle="#dde9f2"; g.fillRect(px+20, py+ih, pw-40, 2);
+      const mw=pw-56, mh=LB-44, sc=Math.min(mw/logo1.naturalWidth, mh/logo1.naturalHeight, 4), lw=logo1.naturalWidth*sc, lh=logo1.naturalHeight*sc;
+      g.drawImage(logo1, px+(pw-lw)/2, py+ih+2+(LB-2-lh)/2, lw, lh); } };
+  /* a wall of logos (the summit sponsors): white tiles under the headline */
+  const tileDims=(n, w, maxH)=>{ const cols=n<=3?n:n<=4?2:n<=9?3:4, rows=Math.ceil(n/cols), gap=16;
+    const tw=(w-(cols-1)*gap)/cols, th=Math.min(tw*0.52, (maxH-(rows-1)*gap)/rows); return {n, cols, rows, gap, tw, th, used:rows*th+(rows-1)*gap}; };
+  const tiles=(L, x0, y0, w, maxH)=>{ const {n, cols, gap, tw, th, used}=tileDims(L.length, w, maxH);
+    L.forEach((im,i)=>{ const r=Math.floor(i/cols), c=i%cols, inRow=Math.min(cols, n-r*cols), off=(cols-inRow)*(tw+gap)/2;
+      const tx=x0+off+c*(tw+gap), ty=y0+r*(th+gap); g.fillStyle="#ffffff"; mlRound(g,tx,ty,tw,th,10); g.fill();
+      const pd=Math.max(12, th*0.16), sc=Math.min((tw-2*pd)/im.naturalWidth, (th-2*pd)/im.naturalHeight, 4), lw=im.naturalWidth*sc, lh=im.naturalHeight*sc;
+      g.drawImage(im, tx+(tw-lw)/2, ty+(th-lh)/2, lw, lh); });
+    return used; };
   const tall = pic && pic.naturalWidth/pic.naturalHeight < 1.3;
   if(tall){
     /* a photo or square logo sits beside the words, so the card has no empty corner */
-    const pad=16, maxW=400, sc=Math.min((maxW-2*pad)/pic.naturalWidth, (avail*0.92-2*pad)/pic.naturalHeight), dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc;
-    const pw=dw+2*pad, ph=dh+2*pad, tw=W-pw-48;
+    const pad=16, maxW=400, sc=Math.min((maxW-2*pad)/pic.naturalWidth, (avail*0.92-2*pad-LB)/pic.naturalHeight), dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc;
+    const pw=Math.max(dw+2*pad, logo1?300:0), ph=dh+2*pad+LB, tw=W-pw-48;
     const H=fit(head, "700", 64, 36, avail*0.62, 1.14, tw);
     const T=teaser ? fit(teaser, "400", 36, 24, avail-H.ls.length*H.lh-70, 1.38, tw) : null;
     const th=H.ls.length*H.lh+70+(T?T.ls.length*T.lh:0), bh=Math.max(th, ph), y0=areaTop+Math.max(0,Math.round((avail-bh)/2));
@@ -91,13 +129,15 @@ async function mlCard(ed, x, teaser){
     panel(M+W-pw, y0+Math.round((bh-ph)/2), pw, ph, dw, dh);
   } else {
     /* the headline as large as fits; then a wide picture or logo on a white panel that hugs it, or the teaser line */
-    const H=fit(head, "700", pic?66:78, 40, avail*(pic?0.38:0.56), 1.14);
-    const T=(!pic && teaser) ? fit(teaser, "400", 42, 28, avail-H.ls.length*H.lh-70, 1.38) : null;
-    let P=null; if(pic){ const pad=34, maxH=avail-H.ls.length*H.lh-70, sc=Math.min((W-2*pad)/pic.naturalWidth, (maxH-2*pad)/pic.naturalHeight, 3);
-      const dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc; P={dw, dh, pw:Math.max(Math.min(W, dw+2*pad), 360), ph:Math.max(dh+2*pad, 200)}; }
-    const block=H.ls.length*H.lh + 70 + (P ? P.ph : (T ? T.ls.length*T.lh : 0));
-    const y=drawText(H, P?null:T, M, areaTop + Math.max(0, Math.round((avail-block)/2)));
+    const H=fit(head, "700", (pic||wall)?66:78, 40, avail*(wall?0.3:pic?0.38:0.56), 1.14);
+    const T=(!pic && !wall && teaser) ? fit(teaser, "400", 42, 28, avail-H.ls.length*H.lh-70, 1.38) : null;
+    let P=null; if(pic){ const pad=34, maxH=avail-H.ls.length*H.lh-70-LB, sc=Math.min((W-2*pad)/pic.naturalWidth, (maxH-2*pad)/pic.naturalHeight, 3);
+      const dw=pic.naturalWidth*sc, dh=pic.naturalHeight*sc; P={dw, dh, pw:Math.max(Math.min(W, dw+2*pad), 360), ph:Math.max(dh+2*pad, 200)+LB}; }
+    const wallMax=wall ? avail-H.ls.length*H.lh-70 : 0, wallH=wall ? tileDims(wall.length, W, wallMax).used : 0;
+    const block=H.ls.length*H.lh + 70 + (P ? P.ph : wall ? wallH : (T ? T.ls.length*T.lh : 0));
+    const y=drawText(H, (P||wall)?null:T, M, areaTop + Math.max(0, Math.round((avail-block)/2)));
     if(P) panel(M+Math.round((W-P.pw)/2), y, P.pw, P.ph, P.dw, P.dh);
+    if(wall) tiles(wall, M, y, W, wallMax);
   }
   /* the foot: edition on the left, the logo on a white plate on the right (the lockup needs a light ground) */
   g.fillStyle="rgba(116,191,235,.35)"; g.fillRect(M,footY,W,2);
