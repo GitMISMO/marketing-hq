@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20: picture thumbnails saved one at a time
+
+Opening a big picture grid used to send dozens of thumbnail saves into the same SharePoint folder at once, and SharePoint refused most of them (45 failed runs of the Marketing HQ Images flow in one minute). Small copies are now saved one at a time, a moment apart, and if SharePoint refuses one, no more are tried for 15 minutes. Pictures still show full size until their small copy is made. Test: dev/tests/thumbs.js.
+
 ## 2026-11-20 (jump links in the website frame)
 - In the website's frame, the "In This Issue" jump links now ask mismo.org to scroll to that section (message mm-matters-scroll). November's web edition has it too.
 
