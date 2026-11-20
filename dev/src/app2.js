@@ -226,9 +226,14 @@ function buildWebPage(ed){
     /* anyone with the link can open it, but it stays out of search results (Jonna, Nov 18, 2026) */
     '<meta name="robots" content="noindex,nofollow">'+
     '<meta property="og:title" content="'+esc(t)+'"><meta property="og:image" content="'+esc(MAST_IMG)+'">'+
+    /* the website shows this page in a frame (mismo.org/about-mismo/mismo-matters), so links open in a new tab;
+       the jump links inside the newsletter stay on the page (Nov 20, 2026) */
+    '<base target="_blank">'+
     '<style>html{scroll-behavior:smooth}body{margin:0;background:#f1f6fa}a[name]{scroll-margin-top:12px}a[data-mm-copy].ok{color:#0f7b5c!important}</style></head><body>'+
-    buildEmail(ed,false,hdrOpt(ed))+
-    '<script>document.addEventListener("click",function(e){var a=e.target.closest("a[data-mm-copy]");if(!a)return;e.preventDefault();var u=location.href.split("#")[0]+"#"+a.getAttribute("data-mm-copy");history.replaceState(null,"",u);var l=a.querySelector("[data-mm-label]");function ok(){if(!l)return;l.textContent="Link Copied";a.classList.add("ok");setTimeout(function(){l.textContent="Copy Link";a.classList.remove("ok")},2200)}if(navigator.clipboard)navigator.clipboard.writeText(u).then(ok,function(){prompt("Copy this link",u)});else prompt("Copy this link",u)});<\/script></body></html>';
+    buildEmail(ed,false,hdrOpt(ed)).replace(/<a (?![^>]*\btarget=)([^>]*?)href="#/g,'<a $1target="_self" href="#')+
+    '<script>document.addEventListener("click",function(e){var a=e.target.closest("a[data-mm-copy]");if(!a)return;e.preventDefault();var u=location.href.split("#")[0]+"#"+a.getAttribute("data-mm-copy");history.replaceState(null,"",u);var l=a.querySelector("[data-mm-label]");function ok(){if(!l)return;l.textContent="Link Copied";a.classList.add("ok");setTimeout(function(){l.textContent="Copy Link";a.classList.remove("ok")},2200)}if(navigator.clipboard)navigator.clipboard.writeText(u).then(ok,function(){prompt("Copy this link",u)});else prompt("Copy this link",u)});<\/script>'+
+    /* tells the website frame how tall the page is, so it shows at full length with no inner scroll bar */
+    '<script>(function(){function s(){if(parent!==window)parent.postMessage({type:\'mm-matters-height\',height:document.documentElement.scrollHeight},\'https://www.mismo.org\');}addEventListener(\'load\',s);addEventListener(\'resize\',s);setTimeout(s,1500);})();<\/script></body></html>';
 }
 function fullArticleLabel(k){ const f=FULL_ARTICLE[k]; return (f&&f[2])||"Read the Full Article"; }
 /* the website moves from collaborate.mismo.org/mismowebsite to www.mismo.org on Nov 16 (certSite picks by publish date);
