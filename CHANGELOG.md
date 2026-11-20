@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20 (jump links in the website frame)
+- In the website's frame, the "In This Issue" jump links now ask mismo.org to scroll to that section (message mm-matters-scroll). November's web edition has it too.
+
 ## 2026-11-20 (web editions in the website frame)
 - MISMO Matters web editions now work inside the frame on mismo.org/about-mismo/mismo-matters: links open in a new tab, the jump links inside the newsletter stay on the page, and the page tells the website its height so it shows at full length. November's web edition was updated the same way.
 
