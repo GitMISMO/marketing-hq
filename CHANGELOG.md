@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20
+- LinkedIn graphics from MISMO Matters now carry company logos: a post about one company (Sponsor Highlight, Member Highlight, Certifications, Implementation Success) shows that company's logo under the picture, and Thank You to Our Sponsors shows every sponsor's logo. Logos come from the Image Library.
+
 ## 2026-11-19 (later still)
 - LinkedIn: post thumbnails stay square in a narrow window instead of shrinking to slivers.
 
