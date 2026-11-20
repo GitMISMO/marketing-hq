@@ -2,6 +2,9 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20 (web editions in the website frame)
+- MISMO Matters web editions now work inside the frame on mismo.org/about-mismo/mismo-matters: links open in a new tab, the jump links inside the newsletter stay on the page, and the page tells the website its height so it shows at full length. November's web edition was updated the same way.
+
 ## 2026-11-20 (Results rebuilt)
 - Results leads with the numbers. The month's checklist folds to one line once everything is in, and Bring In the Numbers moves to the very bottom.
 - MISMO Matters shows everything Higher Logic gives: open, click and click-to-open rates, delivered, unsubscribes (Higher Logic and MISMO's page), total opens, forwards, the send-to-click funnel, each wave side by side, who it reached (hard bounces, blocked, soft bounces), the most-clicked links, where people opened it, and every edition.
