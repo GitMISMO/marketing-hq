@@ -30,4 +30,5 @@ out=$(node rqdone.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fa
 out=$(node mlposts.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node results.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node webframe.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node thumbs.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
