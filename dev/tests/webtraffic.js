@@ -7,7 +7,7 @@ await p.goto('file://'+process.cwd()+'/live.html#results');await p.waitForTimeou
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
   const day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
   /* nothing yet: the section says the first pull hasn't run, Health says so too */
-  go("results"); await wait(300);
+  go("results"); await wait(300); rsOpen("web"); await wait(250);
   out.emptyNote=/first nightly pull/.test(document.getElementById("rs-web").innerText);
   out.healthOff=(hhWebTraffic()||{}).level!=="bad";
   /* twelve days of numbers */
@@ -26,11 +26,13 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   out.refs=/Direct or not shared/.test(t) && /Google/.test(t) && /LinkedIn/.test(t) && /Another mismo\.org page/.test(t);
   out.devices=/Desktop/.test(t) && /Phone/.test(t);
   out.countries=/United States/.test(t);
-  out.tile=[...document.querySelectorAll(".rs-band .tile")].some(x=>/Website Visits/.test(x.innerText));
+  out.tile=/visits, last 12 days/.test(document.querySelector('[data-rs-open="web"]').innerText) && document.querySelector('[data-rs-open="web"]').classList.contains("on");
+  rsOpen("voices"); await wait(250);
   const v=document.getElementById("rs-voices").innerText;
   out.feedback=/Missing the <b>link<\/b>/.test(v) && /What is ULDD\?/.test(v);
   out.problems=/Standards page link is broken/.test(v) && /From Mimi/i.test(v) && /3 spam or repeat reports were dropped/.test(v);
   /* 7-day pick */
+  rsOpen("web"); await wait(250);
   const sel=document.getElementById("wt-days"); sel.value="7"; sel.dispatchEvent(new Event("change")); await wait(200);
   out.pick=document.querySelectorAll("#rs-web .wt-bar").length===7;
   /* Health */
