@@ -14,16 +14,16 @@ function mnSentEdition(per){ return editionsSorted().find(e=>e.dates && e.dates.
 function mnTasks(per){
   const m=MONL[+per.slice(5)-1], ed=mnSentEdition(per);
   return [
-    {k:"li", t:"LinkedIn", page:"linkedin",
+    {k:"li", t:"LinkedIn", page:"linkedin", auto: typeof liApiCovers==="function" && liApiCovers(per),
       how:'On the MISMO LinkedIn page, open <b>Analytics › Content</b>, set the dates to <b>'+m+'</b>, and press <b>Export</b>. Drop the file into <b>LinkedIn Page Analytics Export</b> below.',
       why:'Brings in impressions, clicks and reactions for every post and Mic\'d Up Live, and any post that says "In the News" goes into MISMO Matters.',
-      link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-li"},
+      link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-lifile"},
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
       why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
     {k:"mc", t:"Mailchimp", feed:"mailchimp",
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
-      why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mc"},
+      why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mcfile"},
     {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,
       how: ed ? 'Open Higher Logic\'s report for the <b>'+esc(monthName(ed.month))+'</b> mailing and type Sent To, Delivered, Opens, Clicks, Unsubscribes and the most-clicked links into <b>Record Stats</b>.' : 'No MISMO Matters went out in '+m+'.',
       why:'The open rate and clicks for the edition.', auto: ed && +edStats(ed).recipients, act: ed ? ["Record Stats", ()=>openStats(ed)] : null},
@@ -67,7 +67,9 @@ function mnCard(only){
 function mnWire(el, only){
   $$("[data-mn-done]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnDone,true); toast("Marked done"); mnRedraw(); });
   $$("[data-mn-undo]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnUndo,false); mnRedraw(); });
-  $$("[data-mn-drop]",el).forEach(b=>b.onclick=()=>{ if(only){ go("results"); setTimeout(()=>{ const i=$("#"+b.dataset.mnDrop); if(i){ i.scrollIntoView({block:"center"}); i.click(); } },150); return; } const i=$("#"+b.dataset.mnDrop,el); if(i){ i.scrollIntoView({block:"center"}); i.click(); } });
+  /* the file drops live in Results › Bring In the Numbers, in the panel on the right (Nov 21, 2026) */
+  $$("[data-mn-drop]",el).forEach(b=>b.onclick=()=>{ const id=b.dataset.mnDrop, pick=()=>{ const i=$("#"+id); if(i){ i.scrollIntoView({block:"center"}); i.click(); return true; } return false; };
+    if(pick()) return; if(TAB!=="results") go("results"); setTimeout(()=>{ if(typeof rsOpen==="function") rsOpen("tools"); setTimeout(pick, 250); },150); });
   $$("[data-mn-act]",el).forEach(b=>b.onclick=()=>{ const x=mnTasks(mnPeriod()).find(t=>t.k===b.dataset.mnAct); if(x&&x.act) x.act[1](); });
   $$("[data-go-results]",el).forEach(b=>b.onclick=()=>go("results"));
 }
