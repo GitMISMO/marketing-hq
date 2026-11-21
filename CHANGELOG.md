@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: website traffic shows today so far
+
+The Web traffic workflow runs every 3 hours instead of once a night, and each run also brings today's numbers so far. Results shows today as a lighter bar with a Today So Far figure (as of the last pull); whole days still run midnight to midnight Eastern, and the daily average and busiest day count whole days only.
+
 ## 2026-11-21: sponsor benefits feed for the Sponsorship Portal
 
 LinkedIn posts of kind Sponsor Highlight, the Summits sponsor thank-you post and Mic'd Up episodes have a Sponsor picker (the portal's approved summit sponsors) and a Counts For choice (one summit, or every summit of the sponsorship). MISMO Media works out data/feed-sponsor-benefits.json from them and saves it whenever it changes: benefit linkedin (posted once the post is marked Posted / Sent, with the date and the live link) and benefit micdup (invited, recorded, posted). The Sponsorship Portal reads it to tick those two benefits; contract in the Connections Map row MISMO Media to Sponsorship Portal. System Health has a Sponsor Benefits Feed row.
