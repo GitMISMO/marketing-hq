@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: Results cards fill their columns
+
+The Results cards were held to 380px wide by a rule in the sign-in gate that happened to share their name, which left wide gaps on bigger screens. They now fill their columns with a 16px gap.
+
 ## 2026-11-21: Results as cards, the detail in the right-hand panel
 
 Results is no longer one long scroll. Each channel (MISMO Matters, Mailchimp, the website, LinkedIn, Mic'd Up, what visitors told us, the lists, downloads, and bringing the numbers in) is a summary card; pressing one opens its full detail in the right-hand panel, with Previous and Next to move between channels. LinkedIn's export brings in single posts from its All Posts sheet again, and the page's daily totals (the export's other sheet) are kept as daily totals, shown as a chart, instead of being counted as posts. Who Is on Our Lists says where the website sign-ups come from (the old site's list, May 1 to Sept 8, and the new form since Nov 19) and goes straight to them on Subscribers.
