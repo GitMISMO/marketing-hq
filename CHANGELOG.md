@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: ready to read the LinkedIn page automatically
+
+MISMO Media is ready for the LinkedIn page read (switched on once LinkedIn approves the MISMO Media Page Reporting app and a token is saved). The LinkedIn page workflow in marketing-hq-data reads the page every 3 hours, read only, into data/linkedin.json; MISMO Media matches each post to its record (marked Posted with its live link, numbers filled in: MISMO Matters posts, Sponsor Highlights, the Monday Mic'd Up posts), adds posts it didn't know about, turns the page's daily totals into the Daily totals records, shows followers on Results, ticks the monthly LinkedIn line by itself and has a LinkedIn Page row on System Health. Also: the monthly checklist's Drop the File button opens Results' Bring In the Numbers panel again.
+
 ## 2026-11-21: Jonna and Vanessa can approve and clear MISMO Matters LinkedIn posts
 
 Approve, Don't Post and Bring It Back on the MISMO Matters LinkedIn posts work for Amy, Jonna and Vanessa (each under their own name). A new Mark Posted button and a Link to the Live Post field clear a post once it's up, approved first or not; saving a post with its live link marks it Posted. A live LinkedIn address typed into Link in the Post moves to Link to the Live Post, and the post keeps the link it points to. The card counts posted ones separately.

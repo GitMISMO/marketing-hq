@@ -2715,7 +2715,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2844,7 +2844,7 @@ async function restoreRec(col,id){
   delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
   try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
-let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
+let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
 /* ================= derived data ================= */
 function editionsSorted(){ return vals("editions").sort((a,b)=>(a.month<b.month?-1:1)); }
@@ -4133,9 +4133,10 @@ function rsDLI(x){
         let g=''; for(let v=0; v<=top; v+=top/4){ const y=Tp+(1-v/top)*(H-Tp-B); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" class="rs-grid"/><text x="'+(L-6)+'" y="'+(y+4)+'" class="rs-ax" text-anchor="end">'+rsN(v)+'</text>'; }
         return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="LinkedIn page impressions each day">'+g+d.map((p,i)=>{ const v=+p.impressions||0, h=Math.max(1,v/top*(H-Tp-B)); return '<rect class="wt-bar" x="'+(L+i*bw+bw*0.15)+'" width="'+(bw*0.7)+'" y="'+(H-B-h)+'" height="'+h+'" rx="1.5" data-tip="'+esc(fS(p.date)+"\n"+rsN(v)+" impressions · "+rsN(p.clicks)+" clicks · "+rsN(p.reactions)+" reactions")+'"/>'+((i%5===0||i===d.length-1)?'<text x="'+(L+i*bw+bw/2)+'" y="'+(H-7)+'" class="rs-ax" text-anchor="middle">'+(+p.date.slice(8))+'</text>':''); }).join("")+'</svg>'; })()+
       '</div><p class="rs-note">Every post on MISMO\'s page added together, one bar a day. These come from the daily sheet of the LinkedIn export, so they can\'t say which post a day\'s views went to.</p></div>':'';
-  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · from the monthly export and impressions typed on a post</span></div>'+
+  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · '+(typeof liLive==="function" && liLive() ? 'read from LinkedIn every 3 hours' : 'from the monthly export and impressions typed on a post')+'</span></div>'+
     ((posts.length||x.liMo.length)?rsKpis((x.liMo.length?[{v:rsN(x.liMoImp),k:"Page Impressions",s:mo+", every post together"},{v:rsN(dsum("clicks")),k:"Page Clicks",s:mo},{v:rsN(dsum("reactions")),k:"Page Reactions",s:mo},{v:x.liBest?rsN(x.liBest.impressions):"—",k:"Busiest Day",s:x.liBest?fS(x.liBest.date):""}]:[])
-        .concat(posts.length?[{v:rsN(posts.length),k:"Posts Logged",s:rsN(tot("i"))+" impressions"}]:[]))+daily+
+        .concat(posts.length?[{v:rsN(posts.length),k:"Posts Logged",s:rsN(tot("i"))+" impressions"}]:[])
+        .concat(typeof liRun==="function" && liRun() && liRun().followers ? [{v:rsN(liRun().followers),k:"Followers",s:"read "+hhWhen(liRun().at)}] : []))+daily+
       (posts.length?'<div class="rs-box"><h3>Posts That Reached the Most People</h3>'+hbars(x.liAll.slice(0,10))+'</div>'+
         '<div class="rs-box rs-hist"><h3>Every Post</h3><div class="tw"><table class="t"><thead><tr><th>Posted</th><th>Post</th><th class="n">Impressions</th><th class="n">Clicks</th><th class="n">Reactions</th></tr></thead><tbody>'+
           posts.map(p=>'<tr><td class="nw">'+(p.d?esc(fS(p.d)):"—")+'</td><td>'+(/^https:\/\//.test(p.u)?'<a href="'+esc(p.u)+'" target="_blank" rel="noopener">'+esc(p.l)+'</a>':esc(p.l))+'</td><td class="n">'+rsN(p.i)+'</td><td class="n">'+rsN(p.c)+'</td><td class="n">'+rsN(p.r)+'</td></tr>').join("")+'</tbody></table></div></div>'
@@ -4232,7 +4233,7 @@ function rsCards(x){
       rows:[(()=>{ const l=x.wt[x.wt.length-1]; return l&&l.partial?["Today so far",rsN(l.visits)+' <small class="t2">as of '+esc(wtTime(l.pulledAt))+'</small>']:["Page views",rsN(x.wtViews)]; })(),["Pages per visit",x.wtVisits?(x.wtViews/x.wtVisits).toFixed(1):"—"],["Top page",top?esc(top.k||"/"):"—"]], more:"Each day, top pages, sources and devices"}),
     rsCard("li",{eye:"LinkedIn", color:"--c3", v:rsN(x.liMo.length?x.liMoImp:x.liImp), vk:x.liMo.length?"page impressions, "+MONL[+x.liDayMo.slice(5)-1]:"impressions",
       viz:x.liAll.length?rsMini(x.liAll.slice(0,3).map(i=>({l:i.l,v:i.v,c:"--c3"}))):rsSpark(x.liMo.map(p=>+p.impressions||0),"--c3",true), none:"Drop the LinkedIn export in Bring In the Numbers",
-      rows:[["Busiest day",x.liBest?esc(fS(x.liBest.date))+" · "+rsN(x.liBest.impressions):"—"],["Posts logged",x.liAll.length?rsN(x.liAll.length):'<span class="rs-due">none yet</span>'],["Clicks",rsN(x.liMo.reduce((n,p)=>n+(+p.clicks||0),0)||x.li.reduce((n,p)=>n+(+p.clicks||0),0))]], more:x.liAll.length?"Every post and what reached the most people":"Each day, and how to bring in single posts"}),
+      rows:[["Busiest day",x.liBest?esc(fS(x.liBest.date))+" · "+rsN(x.liBest.impressions):"—"],["Posts logged",x.liAll.length?rsN(x.liAll.length):'<span class="rs-due">none yet</span>'],(typeof liRun==="function" && liRun() && liRun().followers ? ["Followers",rsN(liRun().followers)] : ["Clicks",rsN(x.liMo.reduce((n,p)=>n+(+p.clicks||0),0)||x.li.reduce((n,p)=>n+(+p.clicks||0),0))])], more:x.liAll.length?"Every post and what reached the most people":"Each day, and how to bring in single posts"}),
     rsCard("mu",{eye:"Mic'd Up", color:"--c2", v:rsN(x.ytViews), vk:"YouTube views", viz:rsMini(x.yt.slice(0,3).map(e=>({l:"Ep "+e.num+": "+(e.title||""),v:+e.views,c:"--c2"}))), none:"YouTube views fill in every morning",
       rows:[["Episodes on YouTube",rsN(x.yt.length)],(MU_PAUSED.spotify&&!x.sp.length)?null:["Spotify plays",x.sp.length?rsN(x.spPlays):"—"],["LinkedIn impressions",rsN(x.liEp.reduce((n,e)=>n+(+e.liImpressions||0),0))]], more:"Every episode on YouTube, Spotify and LinkedIn"}),
     rsCard("voices",{eye:"What Visitors Told Us", color:"--c5", v:rsN(n30(x.fb)+n30(x.pr)), vk:"in the last 30 days",
@@ -4731,7 +4732,7 @@ const HELP = [
    <tr><td>YouTube</td><td><b>Every morning, by itself.</b> The <b>Results feed</b> workflow in marketing-hq-data reads views and likes for every video from the channel's public pages.</td><td>Nothing. Watch time and other Studio numbers still come from the monthly YouTube Studio export, if wanted.</td></tr>
    <tr><td>MISMO Matters (Informz)</td><td>Typed in from Higher Logic's report with <b>Record Stats</b>, once a month.</td><td>To make it automatic: an Informz API user from Higher Logic support. With it, the Results feed can read sent, delivered, opens, clicks, unsubscribes and bounces every morning.</td></tr>
    <tr><td>Mailchimp</td><td>The monthly campaigns export dropped on Results.</td><td>Being retired now that MISMO Matters goes through Informz; a Mailchimp API key would make it automatic in the meantime.</td></tr>
-   <tr><td>LinkedIn</td><td>The monthly export dropped on Results (Vanessa).</td><td>LinkedIn doesn't let outside tools read page analytics without an approved developer app, so this stays by hand.</td></tr>
+   <tr><td>LinkedIn</td><td><b>Every 3 hours, by itself, once LinkedIn approves MISMO's app</b> (requested Nov 21, 2026). The <b>LinkedIn page</b> workflow in marketing-hq-data reads the page through the "MISMO Media Page Reporting" app, read only, into <code>data/linkedin.json</code>: every post with its link and numbers, the page's daily totals and followers. MISMO Media matches each post to its record, marks it Posted with its link and fills in the numbers; posts it didn't know about are added.</td><td>Until then, the monthly export dropped on Results. After, a page admin makes a new token about every 60 days; System Health warns ten days ahead.</td></tr>
    <tr><td>In the News</td><td><b>Every morning, by itself.</b> The <b>In the News web search</b> workflow searches Google News and Bing News for MISMO; Brittney's FYI emails come in as they're sent.</td><td>Nothing.</td></tr>
    <tr><td>Website traffic (www.mismo.org)</td><td><b>Every 3 hours, by itself, with today so far.</b> The <b>Web traffic</b> workflow in marketing-hq-data reads Cloudflare Web Analytics (cookie-free; site admins aren't counted) into <code>data/webtraffic.json</code>, plus a month-by-month archive in <code>data/webtraffic-archive/</code> that keeps every day for good. Results shows visits, page views, top pages, where visitors come from, devices and countries; System Health shows a failed pull. Counting started Nov 20, 2026.</td><td>Nothing. The read-only token expires Nov 20, 2027; System Health warns a month before. For traffic before Nov 20, 2026, use Higher Logic's Site Traffic report.</td></tr>
    <tr><td>AI answer feedback and website problems</td><td>As they happen, from the website through the Subscribe form's flow: "Not helpful" comments on Mimi and Ask MISMO answers, and problem reports from a page or through Mimi (spam is dropped first). Both show on Results, and Vanessa gets the day before's in a morning email, Jonna copied.</td><td>Nothing.</td></tr>
@@ -7209,16 +7210,16 @@ function mnSentEdition(per){ return editionsSorted().find(e=>e.dates && e.dates.
 function mnTasks(per){
   const m=MONL[+per.slice(5)-1], ed=mnSentEdition(per);
   return [
-    {k:"li", t:"LinkedIn", page:"linkedin",
+    {k:"li", t:"LinkedIn", page:"linkedin", auto: typeof liApiCovers==="function" && liApiCovers(per),
       how:'On the MISMO LinkedIn page, open <b>Analytics › Content</b>, set the dates to <b>'+m+'</b>, and press <b>Export</b>. Drop the file into <b>LinkedIn Page Analytics Export</b> below.',
       why:'Brings in impressions, clicks and reactions for every post and Mic\'d Up Live, and any post that says "In the News" goes into MISMO Matters.',
-      link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-li"},
+      link:["Open LinkedIn Analytics","https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization/admin/analytics/updates/"], drop:"rs-lifile"},
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
       why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
     {k:"mc", t:"Mailchimp", feed:"mailchimp",
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
-      why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mc"},
+      why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mcfile"},
     {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,
       how: ed ? 'Open Higher Logic\'s report for the <b>'+esc(monthName(ed.month))+'</b> mailing and type Sent To, Delivered, Opens, Clicks, Unsubscribes and the most-clicked links into <b>Record Stats</b>.' : 'No MISMO Matters went out in '+m+'.',
       why:'The open rate and clicks for the edition.', auto: ed && +edStats(ed).recipients, act: ed ? ["Record Stats", ()=>openStats(ed)] : null},
@@ -7262,7 +7263,9 @@ function mnCard(only){
 function mnWire(el, only){
   $$("[data-mn-done]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnDone,true); toast("Marked done"); mnRedraw(); });
   $$("[data-mn-undo]",el).forEach(b=>b.onclick=async()=>{ await mnMark(b.dataset.mnUndo,false); mnRedraw(); });
-  $$("[data-mn-drop]",el).forEach(b=>b.onclick=()=>{ if(only){ go("results"); setTimeout(()=>{ const i=$("#"+b.dataset.mnDrop); if(i){ i.scrollIntoView({block:"center"}); i.click(); } },150); return; } const i=$("#"+b.dataset.mnDrop,el); if(i){ i.scrollIntoView({block:"center"}); i.click(); } });
+  /* the file drops live in Results › Bring In the Numbers, in the panel on the right (Nov 21, 2026) */
+  $$("[data-mn-drop]",el).forEach(b=>b.onclick=()=>{ const id=b.dataset.mnDrop, pick=()=>{ const i=$("#"+id); if(i){ i.scrollIntoView({block:"center"}); i.click(); return true; } return false; };
+    if(pick()) return; if(TAB!=="results") go("results"); setTimeout(()=>{ if(typeof rsOpen==="function") rsOpen("tools"); setTimeout(pick, 250); },150); });
   $$("[data-mn-act]",el).forEach(b=>b.onclick=()=>{ const x=mnTasks(mnPeriod()).find(t=>t.k===b.dataset.mnAct); if(x&&x.act) x.act[1](); });
   $$("[data-go-results]",el).forEach(b=>b.onclick=()=>go("results"));
 }
@@ -7786,7 +7789,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 13:26 ET · 8b8f882";
+const BUILD = "2026-11-21 14:13 ET · dfb1f24";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8002,7 +8005,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -9205,6 +9208,93 @@ function hhSponsorFeed(){
   if(SB.err) return hhRow("sbfeed","Sponsor Benefits Feed","bad","Couldn't update the feed the Sponsorship Portal reads: "+SB.err+". It tries again every two minutes while MISMO Media is open.");
   if(!n) return hhRow("sbfeed","Sponsor Benefits Feed","off","No sponsor picked on a Sponsor Highlight post, a sponsor thank-you post or a Mic'd Up episode yet.");
   return hhRow("sbfeed","Sponsor Benefits Feed","ok",n+" sponsor benefit"+(n===1?"":"s")+" shared with the Sponsorship Portal"+(SB.savedAt?" · last changed "+hhWhen(SB.savedAt):"")+".");
+}
+/* ================= The LinkedIn page, read automatically (Nov 21, 2026) =================
+   Jonna: "not ready for auto linkedin posts but would love for us to bring back information from linkedin
+   automatically". The "LinkedIn page" workflow in marketing-hq-data reads MISMO's company page every 3 hours through
+   LinkedIn's Community Management API (read only: the "MISMO Media Page Reporting" app; nothing is ever posted) into
+   data/linkedin.json: "linkedin/post-<id>" for each post (link, date, words, impressions, clicks, likes, comments,
+   reposts), "linkedin/day-<date>" for the page's daily totals and "linkedin/_run" for the last read.
+   Here, whoever has MISMO Media open with saving rights matches each post to its own record: the post is marked
+   Posted with its live link and its numbers fill in (the MISMO Matters posts, Sponsor Highlights, the Monday Mic'd Up
+   posts). A post MISMO Media didn't know about (dated Oct 1, 2026 or later) is added, the way the monthly export did.
+   The page's daily totals become the LinkedIn page's Daily totals records that Results charts. */
+const LI_API={done:"", busy:false, timer:0, from:"2026-10-01"};
+function liRun(){ return (S.linkedin||{})._run || null; }
+function liApiPosts(){ return Object.values(S.linkedin||{}).filter(d=>d && d.urn && d.date); }
+function liApiDays(){ return Object.values(S.linkedin||{}).filter(d=>d && !d.urn && /^\d{4}-\d\d-\d\d$/.test(d.date||"")); }
+function liLive(){ const r=liRun(); return !!(r && r.ok && r.lastOk && (Date.now()-Date.parse(r.lastOk))<3*864e5); }
+/* the month's LinkedIn numbers have come in by themselves once a good read happened after the month ended */
+function liApiCovers(per){ const r=liRun(); if(!r || !r.lastOk) return false; const [y,m]=per.split("-").map(Number); return r.lastOk.slice(0,10) > new Date(Date.UTC(y,m,0)).toISOString().slice(0,10); }
+/* how alike two posts' words are: the share of the shorter one's words found in the other */
+const liWords=s=>new Set(String(s||"").toLowerCase().replace(/https?:\/\/\S+/g," ").replace(/#\w+/g," ").match(/[a-z0-9']{3,}/g)||[]);
+function liSim(a,b){ const A=liWords(String(a||"").slice(0,500)), B=liWords(String(b||"").slice(0,500)); if(A.size<3||B.size<3) return 0; let n=0; A.forEach(w=>{ if(B.has(w)) n++; }); return n/Math.min(A.size,B.size); }
+const liDays=(a,b)=>Math.abs((P(a)-P(b))/864e5);
+const liNums=x=>({impressions:+x.impressions||0, uniqueImpressions:+x.uniqueImpressions||0, clicks:+x.clicks||0, reactions:+x.likes||0, comments:+x.comments||0, reposts:+x.shares||0});
+/* which of MISMO Media's own records a post on the page is */
+function liFindPiece(x, taken){
+  const id=String(x.urn).split(":").pop();
+  const own=vals("pieces").filter(p=>p.channel==="linkedin" && !liIsDay(p) && !p.archived && p.status!=="canceled" && !taken.has(p.id));
+  const exact=own.find(p=>p.liUrn===x.urn || (p.postedUrl && p.postedUrl.indexOf(id)>=0)); if(exact) return exact;
+  let best=null, score=0;
+  own.filter(p=>!p.liUrn).forEach(p=>{ const near=p.date ? liDays(p.date, x.date)<=3 : true; if(!near) return;
+    const s=liSim(p.copy||p.title, x.text); const need=p.date?0.6:0.75; if(s>=need && s>score){ best=p; score=s; } });
+  return best;
+}
+function liFindEpisode(x, taken){
+  const id=String(x.urn).split(":").pop();
+  const eps=vals("episodes").filter(e=>!taken.has(e.id));
+  const exact=eps.find(e=>e.liUrn===x.urn || (e.linkedinUrl && e.linkedinUrl.indexOf(id)>=0)); if(exact) return exact;
+  const m=String(x.text||"").match(/mic['’]?d up[\s\S]{0,40}?ep(?:isode)?\.?\s*(\d{1,3})/i) || (/mic['’]?d up/i.test(x.text||"") && String(x.text).match(/\bep(?:isode)?\.?\s*(\d{1,3})\b/i));
+  return eps.find(e=>!e.liUrn && ((m && +e.num===+m[1] && e.airDate && liDays(e.airDate, x.date)<=14) || (e.linkedinCopy && liDate(e) && liDays(liDate(e), x.date)<=3 && liSim(e.linkedinCopy, x.text)>=0.6))) || null;
+}
+const liSame=(rec, part)=>Object.keys(part).every(k=>String(rec[k]==null?"":rec[k])===String(part[k]==null?"":part[k]));
+function liSoon(){ clearTimeout(LI_API.timer); LI_API.timer=setTimeout(liSync, 3000); }
+async function liSync(){
+  const r=liRun();
+  if(LI_API.busy || STALE.on || !CANWRITE || !r || !r.ok || !LOADED.has("linkedin") || !LOADED.has("pieces") || !LOADED.has("episodes")) return;
+  if(LI_API.done===r.at) return;
+  LI_API.busy=true; let n=0;
+  try{
+    const taken=new Set();
+    for(const x of liApiPosts().sort((a,b)=>String(b.at).localeCompare(String(a.at)))){
+      const nums=liNums(x);
+      const ep=liFindEpisode(x, taken);
+      if(ep){ taken.add(ep.id); const part={liUrn:x.urn, linkedinDone:true, linkedinUrl:ep.linkedinUrl||x.url, liImpressions:nums.impressions, liClicks:nums.clicks, liReactions:nums.reactions};
+        if(!liSame(ep, part)){ await patch("episodes", ep.id, part); n++; } continue; }
+      const p=liFindPiece(x, taken);
+      if(p){ taken.add(p.id); const part=Object.assign({liUrn:x.urn, postedUrl:p.postedUrl||x.url, date:p.date||x.date}, nums, p.status==="done"?{}:{status:"done", autoPost:false, postedBy:"LinkedIn page (read automatically)", postedAt:x.at});
+        if(!liSame(p, part)){ await patch("pieces", p.id, part); n++; } continue; }
+      if(x.date < LI_API.from) continue;
+      const nid="li-"+String(x.urn).split(":").pop(); if(S.pieces[nid]) continue;
+      const text=String(x.text||""), first=text.split("\n").map(s=>s.trim()).find(Boolean)||"";
+      await put("pieces", nid, Object.assign({channel:"linkedin", title:(first.length>90?first.slice(0,87)+"…":first)||("Post on "+fS(x.date)), copy:text, date:x.date, status:"done",
+        postedUrl:x.url, liUrn:x.urn, kind:/\bin the news\b|#inthenews\b/i.test(text)?"In the News":/mic['’]?d up/i.test(text)?"Mic'd Up":/sponsor/i.test(text)?"Sponsor Highlight":"Other", owner:"",
+        source:"LinkedIn page (read automatically)"}, nums)); n++;
+    }
+    /* the page's daily totals: the records Results charts, one a day */
+    for(const d of liApiDays()){
+      const part={impressions:+d.impressions||0, clicks:+d.clicks||0, reactions:+d.likes||0, comments:+d.comments||0, reposts:+d.shares||0, uniqueImpressions:+d.uniqueImpressions||0};
+      const had=vals("pieces").find(q=>q.channel==="linkedin" && liIsDay(q) && q.date===d.date);
+      if(had){ if(!liSame(had, part)){ await patch("pieces", had.id, part); n++; } }
+      else { await put("pieces", "lid-"+d.date, Object.assign({channel:"linkedin", title:"LinkedIn page, "+fS(d.date), date:d.date, status:"done", kind:"Daily totals", owner:"", source:"LinkedIn page (read automatically)"}, part)); n++; }
+    }
+    LI_API.done=r.at;
+  }catch(e){ LI_API.err=(e&&e.message)||"couldn't save"; }
+  finally{ LI_API.busy=false; }
+  return n;
+}
+/* System Health */
+function hhLinkedIn(){
+  const r=liRun();
+  if(!r) return LOADED.has("linkedin") ? hhRow("liapi","LinkedIn Page","off","Not connected yet. Once LinkedIn approves the MISMO Media Page Reporting app, the LinkedIn page workflow reads posts and numbers every 3 hours.") : null;
+  if(r.waiting) return hhRow("liapi","LinkedIn Page","off",r.error||"Not connected yet.");
+  const left=r.tokenExpires ? Math.ceil((Date.parse(r.tokenExpires+"T00:00:00Z")-Date.now())/864e5) : null;
+  const tok=left!=null && left<=10 ? " The LinkedIn token "+(left<=0?"ran out":"runs out")+" "+fS(r.tokenExpires)+": a page admin makes a new one in LinkedIn's token generator and saves it as the LINKEDIN_TOKEN secret on marketing-hq-data (and the new date in LINKEDIN_TOKEN_EXPIRES)." : "";
+  if(!r.ok) return hhRow("liapi","LinkedIn Page","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+tok);
+  if(left!=null && left<=10) return hhRow("liapi","LinkedIn Page","warn",tok.trim());
+  if((Date.now()-Date.parse(r.at))/36e5>8) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
+  return hhRow("liapi","LinkedIn Page","ok","Read "+hhWhen(r.at)+": "+rsN(r.posts)+" posts"+(r.followers?", "+rsN(r.followers)+" followers":"")+"."+(LI_API.err?" Matching them here hit a problem: "+LI_API.err:""));
 }
 
 /* ================= MISMO Mic'd Up ================= */
