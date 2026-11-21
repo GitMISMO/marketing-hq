@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: Results as cards, the detail in the right-hand panel
+
+Results is no longer one long scroll. Each channel (MISMO Matters, Mailchimp, the website, LinkedIn, Mic'd Up, what visitors told us, the lists, downloads, and bringing the numbers in) is a summary card; pressing one opens its full detail in the right-hand panel, with Previous and Next to move between channels. LinkedIn's export brings in single posts from its All Posts sheet again, and the page's daily totals (the export's other sheet) are kept as daily totals, shown as a chart, instead of being counted as posts. Who Is on Our Lists says where the website sign-ups come from (the old site's list, May 1 to Sept 8, and the new form since Nov 19) and goes straight to them on Subscribers.
+
 ## 2026-11-20: the monthly numbers line names its month; website days on Eastern time
 
 The line at the top of Results now says which month's numbers it covers and when the next set is due ("October 2026 monthly numbers are all in ... November's are due Dec 1"), since in November it shows October's. Website visits and page views now count midnight to midnight Eastern time, the same days as everything else in MISMO Media.
