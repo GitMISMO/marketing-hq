@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20: the monthly numbers line names its month; website days on Eastern time
+
+The line at the top of Results now says which month's numbers it covers and when the next set is due ("October 2026 monthly numbers are all in ... November's are due Dec 1"), since in November it shows October's. Website visits and page views now count midnight to midnight Eastern time, the same days as everything else in MISMO Media.
+
 ## 2026-11-20: website traffic, AI answer feedback and website problems on Results
 
 Results has a new Website section with www.mismo.org's visit counts from Cloudflare Web Analytics, pulled every night by the Web traffic workflow in marketing-hq-data: visits and page views each day, top pages, where visitors come from, devices and countries, with a 7, 30 or 90 day or since-Nov-20 choice. Counting started Nov 20, 2026; Higher Logic's Site Traffic report stays the source before that. Beside the downloads are two new cards: AI Answer Feedback ("Not helpful" comments on Mimi and Ask MISMO answers) and Website Problems (reports from a page or through Mimi, with the count of spam dropped). The band has a Website Visits tile, and System Health has a Cloudflare Web Analytics row that shows a failed or stale nightly pull and warns a month before the token ends on Nov 20, 2027. Test: dev/tests/webtraffic.js.
