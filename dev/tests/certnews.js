@@ -21,38 +21,39 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const eds=editionsSorted(); const sent=eds[0]; sent.dates=Object.assign({},sent.dates,{publish:"2026-11-18"});
   S.sections[sent.month+"__cert"]=Object.assign({id:sent.month+"__cert",month:sent.month,key:"cert"},S.sections[sent.month+"__cert"]||{},{certProgram:"frame",certItems:[{name:"Crittora",path:""},{name:"Falcon Capital Advisors",path:""},{name:"Tidgewell Results eXperience",path:""},{name:"Viant Eye",path:""}]});
   LOADED.add("certnews"); CN.at=0;
+  /* a renewal drafted before Jonna said new certifications only: set aside, not deleted */
+  await put("certnews","cn-old-renewal",{key:"aven|ron|x|2026-11-19",org:"Aven",program:"RON",first:false,type:"Renewal 6",certifiedOn:"2026-11-19",text:"Aven renewed",status:"draft"}); await wait(200);
   await cnSync(true); await wait(500);
   const xs=vals("certnews");
-  out.five=xs.length===8 && xs.every(x=>x.key && x.text && x.org);
+  out.five=xs.filter(x=>x.first).length===5 && xs.every(x=>x.key && x.text && x.org) && !xs.some(x=>x.org==="Guidehouse" || (x.org==="Viant Eye"));
+  out.renewalsOut=S.certnews["cn-old-renewal"].status==="skipped" && /new certifications only/.test(S.certnews["cn-old-renewal"].skipReason);
   const by=o=>xs.find(x=>x.org===o)||{};
   out.covered=["Crittora","Falcon Capital Advisors LLC","TReX (Tidgewell Results Experience)"].every(o=>by(o).status==="covered") && /MISMO Matters/.test(by("Crittora").coveredBy);
-  out.drafts=["Docutech","Aven","Actualize Consulting","Guidehouse","Viant Eye"].every(o=>by(o).status==="draft");   /* Viant Eye's Consultant renewal isn't covered by a FRAME list */
+  out.drafts=["Docutech","Actualize Consulting"].every(o=>by(o).status==="draft");
   out.wording=/first MISMO eVault certification, for Solex eVault/.test(by("Docutech").text) && /is now a MISMO Certified FRAME Advisory Partner/.test(by("Actualize Consulting").text)
-    && /renewed its MISMO Remote Online Notarization \(RON\) certification for Aven Remote Online Notarization Software \(renewal 6\)/.test(by("Aven").text) && !/for Consultant/.test(by("Guidehouse").text);
+    && /renewed its MISMO Remote Online Notarization \(RON\) certification for Aven Remote Online Notarization Software \(renewal 6\)/.test(cnDraft(feed.certifications[1])) && !/for Consultant/.test(cnDraft(feed.certifications[3]));
   out.keyed=by("Docutech").key==="docutech|evault|solex evault|2026-11-20";
   /* again: nothing new */
-  CN.at=0; await cnSync(true); await wait(300); out.noDupes=vals("certnews").length===8;
+  CN.at=0; await cnSync(true); await wait(300); out.noDupes=vals("certnews").length===6;
   /* the card: only Jonna approves */
   MS.sub="sections"; go("matters"); await wait(400);
   const card=document.getElementById("cn-card");
-  out.card=!!card && /New Certifications from the CMS/.test(card.innerText) && card.querySelectorAll("tr[data-cn]").length===5 && /First/i.test(card.innerText);
+  out.card=!!card && /New Certifications from the CMS/.test(card.innerText) && card.querySelectorAll("tr[data-cn]").length===2 && /renewals aren't included/.test(card.innerText) && /First/i.test(card.innerText);
   out.locked=card.querySelector('[data-cna="ok"]').disabled;
   window.ResourcesSession={current:()=>({name:"Jonna Critchley",email:"jcritchley@mismo.org"}), token:()=>"tok"};
   go("matters"); await wait(300);
   const okBtn=document.querySelector('#cn-card tr[data-cn="'+by("Docutech").id+'"] [data-cna="ok"]'); out.unlocked=!okBtn.disabled; okBtn.click(); await wait(500);
-  document.querySelector('#cn-card tr[data-cn="'+by("Aven").id+'"] [data-cna="ok"]').click(); await wait(500);
-  document.querySelector('#cn-card tr[data-cn="'+by("Guidehouse").id+'"] [data-cna="skip"]').click(); await wait(500);
-  const d=S.certnews[by("Docutech").id]; out.approved=d.status==="approved" && !!d.edition && d.decidedBy==="Jonna Critchley" && S.certnews[by("Guidehouse").id].status==="skipped";
+  const d=S.certnews[by("Docutech").id]; out.approved=d.status==="approved" && !!d.edition && d.decidedBy==="Jonna Critchley";
   /* in the edition: first certifications on top */
   const ed=S.editions[d.edition]; S.sections[ed.month+"__cert"]=Object.assign({id:ed.month+"__cert",month:ed.month,key:"cert"},S.sections[ed.month+"__cert"]||{});
   const html=buildEmail(ed), txt=buildText(ed);
-  out.email=/New MISMO Certifications/.test(html) && /First Certification/.test(html) && html.indexOf("Docutech")>=0 && html.indexOf("Docutech")<html.indexOf("Aven") && !/Guidehouse/.test(html);
-  out.text=/First certification: Docutech/.test(txt) && /Renewed:/.test(txt) && /Aven renewed/.test(txt);
+  out.email=/New MISMO Certifications/.test(html) && /First Certification/.test(html) && html.indexOf("Docutech")>=0 && !/Aven/.test(html) && !/Renewed/.test(html);
+  out.text=/First certification: Docutech/.test(txt) && !/Renewed:/.test(txt);
   /* the panel: edit the words */
   cnOpen(by("Actualize Consulting").id); await wait(300);
   document.getElementById("f-text").value="Actualize Consulting joins MISMO's FRAME Advisory Partners."; document.getElementById("pf-save").click(); await wait(500);
   out.edited=/joins MISMO/.test(S.certnews[by("Actualize Consulting").id].text) && S.certnews[by("Actualize Consulting").id].status==="draft";
-  out.health=(hhCertNews()||{}).level==="ok" && /8 certifications/.test(hhCertNews().line);
+  out.health=(hhCertNews()||{}).level==="ok" && /8 certifications/.test(hhCertNews().line) && /renewals left out/.test(hhCertNews().line);
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
 await b.close(); process.exit(r.ok?0:1);})();
