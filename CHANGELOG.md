@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21 · MISMO Matters: new providers only, CMS card below the sections
+
+- Jonna: "put the section below the larger MISMO Matters section and Snapdocs is not new, it's a renewal; make sure they are only initial new providers."
+- The New Certifications from the CMS card now sits below Sections, in Running Order.
+- Only a company's first MISMO certification of any kind is drafted. A company that renews or holds another program (Snapdocs renews eVault, Docutech renews eClosing and RON, the FRAME firsts for Viant Eye, Falcon and TReX that also hold Consultant) is set aside as skipped, not deleted. If the CMS adds a newProvider or firstEver field, that decides instead.
+
 ## 2026-11-21: new certifications only
 
 Only new certifications (a company's first in a program) are drafted for MISMO Matters; renewals are left out (Jonna). The renewal drafts already made were set aside as skipped, not deleted.
