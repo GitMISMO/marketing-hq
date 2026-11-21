@@ -278,6 +278,7 @@ function renderResults(){
     '<div class="tile"><div class="v">'+rsN(ytViews)+'</div><div class="k">Mic\'d Up Views</div><div class="s">'+yt.length+' episodes on YouTube</div></div>'+
     (MU_PAUSED.spotify&&!sp.length?'':'<div class="tile"><div class="v">'+(sp.length?rsN(spPlays):"—")+'</div><div class="k">Mic\'d Up on Spotify</div><div class="s">'+(sp.length?sp.length+' episodes · plays':'type plays into each episode')+'</div></div>')+
     '<button class="tile" type="button" data-go="people"><div class="v">'+rsN(web.length)+'</div><div class="k">Website Sign-Ups</div><div class="s">signed up on mismo.org · '+rsN(dls.length)+' downloaders</div></button>'+
+    (()=>{ const d=wtDays().slice(-30), v=d.reduce((n,x)=>n+(+x.visits||0),0); return '<button class="tile" type="button" data-rs-jump="rs-web"><div class="v">'+(d.length?rsN(v):"—")+'</div><div class="k">Website Visits</div><div class="s">'+(d.length?'www.mismo.org · last '+d.length+' day'+(d.length===1?'':'s'):'counting from Nov 20, 2026')+'</div></button>'; })()+
   '</div></div>';
 
   /* ---- MISMO Matters ---- */
@@ -351,13 +352,14 @@ function renderResults(){
     '</div><p class="hint" id="rs-msg" style="margin-top:10px"></p></div></div>'+(due?'':mnCard());
 
   el.innerHTML='<div class="phead rs-head"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1></div>'+(due?'':rsMonthStrip())+'</div>'+
-    (due?mnCard():'')+band+mm+mcH+social+people+tools;
+    (due?mnCard():'')+band+mm+mcH+social+rsWebsite()+rsVoices()+people+tools;
 
   $$("[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
   $$("[data-rs-jump]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.rsJump,el); if(t) t.scrollIntoView({block:"start",behavior:"smooth"}); });
   const mms=$("#rs-mmstats",el); if(mms && ed) mms.onclick=()=>openStats(ed);
   const pick=$("#rs-ed",el); if(pick) pick.onchange=()=>{ RS.ed=pick.value; renderResults(); };
   const all=$("#rs-mcall",el); if(all) all.onclick=()=>{ RS.mcAll=!RS.mcAll; renderResults(); };
+  wtWire(el);
   rsTips(el);
   mnWire(el); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="results") mnPopup("results"); },400);
 

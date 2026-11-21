@@ -220,7 +220,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
