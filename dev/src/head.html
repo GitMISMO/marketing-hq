@@ -1503,13 +1503,14 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .wt-kl{background:var(--c2)}
 #rs-voices{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
 /* Results as cards, the detail in the right-hand panel (Nov 21, 2026) */
+/* named res-card, not rs-card: the sign-in gate's own .rs-card rule (max-width 380px) was capping these and leaving wide gaps */
 .rs-band .say{margin-bottom:4px}
 .rs-hint{font-size:12px;color:rgba(255,255,255,.62)}
-.rs-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:28px}
-.rs-card{--rc:var(--c1);display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--rc);border-radius:8px;padding:14px 18px 12px;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
-.rs-card:hover{border-color:var(--border-strong);border-top-color:var(--rc);box-shadow:0 8px 22px -14px rgba(13,49,76,.45);transform:translateY(-1px)}
-.rs-card:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
-.rs-card.on{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc)}
+.res-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-bottom:28px}
+.res-card{--rc:var(--c1);display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--rc);border-radius:8px;padding:14px 18px 12px;cursor:pointer;min-width:0;transition:border-color .15s,box-shadow .15s,transform .15s}
+.res-card:hover{border-color:var(--border-strong);border-top-color:var(--rc);box-shadow:0 8px 22px -14px rgba(13,49,76,.45);transform:translateY(-1px)}
+.res-card:focus-visible{outline:2px solid var(--sky);outline-offset:2px}
+.res-card.on{border-color:var(--rc);box-shadow:0 0 0 1px var(--rc)}
 .rs-ce{display:block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rs-cv{display:flex;align-items:baseline;gap:8px;margin-top:6px;min-width:0}
 .rs-cv b{font-size:30px;font-weight:700;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -1537,10 +1538,10 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 :root[data-theme="dark"] .rs-cf{color:var(--sky)}
 #pane-title:focus{outline:none}
 .rs-cf svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:transform .15s}
-.rs-card:hover .rs-cf svg{transform:translateX(3px)}
-@media(max-width:1100px){.rs-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.rs-cards>.rs-card:last-child{grid-column:span 2}}
-@media(max-width:640px){.rs-cards{grid-template-columns:minmax(0,1fr)}.rs-cards>.rs-card:last-child{grid-column:auto}}
-@media (prefers-reduced-motion:reduce){.rs-card,.rs-cf svg{transition:none}.rs-card:hover{transform:none}}
+.res-card:hover .rs-cf svg{transform:translateX(3px)}
+@media(max-width:1100px){.res-cards{grid-template-columns:repeat(2,minmax(0,1fr))}.res-cards>.res-card:last-child{grid-column:span 2}}
+@media(max-width:640px){.res-cards{grid-template-columns:minmax(0,1fr)}.res-cards>.res-card:last-child{grid-column:auto}}
+@media (prefers-reduced-motion:reduce){.res-card,.rs-cf svg{transition:none}.res-card:hover{transform:none}}
 /* the detail inside the panel: no card frame, the panel's title stands in for the heading */
 .rs-rail .rs-sec{border:0;background:transparent;margin:0}
 .rs-rail .rs-sec>.ch{padding:0 0 12px;border-bottom:0}

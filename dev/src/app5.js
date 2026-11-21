@@ -423,7 +423,7 @@ function rsSpark(v, color, bars){
   return '<svg class="rs-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+v.map((y,i)=>X(i)+","+Y(y)).join(" ")+'" style="fill:none;stroke:var('+color+');stroke-width:2;vector-effect:non-scaling-stroke"/></svg>';
 }
 function rsCard(k, o){
-  return '<button class="rs-card'+(PANE&&PANE.rsKey===k?' on':'')+'" type="button" data-rs-open="'+k+'" style="--rc:var('+o.color+')" aria-label="'+esc(o.eye+": "+o.v+" "+o.vk+". Open the details")+'">'+
+  return '<button class="res-card'+(PANE&&PANE.rsKey===k?' on':'')+'" type="button" data-rs-open="'+k+'" style="--rc:var('+o.color+')" aria-label="'+esc(o.eye+": "+o.v+" "+o.vk+". Open the details")+'">'+
     '<span class="rs-ce">'+esc(o.eye)+'</span>'+
     '<span class="rs-cv"><b>'+o.v+'</b><span>'+esc(o.vk)+'</span></span>'+
     '<span class="rs-cz">'+(o.viz||'<span class="rs-cq">'+esc(o.none||"Nothing to show yet")+'</span>')+'</span>'+
@@ -463,7 +463,7 @@ function rsCards(x){
       viz:'<span class="rs-feeds">'+[["matters","MISMO Matters"],["youtube","YouTube"],["mailchimp","Mailchimp"],["linkedin","LinkedIn"]].map(([k,l])=>'<span><i class="fdot'+(feed(k)?" on":"")+'"></i>'+l+'<small>'+(feed(k)?"daily":"by hand")+'</small></span>').join("")+'</span>',
       rows:[[mnName(x.per)+" numbers",x.due?'<span class="rs-due">'+mnOpen(x.per).length+' still due</span>':'all in']], more:"Drop an export from YouTube, LinkedIn or Mailchimp"})
   ];
-  return '<div class="rs-cards" id="rs-cards">'+cards.join("")+'</div>';
+  return '<div class="res-cards" id="res-cards">'+cards.join("")+'</div>';
 }
 /* ---- the right-hand panel ---- */
 function rsOpen(k){
@@ -473,7 +473,7 @@ function rsOpen(k){
     buttons:[{label:"‹ "+RS_SEC[prev].t(x), run:()=>rsOpen(prev)},{label:RS_SEC[next].t(x)+" ›", run:()=>rsOpen(next)}],
     after:b=>rsWireRail(b)});
   PANE.rsKey=k;
-  $$("#rs-cards .rs-card").forEach(c=>c.classList.toggle("on", c.dataset.rsOpen===k));
+  $$("#res-cards .res-card").forEach(c=>c.classList.toggle("on", c.dataset.rsOpen===k));
   const t=$("#pane-title"); if(t){ t.setAttribute("tabindex","-1"); setTimeout(()=>{ try{ t.focus({preventScroll:true}); }catch(e){} },60); }
 }
 /* the data changed while the panel is open: refresh what it shows, where it was scrolled to */
