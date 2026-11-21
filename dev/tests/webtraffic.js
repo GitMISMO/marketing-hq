@@ -8,7 +8,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
   /* nothing yet: the section says the first pull hasn't run, Health says so too */
   go("results"); await wait(300); rsOpen("web"); await wait(250);
-  out.emptyNote=/first nightly pull/.test(document.getElementById("rs-web").innerText);
+  out.emptyNote=/first pull from Cloudflare/.test(document.getElementById("rs-web").innerText);
   out.healthOff=(hhWebTraffic()||{}).level!=="bad";
   /* twelve days of numbers */
   for(let i=12;i>=1;i--) S.webtraffic["d"+i]={id:"d"+i, date:day(i), visits:100+i*7, views:250+i*11,
@@ -35,6 +35,11 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   rsOpen("web"); await wait(250);
   const sel=document.getElementById("wt-days"); sel.value="7"; sel.dispatchEvent(new Event("change")); await wait(200);
   out.pick=document.querySelectorAll("#rs-web .wt-bar").length===7;
+  /* today so far (Nov 21, 2026): a lighter bar, a Today So Far figure, left out of the daily average */
+  S.webtraffic.d0={id:"d0", date:new Date().toISOString().slice(0,10), partial:true, visits:40, views:90, pulledAt:new Date().toISOString(), devices:[["desktop",30,20]]};
+  sel.value="7"; renderResults(); rsOpen("web"); await wait(250);
+  const wt=document.getElementById("rs-web").innerText;
+  out.today=document.querySelectorAll("#rs-web .wt-part").length===1 && /Today So Far/i.test(wt) && /today so far/i.test(wt) && /Today so far/.test(document.querySelector('[data-rs-open="web"]').innerText);
   /* Health */
   out.healthOk=(hhWebTraffic()||{}).level==="ok";
   S.webtraffic._run=Object.assign({}, S.webtraffic._run, {ok:false, error:"Cloudflare 401: Invalid token"});
