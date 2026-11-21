@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: Jonna and Vanessa can approve and clear MISMO Matters LinkedIn posts
+
+Approve, Don't Post and Bring It Back on the MISMO Matters LinkedIn posts work for Amy, Jonna and Vanessa (each under their own name). A new Mark Posted button and a Link to the Live Post field clear a post once it's up, approved first or not; saving a post with its live link marks it Posted. A live LinkedIn address typed into Link in the Post moves to Link to the Live Post, and the post keeps the link it points to. The card counts posted ones separately.
+
 ## 2026-11-21: website traffic shows today so far
 
 The Web traffic workflow runs every 3 hours instead of once a night, and each run also brings today's numbers so far. Results shows today as a lighter bar with a Today So Far figure (as of the last pull); whole days still run midnight to midnight Eastern, and the daily average and busiest day count whole days only.
