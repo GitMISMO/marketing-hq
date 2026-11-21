@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: new certifications only
+
+Only new certifications (a company's first in a program) are drafted for MISMO Matters; renewals are left out (Jonna). The renewal drafts already made were set aside as skipped, not deleted.
+
 ## 2026-11-21: new certifications from the CMS, drafted for MISMO Matters
 
 MISMO Media reads the CMS's new-certifications feed (resources.mismo.org/certified/new-certifications.json) and drafts one line per certification it hasn't seen (tracked by slug + program + product + certifiedOn in data/certnews.json), first certifications highlighted. A New Certifications from the CMS card on MISMO Matters lists them for Jonna to approve, edit, move or skip; one already named in a sent edition is marked Covered. Approved lines appear in that edition's Certifications section (first certifications on top, then renewals) in the email and the text version. Nothing is sent or posted from here. System Health has a CMS New Certifications row.
