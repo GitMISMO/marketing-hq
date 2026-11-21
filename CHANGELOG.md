@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: sponsor benefits feed for the Sponsorship Portal
+
+LinkedIn posts of kind Sponsor Highlight, the Summits sponsor thank-you post and Mic'd Up episodes have a Sponsor picker (the portal's approved summit sponsors) and a Counts For choice (one summit, or every summit of the sponsorship). MISMO Media works out data/feed-sponsor-benefits.json from them and saves it whenever it changes: benefit linkedin (posted once the post is marked Posted / Sent, with the date and the live link) and benefit micdup (invited, recorded, posted). The Sponsorship Portal reads it to tick those two benefits; contract in the Connections Map row MISMO Media to Sponsorship Portal. System Health has a Sponsor Benefits Feed row.
+
 ## 2026-11-21: Results cards fill their columns
 
 The Results cards were held to 380px wide by a rule in the sign-in gate that happened to share their name, which left wide gaps on bigger screens. They now fill their columns with a 16px gap.
