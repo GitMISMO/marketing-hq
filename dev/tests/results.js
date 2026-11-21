@@ -18,7 +18,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   go("results"); await wait(400); const m=document.getElementById("mn-pop"); if(m) m.remove();
   const page=document.getElementById("page-results");
   out.short=page.scrollHeight<2200;
-  out.cards=document.querySelectorAll("#rs-cards .rs-card").length===9 && !page.querySelector("#rs-mm") && !page.querySelector("#rs-tools");
+  out.cards=document.querySelectorAll("#res-cards .res-card").length===9 && !page.querySelector("#rs-mm") && !page.querySelector("#rs-tools");
   const card=k=>page.querySelector('[data-rs-open="'+k+'"]');
   out.mmCard=/20\.0%/.test(card("mm").innerText);
   out.liCard=/1,500/.test(card("li").innerText) && /page impressions, October/i.test(card("li").innerText) && /none yet/.test(card("li").innerText);
