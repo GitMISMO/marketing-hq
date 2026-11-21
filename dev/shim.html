@@ -692,6 +692,20 @@
       .then(function (b) { var d = b && b.data; if (typeof d === 'string') d = JSON.parse(d); d = (d && d.docs) || d || {};
         return Object.keys(d).map(function (k) { return Object.assign({ id: k }, d[k]); }); });
   };
+  /* a plain data file of MISMO Media's own, not records: the feeds other systems read, such as the sponsor benefits
+     feed the Sponsorship Portal reads (data/feed-sponsor-benefits.json, Nov 21, 2026). Only names starting "feed-". */
+  window.__hqFile = {
+    get: function (name) {
+      if (!/^feed-[a-z0-9-]+$/.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
+      return net('GET', name).then(function (b) { var d = b && b.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } } return { data: d || null, sha: (b && b.sha) || null }; },
+        function (e) { if (e && e.status === 404 && (e.code === 'NOT_FOUND' || e.code === 'HTTP_404')) return { data: null, sha: null }; throw e; });
+    },
+    put: function (name, content, sha) {
+      if (!/^feed-[a-z0-9-]+$/.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
+      if (PREVIEW) return Promise.reject(err('PREVIEW', 'Nothing is saved in the preview', 0));
+      return put(name, { content: content, sha: sha || null });
+    }
+  };
   window.__hqImages.notify = function (to, subject, html) { return imgCall({ action: 'notify', to: to, subject: subject, html: html }); };
   var ASSETS = { upload: function (blob) { return window.__hqImages.save(blob, blob && blob.name); } };
 
