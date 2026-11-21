@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-20: website traffic, AI answer feedback and website problems on Results
+
+Results has a new Website section with www.mismo.org's visit counts from Cloudflare Web Analytics, pulled every night by the Web traffic workflow in marketing-hq-data: visits and page views each day, top pages, where visitors come from, devices and countries, with a 7, 30 or 90 day or since-Nov-20 choice. Counting started Nov 20, 2026; Higher Logic's Site Traffic report stays the source before that. Beside the downloads are two new cards: AI Answer Feedback ("Not helpful" comments on Mimi and Ask MISMO answers) and Website Problems (reports from a page or through Mimi, with the count of spam dropped). The band has a Website Visits tile, and System Health has a Cloudflare Web Analytics row that shows a failed or stale nightly pull and warns a month before the token ends on Nov 20, 2027. Test: dev/tests/webtraffic.js.
+
 ## 2026-11-20: picture thumbnails saved one at a time
 
 Opening a big picture grid used to send dozens of thumbnail saves into the same SharePoint folder at once, and SharePoint refused most of them (45 failed runs of the Marketing HQ Images flow in one minute). Small copies are now saved one at a time, a moment apart, and if SharePoint refuses one, no more are tried for 15 minutes. Pictures still show full size until their small copy is made. Test: dev/tests/thumbs.js.

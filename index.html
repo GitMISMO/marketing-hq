@@ -2250,6 +2250,23 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .rs-tip{position:fixed;z-index:9999;display:none;max-width:320px;white-space:pre-line;background:var(--navy-deep);color:#fff;border-radius:5px;padding:7px 10px;font-size:12px;line-height:1.4;pointer-events:none;box-shadow:0 6px 18px rgba(6,32,47,.25)}
 @media (max-width:1100px){ .rs-g3{grid-template-columns:minmax(0,1fr)} }
 @media (max-width:800px){ .rs-g2{grid-template-columns:minmax(0,1fr)} .rs-mstrip{margin-left:0} }
+.wt-bar{fill:var(--c1);opacity:.85;cursor:pointer}
+.wt-bar:hover,.wt-bar:focus{opacity:1;outline:none}
+.wt-line{fill:none;stroke:var(--c2);stroke-width:2}
+.wt-dot{fill:var(--c2);stroke:var(--surface);stroke-width:1.5;cursor:pointer}
+.wt-dot:hover,.wt-dot:focus{r:6;outline:none}
+.wt-kb{border-radius:2px;background:var(--c1)}
+.wt-kl{background:var(--c2)}
+#rs-voices{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+@media (max-width:800px){ #rs-voices{grid-template-columns:minmax(0,1fr)} }
+.vo-list{list-style:none;margin:0;padding:4px 16px 12px}
+.vo-i{padding:10px 0;border-bottom:1px solid var(--rule)}
+.vo-i:last-child{border-bottom:0}
+.vo-h{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-3)}
+.vo-h .rs-tag{margin-left:0}
+.vo-q{font-size:14px;font-weight:600;color:var(--ink);margin:4px 0 3px;line-height:1.45;overflow-wrap:anywhere}
+.vo-m{font-size:12.5px;color:var(--ink-2);line-height:1.45;overflow-wrap:anywhere}
+.vo-m a{color:var(--link,var(--navy-mid))}
 </style>
 
 <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'">
@@ -2621,7 +2638,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -3967,6 +3984,7 @@ function renderResults(){
     '<div class="tile"><div class="v">'+rsN(ytViews)+'</div><div class="k">Mic\'d Up Views</div><div class="s">'+yt.length+' episodes on YouTube</div></div>'+
     (MU_PAUSED.spotify&&!sp.length?'':'<div class="tile"><div class="v">'+(sp.length?rsN(spPlays):"—")+'</div><div class="k">Mic\'d Up on Spotify</div><div class="s">'+(sp.length?sp.length+' episodes · plays':'type plays into each episode')+'</div></div>')+
     '<button class="tile" type="button" data-go="people"><div class="v">'+rsN(web.length)+'</div><div class="k">Website Sign-Ups</div><div class="s">signed up on mismo.org · '+rsN(dls.length)+' downloaders</div></button>'+
+    (()=>{ const d=wtDays().slice(-30), v=d.reduce((n,x)=>n+(+x.visits||0),0); return '<button class="tile" type="button" data-rs-jump="rs-web"><div class="v">'+(d.length?rsN(v):"—")+'</div><div class="k">Website Visits</div><div class="s">'+(d.length?'www.mismo.org · last '+d.length+' day'+(d.length===1?'':'s'):'counting from Nov 20, 2026')+'</div></button>'; })()+
   '</div></div>';
 
   /* ---- MISMO Matters ---- */
@@ -4040,13 +4058,14 @@ function renderResults(){
     '</div><p class="hint" id="rs-msg" style="margin-top:10px"></p></div></div>'+(due?'':mnCard());
 
   el.innerHTML='<div class="phead rs-head"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1></div>'+(due?'':rsMonthStrip())+'</div>'+
-    (due?mnCard():'')+band+mm+mcH+social+people+tools;
+    (due?mnCard():'')+band+mm+mcH+social+rsWebsite()+rsVoices()+people+tools;
 
   $$("[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
   $$("[data-rs-jump]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.rsJump,el); if(t) t.scrollIntoView({block:"start",behavior:"smooth"}); });
   const mms=$("#rs-mmstats",el); if(mms && ed) mms.onclick=()=>openStats(ed);
   const pick=$("#rs-ed",el); if(pick) pick.onchange=()=>{ RS.ed=pick.value; renderResults(); };
   const all=$("#rs-mcall",el); if(all) all.onclick=()=>{ RS.mcAll=!RS.mcAll; renderResults(); };
+  wtWire(el);
   rsTips(el);
   mnWire(el); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="results") mnPopup("results"); },400);
 
@@ -4487,6 +4506,8 @@ const HELP = [
    <tr><td>Mailchimp</td><td>The monthly campaigns export dropped on Results.</td><td>Being retired now that MISMO Matters goes through Informz; a Mailchimp API key would make it automatic in the meantime.</td></tr>
    <tr><td>LinkedIn</td><td>The monthly export dropped on Results (Vanessa).</td><td>LinkedIn doesn't let outside tools read page analytics without an approved developer app, so this stays by hand.</td></tr>
    <tr><td>In the News</td><td><b>Every morning, by itself.</b> The <b>In the News web search</b> workflow searches Google News and Bing News for MISMO; Brittney's FYI emails come in as they're sent.</td><td>Nothing.</td></tr>
+   <tr><td>Website traffic (www.mismo.org)</td><td><b>Every night, by itself.</b> The <b>Web traffic</b> workflow in marketing-hq-data reads Cloudflare Web Analytics (cookie-free; site admins aren't counted) into <code>data/webtraffic.json</code>, plus a month-by-month archive in <code>data/webtraffic-archive/</code> that keeps every day for good. Results shows visits, page views, top pages, where visitors come from, devices and countries; System Health shows a failed pull. Counting started Nov 20, 2026.</td><td>Nothing. The read-only token expires Nov 20, 2027; System Health warns a month before. For traffic before Nov 20, 2026, use Higher Logic's Site Traffic report.</td></tr>
+   <tr><td>AI answer feedback and website problems</td><td>As they happen, from the website through the Subscribe form's flow: "Not helpful" comments on Mimi and Ask MISMO answers, and problem reports from a page or through Mimi (spam is dropped first). Both show on Results, and Vanessa gets the day before's in a morning email, Jonna copied.</td><td>Nothing.</td></tr>
    <tr><td>Website subscribers</td><td>As they happen. MISMO's own Subscribe form sends each sign-up straight to Higher Logic and MISMO Media (see <b>The Subscribe Form</b>).</td><td>Nothing.</td></tr>
   </tbody></table>
   <p>Staged LinkedIn posts go out through a second flow, described under <b>Posting and Scheduling</b>.</p>
@@ -7538,7 +7559,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-20 16:11 ET · 1f355f3";
+const BUILD = "2026-11-20 21:40 ET · 2e5e933";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -7754,7 +7775,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -8707,6 +8728,106 @@ function mlWire(el){
   const tog=$("#ml-tog",el); if(tog) tog.onclick=()=>{ const card=$("#ml-card",el), open=card.classList.toggle("closed")===false;
     tog.setAttribute("aria-expanded", open?"true":"false"); try{ localStorage.setItem("mmhq.mlOpen", open?"1":"0"); }catch(e){} };
   $$("[data-mlrow]",el).forEach(r=>r.onclick=()=>mlOpen(ed, r.dataset.mlrow));
+}
+/* ================= Results: the website =================
+   Added Nov 20, 2026 (website note). www.mismo.org sends cookie-free visit counts to Cloudflare Web Analytics
+   (site admins aren't counted); the "Web traffic" workflow in marketing-hq-data pulls them every night into
+   data/webtraffic.json: one record per day ("webtraffic/<YYYY-MM-DD>": visits, views, pages, refs, countries,
+   devices, each list as [name, page views, visits]) and "webtraffic/_run" for the last pull. Counting started
+   Nov 20, 2026; Higher Logic's Site Traffic report stays the source for anything before that.
+   Beside it: the "Not helpful" comments on Mimi and Ask MISMO answers (data/aifeedback.json) and the website
+   problem reports (data/websiteproblems.json), both filed only by the sign-up workflow. */
+const WT = {days:30};
+const WT_START = "2026-11-20", WT_TOKEN_EXPIRES = "2027-11-20";
+function wtRun(){ return (S.webtraffic||{})._run || null; }
+function wtDays(){ return Object.values(S.webtraffic||{}).filter(d=>d && /^\d{4}-\d\d-\d\d$/.test(d.date||"")).sort((a,b)=>a.date.localeCompare(b.date)); }
+/* add up [name, views, visits] lists over some days */
+function wtSum(days, key){
+  const m={}; days.forEach(d=>(d[key]||[]).forEach(r=>{ const k=String(r[0]||""); const x=m[k]||(m[k]={k, views:0, visits:0}); x.views+=+r[1]||0; x.visits+=+r[2]||0; }));
+  return Object.values(m).sort((a,b)=>b.views-a.views);
+}
+function wtRefName(h){ h=String(h||"").toLowerCase(); if(!h) return "Direct or not shared";
+  if(/(^|\.)mismo\.org$/.test(h)) return "Another mismo.org page ("+h+")";
+  if(/google\./.test(h)) return "Google"; if(/bing\.com$/.test(h)) return "Bing"; if(/linkedin\.com$|lnkd\.in$/.test(h)) return "LinkedIn";
+  if(/duckduckgo/.test(h)) return "DuckDuckGo"; if(/yahoo\./.test(h)) return "Yahoo"; if(/chatgpt\.com$|openai\.com$/.test(h)) return "ChatGPT"; if(/perplexity/.test(h)) return "Perplexity";
+  if(/mba\.org$/.test(h)) return "MBA ("+h+")"; if(/higherlogic|informz/.test(h)) return "MISMO Matters email ("+h+")";
+  return h.replace(/^www\./,""); }
+function wtDevice(d){ d=String(d||"").toLowerCase(); return d==="desktop"?"Desktop":d==="mobile"?"Phone":d==="tablet"?"Tablet":d?d.charAt(0).toUpperCase()+d.slice(1):"Not known"; }
+/* visits as bars and page views as a line, one shared count axis */
+function wtChart(days){
+  if(!days.length) return '';
+  const W=760, H=210, L=48, R=12, Tp=14, B=28, n=days.length;
+  const top=Math.max(10, ...days.map(d=>Math.max(+d.views||0,+d.visits||0)));
+  const step=Math.pow(10, Math.floor(Math.log10(top))), nice=Math.ceil(top/step)*step;
+  const bw=(W-L-R)/n, X=i=>L+i*bw+bw/2, Y=v=>Tp+(1-v/nice)*(H-Tp-B);
+  let g=''; for(let k=0;k<=4;k++){ const v=nice*k/4; g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" class="rs-grid"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" class="rs-ax" text-anchor="end">'+rsN(Math.round(v))+'</text>'; }
+  const every=Math.max(1, Math.ceil(n/8));
+  days.forEach((d,i)=>{ if(i%every===0 || i===n-1){ const dt=P(d.date); g+='<text x="'+X(i)+'" y="'+(H-8)+'" class="rs-ax" text-anchor="middle">'+MON[dt.getMonth()]+' '+dt.getDate()+'</text>'; } });
+  const bars=days.map((d,i)=>{ const v=+d.visits||0, w=Math.max(2,Math.min(26,bw*0.62)); return '<rect class="wt-bar" x="'+(X(i)-w/2)+'" y="'+Y(v)+'" width="'+w+'" height="'+Math.max(0,Y(0)-Y(v))+'" rx="2" data-tip="'+esc(fS(d.date)+"\n"+rsN(v)+" visits · "+rsN(d.views)+" page views")+'"/>'; }).join("");
+  const line=n>1?'<polyline class="wt-line" points="'+days.map((d,i)=>X(i)+","+Y(+d.views||0)).join(" ")+'"/>':'';
+  const dots=days.map((d,i)=>'<circle class="wt-dot" cx="'+X(i)+'" cy="'+Y(+d.views||0)+'" r="'+(n>60?2:3.5)+'" data-tip="'+esc(fS(d.date)+"\n"+rsN(d.views)+" page views · "+rsN(d.visits)+" visits")+'"/>').join("");
+  return '<div class="rs-chart"><div class="rs-legend"><span><i class="rs-k wt-kb"></i>Visits</span><span><i class="rs-k wt-kl"></i>Page views</span></div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Visits and page views on www.mismo.org each day">'+g+bars+line+dots+'</svg></div>';
+}
+function rsWebsite(){
+  const all=wtDays(), run=wtRun();
+  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted</span><span class="sp"></span>'+
+    '<select class="plain" id="wt-days" aria-label="Days shown">'+[[7,"Last 7 Days"],[30,"Last 30 Days"],[90,"Last 90 Days"],[0,"Since Nov 20, 2026"]].map(([v,l])=>'<option value="'+v+'"'+(WT.days===v?' selected':'')+'>'+l+'</option>').join("")+'</select></div>';
+  if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The nightly pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first nightly pull from Cloudflare hasn\'t run yet. It runs every night at about 3:23 AM Eastern; numbers start with Nov 20, 2026.')+
+    ' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.</div></div>';
+  const days=WT.days?all.slice(-WT.days):all, withLists=days.filter(d=>d.pages);
+  const visits=days.reduce((n,d)=>n+(+d.visits||0),0), views=days.reduce((n,d)=>n+(+d.views||0),0), last=all[all.length-1];
+  const best=days.reduce((b,d)=>(+d.visits||0)>(+b.visits||0)?d:b, days[0]);
+  const pages=wtSum(withLists,"pages").slice(0,10).map(x=>({l:x.k||"/",v:x.views,c:"--c1",tip:(x.k||"/")+"\n"+rsN(x.views)+" page views · "+rsN(x.visits)+" visits"}));
+  const refsM={}; wtSum(withLists,"refs").forEach(x=>{ const k=wtRefName(x.k); const r=refsM[k]||(refsM[k]={l:k,v:0}); r.v+=x.visits||x.views; });
+  const refs=Object.values(refsM).sort((a,b)=>b.v-a.v).slice(0,9).map(r=>Object.assign(r,{c:"--c4",tip:r.l+" · "+rsN(r.v)+" visits"}));
+  const countries=wtSum(withLists,"countries").slice(0,8).map(x=>({l:x.k||"Not known",v:x.visits||x.views,c:"--c3",tip:(x.k||"Not known")+" · "+rsN(x.visits||x.views)+" visits"}));
+  const dev=wtSum(days,"devices"), devT=dev.reduce((n,x)=>n+(x.visits||x.views),0)||1, devC=["--c1","--c2","--c3","--c4","--c5"];
+  const devices=dev.length?'<div class="rs-stack">'+dev.map((x,i)=>'<i style="flex:'+(x.visits||x.views)+' 1 0;background:var('+devC[i%5]+')" data-tip="'+esc(wtDevice(x.k)+": "+rsN(x.visits||x.views)+" visits ("+pct((x.visits||x.views)/devT)+")")+'"></i>').join("")+'</div>'+
+    '<div class="rs-legend col">'+dev.map((x,i)=>'<span><i class="rs-k" style="background:var('+devC[i%5]+')"></i>'+esc(wtDevice(x.k))+'<b>'+pct((x.visits||x.views)/devT)+'</b></span>').join("")+'</div>':'<div class="empty sm">No device counts yet.</div>';
+  const span=WT.days?'last '+days.length+' day'+(days.length===1?'':'s'):'since Nov 20';
+  return '<div class="card rs-sec" id="rs-web">'+head+
+    rsKpis([{v:rsN(visits),k:"Visits",s:span},{v:rsN(views),k:"Page Views",s:span},{v:visits?(views/visits).toFixed(1):"—",k:"Pages per Visit",s:"page views ÷ visits"},
+      {v:rsN(Math.round(visits/Math.max(1,days.length))),k:"Visits a Day",s:"on average"},{v:rsN(last.visits),k:"Latest Day",s:fS(last.date)+" · "+rsN(last.views)+" views"},
+      {v:rsN(best.visits),k:"Busiest Day",s:fS(best.date)}])+
+    '<div class="rs-box"><h3>Visits and Page Views Each Day</h3>'+wtChart(days)+'<p class="rs-note">Days run midnight to midnight UTC (7 PM to 7 PM Eastern), the way Cloudflare counts them. For anything before Nov 20, 2026, use Higher Logic\'s Site Traffic report.</p></div>'+
+    '<div class="rs-g2"><div class="rs-box"><h3>Top Pages</h3>'+(pages.length?hbars(pages,v=>rsN(v)+" views"):'<div class="empty sm">No pages counted for these days.</div>')+'</div>'+
+      '<div class="rs-box"><h3>Where Visitors Come From</h3>'+(refs.length?hbars(refs,v=>rsN(v)+" visits"):'<div class="empty sm">No referrers counted for these days.</div>')+'<p class="rs-note">"Direct or not shared" is people who typed the address, used a bookmark, or came from an app or email that doesn\'t say where they came from.</p></div></div>'+
+    '<div class="rs-g2"><div class="rs-box"><h3>Devices</h3>'+devices+'</div>'+
+      '<div class="rs-box"><h3>Countries</h3>'+(countries.length?hbars(countries,v=>rsN(v)+" visits"):'<div class="empty sm">No countries counted for these days.</div>')+'</div></div>'+
+  '</div>';
+}
+/* what people on the website told MISMO: "Not helpful" comments on AI answers, and problem reports */
+function rsVoices(){
+  const since=new Date(Date.now()-30*864e5).toISOString();
+  const fb=vals("aifeedback").filter(x=>x.at && x.comment).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const pr=vals("websiteproblems").filter(x=>x.at && x.message).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const drop=(S.websiteproblems||{})._dropped||null;
+  const pg=u=>{ u=String(u||""); const s=u.replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,""); return /^https:\/\//.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(s||u)+'</a>':esc(s); };
+  const who=x=>x.e?esc(x.n||x.e)+' · <a href="mailto:'+esc(x.e)+'">'+esc(x.e)+'</a>':'anonymous'+(x.reply?' · left <a href="mailto:'+esc(x.reply)+'">'+esc(x.reply)+'</a>':'');
+  const fbRows=fb.slice(0,6).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+esc(x.assistant||"AI")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(x.comment)+'”</div><div class="vo-m">Asked: '+esc(String(x.question||"").slice(0,180))+'</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+'</div></li>').join("");
+  const prRows=pr.slice(0,6).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+(x.via==="mimi"?"From Mimi":"Page Link")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(String(x.message).slice(0,400))+'”</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+(x.signedIn?' · signed in':'')+'</div></li>').join("");
+  const n30=a=>a.filter(x=>x.at>=since).length;
+  return '<div class="grid2 rs-row" id="rs-voices"><div class="card"><div class="ch"><h2>AI Answer Feedback</h2><span class="cnt">'+fb.length+'</span><span class="note">"Not helpful" on Mimi and Ask MISMO · '+n30(fb)+' in the last 30 days</span></div>'+
+      (fbRows?'<ul class="vo-list">'+fbRows+'</ul>':'<div class="empty">No comments yet. They arrive when someone marks a Mimi or Ask MISMO answer "Not helpful" and says why.</div>')+
+      (fb.length>6?'<p class="rs-note pad">The newest 6 of '+fb.length+'. Vanessa gets each day\'s in the morning email, with Jonna copied.</p>':'')+'</div>'+
+    '<div class="card"><div class="ch"><h2>Website Problems</h2><span class="cnt">'+pr.length+'</span><span class="note">reported from a page or through Mimi · '+n30(pr)+' in the last 30 days</span></div>'+
+      (prRows?'<ul class="vo-list">'+prRows+'</ul>':'<div class="empty">No problem reports yet. They arrive from the website\'s report-a-problem form and from Mimi.</div>')+
+      (drop&&drop.total?'<p class="rs-note pad">'+rsN(drop.total)+' spam or repeat report'+(drop.total===1?' was':'s were')+' dropped and never kept'+(drop.byReason?' ('+Object.entries(drop.byReason).map(([k,v])=>esc(k)+' '+v).join(', ')+')':'')+'.</p>':'')+'</div></div>';
+}
+function wtWire(el){ const s=$("#wt-days",el); if(s) s.onchange=()=>{ WT.days=+s.value; renderResults(); }; }
+/* System Health: the nightly pull and the token's end date */
+function hhWebTraffic(){
+  const r=wtRun();
+  if(!r) return LOADED.has("webtraffic")? hhRow("cfwa","Cloudflare Web Analytics","off","Hasn't run yet. It pulls www.mismo.org's visit counts every night at about 3:23 AM Eastern.") : null;
+  const left=Math.ceil((Date.parse(WT_TOKEN_EXPIRES+"T00:00:00Z")-Date.now())/864e5);
+  const tok=left<=30 ? " The Cloudflare token "+(left<=0?"expired":"expires")+" Nov 20, 2027"+(left>0?" (in "+left+" day"+(left===1?"":"s")+")":"")+": ask for a new read-only one and put it in the CLOUDFLARE_ANALYTICS_TOKEN secret on marketing-hq-data." : "";
+  if(!r.ok) return hhRow("cfwa","Cloudflare Web Analytics","bad","The nightly pull failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good pull "+hhWhen(r.lastOk)+".":"No good pull yet.")+tok);
+  if(left<=30) return hhRow("cfwa","Cloudflare Web Analytics","warn",tok.trim());
+  const hrs=(Date.now()-Date.parse(r.at))/36e5;
+  if(hrs>36) return hhRow("cfwa","Cloudflare Web Analytics","warn","Last pulled "+hhWhen(r.at)+", more than a day ago. The \"Web traffic\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
+  const d=wtDays(), last=d[d.length-1];
+  return hhRow("cfwa","Cloudflare Web Analytics","ok","Pulled "+hhWhen(r.at)+"."+(last?" "+fS(last.date)+": "+rsN(last.visits)+" visits, "+rsN(last.views)+" page views.":""));
 }
 
 /* ================= MISMO Mic'd Up ================= */
