@@ -282,7 +282,7 @@ async function restoreRec(col,id){
   delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
   try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
-let _raf=0; function schedule(){ if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
+let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
 /* ================= derived data ================= */
 function editionsSorted(){ return vals("editions").sort((a,b)=>(a.month<b.month?-1:1)); }

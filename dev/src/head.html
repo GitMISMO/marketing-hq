@@ -1502,6 +1502,11 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .wt-kb{border-radius:2px;background:var(--c1)}
 .wt-kl{background:var(--c2)}
 #rs-voices{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+/* the sponsor picker on posts and Mic'd Up episodes (Nov 21, 2026) */
+.sb-pick .fgrid{margin:0}
+.sb-pick .fgrid>.field:first-child{grid-column:span 2}
+@media(max-width:760px){.sb-pick .fgrid>.field:first-child{grid-column:auto}}
+.sb-pick .sb-say{margin:6px 0 0}
 /* Results as cards, the detail in the right-hand panel (Nov 21, 2026) */
 /* named res-card, not rs-card: the sign-in gate's own .rs-card rule (max-width 380px) was capping these and leaving wide gaps */
 .rs-band .say{margin-bottom:4px}

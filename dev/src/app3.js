@@ -59,6 +59,8 @@ function openEpisode(id, seed){
     {k:"title",label:"Title",wide:true,ph:"e.g. Beyond the Next Loan: Building Trust, Community, and Influence"},
     {k:"guests",label:"Guests",ph:"e.g. Steve Manente and Mike Hallman"},
     {k:"company",label:"Company",ph:"e.g. DocsDirect"},
+    {sec:"Sponsor Guest"},
+    {k:"_sponsor",type:"html",html:()=>sbPickerHtml(e,"micdup")},
     {sec:"Guest and Run of Show"},
     {k:"guestEmail",label:"Guest's Email",ph:"For the guest form and the share kit"},
     {k:"_guest",type:"html",html:()=>guestPaneHtml(id?S.episodes[id]:e, id)},
@@ -95,9 +97,9 @@ function openEpisode(id, seed){
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
-    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); },
+    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const sp=sbRead($("#pane-body"), e); if(sp) Object.assign(v, sp); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); sbSoon(); },
     del: id ? async()=>remove("episodes",id) : null,
-    after:b=>{ wireCx(b); wireGuestPane(b, id); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
+    after:b=>{ wireCx(b); wireGuestPane(b, id); sbWirePicker(b, e, ""); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
       const pa=$("#ep-paste",b); if(pa) pa.addEventListener("input",()=>{ const txt=pa.value; const urls=txt.match(/https?:\/\/[^\s<>"')\]]+/g)||[]; const drive=urls.find(u=>/drive\.google|docs\.google|sharepoint|onedrive|1drv/.test(u))||urls[0];
         const msg=$("#ep-paste-msg",b); let said=[];
         if(drive){ $("#f-fileUrl",b).value=drive; $("#f-fileIn",b).checked=true; said.push("file link"); }
@@ -147,8 +149,19 @@ function openPiece(id, seed){
   const ch = p.channel||"other"; const nid=id||uid("p");
   const cxWhat = ch==="linkedin"?"This Post":ch==="mailchimp"?"This Campaign":"This Item";
   const fields = id ? [{k:"_cx",type:"html",html:()=>cxBox("piece",id,cxWhat)}].concat(pieceFields(ch)) : pieceFields(ch);
-  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item")), fields, data:p, after:b=>wireCx(b),
-    save:async v=>{ if(ch==="linkedin"){ if(v.status==="canceled") v.autoPost=false; else if(v.autoPost && v.status!=="done") v.status="staged"; else if(!v.autoPost && v.status==="staged") v.status="ready"; } await put("pieces",nid,Object.assign({},p,v)); },
+  /* the sponsor this post recognizes, for the Sponsorship Portal's benefits (Nov 21, 2026): Sponsor Highlight posts and
+     the Summits sponsor thank-you post */
+  const sbCan = ch==="linkedin" || (ch==="summit" && /sponsor/i.test(p.title||""));
+  if(sbCan){ const at=fields.findIndex(f=>f.sec==="Copy and Links"); fields.splice(at<0?fields.length:at, 0, {sec:"Sponsor"}, {k:"_sponsor",type:"html",html:()=>sbPickerHtml(p,"linkedin")}); }
+  const sbShow=b=>{ const box=$("#sb-pick",b); if(!box) return; const k=$("#f-kind",b), via=$("#f-via",b);
+    const on = ch==="linkedin" ? (k && k.value==="Sponsor Highlight") : (!via || via.value==="LinkedIn");
+    box.hidden=!on; const sec=box.closest(".field"); const head=sec && sec.parentElement && sec.parentElement.previousElementSibling; if(sec) sec.hidden=!on; if(head && head.classList.contains("fsec")) head.hidden=!on; };
+  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item")), fields, data:p,
+    after:b=>{ wireCx(b); if(sbCan){ sbShow(b); const k=$("#f-kind",b), via=$("#f-via",b); if(k) k.addEventListener("change",()=>sbShow(b)); if(via) via.addEventListener("change",()=>sbShow(b)); sbWirePicker(b, p, ch==="summit"?sbSummitName(p.summit):""); } },
+    save:async v=>{ if(ch==="linkedin"){ if(v.status==="canceled") v.autoPost=false; else if(v.autoPost && v.status!=="done") v.status="staged"; else if(!v.autoPost && v.status==="staged") v.status="ready"; }
+      if(sbCan){ const sp=sbRead($("#pane-body"), p); if(sp) Object.assign(v, sp); }
+      if(v.status==="done" && p.status!=="done") v.postedBy=WHO();
+      await put("pieces",nid,Object.assign({},p,v)); sbSoon(); },
     del: id ? async()=>remove("pieces",id) : null });
 }
 function pieceRows(list, cols){
