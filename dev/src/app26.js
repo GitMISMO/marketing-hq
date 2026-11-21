@@ -59,7 +59,7 @@ function rsWebsite(){
     rsKpis([{v:rsN(visits),k:"Visits",s:span},{v:rsN(views),k:"Page Views",s:span},{v:visits?(views/visits).toFixed(1):"—",k:"Pages per Visit",s:"page views ÷ visits"},
       {v:rsN(Math.round(visits/Math.max(1,days.length))),k:"Visits a Day",s:"on average"},{v:rsN(last.visits),k:"Latest Day",s:fS(last.date)+" · "+rsN(last.views)+" views"},
       {v:rsN(best.visits),k:"Busiest Day",s:fS(best.date)}])+
-    '<div class="rs-box"><h3>Visits and Page Views Each Day</h3>'+wtChart(days)+'<p class="rs-note">Days run midnight to midnight UTC (7 PM to 7 PM Eastern), the way Cloudflare counts them. For anything before Nov 20, 2026, use Higher Logic\'s Site Traffic report.</p></div>'+
+    '<div class="rs-box"><h3>Visits and Page Views Each Day</h3>'+wtChart(days)+'<p class="rs-note">Days run midnight to midnight Eastern time. For anything before Nov 20, 2026, use Higher Logic\'s Site Traffic report.</p></div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>Top Pages</h3>'+(pages.length?hbars(pages,v=>rsN(v)+" views"):'<div class="empty sm">No pages counted for these days.</div>')+'</div>'+
       '<div class="rs-box"><h3>Where Visitors Come From</h3>'+(refs.length?hbars(refs,v=>rsN(v)+" visits"):'<div class="empty sm">No referrers counted for these days.</div>')+'<p class="rs-note">"Direct or not shared" is people who typed the address, used a bookmark, or came from an app or email that doesn\'t say where they came from.</p></div></div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>Devices</h3>'+devices+'</div>'+

@@ -230,7 +230,9 @@ function rsKpis(items){ return '<div class="rs-kpis">'+items.map(k=>'<div class=
 /* the month's checklist, folded to one line once everything is in */
 function rsMonthStrip(){
   const per=mnPeriod(), all=mnTasks(per);
-  return '<div class="rs-mstrip" title="Due the 1st of each month, for the month before"><span class="rs-ml">'+esc(mnName(per))+' numbers</span>'+all.map(x=>'<span class="rs-mc ok">✓ '+esc(x.t)+'</span>').join("")+'</div>';
+  /* the monthly hand-entered numbers are for the month before, so in November this is October's set (Jonna asked, Nov 20, 2026) */
+  const t=today(), cur=MONL[t.getMonth()], due=MONL[(t.getMonth()+1)%12].slice(0,3);
+  return '<div class="rs-mstrip" title="Monthly numbers come due the 1st of each month, for the month before"><span class="rs-ml">'+esc(mnName(per))+' monthly numbers are all in</span>'+all.map(x=>'<span class="rs-mc ok">✓ '+esc(x.t)+'</span>').join("")+'<span class="rs-mn">'+esc(cur)+'\'s are due '+esc(due)+' 1</span></div>';
 }
 /* hover notes on the charts: one floating label, follows the mark under the pointer (keyboard: focus) */
 function rsTips(el){
