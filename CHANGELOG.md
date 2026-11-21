@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21: new certifications from the CMS, drafted for MISMO Matters
+
+MISMO Media reads the CMS's new-certifications feed (resources.mismo.org/certified/new-certifications.json) and drafts one line per certification it hasn't seen (tracked by slug + program + product + certifiedOn in data/certnews.json), first certifications highlighted. A New Certifications from the CMS card on MISMO Matters lists them for Jonna to approve, edit, move or skip; one already named in a sent edition is marked Covered. Approved lines appear in that edition's Certifications section (first certifications on top, then renewals) in the email and the text version. Nothing is sent or posted from here. System Health has a CMS New Certifications row.
+
 ## 2026-11-21: ready to read the LinkedIn page automatically
 
 MISMO Media is ready for the LinkedIn page read (switched on once LinkedIn approves the MISMO Media Page Reporting app and a token is saved). The LinkedIn page workflow in marketing-hq-data reads the page every 3 hours, read only, into data/linkedin.json; MISMO Media matches each post to its record (marked Posted with its live link, numbers filled in: MISMO Matters posts, Sponsor Highlights, the Monday Mic'd Up posts), adds posts it didn't know about, turns the page's daily totals into the Daily totals records, shows followers on Results, ticks the monthly LinkedIn line by itself and has a LinkedIn Page row on System Health. Also: the monthly checklist's Drop the File button opens Results' Bring In the Numbers panel again.

@@ -2275,6 +2275,13 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .wt-kb{border-radius:2px;background:var(--c1)}
 .wt-kl{background:var(--c2)}
 #rs-voices{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+/* new certifications from the CMS (Nov 21, 2026) */
+.cn-first,.cn-ren{display:inline-block;border-radius:4px;padding:1px 7px;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap}
+.cn-first{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good);border:1px solid color-mix(in srgb,var(--good) 40%,transparent)}
+.cn-ren{color:var(--ink-2);border:1px solid var(--border)}
+#cn-card td .t2{display:block;margin-top:2px}
+.cn-acts{text-align:right;white-space:nowrap}.cn-acts .btn{display:inline-flex;width:auto}.cn-acts .btn+.btn{margin-left:6px}
+.cn-facts{line-height:1.6}
 /* the sponsor picker on posts and Mic'd Up episodes (Nov 21, 2026) */
 .sb-pick .fgrid{margin:0}
 .sb-pick .fgrid>.field:first-child{grid-column:span 2}
@@ -2715,7 +2722,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2844,7 +2851,7 @@ async function restoreRec(col,id){
   delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
   try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
-let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
+let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(typeof cnSync==="function") setTimeout(cnSync, 2000); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
 /* ================= derived data ================= */
 function editionsSorted(){ return vals("editions").sort((a,b)=>(a.month<b.month?-1:1)); }
@@ -3275,7 +3282,7 @@ function renderMatters(){
   const subs = '<div class="subtabs" role="group" aria-label="Edition views">'+
     [["sections","Sections",""],["preview","Preview & HTML",""],["checks","Send Checklist",checksDone+"/"+SEND_CHECKS.length],["stats","Stats",""],["archive","Past Editions",""]].map(([k,l,n])=>'<button type="button" data-sub="'+k+'" aria-pressed="'+(MS.sub===k)+'">'+esc(l)+(n?' <span class="note">'+esc(n)+'</span>':'')+'</button>').join("")+'</div>';
   let body='';
-  if(MS.sub==="sections") body=sectionsView(ed,secs);
+  if(MS.sub==="sections") body=(typeof cnCard==="function"?cnCard(ed):"")+sectionsView(ed,secs);
   else if(MS.sub==="preview") body=previewView(ed);
   else if(MS.sub==="checks") body=checksView(ed);
   else if(MS.sub==="stats") body=statsView(ed);
@@ -3285,7 +3292,7 @@ function renderMatters(){
   $$(".mile",el).forEach(b=>b.onclick=async()=>{ const k=b.dataset.mile; const done=Object.assign({},ed.done||{}); const was=!!done[k]; done[k]=!was; await patch("editions",ed.id,{done}); toast((was?"Unmarked: ":"Done: ")+MILES.find(m=>m[0]===k)[1]); });
   $$("[data-sub]",el).forEach(b=>b.onclick=()=>{ MS.sub=b.dataset.sub; renderMatters(); });
   $$("[data-rk]",el).forEach(p=>p.addEventListener("click",()=>openSection(ed,p.dataset.rk)));
-  if(MS.sub==="sections") wireSections(el,ed);
+  if(MS.sub==="sections"){ wireSections(el,ed); if(typeof cnWire==="function") cnWire(el,ed); }
   if(MS.sub==="preview") wirePreview(el,ed);
   if(MS.sub==="checks") $$("[data-chk]",el).forEach(c=>c.onchange=async()=>{ const checks=Object.assign({},ed.checks||{}); checks[c.dataset.chk]=c.checked; await patch("editions",ed.id,{checks}); });
   if(MS.sub==="stats"){ const b=$("#ms-stats",el); if(b) b.onclick=()=>openStats(ed); }
@@ -3311,6 +3318,8 @@ function sectionsView(ed,secs){
     else if(isCertSpot(s)){ const p=certProg(d.certProgram); snip=esc(p.name)+' · '+d.certItems.length+' certified, current from the website'; }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ const L=logoPicks(ed,s.k); snip=L.length+' logo'+(L.length===1?'':'s')+': '+esc(L.map(l=>l.name||(S.images[l.id]||{}).name||"").join(", ")); }
     else snip = d.headline ? esc(d.headline) : (d.body ? esc(mdPlain(d.body).slice(0,120)) : '<i>Nothing in yet</i>');
+    /* new certifications Jonna approved from the CMS feed (Nov 21, 2026) */
+    if(s.k==="cert" && typeof cnFor==="function" && cnFor(ed).length){ const n=cnFor(ed).length; snip+=' <i>· '+n+' new certification'+(n===1?'':'s')+' from the CMS</i>'; }
     const reuse = REUSE.map(([k,l,a])=>'<span class="rz k-'+(k==="website"?"other":k)+(d.reuse&&d.reuse[k]?" on":"")+'" title="'+esc(l)+'">'+a+'</span>').join("");
     const st = s.meta.auto ? '<span class="chip in">Automatic</span>' : chip(SSTAT, d.status||"waiting");
     return '<div class="secrow'+(s.on?"":" off")+'" draggable="true" data-k="'+esc(s.k)+'"><span class="grip" title="Drag to reorder">'+GRIP+'</span><input type="checkbox" data-inc="'+esc(s.k)+'"'+(s.on?" checked":"")+' aria-label="Include '+esc(s.meta.name)+' this month" title="Running this month"><div class="sn"><b>'+esc(d.name||s.meta.name)+'</b><small>'+esc(d.owner||s.meta.owner)+' · '+esc(s.meta.from||"")+(d.imageId||d.imageNote||d.imageUrl?" · image ✓":"")+'</small></div><div class="sx">'+snip+'</div><div class="reuse">'+reuse+'</div><div>'+st+'</div></div>';
@@ -3551,7 +3560,8 @@ function buildEmail(ed, preview, opt){
       /* the Certifications spotlight has its own layout, but its lead picture and quote still show, after the
          highlighted company's text (Nov 13, 2026: they were left out) */
       const cert=isCertSpot(s);
-      if(!cert && !d.headline && !d.body && !d.quote) return;
+      const cnew = s.k==="cert" && typeof certNewsEmail==="function" ? certNewsEmail(ed) : "";
+      if(!cert && !cnew && !d.headline && !d.body && !d.quote) return;
       if(!cert && d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
@@ -3570,9 +3580,9 @@ function buildEmail(ed, preview, opt){
       const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
       let quote='';
       if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
-      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote, pic) : certSpotlight(ed, s, body, pic+clear+quote); }
+      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote+cnew, pic) : certSpotlight(ed, s, body, pic+clear+quote+cnew); }
       else {
-      inner+=pic+body(d.body)+clear+quote;
+      inner+=pic+body(d.body)+clear+quote+cnew;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+=emGap(emBtn(esc(full), esc(fullWords(s.k, d))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
       const cm=ctaMode(d, "button");
@@ -3671,8 +3681,9 @@ function buildText(ed){
     if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push("MISMO Mic’d Up "+epWord(e)+(e.title?": "+e.title:"")+(e.guests?" — with "+e.guests+(e.company?", "+e.company:""):"")+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
-    else if(isCertSpot(s)){ body=certSpotlightText(ed,s); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullWords(s.k, d)+": "+full); if(ctaMode(d,"button")) body.push(ctaWords(d)+": "+d.ctaUrl); }
+    else if(isCertSpot(s)){ body=certSpotlightText(ed,s).concat(typeof certNewsText==="function"?certNewsText(ed):[]); }
+    else if(s.k==="cert" && typeof certNewsText==="function" && certNewsText(ed).length && !d.headline && !d.body){ body=certNewsText(ed); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullWords(s.k, d)+": "+full); if(ctaMode(d,"button")) body.push(ctaWords(d)+": "+d.ctaUrl); if(s.k==="cert" && typeof certNewsText==="function") body=body.concat(certNewsText(ed)); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"Unsubscribe: "+UNSUB_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");
@@ -7789,7 +7800,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 14:13 ET · dfb1f24";
+const BUILD = "2026-11-21 15:00 ET · 57492f5";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8005,7 +8016,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -9295,6 +9306,162 @@ function hhLinkedIn(){
   if(left!=null && left<=10) return hhRow("liapi","LinkedIn Page","warn",tok.trim());
   if((Date.now()-Date.parse(r.at))/36e5>8) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
   return hhRow("liapi","LinkedIn Page","ok","Read "+hhWhen(r.at)+": "+rsN(r.posts)+" posts"+(r.followers?", "+rsN(r.followers)+" followers":"")+"."+(LI_API.err?" Matching them here hit a problem: "+LI_API.err:""));
+}
+/* ================= New certifications from the CMS, for MISMO Matters (Nov 21, 2026) =================
+   The CMS publishes resources.mismo.org/certified/new-certifications.json: company and product certifications
+   completed in the last 180 days, newest first ({note, updated, certifications:[{org, slug, program, product (or null),
+   first, type, certifiedOn}]}). Contract: Connections Map row "CMS (Certification Completions) → MISMO Media".
+   The CMS only ever adds fields; questions go to certifications@mismo.org.
+   Each certification not seen before becomes a draft line for the Certifications section of the next MISMO Matters,
+   kept here in data/certnews.json, one record per certification (slug + program + product + certifiedOn). First
+   certifications lead and are highlighted. Nothing goes in until Jonna approves it; she can edit the words, move it
+   to another edition or skip it. One already named in an edition that went out is marked Covered instead. Nothing is
+   sent or posted automatically: approved lines only appear in the edition, which goes out the usual way. */
+const CN_FEED="/certified/new-certifications.json";
+const CN={busy:false, at:0, err:"", feedAt:"", n:0, all:false};
+const CN_APPROVERS={"jcritchley@mismo.org":"Jonna Critchley","jcritchley@mba.org":"Jonna Critchley"};
+function cnMe(){ const s=window.ResourcesSession && window.ResourcesSession.current && window.ResourcesSession.current(); return CN_APPROVERS[String((s&&s.email)||"").toLowerCase()]||""; }
+/* the tracking key the CMS asked for: slug + program + product + certifiedOn */
+function cnKey(c){ return [c.slug, c.program, c.product||"", c.certifiedOn].map(x=>String(x==null?"":x).trim().toLowerCase()).join("|"); }
+function cnId(c){ const s=cnKey(c); let h=2166136261>>>0, g=5381; for(let i=0;i<s.length;i++){ h=Math.imul(h^s.charCodeAt(i),16777619)>>>0; g=((g*33)^s.charCodeAt(i))>>>0; }
+  return "cn-"+String(c.slug||"x").replace(/[^a-z0-9-]/gi,"").slice(0,24)+"-"+h.toString(36)+g.toString(36); }
+/* how each program reads in a sentence; a program the CMS adds later reads by its own name */
+const CN_PROG={
+  RON:{label:"Remote Online Notarization (RON)", role:"a MISMO Certified RON Provider", k:"ron"},
+  eVault:{label:"eVault", role:"a MISMO Certified eVault System", k:"evault"},
+  eClosing:{label:"eClosing", role:"a MISMO Certified eClose Provider", k:"eclose"},
+  FRAME:{label:"FRAME Advisory Partner", role:"a MISMO Certified FRAME Advisory Partner", k:"frame"},
+  Consultant:{label:"Consultant", role:"a MISMO Certified Consultant", k:"consultant"},
+  Product:{label:"Product", role:"a MISMO Certified Product Provider", k:"product"}
+};
+function cnProg(p){ return CN_PROG[p] || {label:String(p||""), role:"MISMO "+String(p||"")+" certified", k:""}; }
+/* a product name worth saying: not empty, not the program's name, not just the company again */
+function cnProduct(c){ const p=String(c.product||"").trim(); if(!p) return ""; const n=s=>s.toLowerCase().replace(/[^a-z0-9]+/g,"");
+  return (n(p)===n(c.program) || n(p)===n(c.org) || n(p)===n(cnProg(c.program).label)) ? "" : p; }
+function cnDraft(c){
+  const pr=cnProg(c.program), prod=cnProduct(c);
+  if(c.first) return prod ? c.org+" earned its first MISMO "+pr.label+" certification, for "+prod+"."
+                          : c.org+" is now "+pr.role+", its first MISMO "+pr.label+" certification.";
+  return c.org+" renewed its MISMO "+pr.label+" certification"+(prod?" for "+prod:"")+(c.type && /\d/.test(c.type)?" ("+c.type.toLowerCase()+")":"")+".";
+}
+/* the edition a new line goes to: the next one still being built */
+function cnEdition(){ const t=T(); const eds=editionsSorted().filter(e=>e.dates && !e.archived && !(e.done&&e.done.publish));
+  return (eds.find(e=>(e.dates.publish||e.month+"-28")>=t) || curEdition() || {}).id || ""; }
+/* already named in an edition that went out (its Certifications list or words, or its In the News stories)? */
+function cnCoveredBy(c){
+  const name=String(c.org||"").toLowerCase(); if(name.length<3) return "";
+  for(const e of editionsSorted()){
+    if(!(e.dates && e.dates.publish && e.dates.publish<=T() && e.dates.publish>=c.certifiedOn)) continue;
+    const d=S.sections[e.month+"__cert"]||{};
+    const words=[(d.certItems||[]).map(i=>i.name).join(" "), d.body||"", d.headline||""].join(" ").toLowerCase();
+    const prog=cnProg(c.program).k;
+    if((d.certItems||[]).some(i=>String(i.name).toLowerCase().indexOf(name)>=0) && (!prog || d.certProgram===prog)) return monthName(e.month)+" MISMO Matters (Certifications list)";
+    if(words.indexOf(name)>=0) return monthName(e.month)+" MISMO Matters (Certifications section)";
+    if(typeof newsInWindow==="function" && newsInWindow(e).some(n=>String(n.headline||"").toLowerCase().indexOf(name)>=0 && /certif/i.test(n.headline||""))) return monthName(e.month)+" MISMO Matters (In the News)";
+  }
+  return "";
+}
+async function cnSync(force){
+  if(CN.busy || STALE.on || !CANWRITE || !LOADED.has("certnews") || !LOADED.has("editions") || !LOADED.has("sections")) return;
+  if(!force && Date.now()-CN.at < 30*60000) return;
+  if(location.protocol==="file:" && /\[native code\]/.test(String(window.fetch))) return;   /* a saved copy opened from disk has no feed to read */
+  CN.busy=true; CN.at=Date.now();
+  try{
+    const r=await fetch(CN_FEED, {cache:"no-store"}); if(!r.ok) throw new Error("the CMS feed answered "+r.status);
+    const j=await r.json(); const list=Array.isArray(j && j.certifications) ? j.certifications : [];
+    CN.feedAt=String(j && j.updated || ""); CN.n=list.length; CN.err="";
+    const have=new Set(vals("certnews").map(x=>x.key));
+    const ed=cnEdition();
+    for(const c of list){
+      if(!c || !c.slug || !c.program || !c.certifiedOn) continue;
+      const key=cnKey(c), id=cnId(c); if(have.has(key) || S.certnews[id]) continue;
+      const cov=cnCoveredBy(c);
+      await put("certnews", id, {key, org:String(c.org||""), slug:c.slug, program:c.program, product:c.product||null, first:c.first===true, type:String(c.type||""), certifiedOn:c.certifiedOn,
+        text:cnDraft(c), status:cov?"covered":"draft", coveredBy:cov, edition:cov?"":ed, draftedAt:new Date().toISOString(), feed:c});
+      have.add(key);
+    }
+  }catch(e){ CN.err=(e&&e.message)||"couldn't read the CMS feed"; }
+  finally{ CN.busy=false; }
+}
+setInterval(()=>{ if(document.visibilityState!=="hidden") cnSync(); }, 10*60000);
+/* the approved lines for an edition, first certifications first, then newest */
+function cnFor(ed){ return vals("certnews").filter(x=>x.status==="approved" && x.edition===ed.id).sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)) || String(a.org).localeCompare(String(b.org))); }
+
+/* ---------- in the email and the text version ---------- */
+function certNewsEmail(ed){
+  const xs=cnFor(ed); if(!xs.length) return "";
+  const F=EM_F, navy="#0d314c", line="#dde9f2", M="font-family:'IBM Plex Mono',Consolas,monospace;";
+  const firsts=xs.filter(x=>x.first), renew=xs.filter(x=>!x.first);
+  const head='<div style="'+M+'font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#2477b8;font-weight:600;margin:0 0 6px">New MISMO Certifications</div>'+
+    '<div style="'+F+'font-size:20px;line-height:1.25;color:'+navy+';font-weight:700;margin:0 0 12px">Congratulations to the companies certified'+(firsts.length&&!renew.length?' for the first time':'')+' this month</div>';
+  const first=x=>'<tr><td style="padding:10px 0;border-bottom:1px solid '+line+'"><div style="'+M+'font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:#1a8a5c;font-weight:700;margin:0 0 3px">First Certification &middot; '+esc(cnProg(x.program).label)+'</div>'+
+    '<div style="'+F+'font-size:16px;line-height:1.45;color:'+navy+';font-weight:700">'+esc(x.org)+'</div><div style="'+F+'font-size:15px;line-height:1.55;color:#1d2b36">'+esc(x.text)+'</div></td></tr>';
+  const ren=x=>'<tr><td width="14" valign="top" style="padding:6px 0;'+F+'font-size:11px;line-height:20px;color:#74bfeb">&#11042;</td><td style="padding:6px 0 6px 6px;border-bottom:1px solid '+line+';'+F+'font-size:14.5px;line-height:20px;color:#1d2b36">'+esc(x.text)+'</td></tr>';
+  return emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid '+line+';border-top:4px solid #1a8a5c;border-radius:8px"><tr><td style="padding:20px 22px">'+head+
+    (firsts.length?'<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+firsts.map(first).join("")+'</table>':'')+
+    (renew.length?'<div style="'+F+'font-size:14px;font-weight:700;color:'+navy+';margin:'+(firsts.length?'16px':'0')+' 0 4px">Renewed</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+renew.map(ren).join("")+'</table>':'')+
+    '</td></tr></table>', 6, 22);
+}
+function certNewsText(ed){
+  const xs=cnFor(ed); if(!xs.length) return [];
+  const out=["New MISMO Certifications"];
+  xs.filter(x=>x.first).forEach(x=>out.push("First certification: "+x.text));
+  const r=xs.filter(x=>!x.first); if(r.length){ out.push("Renewed:"); r.forEach(x=>out.push("• "+x.text)); }
+  return out;
+}
+
+/* ---------- the card on MISMO Matters, for Jonna ---------- */
+function cnCard(ed){
+  const all=vals("certnews"), wait=all.filter(x=>x.status==="draft").sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)));
+  const shown=CN.all ? all.slice().sort((a,b)=>String(b.certifiedOn).localeCompare(String(a.certifiedOn))) : wait;
+  const me=!!cnMe(), inEd=cnFor(ed).length;
+  if(!all.length && !CN.err) return '';
+  const st=x=>x.status==="draft"?'<span class="chip review">Waiting for Jonna</span>':x.status==="approved"?'<span class="chip ok">In '+esc(monthName((S.editions[x.edition]||{}).month||""))+'</span>':x.status==="covered"?'<span class="chip wait" title="'+esc(x.coveredBy||"")+'">Covered</span>':'<span class="chip changes">Skipped</span>';
+  const row=x=>'<tr class="click" data-cn="'+esc(x.id)+'"><td>'+(x.first?'<span class="cn-first">First</span>':'<span class="cn-ren">'+esc(x.type||"Renewal")+'</span>')+'</td>'+
+    '<td><b>'+esc(x.org)+'</b><span class="t2">'+esc(x.text)+'</span></td><td class="nw">'+esc(cnProg(x.program).label)+'</td><td class="nw">'+esc(fS(x.certifiedOn))+'</td><td class="nw">'+st(x)+'</td>'+
+    '<td class="nw cn-acts">'+(x.status==="draft"?'<button class="btn sm pri" type="button" data-cna="ok" data-id="'+esc(x.id)+'"'+(me?'':' disabled title="Jonna approves these"')+'>Approve</button><button class="btn sm" type="button" data-cna="skip" data-id="'+esc(x.id)+'"'+(me?'':' disabled title="Jonna approves these"')+'>Skip</button>':'')+'</td></tr>';
+  return '<div class="card" id="cn-card" style="margin-bottom:22px"><div class="ch"><h2>New Certifications from the CMS</h2><span class="cnt">'+wait.length+'</span>'+
+    '<span class="note">'+(wait.length?wait.filter(x=>x.first).length+' first certifications and '+wait.filter(x=>!x.first).length+' renewals drafted for the Certifications section, waiting for Jonna':'nothing waiting')+(inEd?' · '+inEd+' approved for '+esc(monthName(ed.month)):'')+'</span><span class="sp"></span>'+
+    '<button class="btn sm" type="button" id="cn-all">'+(CN.all?'Show Only Waiting':'Show All '+all.length)+'</button>'+
+    (me && wait.some(x=>x.first)?'<button class="btn sm" type="button" id="cn-firsts">Approve All First Certifications</button>':'')+'</div>'+
+    (CN.err?'<div class="hint pad">Couldn\'t read the CMS feed: '+esc(CN.err)+'. Questions about it go to certifications@mismo.org.</div>':'')+
+    (shown.length?'<div class="tw"><table class="t"><thead><tr><th></th><th>Draft for MISMO Matters</th><th>Program</th><th>Certified</th><th>Status</th><th></th></tr></thead><tbody>'+shown.map(row).join("")+'</tbody></table></div>'
+      :'<div class="empty sm">Every certification from the CMS is approved, skipped or already covered. New ones arrive as drafts by themselves.</div>')+
+    '<p class="rs-note pad">Approved lines appear in the edition\'s Certifications section, first certifications on top. Nothing is sent or posted from here. Click a line to edit the words or move it to another edition.</p></div>';
+}
+async function cnSet(id, part){
+  if(!cnMe()){ toast("Jonna approves these.", 3000); return; }
+  const x=S.certnews[id]; if(!x) return;
+  await put("certnews", id, Object.assign({}, x, part, {decidedBy:cnMe(), decidedAt:new Date().toISOString()}));
+}
+function cnWire(el, ed){
+  const c=$("#cn-card",el); if(!c) return;
+  const a=$("#cn-all",c); if(a) a.onclick=()=>{ CN.all=!CN.all; renderMatters(); };
+  const f=$("#cn-firsts",c); if(f) f.onclick=async()=>{ const xs=vals("certnews").filter(x=>x.status==="draft" && x.first); for(const x of xs) await cnSet(x.id, {status:"approved", edition:x.edition||cnEdition()}); toast(xs.length+" first certifications approved.", 3000); renderMatters(); };
+  $$("[data-cna]",c).forEach(b=>b.onclick=async ev=>{ ev.stopPropagation(); const x=S.certnews[b.dataset.id]; if(!x) return;
+    await cnSet(x.id, b.dataset.cna==="ok" ? {status:"approved", edition:x.edition||cnEdition()} : {status:"skipped"}); renderMatters(); });
+  $$("tr[data-cn]",c).forEach(r=>r.onclick=()=>cnOpen(r.dataset.cn));
+}
+function cnOpen(id){
+  const x=S.certnews[id]; if(!x) return; const me=!!cnMe();
+  const eds=editionsSorted().filter(e=>!e.archived || e.id===x.edition).slice().reverse().map(e=>[e.id, monthName(e.month)+(e.done&&e.done.publish?" (sent)":"")]);
+  const facts='<div class="ro cn-facts"><b>'+esc(x.org)+'</b> · '+esc(x.program)+(x.product?' · '+esc(x.product):'')+' · '+esc(x.type||"")+' · certified '+esc(fS(x.certifiedOn))+(x.first?' · <span class="cn-first">First</span>':'')+
+    (x.coveredBy?'<div class="hint">Already covered: '+esc(x.coveredBy)+'.</div>':'')+'<div class="hint">From the CMS feed. If something here looks wrong, ask certifications@mismo.org.</div></div>';
+  openPane({eye:"New Certification · from the CMS", title:x.org, data:Object.assign({}, x),
+    fields:[{k:"_f",type:"html",html:()=>facts},{k:"text",label:"The Line in MISMO Matters",type:"textarea",rows:3,wide:true},{k:"edition",label:"Goes in",type:"select",opts:[["","Next edition being built"]].concat(eds)}],
+    save: me ? async v=>{ await put("certnews", id, Object.assign({}, S.certnews[id], v, {edition:v.edition||x.edition||cnEdition()})); renderMatters(); } : null,
+    buttons: me ? [x.status!=="approved"?{label:"Approve", run:async v=>{ await cnSet(id, Object.assign({}, v, {status:"approved", edition:v.edition||x.edition||cnEdition()})); closePane(true); renderMatters(); }}:null,
+      x.status!=="skipped"?{label:"Skip It", run:async v=>{ await cnSet(id, {status:"skipped"}); closePane(true); renderMatters(); }}:null,
+      x.status!=="draft"?{label:"Back to Waiting", run:async v=>{ await cnSet(id, {status:"draft"}); closePane(true); renderMatters(); }}:null].filter(Boolean) : [],
+    noFocus:!me});
+}
+/* System Health */
+function hhCertNews(){
+  if(!LOADED.has("certnews")) return null;
+  const wait=vals("certnews").filter(x=>x.status==="draft").length;
+  if(CN.err) return hhRow("cnfeed","CMS New Certifications","bad","Couldn't read the CMS feed: "+CN.err+". Questions go to certifications@mismo.org.");
+  if(!CN.at) return hhRow("cnfeed","CMS New Certifications","off","Reads the CMS's new certifications when MISMO Media opens.");
+  return hhRow("cnfeed","CMS New Certifications","ok","Read "+hhWhen(CN.at)+(CN.feedAt?" (the CMS updated it "+fS(CN.feedAt)+")":"")+": "+CN.n+" certifications in the last 180 days, "+wait+" waiting for Jonna.");
 }
 
 /* ================= MISMO Mic'd Up ================= */
