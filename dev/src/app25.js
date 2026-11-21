@@ -3,7 +3,9 @@
    Claude writes the post from that section's own words and links (it never adds facts), and a 1080 x 1080
    branded card is drawn from the section's header banner, its headline and its picture (or a one-line teaser).
    The posts land on the LinkedIn page with no date, Ready for Review, until Amy approves each one in MISMO Media.
-   Nothing posts by itself: the team sets a date and posts once Amy has approved. */
+   Nothing posts by itself: the team sets a date and posts once Amy has approved.
+   Jonna and Vanessa can approve too, and anyone of the three can mark a post Posted with its live link, which clears it
+   whether or not it was approved first (Jonna, Nov 21, 2026: Amy posts some herself without pressing Approve). */
 const ML = {busy:{}, ed:""};
 const ML_SIZE = 1080;
 /* which edition: the one picked, else the newest one already sent, else the one being built */
@@ -13,8 +15,18 @@ function mlEdition(){ return (ML.ed && S.editions[ML.ed]) || mlEditions()[0] || 
 function mlId(ed, k){ return "li-mm-"+ed.month+"-"+k; }
 function mlPosts(ed){ return vals("pieces").filter(p=>p.channel==="linkedin" && p.fromEdition===ed.id && !p.archived); }
 function mlPostFor(ed, k){ const p=(S.pieces||{})[mlId(ed,k)]; return p && !p.archived ? p : null; }
-function mlIsAmy(){ const s=window.ResourcesSession && window.ResourcesSession.current && window.ResourcesSession.current();
-  return String((s&&s.email)||"").toLowerCase()==="amoses@mismo.org"; }
+const ML_DECIDERS={"amoses@mismo.org":"Amy Moses","jcritchley@mismo.org":"Jonna Critchley","jcritchley@mba.org":"Jonna Critchley","vrios@mismo.org":"Vanessa Rios","vrios@mba.org":"Vanessa Rios"};
+function mlMe(){ const s=window.ResourcesSession && window.ResourcesSession.current && window.ResourcesSession.current(); return ML_DECIDERS[String((s&&s.email)||"").toLowerCase()]||""; }
+function mlIsAmy(){ return !!mlMe(); }   /* Amy, Jonna or Vanessa */
+const ML_WHO="Only Amy, Jonna or Vanessa can";
+/* a LinkedIn address of a live post (linkedin.com/feed/update/… or /posts/…) */
+const mlLive = u=>/^https:\/\/(www\.)?linkedin\.com\/(feed\/update|posts)\//i.test(String(u||"").trim());
+async function mlPosted(id, live, date){
+  if(!mlIsAmy()){ toast(ML_WHO+" mark these posted.", 3500); return; }
+  const p=S.pieces[id]; if(!p) return;
+  await put("pieces", id, Object.assign({}, p, {status:"done", postedUrl:live||p.postedUrl||"", date:date||p.date||T(), postedBy:mlMe(), postedAt:new Date().toISOString(), autoPost:false}));
+  toast("Marked Posted.", 3000); renderLinkedin();
+}
 /* the sections that have something to say, in newsletter order, with each one's plain text from the text version */
 function mlSections(ed){
   const txt=buildText(ed), blocks={};
@@ -201,21 +213,21 @@ async function mlMakeAll(ed, onlyMissing){
   if(TAB==="linkedin") renderLinkedin();
 }
 async function mlApprove(id){
-  if(!mlIsAmy()){ toast("Only Amy can approve these.", 3500); return; }
+  if(!mlIsAmy()){ toast(ML_WHO+" approve these.", 3500); return; }
   const p=S.pieces[id]; if(!p) return;
-  await put("pieces", id, Object.assign({}, p, {status:"ready", approvedBy:"Amy Moses", approvedAt:new Date().toISOString()}));
+  await put("pieces", id, Object.assign({}, p, {status:"ready", approvedBy:mlMe(), approvedAt:new Date().toISOString()}));
   toast("Approved. Set a post date when it's going up.", 3500); renderLinkedin();
 }
 
 /* Amy can also decide a section shouldn't go on LinkedIn at all (Nov 19, 2026); it can be brought back */
 async function mlSkip(id){
-  if(!mlIsAmy()){ toast("Only Amy can decide that.", 3500); return; }
+  if(!mlIsAmy()){ toast(ML_WHO+" decide that.", 3500); return; }
   const p=S.pieces[id]; if(!p) return;
-  await put("pieces", id, Object.assign({}, p, {status:"canceled", cancelReason:"Not posting (Amy)", skippedBy:"Amy Moses", skippedAt:new Date().toISOString(), autoPost:false}));
+  await put("pieces", id, Object.assign({}, p, {status:"canceled", cancelReason:"Not posting ("+mlMe().split(" ")[0]+")", skippedBy:mlMe(), skippedAt:new Date().toISOString(), autoPost:false}));
   toast("Marked Not Posting.", 3000); renderLinkedin();
 }
 async function mlUnskip(id){
-  if(!mlIsAmy()){ toast("Only Amy can decide that.", 3500); return; }
+  if(!mlIsAmy()){ toast(ML_WHO+" decide that.", 3500); return; }
   const p=S.pieces[id]; if(!p) return;
   await put("pieces", id, Object.assign({}, p, {status:"review", cancelReason:"", skippedBy:"", skippedAt:""}));
   toast("Back to Ready for Review.", 3000); renderLinkedin();
@@ -224,7 +236,7 @@ async function mlUnskip(id){
 function mlCardHtml(){
   const ed=mlEdition(); if(!ed) return "";
   const secs=mlSections(ed), posts=secs.map(x=>({x, p:mlPostFor(ed,x.k)})), made=posts.filter(o=>o.p).length;
-  const waiting=posts.filter(o=>o.p && o.p.status==="review").length, approved=posts.filter(o=>o.p && ["ready","staged","done"].includes(o.p.status)).length, skipped=posts.filter(o=>o.p && o.p.status==="canceled").length;
+  const waiting=posts.filter(o=>o.p && o.p.status==="review").length, approved=posts.filter(o=>o.p && ["ready","staged"].includes(o.p.status)).length, posted=posts.filter(o=>o.p && o.p.status==="done").length, skipped=posts.filter(o=>o.p && o.p.status==="canceled").length;
   const busy=Object.keys(ML.busy).length;
   /* one row per section, like the other lists: click it to see and work on the post in the panel on the right */
   const row=o=>{ const p=o.p, id=mlId(ed,o.x.k), im=p&&p.imageId&&S.images&&S.images[p.imageId];
@@ -240,7 +252,7 @@ function mlCardHtml(){
     '<div class="r ml-tools">'+(mlEditions().length>1?'<select class="plain" id="ml-ed" aria-label="Edition">'+mlEditions().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
       /* the button only shows while a section has no post yet: the first time, or one that didn't work */
       (made<secs.length?'<button class="btn pri" type="button" id="ml-make"'+(busy?' disabled':'')+'>'+(made?"Make the "+(secs.length-made)+" Missing Post"+(secs.length-made===1?"":"s"):"Make a Post for Every Section")+'</button>':'')+'</div></div>'+
-    '<div id="ml-body"><div class="ml-sub">'+(made?'<b>'+waiting+'</b> waiting on Amy, <b>'+approved+'</b> approved'+(skipped?', <b>'+skipped+'</b> not posting':'')+'. Click a post to read it, see its graphic and approve it. Nothing posts by itself.'
+    '<div id="ml-body"><div class="ml-sub">'+(made?'<b>'+waiting+'</b> waiting for approval, <b>'+approved+'</b> approved'+(posted?', <b>'+posted+'</b> posted':'')+(skipped?', <b>'+skipped+'</b> not posting':'')+'. Click a post to read it, see its graphic, approve it or mark it posted. Nothing posts by itself.'
       :'Each section becomes its own post with a 1080 x 1080 graphic, written from the section\'s own words and links. Nothing posts by itself.')+'</div>'+
     '<div class="tw"><table class="t"><thead><tr><th style="width:56px"></th><th>Post</th><th>Status</th><th>Date</th></tr></thead><tbody>'+posts.map(row).join("")+'</tbody></table></div></div></div>';
 }
@@ -254,21 +266,30 @@ function mlOpen(ed, k){
   const im=p.imageId&&S.images&&S.images[p.imageId], amy=mlIsAmy();
   const st=p.status==="canceled" ? '<span class="chip changes">Not Posting</span>' : chip(PSTAT,p.status||"review");
   const acts='<div class="ml-acts">'+
-    (p.status==="review"?'<button class="btn sm pri" type="button" data-mla="ok"'+(amy?'':' disabled title="Only Amy can approve"')+'>Approve</button>':'')+
-    (["review","ready"].includes(p.status)?'<button class="btn sm" type="button" data-mla="skip"'+(amy?'':' disabled title="Only Amy can decide this"')+'>Don\'t Post</button>':'')+
-    (p.status==="canceled"?'<button class="btn sm" type="button" data-mla="back"'+(amy?'':' disabled title="Only Amy can decide this"')+'>Bring It Back</button>':'')+
+    (p.status==="review"?'<button class="btn sm pri" type="button" data-mla="ok"'+(amy?'':' disabled title="'+ML_WHO+' approve"')+'>Approve</button>':'')+
+    (["review","ready","staged"].includes(p.status)?'<button class="btn sm" type="button" data-mla="posted"'+(amy?'':' disabled title="'+ML_WHO+' mark it posted"')+'>Mark Posted</button>':'')+
+    (["review","ready"].includes(p.status)?'<button class="btn sm" type="button" data-mla="skip"'+(amy?'':' disabled title="'+ML_WHO+' decide this"')+'>Don\'t Post</button>':'')+
+    (p.status==="canceled"?'<button class="btn sm" type="button" data-mla="back"'+(amy?'':' disabled title="'+ML_WHO+' decide this"')+'>Bring It Back</button>':'')+
     '<button class="btn sm" type="button" data-mla="copy">Copy Post</button>'+
     (im?'<button class="btn sm" type="button" data-mla="dl">Download Graphic</button>':'')+
     '<button class="btn sm" type="button" data-mla="draw">Redraw Graphic</button>'+
     '<button class="btn sm" type="button" data-mla="redo">Write It Again</button></div>'+
-    (amy||!["review","ready","canceled"].includes(p.status)?'':'<div class="t2 ml-who">Approve and Don\'t Post are Amy\'s calls, so they\'re greyed out for everyone else.</div>');
+    (amy||!["review","ready","canceled"].includes(p.status)?'':'<div class="t2 ml-who">Approve, Mark Posted and Don\'t Post are for Amy, Jonna and Vanessa, so they\'re greyed out for everyone else.</div>');
   openPane({eye:"LinkedIn Post · "+monthName(ed.month)+" MISMO Matters", title:x.name, data:Object.assign({}, p), noFocus:true,
     fields:[{k:"_g",type:"html",html:()=>'<div class="ml-pv">'+(im?'<img alt="" id="ml-pvimg" src="'+esc(imgSrc(im)||"")+'">':'<div class="ro">No graphic yet. Press Redraw Graphic.</div>')+'</div>'+
-        '<div class="ml-pst">'+st+(p.approvedBy?'<span class="t2">Approved by '+esc(p.approvedBy)+'</span>':'')+'</div>'+acts},
+        '<div class="ml-pst">'+st+(p.approvedBy?'<span class="t2">Approved by '+esc(p.approvedBy)+'</span>':'')+(p.status==="done"&&p.postedUrl?'<a class="t2" href="'+esc(p.postedUrl)+'" target="_blank" rel="noopener">See the live post ↗</a>':'')+'</div>'+acts},
       {k:"copy",label:"Post",type:"textarea",rows:12,wide:true},
       {k:"link",label:"Link in the Post",type:"url",wide:true},
-      {k:"date",label:"Post Date",type:"date"},{k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true}],
-    save:async v=>{ await put("pieces", id, Object.assign({}, S.pieces[id], v)); renderLinkedin(); },
+      {k:"date",label:"Post Date",type:"date"},{k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true},
+      {k:"postedUrl",label:"Link to the Live Post",type:"url",wide:true,ph:"https://www.linkedin.com/feed/update/…",hint:"Once it's up. Saving with this link marks the post Posted."}],
+    save:async v=>{ const cur=S.pieces[id]||p;
+      /* the live post's address typed into Link in the Post belongs in Link to the Live Post; the post keeps the link it points to */
+      if(mlLive(v.link) && !mlLive(cur.link) && !v.postedUrl){ v.postedUrl=v.link; v.link=cur.link; }
+      if(v.postedUrl && !["done","canceled"].includes(cur.status)){
+        if(mlIsAmy()) Object.assign(v, {status:"done", date:v.date||T(), postedBy:mlMe(), postedAt:new Date().toISOString(), autoPost:false});
+        else toast("Saved. Amy, Jonna or Vanessa marks it Posted.", 4000);
+      }
+      await put("pieces", id, Object.assign({}, cur, v)); renderLinkedin(); },
     after:b=>{
       if(im) imgEnsure(im).then(()=>{ const t=$("#ml-pvimg",b); if(t && imgSrc(im)) t.src=imgSrc(im); }).catch(()=>{});
       const go2=async fn=>{ await fn(); closePane(true); renderLinkedin(); mlOpen(ed,k); };
@@ -276,6 +297,7 @@ function mlOpen(ed, k){
         if(a==="ok") return go2(()=>mlApprove(id));
         if(a==="skip") return go2(()=>mlSkip(id));
         if(a==="back") return go2(()=>mlUnskip(id));
+        if(a==="posted"){ const u=($("#f-postedUrl",b)||{}).value||"", l=($("#f-link",b)||{}).value||""; return go2(()=>mlPosted(id, u.trim()||(mlLive(l)?l.trim():""), parseDateIn(($("#f-date",b)||{}).value||"")||"")); }
         if(a==="copy") return copyText($("#f-copy",b).value||p.copy||"","The post");
         if(a==="dl"){ try{ await imgEnsure(im); const blob=await fetch(imgSrc(im)).then(r=>r.blob()); await saveBlob(blob, imgFileName(im)); }catch(e){ toast("Couldn't download it: "+(e.message||"try again"), 4000); } return; }
         if(a==="draw"){ toast("Drawing a new graphic…", 30000); try{ toast(await mlRedraw(ed,k) ? "New graphic saved." : "It didn't work. Try again.", 3500); }catch(e){ toast("It didn't work: "+(e.message||"try again"), 5000); } closePane(true); renderLinkedin(); mlOpen(ed,k); return; }
