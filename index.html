@@ -7800,7 +7800,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 15:00 ET · 57492f5";
+const BUILD = "2026-11-21 15:07 ET · 5449e45";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -9347,17 +9347,21 @@ function cnDraft(c){
 /* the edition a new line goes to: the next one still being built */
 function cnEdition(){ const t=T(); const eds=editionsSorted().filter(e=>e.dates && !e.archived && !(e.done&&e.done.publish));
   return (eds.find(e=>(e.dates.publish||e.month+"-28")>=t) || curEdition() || {}).id || ""; }
-/* already named in an edition that went out (its Certifications list or words, or its In the News stories)? */
+/* the names a company goes by: "TReX (Tidgewell Results Experience)" is also TReX and Tidgewell Results Experience */
+function cnNames(org){ const o=String(org||"").trim(), m=o.match(/^(.*?)\s*\((.+)\)\s*$/); return (m?[o,m[1],m[2]]:[o]).filter(n=>n.length>=3); }
+const cnNorm=s=>String(s||"").toLowerCase().replace(/&/g," and ").replace(/\b(inc|llc|l\.l\.c|corp|corporation|company|co|the|ltd)\b\.?/g," ").replace(/[^a-z0-9]+/g,"");
+function cnSameOrg(a, org){ return cnNames(org).some(n=>cnNorm(a)===cnNorm(n) || (typeof nmSame==="function" && nmSame(a, n))); }
+/* already named in an edition that went out (its Certifications list for the same program, its own words, or its
+   In the News stories about a certification)? */
 function cnCoveredBy(c){
-  const name=String(c.org||"").toLowerCase(); if(name.length<3) return "";
+  if(!cnNames(c.org).length) return "";
   for(const e of editionsSorted()){
     if(!(e.dates && e.dates.publish && e.dates.publish<=T() && e.dates.publish>=c.certifiedOn)) continue;
-    const d=S.sections[e.month+"__cert"]||{};
-    const words=[(d.certItems||[]).map(i=>i.name).join(" "), d.body||"", d.headline||""].join(" ").toLowerCase();
-    const prog=cnProg(c.program).k;
-    if((d.certItems||[]).some(i=>String(i.name).toLowerCase().indexOf(name)>=0) && (!prog || d.certProgram===prog)) return monthName(e.month)+" MISMO Matters (Certifications list)";
-    if(words.indexOf(name)>=0) return monthName(e.month)+" MISMO Matters (Certifications section)";
-    if(typeof newsInWindow==="function" && newsInWindow(e).some(n=>String(n.headline||"").toLowerCase().indexOf(name)>=0 && /certif/i.test(n.headline||""))) return monthName(e.month)+" MISMO Matters (In the News)";
+    const d=S.sections[e.month+"__cert"]||{}, prog=cnProg(c.program).k;
+    if(prog && d.certProgram===prog && (d.certItems||[]).some(i=>cnSameOrg(i.name, c.org))) return monthName(e.month)+" MISMO Matters (Certifications list)";
+    const words=cnNorm([d.body||"", d.headline||""].join(" "));
+    if(cnNames(c.org).some(n=>cnNorm(n).length>=5 && words.indexOf(cnNorm(n))>=0) && new RegExp(String(c.program).replace(/[^a-z]/gi,""),"i").test([d.body||"",d.headline||""].join(" "))) return monthName(e.month)+" MISMO Matters (Certifications section)";
+    if(typeof newsInWindow==="function" && newsInWindow(e).some(n=>/certif/i.test(n.headline||"") && cnNames(c.org).some(x=>cnNorm(n.headline).indexOf(cnNorm(x))>=0))) return monthName(e.month)+" MISMO Matters (In the News)";
   }
   return "";
 }
@@ -9379,6 +9383,12 @@ async function cnSync(force){
       await put("certnews", id, {key, org:String(c.org||""), slug:c.slug, program:c.program, product:c.product||null, first:c.first===true, type:String(c.type||""), certifiedOn:c.certifiedOn,
         text:cnDraft(c), status:cov?"covered":"draft", coveredBy:cov, edition:cov?"":ed, draftedAt:new Date().toISOString(), feed:c});
       have.add(key);
+    }
+    /* lines no one has decided on yet: check again whether a sent edition already covered them */
+    for(const x of vals("certnews")){
+      if(x.decidedBy || !["draft","covered"].includes(x.status)) continue;
+      const cov=cnCoveredBy(x.feed||x), want=cov?"covered":"draft";
+      if(want!==x.status || (cov||"")!==(x.coveredBy||"")) await put("certnews", x.id, Object.assign({}, x, {status:want, coveredBy:cov, edition:cov?"":(x.edition||ed)}));
     }
   }catch(e){ CN.err=(e&&e.message)||"couldn't read the CMS feed"; }
   finally{ CN.busy=false; }
