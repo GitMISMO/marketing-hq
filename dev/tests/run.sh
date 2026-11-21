@@ -33,4 +33,5 @@ out=$(node webframe.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || 
 out=$(node thumbs.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node webtraffic.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node sponsorfeed.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node liapi.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
