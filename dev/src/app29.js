@@ -3,8 +3,12 @@
    completed in the last 180 days, newest first ({note, updated, certifications:[{org, slug, program, product (or null),
    first, type, certifiedOn}]}). Contract: Connections Map row "CMS (Certification Completions) → MISMO Media".
    The CMS only ever adds fields; questions go to certifications@mismo.org.
-   Only new certifications are announced: a company's first certification in a program (Jonna, Nov 21, 2026: "no
-   renewals, new certifications providers only"). Renewals are left out and never drafted.
+   Only new providers are announced: a company's first MISMO certification of any kind (Jonna, Nov 21, 2026: "no
+   renewals, new certifications providers only"; "Snapdocs is not new... make sure they are only initial new
+   providers"). Renewals are never drafted, and neither is a company's first certification in a second program when it
+   already holds another (Snapdocs' first RON certification while it renews eVault). The CMS's own newProvider (or
+   firstEver) field decides when the feed carries it; until then a company counts as new only when the feed (the last
+   180 days) and everything read here before show no other certification for it.
    Each new certification not seen before becomes a draft line for the Certifications section of the next MISMO Matters,
    kept here in data/certnews.json, one record per certification (slug + program + product + certifiedOn). First
    certifications lead and are highlighted. Nothing goes in until Jonna approves it; she can edit the words, move it
@@ -58,6 +62,20 @@ function cnCoveredBy(c){
   }
   return "";
 }
+/* a new provider: the company's first MISMO certification of any kind. The CMS's newProvider / firstEver field wins
+   when the feed has it; otherwise the company must have no other certification in the feed or in what was read before. */
+function cnNewProvider(c, list){
+  if(typeof c.newProvider==="boolean") return c.newProvider;
+  if(typeof c.firstEver==="boolean") return c.firstEver;
+  if(c.first!==true) return false;
+  /* another certification of the same company that came earlier: any renewal, or a first certification dated before
+     this one (two firsts on the same day are a brand-new company certified twice at once, and both count) */
+  const earlier=x=>x && x!==c && String(x.slug||"").toLowerCase()===String(c.slug||"").toLowerCase() && cnKey(x)!==cnKey(c)
+    && (x.first!==true || String(x.certifiedOn||"")<String(c.certifiedOn||""));
+  if((list||[]).some(earlier)) return false;
+  if(vals("certnews").some(x=>earlier(x.feed||x))) return false;
+  return true;
+}
 async function cnSync(force){
   if(CN.busy || STALE.on || !CANWRITE || !LOADED.has("certnews") || !LOADED.has("editions") || !LOADED.has("sections")) return;
   if(!force && Date.now()-CN.at < 30*60000) return;
@@ -69,20 +87,28 @@ async function cnSync(force){
     CN.feedAt=String(j && j.updated || ""); CN.n=list.length; CN.err="";
     const have=new Set(vals("certnews").map(x=>x.key));
     const ed=cnEdition();
+    CN.list=list;
     for(const c of list){
       if(!c || !c.slug || !c.program || !c.certifiedOn) continue;
-      if(c.first!==true) continue;   /* renewals aren't announced */
+      if(!cnNewProvider(c, list)) continue;   /* renewals and companies already certified aren't announced */
       const key=cnKey(c), id=cnId(c); if(have.has(key) || S.certnews[id]) continue;
       const cov=cnCoveredBy(c);
-      await put("certnews", id, {key, org:String(c.org||""), slug:c.slug, program:c.program, product:c.product||null, first:c.first===true, type:String(c.type||""), certifiedOn:c.certifiedOn,
+      await put("certnews", id, {key, org:String(c.org||""), slug:c.slug, program:c.program, product:c.product||null, first:c.first===true, newProvider:true, type:String(c.type||""), certifiedOn:c.certifiedOn,
         text:cnDraft(c), status:cov?"covered":"draft", coveredBy:cov, edition:cov?"":ed, draftedAt:new Date().toISOString(), feed:c});
       have.add(key);
     }
     /* lines no one has decided on yet: check again whether a sent edition already covered them */
     for(const x of vals("certnews")){
       /* renewals drafted before Jonna's Nov 21 call: put aside, not deleted */
-      if(!x.first && x.status==="draft"){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", skipReason:"Renewals aren't announced; new certifications only (Jonna, Nov 21, 2026)"})); continue; }
+      if(!x.first && x.status==="draft"){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:"Renewals aren't announced; new providers only (Jonna, Nov 21, 2026)"})); continue; }
       if(!x.first) continue;
+      /* a company's first certification in a second program isn't a new provider: put aside, not deleted */
+      const np=cnNewProvider(x.feed||x, list);
+      if(np!==(x.newProvider!==false) || x.newProvider===undefined){
+        if(!np && !x.decidedBy && ["draft","covered"].includes(x.status)){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:x.org+" already holds another MISMO certification, so it isn't a new provider (Jonna, Nov 21, 2026)"})); continue; }
+        await put("certnews", x.id, Object.assign({}, x, {newProvider:np})); if(!np) continue;
+      }
+      if(x.newProvider===false) continue;
       if(x.decidedBy || !["draft","covered"].includes(x.status)) continue;
       const cov=cnCoveredBy(x.feed||x), want=cov?"covered":"draft";
       if(want!==x.status || (cov||"")!==(x.coveredBy||"")) await put("certnews", x.id, Object.assign({}, x, {status:want, coveredBy:cov, edition:cov?"":(x.edition||ed)}));
@@ -92,7 +118,7 @@ async function cnSync(force){
 }
 setInterval(()=>{ if(document.visibilityState!=="hidden") cnSync(); }, 10*60000);
 /* the approved lines for an edition, first certifications first, then newest */
-function cnFor(ed){ return vals("certnews").filter(x=>x.first && x.status==="approved" && x.edition===ed.id).sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)) || String(a.org).localeCompare(String(b.org))); }
+function cnFor(ed){ return vals("certnews").filter(x=>x.first && x.newProvider!==false && x.status==="approved" && x.edition===ed.id).sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)) || String(a.org).localeCompare(String(b.org))); }
 
 /* ---------- in the email and the text version ---------- */
 function certNewsEmail(ed){
@@ -119,7 +145,7 @@ function certNewsText(ed){
 
 /* ---------- the card on MISMO Matters, for Jonna ---------- */
 function cnCard(ed){
-  const all=vals("certnews").filter(x=>x.first), wait=all.filter(x=>x.status==="draft").sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)));
+  const all=vals("certnews").filter(x=>x.first && x.newProvider!==false), wait=all.filter(x=>x.status==="draft").sort((a,b)=>(b.first?1:0)-(a.first?1:0) || String(b.certifiedOn).localeCompare(String(a.certifiedOn)));
   const shown=CN.all ? all.slice().sort((a,b)=>String(b.certifiedOn).localeCompare(String(a.certifiedOn))) : wait;
   const me=!!cnMe(), inEd=cnFor(ed).length;
   if(!all.length && !CN.err) return '';
@@ -127,14 +153,14 @@ function cnCard(ed){
   const row=x=>'<tr class="click" data-cn="'+esc(x.id)+'"><td>'+(x.first?'<span class="cn-first">First</span>':'<span class="cn-ren">'+esc(x.type||"Renewal")+'</span>')+'</td>'+
     '<td><b>'+esc(x.org)+'</b><span class="t2">'+esc(x.text)+'</span></td><td class="nw">'+esc(cnProg(x.program).label)+'</td><td class="nw">'+esc(fS(x.certifiedOn))+'</td><td class="nw">'+st(x)+'</td>'+
     '<td class="nw cn-acts">'+(x.status==="draft"?'<button class="btn sm pri" type="button" data-cna="ok" data-id="'+esc(x.id)+'"'+(me?'':' disabled title="Jonna approves these"')+'>Approve</button><button class="btn sm" type="button" data-cna="skip" data-id="'+esc(x.id)+'"'+(me?'':' disabled title="Jonna approves these"')+'>Skip</button>':'')+'</td></tr>';
-  return '<div class="card" id="cn-card" style="margin-bottom:22px"><div class="ch"><h2>New Certifications from the CMS</h2><span class="cnt">'+wait.length+'</span>'+
-    '<span class="note">'+(wait.length?wait.length+' new certification'+(wait.length===1?'':'s')+' drafted for the Certifications section, waiting for Jonna':'nothing waiting')+' · renewals aren\'t included'+(inEd?' · '+inEd+' approved for '+esc(monthName(ed.month)):'')+'</span><span class="sp"></span>'+
+  return '<div class="card" id="cn-card" style="margin-top:28px"><div class="ch"><h2>New Certifications from the CMS</h2><span class="cnt">'+wait.length+'</span>'+
+    '<span class="note">'+(wait.length?wait.length+' new provider'+(wait.length===1?'':'s')+' drafted for the Certifications section, waiting for Jonna':'nothing waiting')+' · renewals and companies already certified aren\'t included'+(inEd?' · '+inEd+' approved for '+esc(monthName(ed.month)):'')+'</span><span class="sp"></span>'+
     '<button class="btn sm" type="button" id="cn-all">'+(CN.all?'Show Only Waiting':'Show All '+all.length)+'</button>'+
-    (me && wait.some(x=>x.first)?'<button class="btn sm" type="button" id="cn-firsts">Approve All First Certifications</button>':'')+'</div>'+
+    (me && wait.length>1?'<button class="btn sm" type="button" id="cn-firsts">Approve All '+wait.length+'</button>':'')+'</div>'+
     (CN.err?'<div class="hint pad">Couldn\'t read the CMS feed: '+esc(CN.err)+'. Questions about it go to certifications@mismo.org.</div>':'')+
     (shown.length?'<div class="tw"><table class="t"><thead><tr><th></th><th>Draft for MISMO Matters</th><th>Program</th><th>Certified</th><th>Status</th><th></th></tr></thead><tbody>'+shown.map(row).join("")+'</tbody></table></div>'
       :'<div class="empty sm">Every certification from the CMS is approved, skipped or already covered. New ones arrive as drafts by themselves.</div>')+
-    '<p class="rs-note pad">Only new certifications (a company\'s first in a program) are drafted; renewals are left out. Approved lines appear in the edition\'s Certifications section. Nothing is sent or posted from here. Click a line to edit the words or move it to another edition.</p></div>';
+    '<p class="rs-note pad">Only new providers are drafted: a company\'s first MISMO certification. Renewals, and a company that already holds another MISMO certification, are left out. Approved lines appear in the edition\'s Certifications section. Nothing is sent or posted from here. Click a line to edit the words or move it to another edition.</p></div>';
 }
 async function cnSet(id, part){
   if(!cnMe()){ toast("Jonna approves these.", 3000); return; }
@@ -144,7 +170,7 @@ async function cnSet(id, part){
 function cnWire(el, ed){
   const c=$("#cn-card",el); if(!c) return;
   const a=$("#cn-all",c); if(a) a.onclick=()=>{ CN.all=!CN.all; renderMatters(); };
-  const f=$("#cn-firsts",c); if(f) f.onclick=async()=>{ const xs=vals("certnews").filter(x=>x.status==="draft" && x.first); for(const x of xs) await cnSet(x.id, {status:"approved", edition:x.edition||cnEdition()}); toast(xs.length+" first certifications approved.", 3000); renderMatters(); };
+  const f=$("#cn-firsts",c); if(f) f.onclick=async()=>{ const xs=vals("certnews").filter(x=>x.status==="draft" && x.first && x.newProvider!==false); for(const x of xs) await cnSet(x.id, {status:"approved", edition:x.edition||cnEdition()}); toast(xs.length+" new providers approved.", 3000); renderMatters(); };
   $$("[data-cna]",c).forEach(b=>b.onclick=async ev=>{ ev.stopPropagation(); const x=S.certnews[b.dataset.id]; if(!x) return;
     await cnSet(x.id, b.dataset.cna==="ok" ? {status:"approved", edition:x.edition||cnEdition()} : {status:"skipped"}); renderMatters(); });
   $$("tr[data-cn]",c).forEach(r=>r.onclick=()=>cnOpen(r.dataset.cn));
@@ -165,8 +191,8 @@ function cnOpen(id){
 /* System Health */
 function hhCertNews(){
   if(!LOADED.has("certnews")) return null;
-  const wait=vals("certnews").filter(x=>x.first && x.status==="draft").length;
+  const wait=vals("certnews").filter(x=>x.first && x.newProvider!==false && x.status==="draft").length;
   if(CN.err) return hhRow("cnfeed","CMS New Certifications","bad","Couldn't read the CMS feed: "+CN.err+". Questions go to certifications@mismo.org.");
   if(!CN.at) return hhRow("cnfeed","CMS New Certifications","off","Reads the CMS's new certifications when MISMO Media opens.");
-  return hhRow("cnfeed","CMS New Certifications","ok","Read "+hhWhen(CN.at)+(CN.feedAt?" (the CMS updated it "+fS(CN.feedAt)+")":"")+": "+CN.n+" certifications in the last 180 days ("+vals("certnews").filter(x=>x.first).length+" new; renewals left out), "+wait+" waiting for Jonna.");
+  return hhRow("cnfeed","CMS New Certifications","ok","Read "+hhWhen(CN.at)+(CN.feedAt?" (the CMS updated it "+fS(CN.feedAt)+")":"")+": "+CN.n+" certifications in the last 180 days ("+vals("certnews").filter(x=>x.first && x.newProvider!==false).length+" new providers; renewals and companies already certified left out), "+wait+" waiting for Jonna.");
 }

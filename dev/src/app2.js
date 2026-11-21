@@ -34,7 +34,7 @@ function renderMatters(){
   const subs = '<div class="subtabs" role="group" aria-label="Edition views">'+
     [["sections","Sections",""],["preview","Preview & HTML",""],["checks","Send Checklist",checksDone+"/"+SEND_CHECKS.length],["stats","Stats",""],["archive","Past Editions",""]].map(([k,l,n])=>'<button type="button" data-sub="'+k+'" aria-pressed="'+(MS.sub===k)+'">'+esc(l)+(n?' <span class="note">'+esc(n)+'</span>':'')+'</button>').join("")+'</div>';
   let body='';
-  if(MS.sub==="sections") body=(typeof cnCard==="function"?cnCard(ed):"")+sectionsView(ed,secs);
+  if(MS.sub==="sections") body=sectionsView(ed,secs)+(typeof cnCard==="function"?cnCard(ed):"");
   else if(MS.sub==="preview") body=previewView(ed);
   else if(MS.sub==="checks") body=checksView(ed);
   else if(MS.sub==="stats") body=statsView(ed);
