@@ -25,7 +25,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   renderLinkedin(); await wait(200);
   out.rows=document.querySelectorAll("#ml-card tr[data-mlrow]").length===secs.length && !document.querySelector("#ml-make");
   document.querySelector('#ml-card tr[data-mlrow="'+posts[0].fromSec+'"]').click(); await wait(300);
-  const okBtn=document.querySelector('#pane-body [data-mla="ok"]'); out.lockedForOthers=!!okBtn && okBtn.disabled && !!document.querySelector("#pane-body #f-copy") && /Amy's calls/.test(document.querySelector("#pane-body .ml-who").innerText);
+  const okBtn=document.querySelector('#pane-body [data-mla="ok"]'); out.lockedForOthers=!!okBtn && okBtn.disabled && !!document.querySelector("#pane-body #f-copy") && /for Amy, Jonna and Vanessa/.test(document.querySelector("#pane-body .ml-who").innerText) && document.querySelector('#pane-body [data-mla="posted"]').disabled;
   /* the card folds up to its header and stays that way after a redraw */
   closePane(true); document.querySelector("#ml-tog").click(); await wait(100);
   const folded=()=>{ const b=document.querySelector("#ml-body"); return document.querySelector("#ml-card").classList.contains("closed") && b && b.offsetHeight===0; };
@@ -38,7 +38,23 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   mlOpen(ed, posts[0].fromSec); await wait(300);
   out.amyCan=!document.querySelector('#pane-body [data-mla="ok"]').disabled; closePane(true);
   await mlApprove(posts[0].id); out.approved=S.pieces[posts[0].id].status==="ready" && S.pieces[posts[0].id].approvedBy==="Amy Moses";
-  /* Don't Post: Amy only, shows as Not Posting, can be brought back, and isn't remade */
+  /* Jonna and Vanessa can approve too (Nov 21, 2026), under their own names */
+  window.ResourcesSession={current:()=>({name:"Vanessa Rios",email:"vrios@mismo.org"}), token:()=>"tok"};
+  await patch("pieces", posts[0].id, {status:"review", approvedBy:""}); await wait(200);
+  await mlApprove(posts[0].id); out.vanessaApproves=S.pieces[posts[0].id].status==="ready" && S.pieces[posts[0].id].approvedBy==="Vanessa Rios";
+  /* Amy posted it herself: Jonna puts the date and the live link in, and it clears (Posted), with the post's own link kept */
+  window.ResourcesSession={current:()=>({name:"Jonna Critchley",email:"jcritchley@mismo.org"}), token:()=>"tok"};
+  const keep=S.pieces[posts[0].id].link;
+  mlOpen(ed, posts[0].fromSec); await wait(300);
+  document.getElementById("f-link").value="https://www.linkedin.com/feed/update/urn:li:activity:123"; document.getElementById("f-date").value="11/20/26";
+  document.getElementById("pf-save").click(); await wait(500);
+  const q=S.pieces[posts[0].id]; out.clearsWithLink=q.status==="done" && /activity:123/.test(q.postedUrl) && q.link===keep && q.postedBy==="Jonna Critchley" && q.date==="2026-11-20";
+  mlOpen(ed, posts[1].fromSec); await wait(300); document.querySelector('#pane-body [data-mla="posted"]').click(); await wait(500);
+  out.markPosted=S.pieces[posts[1].id].status==="done";
+  renderLinkedin(); await wait(200); out.postedCount=/2<\/b> posted/.test(document.querySelector("#ml-card .ml-sub").innerHTML);
+  closePane(true); await patch("pieces", posts[1].id, {status:"review", postedUrl:"", postedBy:""}); await wait(300);
+  window.ResourcesSession={current:()=>({name:"Amy Moses",email:"amoses@mismo.org"}), token:()=>"tok"};
+  /* Don't Post: Amy, Jonna or Vanessa, shows as Not Posting, can be brought back, and isn't remade */
   await mlSkip(posts[1].id); out.skipped=S.pieces[posts[1].id].status==="canceled";
   renderLinkedin(); await wait(200); out.notPostingShown=/Not Posting/.test(document.querySelector("#ml-card").innerText);
   mlOpen(ed, posts[1].fromSec); await wait(300); out.backBtn=!!document.querySelector('#pane-body [data-mla="back"]'); closePane(true);
