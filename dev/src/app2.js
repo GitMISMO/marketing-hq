@@ -34,7 +34,7 @@ function renderMatters(){
   const subs = '<div class="subtabs" role="group" aria-label="Edition views">'+
     [["sections","Sections",""],["preview","Preview & HTML",""],["checks","Send Checklist",checksDone+"/"+SEND_CHECKS.length],["stats","Stats",""],["archive","Past Editions",""]].map(([k,l,n])=>'<button type="button" data-sub="'+k+'" aria-pressed="'+(MS.sub===k)+'">'+esc(l)+(n?' <span class="note">'+esc(n)+'</span>':'')+'</button>').join("")+'</div>';
   let body='';
-  if(MS.sub==="sections") body=sectionsView(ed,secs);
+  if(MS.sub==="sections") body=(typeof cnCard==="function"?cnCard(ed):"")+sectionsView(ed,secs);
   else if(MS.sub==="preview") body=previewView(ed);
   else if(MS.sub==="checks") body=checksView(ed);
   else if(MS.sub==="stats") body=statsView(ed);
@@ -44,7 +44,7 @@ function renderMatters(){
   $$(".mile",el).forEach(b=>b.onclick=async()=>{ const k=b.dataset.mile; const done=Object.assign({},ed.done||{}); const was=!!done[k]; done[k]=!was; await patch("editions",ed.id,{done}); toast((was?"Unmarked: ":"Done: ")+MILES.find(m=>m[0]===k)[1]); });
   $$("[data-sub]",el).forEach(b=>b.onclick=()=>{ MS.sub=b.dataset.sub; renderMatters(); });
   $$("[data-rk]",el).forEach(p=>p.addEventListener("click",()=>openSection(ed,p.dataset.rk)));
-  if(MS.sub==="sections") wireSections(el,ed);
+  if(MS.sub==="sections"){ wireSections(el,ed); if(typeof cnWire==="function") cnWire(el,ed); }
   if(MS.sub==="preview") wirePreview(el,ed);
   if(MS.sub==="checks") $$("[data-chk]",el).forEach(c=>c.onchange=async()=>{ const checks=Object.assign({},ed.checks||{}); checks[c.dataset.chk]=c.checked; await patch("editions",ed.id,{checks}); });
   if(MS.sub==="stats"){ const b=$("#ms-stats",el); if(b) b.onclick=()=>openStats(ed); }
@@ -70,6 +70,8 @@ function sectionsView(ed,secs){
     else if(isCertSpot(s)){ const p=certProg(d.certProgram); snip=esc(p.name)+' · '+d.certItems.length+' certified, current from the website'; }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ const L=logoPicks(ed,s.k); snip=L.length+' logo'+(L.length===1?'':'s')+': '+esc(L.map(l=>l.name||(S.images[l.id]||{}).name||"").join(", ")); }
     else snip = d.headline ? esc(d.headline) : (d.body ? esc(mdPlain(d.body).slice(0,120)) : '<i>Nothing in yet</i>');
+    /* new certifications Jonna approved from the CMS feed (Nov 21, 2026) */
+    if(s.k==="cert" && typeof cnFor==="function" && cnFor(ed).length){ const n=cnFor(ed).length; snip+=' <i>· '+n+' new certification'+(n===1?'':'s')+' from the CMS</i>'; }
     const reuse = REUSE.map(([k,l,a])=>'<span class="rz k-'+(k==="website"?"other":k)+(d.reuse&&d.reuse[k]?" on":"")+'" title="'+esc(l)+'">'+a+'</span>').join("");
     const st = s.meta.auto ? '<span class="chip in">Automatic</span>' : chip(SSTAT, d.status||"waiting");
     return '<div class="secrow'+(s.on?"":" off")+'" draggable="true" data-k="'+esc(s.k)+'"><span class="grip" title="Drag to reorder">'+GRIP+'</span><input type="checkbox" data-inc="'+esc(s.k)+'"'+(s.on?" checked":"")+' aria-label="Include '+esc(s.meta.name)+' this month" title="Running this month"><div class="sn"><b>'+esc(d.name||s.meta.name)+'</b><small>'+esc(d.owner||s.meta.owner)+' · '+esc(s.meta.from||"")+(d.imageId||d.imageNote||d.imageUrl?" · image ✓":"")+'</small></div><div class="sx">'+snip+'</div><div class="reuse">'+reuse+'</div><div>'+st+'</div></div>';
@@ -310,7 +312,8 @@ function buildEmail(ed, preview, opt){
       /* the Certifications spotlight has its own layout, but its lead picture and quote still show, after the
          highlighted company's text (Nov 13, 2026: they were left out) */
       const cert=isCertSpot(s);
-      if(!cert && !d.headline && !d.body && !d.quote) return;
+      const cnew = s.k==="cert" && typeof certNewsEmail==="function" ? certNewsEmail(ed) : "";
+      if(!cert && !cnew && !d.headline && !d.body && !d.quote) return;
       if(!cert && d.headline) inner+='<h2 style="'+F+'font-size:24px;line-height:1.27;letter-spacing:-.012em;color:'+navy+';margin:0 0 16px;font-weight:700">'+esc(d.headline)+'</h2>';
       const lib=d.imageLib&&S.images[d.imageLib], local=lib?imgSrc(lib):(d.imageId?"/_blob/"+d.imageId:"");
       const hl=d.imageUrl||(lib&&lib.hlUrl)||"";
@@ -329,9 +332,9 @@ function buildEmail(ed, preview, opt){
       const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
       let quote='';
       if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
-      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote, pic) : certSpotlight(ed, s, body, pic+clear+quote); }
+      if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote+cnew, pic) : certSpotlight(ed, s, body, pic+clear+quote+cnew); }
       else {
-      inner+=pic+body(d.body)+clear+quote;
+      inner+=pic+body(d.body)+clear+quote+cnew;
       const full = !d.noFull && fullArticleUrl(ed, s.k, d);
       if(full) inner+=emGap(emBtn(esc(full), esc(fullWords(s.k, d))+'&nbsp;&rarr;', opt==="2"?'#1a8fe3':navy, '#ffffff'), 2, 18);
       const cm=ctaMode(d, "button");
@@ -430,8 +433,9 @@ function buildText(ed){
     if(s.k==="micdup"){ const eps=epsInWindow(ed); if(!eps.length) return; if(d.intro) body.push(mdPlain(d.intro)); eps.forEach(e=>body.push("MISMO Mic’d Up "+epWord(e)+(e.title?": "+e.title:"")+(e.guests?" — with "+e.guests+(e.company?", "+e.company:""):"")+(e.youtubeUrl?"\n"+e.youtubeUrl:""))); }
     else if(s.k==="news"){ const ns=newsInWindow(ed); if(!ns.length) return; ns.forEach(n=>body.push((n.outlet?n.outlet+" – ":"")+n.headline+(n.url?"\n"+n.url:""))); }
     else if(isLogoSec(s.k) && logoPicks(ed,s.k).length){ body=logoWallText(ed,s); }
-    else if(isCertSpot(s)){ body=certSpotlightText(ed,s); }
-    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullWords(s.k, d)+": "+full); if(ctaMode(d,"button")) body.push(ctaWords(d)+": "+d.ctaUrl); }
+    else if(isCertSpot(s)){ body=certSpotlightText(ed,s).concat(typeof certNewsText==="function"?certNewsText(ed):[]); }
+    else if(s.k==="cert" && typeof certNewsText==="function" && certNewsText(ed).length && !d.headline && !d.body){ body=certNewsText(ed); }
+    else { if(!d.headline&&!d.body) return; if(d.headline) body.push(d.headline); paras(mdPlain(d.body)).forEach(p=>body.push(p)); if(d.quote) body.push("“"+mdPlain(d.quote)+"”"+(d.quoteBy?" — "+d.quoteBy:"")); const full=!d.noFull && fullArticleUrl(ed, s.k, d); if(full) body.push(fullWords(s.k, d)+": "+full); if(ctaMode(d,"button")) body.push(ctaWords(d)+": "+d.ctaUrl); if(s.k==="cert" && typeof certNewsText==="function") body=body.concat(certNewsText(ed)); }
     out.push("== "+name+" ==", ...body, "");
   });
   out.push("Subscribe: "+SUBSCRIBE_URL,"Unsubscribe: "+UNSUB_URL,"","MISMO · 1919 M Street NW, 5th Floor, Washington, DC 20036 · info@mismo.org","LinkedIn: https://www.linkedin.com/company/mismo-mortgage-industry-standards-maintenance-organization","YouTube: https://www.youtube.com/@MISMOStandards");

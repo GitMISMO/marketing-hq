@@ -153,7 +153,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -282,7 +282,7 @@ async function restoreRec(col,id){
   delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
   try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
-let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
+let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(typeof cnSync==="function") setTimeout(cnSync, 2000); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
 /* ================= derived data ================= */
 function editionsSorted(){ return vals("editions").sort((a,b)=>(a.month<b.month?-1:1)); }
