@@ -293,7 +293,7 @@ function hmStudio(){
     stat(vals("images").filter(i=>!i.archived).length,"Pictures","images")+
     stat(ppl.size,"Subscribers and Downloaders","people")+
     stat(newsAll().length,"News Stories","news")+
-    stat(vals("pieces").filter(p=>p.channel==="linkedin" && p.status==="done").length+vals("episodes").filter(e=>e.linkedinDone).length,"LinkedIn Posts and Lives","linkedin")+
+    stat(vals("pieces").filter(p=>p.channel==="linkedin" && p.status==="done" && !liIsDay(p)).length+vals("episodes").filter(e=>e.linkedinDone).length,"LinkedIn Posts and Lives","linkedin")+
   '</div></div>';
 
   /* Orders: the pipeline */

@@ -67,19 +67,21 @@ function rsWebsite(){
   '</div>';
 }
 /* what people on the website told MISMO: "Not helpful" comments on AI answers, and problem reports */
-function rsVoices(){
+/* full: everything (the right-hand panel on Results); otherwise the newest 6 */
+function rsVoices(full){
+  const lim=full?300:6;
   const since=new Date(Date.now()-30*864e5).toISOString();
   const fb=vals("aifeedback").filter(x=>x.at && x.comment).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
   const pr=vals("websiteproblems").filter(x=>x.at && x.message).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
   const drop=(S.websiteproblems||{})._dropped||null;
   const pg=u=>{ u=String(u||""); const s=u.replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,""); return /^https:\/\//.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(s||u)+'</a>':esc(s); };
   const who=x=>x.e?esc(x.n||x.e)+' · <a href="mailto:'+esc(x.e)+'">'+esc(x.e)+'</a>':'anonymous'+(x.reply?' · left <a href="mailto:'+esc(x.reply)+'">'+esc(x.reply)+'</a>':'');
-  const fbRows=fb.slice(0,6).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+esc(x.assistant||"AI")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(x.comment)+'”</div><div class="vo-m">Asked: '+esc(String(x.question||"").slice(0,180))+'</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+'</div></li>').join("");
-  const prRows=pr.slice(0,6).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+(x.via==="mimi"?"From Mimi":"Page Link")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(String(x.message).slice(0,400))+'”</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+(x.signedIn?' · signed in':'')+'</div></li>').join("");
+  const fbRows=fb.slice(0,lim).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+esc(x.assistant||"AI")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(x.comment)+'”</div><div class="vo-m">Asked: '+esc(String(x.question||"").slice(0,180))+'</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+'</div></li>').join("");
+  const prRows=pr.slice(0,lim).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+(x.via==="mimi"?"From Mimi":"Page Link")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(String(x.message).slice(0,400))+'”</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+(x.signedIn?' · signed in':'')+'</div></li>').join("");
   const n30=a=>a.filter(x=>x.at>=since).length;
   return '<div class="grid2 rs-row" id="rs-voices"><div class="card"><div class="ch"><h2>AI Answer Feedback</h2><span class="cnt">'+fb.length+'</span><span class="note">"Not helpful" on Mimi and Ask MISMO · '+n30(fb)+' in the last 30 days</span></div>'+
       (fbRows?'<ul class="vo-list">'+fbRows+'</ul>':'<div class="empty">No comments yet. They arrive when someone marks a Mimi or Ask MISMO answer "Not helpful" and says why.</div>')+
-      (fb.length>6?'<p class="rs-note pad">The newest 6 of '+fb.length+'. Vanessa gets each day\'s in the morning email, with Jonna copied.</p>':'')+'</div>'+
+      (fb.length>lim?'<p class="rs-note pad">The newest '+lim+' of '+fb.length+'. Vanessa gets each day\'s in the morning email, with Jonna copied.</p>':'')+'</div>'+
     '<div class="card"><div class="ch"><h2>Website Problems</h2><span class="cnt">'+pr.length+'</span><span class="note">reported from a page or through Mimi · '+n30(pr)+' in the last 30 days</span></div>'+
       (prRows?'<ul class="vo-list">'+prRows+'</ul>':'<div class="empty">No problem reports yet. They arrive from the website\'s report-a-problem form and from Mimi.</div>')+
       (drop&&drop.total?'<p class="rs-note pad">'+rsN(drop.total)+' spam or repeat report'+(drop.total===1?' was':'s were')+' dropped and never kept'+(drop.byReason?' ('+Object.entries(drop.byReason).map(([k,v])=>esc(k)+' '+v).join(', ')+')':'')+'.</p>':'')+'</div></div>';

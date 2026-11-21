@@ -2,6 +2,8 @@
 /* ================= People: subscribers and downloaders ================= */
 const PEOPLE_LISTS = {subscribers:"Website Subscribers", downloaders:"Website Downloaders", prospects:"Prospects", matters:"MISMO Matters Group", unsubscribed:"Unsubscribed"};
 const PL = {q:"", list:"all", limit:150};
+/* a LinkedIn row that is the page's total for one day, not a post (Nov 21, 2026) */
+const liIsDay = p=>p && (p.kind==="Daily totals");
 /* Unsubscribes from MISMO's own page (data/unsubs.json, written only by the sign-up workflow). Someone counts as
    unsubscribed when their unsubscribe is newer than their last sign-up; signing up again puts them back on. */
 function unsubMap(){ const m={}; vals("unsubs").forEach(u=>{ const e=(u.e||"").toLowerCase(); if(e && (!m[e] || String(u.at||"")>String(m[e].at||""))) m[e]=u; }); return m; }
@@ -131,17 +133,20 @@ function renderPeople(){
 }
 
 /* reading a spreadsheet or CSV someone drops in (SheetJS 0.20.3, fetched only when needed, integrity-checked) */
-async function readSheet(file){
+/* LinkedIn's export has two sheets: the page's daily totals (one row a day, the longer one) and All posts.
+   readSheets hands back every sheet; readSheet keeps the longest, as before (Nov 21, 2026). */
+async function readSheet(file){ const all=await readSheets(file); return all.reduce((b,x)=>x.rows.length>b.length?x.rows:b,[]); }
+async function readSheets(file){
   await loadXLSX();
   return new Promise((res,rej)=>{
     const fr=new FileReader();
     fr.onload=()=>{ try{
       const wb=XLSX.read(new Uint8Array(fr.result),{type:"array",cellDates:true});
-      let best=[]; wb.SheetNames.forEach(n=>{ const raw=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:false});
+      const out=[]; wb.SheetNames.forEach(n=>{ const raw=XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,defval:"",raw:false});
         let h=raw.findIndex(r=>r.filter(c=>String(c).trim()).length>=2 && r.some(c=>/mail|title|views|impressions|video|content|subject|post/i.test(String(c)))); if(h<0) h=0;
         const head=raw[h].map(c=>String(c).trim()); const rows=raw.slice(h+1).filter(r=>r.some(c=>String(c).trim())).map(r=>Object.fromEntries(head.map((k,i)=>[k,r[i]])));
-        if(rows.length>best.length) best=rows; });
-      res(best);
+        out.push({name:n, head, rows}); });
+      res(out);
     }catch(e){ rej(e); } };
     fr.onerror=()=>rej(new Error("Couldn't read that file.")); fr.readAsArrayBuffer(file);
   });
@@ -182,7 +187,7 @@ function hbars(items, fmt){
   const max=Math.max(...items.map(i=>i.v))||1;
   return '<div class="funnel">'+items.map(i=>'<div class="fr" style="grid-template-columns:minmax(0,2.2fr) minmax(0,3fr) 80px"'+(i.tip?' data-tip="'+esc(i.tip)+'"':'')+'><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(i.l)+'">'+esc(i.l)+'</span><span class="bar"><i style="width:'+Math.max(1,i.v/max*100)+'%;background:var('+(i.c||"--c1")+')"></i></span><span class="fv">'+(fmt?fmt(i.v):i.v.toLocaleString())+'</span></div>').join("")+'</div>';
 }
-const RS = {mcAll:false, ed:""};
+const RS = {mcAll:false, ed:"", msg:""};
 const rsN = v=>(+v||0).toLocaleString();
 /* "Label (address) — 35 people" or "Label — 35" → {l, v} */
 function rsLinkLines(text){
@@ -244,150 +249,293 @@ function rsTips(el){
   el.addEventListener("mouseleave",()=>{ tip.style.display="none"; }); }
   $$("[data-tip]",el).forEach(t=>{ if(!t.hasAttribute("tabindex") && !/^(BUTTON|A)$/.test(t.tagName)) t.setAttribute("tabindex","0"); t.addEventListener("focus",()=>show(t)); t.addEventListener("blur",()=>{ tip.style.display="none"; }); });
 }
-function renderResults(){
-  const el=$("#page-results");
-  const per=mnPeriod(), due=mnOpen(per).length>0;
-  /* MISMO Matters */
-  const eds=editionsSorted().filter(e=>+edStats(e).recipients);
-  const ed=(RS.ed && eds.find(e=>e.id===RS.ed)) || eds[eds.length-1] || null;
-  const st=ed?edStats(ed):{}, c=statsCalc(st), md=mmDetail(st);
-  /* Mailchimp */
-  const mc=mcSends(), yr=String(new Date().getFullYear()), mcY=mc.filter(x=>String(x.date).slice(0,4)===yr), mcO=mcY.filter(x=>!x.resend);
-  const sum=(a,k)=>a.reduce((n,x)=>n+(+x[k]||0),0);
-  const mcOpen=sum(mcO,"dl")?sum(mcO,"o")/sum(mcO,"dl"):0, mcClick=sum(mcO,"dl")?sum(mcO,"c")/sum(mcO,"dl"):0;
-  /* LinkedIn, Mic'd Up, people */
-  const li=vals("pieces").filter(p=>p.channel==="linkedin" && +p.impressions);
-  const liEp=vals("episodes").filter(e=>+e.liImpressions);
+/* ================= Results as cards (Nov 21, 2026) =================
+   Jonna: "can the results not be an endless scroll? like cards with summary and click on them for right rail full
+   details". Each channel is one summary card; pressing it opens everything about that channel in the right-hand
+   panel, and Previous / Next move through the channels without closing it. The detail is the same as before. */
+const RS_ORDER=["mm","mc","web","li","mu","voices","lists","dl","tools"];
+function rsCtx(){
+  const x={};
+  x.per=mnPeriod(); x.due=mnOpen(x.per).length>0;
+  x.eds=editionsSorted().filter(e=>+edStats(e).recipients);
+  x.ed=(RS.ed && x.eds.find(e=>e.id===RS.ed)) || x.eds[x.eds.length-1] || null;
+  x.st=x.ed?edStats(x.ed):{}; x.c=statsCalc(x.st); x.md=mmDetail(x.st);
+  x.mc=mcSends(); x.yr=String(new Date().getFullYear()); x.mcY=x.mc.filter(m=>String(m.date).slice(0,4)===x.yr); x.mcO=x.mcY.filter(m=>!m.resend);
+  const sum=x.sum=(a,k)=>a.reduce((n,m)=>n+(+m[k]||0),0);
+  x.mcOpen=sum(x.mcO,"dl")?sum(x.mcO,"o")/sum(x.mcO,"dl"):0; x.mcClick=sum(x.mcO,"dl")?sum(x.mcO,"c")/sum(x.mcO,"dl"):0;
+  x.li=vals("pieces").filter(p=>p.channel==="linkedin" && +p.impressions && !liIsDay(p));
+  /* the page's daily totals from the export's daily sheet (every post together, one row a day) */
+  x.liDays=vals("pieces").filter(p=>p.channel==="linkedin" && liIsDay(p) && p.date).sort((a,b)=>a.date.localeCompare(b.date));
+  x.liDayMo=x.liDays.length?x.liDays[x.liDays.length-1].date.slice(0,7):""; x.liMo=x.liDays.filter(p=>p.date.slice(0,7)===x.liDayMo);
+  x.liMoImp=x.liMo.reduce((n,p)=>n+(+p.impressions||0),0); x.liBest=x.liMo.reduce((b,p)=>!b||(+p.impressions||0)>(+b.impressions||0)?p:b,null);
+  x.liEp=vals("episodes").filter(e=>+e.liImpressions);
   /* posts brought in from the export without their words are named by their date */
-  const liName=p=>{ const t=(p.title&&p.title!=="LinkedIn post"?p.title:"")||String(p.copy||"").split("\n")[0].slice(0,90); return t || ("Post on "+fS(p.date)); };
-  const liAll=li.map(p=>({l:liName(p),v:+p.impressions,c:"--c3",tip:liName(p)+" · "+fS(p.date)+" · "+rsN(p.impressions)+" impressions"+(+p.clicks?" · "+rsN(p.clicks)+" clicks":"")+(+p.reactions?" · "+rsN(p.reactions)+" reactions":"")})).concat(liEp.map(e=>({l:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:""),v:+e.liImpressions,c:"--c3",tip:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:"")+" · "+rsN(e.liImpressions)+" impressions"})));
-  const yt=vals("episodes").filter(e=>epViews(e)).map(e=>Object.assign({},e,{views:epViews(e)}));
-  const ytViews=yt.reduce((n,e)=>n+(+e.views),0);
-  const sp=vals("episodes").filter(e=>+e.spotifyPlays); const spPlays=sp.reduce((n,e)=>n+(+e.spotifyPlays),0);
-  const ppl=peopleIndex(), pros=ppl.filter(p=>p.lists.prospects), dls=ppl.filter(p=>p.lists.downloaders), web=ppl.filter(p=>p.lists.subscribers), grp=ppl.filter(p=>p.lists.matters), uns=ppl.filter(p=>p.lists.unsubscribed);
-  const what={}; dls.forEach(p=>p.x.forEach(x=>what[x]=(what[x]||0)+1));
-  const topWhat=Object.entries(what).sort((a,b)=>b[1]-a[1]).slice(0,7).map(([l,v])=>({l,v,c:"--c6",tip:l+" · "+v+" people"}));
-  const emailsYr=sum(mcY,"dl")+eds.filter(e=>String(e.month).slice(0,4)===yr).reduce((n,e)=>n+statsCalc(edStats(e)).dl,0);
-
-  /* ---- the hero band ---- */
-  const say = ed ? 'MISMO Matters reached '+rsN(c.dl)+' inboxes in '+esc(monthName(ed.month))+' and '+rsN(c.o)+' people opened it. Mailchimp has sent '+mcY.length+' emails this year'+(mcO.length?', opened by '+pct(mcOpen)+' of people on average':'')+'.'
-    : (mc.length||li.length||yt.length ? 'Here is how each channel is doing from the numbers brought in so far.' : 'No results brought in yet. The tools to bring them in are at the bottom of this page.');
-  const band='<div class="band rs-band"><div class="today">Results · '+esc(fS(T()))+'</div><div class="say">'+say+'</div><div class="tiles">'+
-    '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed?pct(c.openRate):"—")+'</div><div class="k">MISMO Matters Open Rate</div><div class="s">'+(ed?esc(monthName(ed.month))+' · '+rsN(c.o)+' of '+rsN(c.dl):'from November on')+'</div></button>'+
-    '<button class="tile" type="button" data-rs-jump="rs-mc"><div class="v">'+(mcO.length?pct(mcOpen):"—")+'</div><div class="k">Mailchimp Open Rate</div><div class="s">'+mcY.length+' sends in '+yr+'</div></button>'+
-    '<div class="tile"><div class="v">'+rsN(emailsYr)+'</div><div class="k">Emails Delivered</div><div class="s">'+yr+', MISMO Matters and Mailchimp</div></div>'+
-    '<div class="tile"><div class="v">'+rsN(liAll.reduce((n,i)=>n+i.v,0))+'</div><div class="k">LinkedIn Impressions</div><div class="s">'+liAll.length+' posts logged</div></div>'+
-    '<div class="tile"><div class="v">'+rsN(ytViews)+'</div><div class="k">Mic\'d Up Views</div><div class="s">'+yt.length+' episodes on YouTube</div></div>'+
-    (MU_PAUSED.spotify&&!sp.length?'':'<div class="tile"><div class="v">'+(sp.length?rsN(spPlays):"—")+'</div><div class="k">Mic\'d Up on Spotify</div><div class="s">'+(sp.length?sp.length+' episodes · plays':'type plays into each episode')+'</div></div>')+
-    '<button class="tile" type="button" data-go="people"><div class="v">'+rsN(web.length)+'</div><div class="k">Website Sign-Ups</div><div class="s">signed up on mismo.org · '+rsN(dls.length)+' downloaders</div></button>'+
-    (()=>{ const d=wtDays().slice(-30), v=d.reduce((n,x)=>n+(+x.visits||0),0); return '<button class="tile" type="button" data-rs-jump="rs-web"><div class="v">'+(d.length?rsN(v):"—")+'</div><div class="k">Website Visits</div><div class="s">'+(d.length?'www.mismo.org · last '+d.length+' day'+(d.length===1?'':'s'):'counting from Nov 20, 2026')+'</div></button>'; })()+
-  '</div></div>';
-
-  /* ---- MISMO Matters ---- */
-  let mm;
-  if(!ed) mm='<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters</h2></div><div class="empty">Axios never shared numbers, so the first edition here is November 2026. Record its stats on the MISMO Matters page.</div></div>';
-  else {
-    const funnel='<div class="rs-funnel">'+[["Sent",c.r,""],["Delivered",c.dl,pct(c.r?c.dl/c.r:0)+" of sent"],["Opened",c.o,pct(c.openRate)+" of delivered"],["Clicked",c.c,pct(c.cto)+" of openers"]].map(([l,v,s],i)=>
-      '<div class="rs-fstep"><div class="rs-fl"><b>'+l+'</b><span>'+rsN(v)+'</span></div><div class="rs-fb"><i style="width:'+Math.max(0.6,c.r?v/c.r*100:0)+'%;background:var(--c'+(i<2?1:i===2?3:2)+')"></i></div>'+(s?'<small>'+s+'</small>':'')+'</div>').join("")+'</div>';
-    const wmax=Math.max(0.01,...md.waves.map(w=>w.dl?w.o/w.dl:0));
-    const waves=md.waves.length?'<div class="rs-waves">'+md.waves.map(w=>{ const or=w.dl?w.o/w.dl:0, co=w.o?w.c/w.o:0; return '<div class="rs-wave" data-tip="'+esc(w.l+": "+rsN(w.sent)+" sent · "+rsN(w.dl)+" delivered · "+rsN(w.o)+" opened · "+rsN(w.c)+" clicked")+'"><div class="rs-wl"><b>'+esc(w.l)+'</b><span>'+rsN(w.sent)+' sent</span></div>'+
-      '<div class="rs-wr"><span class="rs-wk">Opened</span><span class="rs-wb"><i style="width:'+Math.max(1,or/wmax*100)+'%;background:var(--c1)"></i></span><b>'+pct(or)+'</b></div>'+
-      '<div class="rs-wr" title="of the people who opened"><span class="rs-wk">Clicked</span><span class="rs-wb"><i style="width:'+Math.max(1,co/Math.max(0.01,...md.waves.map(x=>x.o?x.c/x.o:0))*100)+'%;background:var(--c2)"></i></span><b>'+pct(co)+'</b></div></div>'; }).join("")+'<p class="rs-note">Opened is out of delivered; clicked is out of the people who opened.</p></div>'
-      :'<div class="empty sm">Add each wave\'s numbers in Update Stats to compare them.</div>';
-    const ndT=md.nd.hard+md.nd.blocked+md.nd.soft, bad=c.r-c.dl;
-    const segs=[["Delivered",c.dl,"--c1"],["Didn't exist (hard bounce)",md.nd.hard,"--c2"],["Blocked by the company's filter",md.nd.blocked,"--c4"],["Temporary (soft bounce)",md.nd.soft,"--c5"]].filter(s=>s[1]);
-    if(!ndT && bad>0) segs.push(["Didn't deliver",bad,"--c2"]);
-    const deliv='<div class="rs-stack">'+segs.map(s=>'<i style="flex:'+s[1]+' 1 0;background:var('+s[2]+')" data-tip="'+esc(s[0]+": "+rsN(s[1])+" ("+pct(c.r?s[1]/c.r:0)+")")+'"></i>').join("")+'</div><div class="rs-legend col">'+segs.map(s=>'<span><i class="rs-k" style="background:var('+s[2]+')"></i>'+esc(s[0])+'<b>'+rsN(s[1])+'</b></span>').join("")+'</div>'+
-      (md.nd.hard?'<p class="rs-note">The '+rsN(md.nd.hard)+' addresses that didn\'t exist were taken off the list after this send.</p>':'');
-    const links=md.links.length?hbars(md.links.slice(0,8).map(x=>({l:x.l,v:x.v,c:"--c1"})),v=>v+" people"):'<div class="empty sm">Add the most-clicked links in Update Stats.</div>';
-    const clients=md.clients.length?hbars(md.clients.map(x=>({l:x.l,v:x.v,c:"--c3"})),v=>v.toFixed(1)+"%"):'<div class="empty sm">Add where people opened it (desktop, mobile, webmail) in Update Stats.</div>';
-    const unsubLine = (md.unsubsHL||md.unsubsPage) ? rsN(md.unsubsHL)+' in Higher Logic · '+rsN(md.unsubsPage)+' on MISMO\'s page' : '';
-    const hist=eds.slice().reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr'+(e.id===ed.id?' class="on"':'')+'><td>'+esc(monthName(e.month))+'</td><td class="n">'+rsN(x.r)+'</td><td class="n">'+rsN(x.dl)+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.cto)+'</td><td class="n">'+rsN(x.u)+'</td></tr>'; }).join("");
-    mm='<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters · '+esc(monthName(ed.month))+'</h2><span class="note">'+(ed.dates&&ed.dates.publish?'sent '+esc(fS(ed.dates.publish))+' through Higher Logic':'')+(st.asOf?' · numbers as of '+esc(String(st.asOf).split(",")[0]):'')+'</span><span class="sp"></span>'+
-        (eds.length>1?'<select class="plain" id="rs-ed" aria-label="Edition">'+eds.slice().reverse().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?' selected':'')+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
-        '<button class="btn sm" type="button" id="rs-mmstats">Update Stats</button></div>'+
-      rsKpis([{v:pct(c.openRate),k:"Open Rate",s:rsN(c.o)+" opened"},{v:pct(c.ctr),k:"Click Rate",s:rsN(c.c)+" clicked"},{v:pct(c.cto),k:"Click to Open",s:"of the people who opened"},{v:pct(c.r?c.dl/c.r:0),k:"Delivered",s:rsN(c.dl)+" of "+rsN(c.r)},
-        {v:rsN(c.u),k:"Unsubscribes",s:unsubLine||pct(c.dl?c.u/c.dl:0)+" of delivered"}].concat(md.totalOpens?[{v:rsN(md.totalOpens),k:"Total Opens",s:(c.o?(md.totalOpens/c.o).toFixed(2):"0")+" per person who opened"}]:[]).concat(md.forwards?[{v:rsN(md.forwards),k:"Forwards",s:"passed along to someone else"}]:[]))+
-      '<div class="rs-g3"><div class="rs-box"><h3>From Send to Click</h3>'+funnel+'</div><div class="rs-box"><h3>The Waves</h3>'+waves+'</div><div class="rs-box"><h3>Who It Reached</h3>'+deliv+'</div></div>'+
-      '<div class="rs-g2"><div class="rs-box"><h3>Most-Clicked Links</h3>'+links+'</div><div class="rs-box"><h3>Where People Opened It</h3>'+clients+'</div></div>'+
-      (hist?'<div class="rs-box rs-hist"><h3>Every Edition</h3><div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent</th><th class="n">Delivered</th><th class="n">Open Rate</th><th class="n">Click to Open</th><th class="n">Unsubscribes</th></tr></thead><tbody>'+hist+'</tbody></table></div><p class="rs-note">Axios never shared its numbers, so the record starts with November 2026.</p></div>':'')+
-    '</div>';
-  }
-
-  /* ---- Mailchimp ---- */
-  let mcH;
-  if(!mc.length) mcH='<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp</h2></div><div class="empty">No Mailchimp sends logged yet. Drop the Mailchimp campaigns export at the bottom of this page.</div></div>';
-  else {
-    const topics={}; mcY.forEach(x=>{ const t=topics[x.topic]||(topics[x.topic]={n:0,re:0,dl:0,o:0,c:0,u:0}); if(x.resend) t.re++; else { t.n++; t.o+=x.o; t.c+=x.c; t.dlO=(t.dlO||0)+x.dl; } t.dl+=x.dl; t.u+=x.u; });
-    const tRows=Object.entries(topics).sort((a,b)=>b[1].dl-a[1].dl).map(([k,t])=>'<tr><td>'+esc(k)+'</td><td class="n nw">'+t.n+(t.re?' <small class="t2">+'+t.re+'</small>':'')+'</td><td class="n">'+rsN(t.dl)+'</td><td class="n">'+(t.dlO?pct(t.o/t.dlO):"—")+'</td><td class="n">'+(t.dlO?pct(t.c/t.dlO):"—")+'</td></tr>').join("");
-    const lk={}; mcY.forEach(x=>(x.links||[]).forEach(([u,n])=>{ const k=String(u).replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/$/,""); if(!/unsubscribe|list-manage|preferences/i.test(k)) lk[k]=(lk[k]||0)+(+n||0); }));
-    const topL=Object.entries(lk).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l,v,c:"--c4"}));
-    const shown=RS.mcAll?mc:mc.slice(0,12);
-    const rows=shown.map(x=>'<tr><td class="nw">'+esc(fS(x.date))+'</td><td><b>'+esc(x.name.replace(/^Resend:\s*/i,""))+'</b>'+(x.resend?' <span class="rs-tag">Resend</span>':'')+'<small class="t2 rs-subj">'+esc(x.subject)+'</small></td><td class="n">'+rsN(x.dl)+'</td><td class="n">'+pct(x.or)+'</td><td class="n">'+pct(x.cr)+'</td><td class="n">'+rsN(x.u)+'</td></tr>').join("");
-    mcH='<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp · '+yr+'</h2><span class="note">'+mcO.length+' sends and '+(mcY.length-mcO.length)+' resends to people who didn\'t open the first time</span></div>'+
-      rsKpis([{v:rsN(mcY.length),k:"Sends",s:mcO.length+" originals · "+(mcY.length-mcO.length)+" resends"},{v:rsN(sum(mcY,"dl")),k:"Delivered",s:pct(sum(mcY,"sent")?sum(mcY,"dl")/sum(mcY,"sent"):0)+" of sent"},
-        {v:pct(mcOpen),k:"Open Rate",s:"first sends, all together",tip:"Opens divided by deliveries across every original send this year"},{v:pct(mcClick),k:"Click Rate",s:"first sends, all together"},
-        {v:rsN(sum(mcY,"u")),k:"Unsubscribes",s:pct(sum(mcY,"dl")?sum(mcY,"u")/sum(mcY,"dl"):0)+" of delivered"},{v:pct(sum(mcY,"sent")?sum(mcY,"b")/sum(mcY,"sent"):0),k:"Bounce Rate",s:rsN(sum(mcY,"b"))+" bounced"}])+
-      '<div class="rs-box"><h3>Open Rate for Every Send</h3>'+mcChart(mcY)+'</div>'+
-      '<div class="rs-g2"><div class="rs-box"><h3>By Topic</h3><div class="tw"><table class="t"><thead><tr><th>Topic</th><th class="n" title="original sends, plus resends to people who didn&rsquo;t open">Sends</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th></tr></thead><tbody>'+tRows+'</tbody></table></div></div>'+
-        '<div class="rs-box"><h3>Most-Clicked Links</h3>'+(topL.length?hbars(topL,v=>v+" clicks"):'<div class="empty sm">No link clicks logged.</div>')+'</div></div>'+
-      '<div class="rs-box rs-hist"><h3>Every Send</h3><div class="tw"><table class="t"><thead><tr><th>Sent</th><th>Campaign</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th><th class="n">Unsubs</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
-        (mc.length>12?'<div class="rs-more"><button class="btn sm" type="button" id="rs-mcall">'+(RS.mcAll?"Show the Latest 12":"Show All "+mc.length)+'</button></div>':'')+'</div>'+
-    '</div>';
-  }
-
-  /* ---- LinkedIn and Mic'd Up, downloads and the lists ---- */
-  const social='<div class="grid2 rs-row"><div class="card"><div class="ch"><h2>LinkedIn Posts That Reached the Most People</h2></div>'+(liAll.length?hbars(liAll.sort((a,b)=>b.v-a.v).slice(0,10)):'<div class="empty">Drop the LinkedIn export at the bottom of this page, or type impressions on a post.</div>')+'</div>'+
-    '<div class="card"><div class="ch"><h2>Most-Watched Mic\'d Up Episodes</h2></div>'+(yt.length?hbars(yt.sort((a,b)=>b.views-a.views).slice(0,10).map(e=>({l:"Ep "+e.num+": "+(e.title||""),v:+e.views,c:"--c2",tip:"Ep "+e.num+": "+(e.title||"")+" · "+rsN(e.views)+" views"}))):'<div class="empty">Drop the YouTube Studio export at the bottom of this page.</div>')+'</div></div>';
-  const people='<div class="grid2 rs-row"><div class="card"><div class="ch"><h2>Who Is on Our Lists</h2><button class="btn sm" type="button" data-go="people">Open Subscribers</button></div>'+
-      hbars([{l:"MISMO Matters list (last send delivered to)",v:ed?c.dl:grp.length,c:"--c1"},{l:"Mailchimp's largest send this year",v:Math.max(0,...mcY.map(x=>x.dl)),c:"--c4"},{l:"Website sign-ups (mismo.org form)",v:web.length,c:"--c3"},{l:"Work product downloaders",v:dls.length,c:"--c6"},{l:"Prospects from Member 360",v:pros.length,c:"--c5"},{l:"Unsubscribed on MISMO's page",v:uns.length,c:"--c2"}].filter(x=>x.v))+
-      '<p class="rs-note pad">Website sign-ups are only the people who joined through the form on mismo.org; the full MISMO Matters list is the people the last edition went to.</p></div>'+
-    '<div class="card"><div class="ch"><h2>What People Download</h2><span class="cnt">'+rsN(dls.length)+' people</span></div>'+(topWhat.length?hbars(topWhat):'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>')+'</div></div>';
-
-  /* ---- bringing the numbers in: at the very bottom ---- */
-  const tools='<div class="card rs-tools" id="rs-tools"><div class="ch"><h2>Bring In the Numbers</h2><span class="note">drop the file each platform exports; rows are matched to what\'s already here</span></div><div class="cb">'+
+  x.liName=p=>{ const t=(p.title&&p.title!=="LinkedIn post"?p.title:"")||String(p.copy||"").split("\n")[0].slice(0,90); return t || ("Post on "+fS(p.date)); };
+  x.liAll=x.li.map(p=>({l:x.liName(p),v:+p.impressions,c:"--c3",tip:x.liName(p)+" · "+fS(p.date)+" · "+rsN(p.impressions)+" impressions"+(+p.clicks?" · "+rsN(p.clicks)+" clicks":"")+(+p.reactions?" · "+rsN(p.reactions)+" reactions":"")}))
+    .concat(x.liEp.map(e=>({l:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:""),v:+e.liImpressions,c:"--c3",tip:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:"")+" · "+rsN(e.liImpressions)+" impressions"})))
+    .sort((a,b)=>b.v-a.v);
+  x.liImp=x.liAll.reduce((n,i)=>n+i.v,0);
+  x.yt=vals("episodes").filter(e=>epViews(e)).map(e=>Object.assign({},e,{views:epViews(e)})).sort((a,b)=>b.views-a.views);
+  x.ytViews=x.yt.reduce((n,e)=>n+(+e.views),0);
+  x.sp=vals("episodes").filter(e=>+e.spotifyPlays); x.spPlays=x.sp.reduce((n,e)=>n+(+e.spotifyPlays),0);
+  const ppl=peopleIndex(); x.pros=ppl.filter(p=>p.lists.prospects); x.dls=ppl.filter(p=>p.lists.downloaders); x.web=ppl.filter(p=>p.lists.subscribers); x.grp=ppl.filter(p=>p.lists.matters); x.uns=ppl.filter(p=>p.lists.unsubscribed);
+  const what={}; x.dls.forEach(p=>p.x.forEach(w=>what[w]=(what[w]||0)+1));
+  x.what=Object.entries(what).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v,c:"--c6",tip:l+" · "+v+" people"}));
+  x.emailsYr=sum(x.mcY,"dl")+x.eds.filter(e=>String(e.month).slice(0,4)===x.yr).reduce((n,e)=>n+statsCalc(edStats(e)).dl,0);
+  x.listSize=x.ed?x.c.dl:x.grp.length;
+  /* website sign-ups: the old site's list (May 1 to Sept 8, 2026) plus everyone on the new form since Nov 19, 2026 */
+  const sgE=new Set(vals("signups").map(g=>String(g.e||"").toLowerCase())); x.webNew=x.web.filter(p=>sgE.has(String(p.e).toLowerCase())).length; x.webOld=x.web.length-x.webNew; x.mcBig=Math.max(0,...x.mcY.map(m=>m.dl));
+  x.wt=wtDays().slice(-30); x.wtVisits=x.wt.reduce((n,d)=>n+(+d.visits||0),0); x.wtViews=x.wt.reduce((n,d)=>n+(+d.views||0),0);
+  x.fb=vals("aifeedback").filter(f=>f.at && f.comment).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  x.pr=vals("websiteproblems").filter(f=>f.at && f.message).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  return x;
+}
+/* ---- the detail for each channel (the right-hand panel) ---- */
+function rsDMM(x){
+  const {ed,eds,st,c,md}=x;
+  if(!ed) return '<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters</h2></div><div class="empty">Axios never shared numbers, so the first edition here is November 2026. Record its stats on the MISMO Matters page.</div></div>';
+  const funnel='<div class="rs-funnel">'+[["Sent",c.r,""],["Delivered",c.dl,pct(c.r?c.dl/c.r:0)+" of sent"],["Opened",c.o,pct(c.openRate)+" of delivered"],["Clicked",c.c,pct(c.cto)+" of openers"]].map(([l,v,s],i)=>
+    '<div class="rs-fstep"><div class="rs-fl"><b>'+l+'</b><span>'+rsN(v)+'</span></div><div class="rs-fb"><i style="width:'+Math.max(0.6,c.r?v/c.r*100:0)+'%;background:var(--c'+(i<2?1:i===2?3:2)+')"></i></div>'+(s?'<small>'+s+'</small>':'')+'</div>').join("")+'</div>';
+  const wmax=Math.max(0.01,...md.waves.map(w=>w.dl?w.o/w.dl:0));
+  const waves=md.waves.length?'<div class="rs-waves">'+md.waves.map(w=>{ const or=w.dl?w.o/w.dl:0, co=w.o?w.c/w.o:0; return '<div class="rs-wave" data-tip="'+esc(w.l+": "+rsN(w.sent)+" sent · "+rsN(w.dl)+" delivered · "+rsN(w.o)+" opened · "+rsN(w.c)+" clicked")+'"><div class="rs-wl"><b>'+esc(w.l)+'</b><span>'+rsN(w.sent)+' sent</span></div>'+
+    '<div class="rs-wr"><span class="rs-wk">Opened</span><span class="rs-wb"><i style="width:'+Math.max(1,or/wmax*100)+'%;background:var(--c1)"></i></span><b>'+pct(or)+'</b></div>'+
+    '<div class="rs-wr" title="of the people who opened"><span class="rs-wk">Clicked</span><span class="rs-wb"><i style="width:'+Math.max(1,co/Math.max(0.01,...md.waves.map(w2=>w2.o?w2.c/w2.o:0))*100)+'%;background:var(--c2)"></i></span><b>'+pct(co)+'</b></div></div>'; }).join("")+'<p class="rs-note">Opened is out of delivered; clicked is out of the people who opened.</p></div>'
+    :'<div class="empty sm">Add each wave\'s numbers in Update Stats to compare them.</div>';
+  const ndT=md.nd.hard+md.nd.blocked+md.nd.soft, bad=c.r-c.dl;
+  const segs=[["Delivered",c.dl,"--c1"],["Didn't exist (hard bounce)",md.nd.hard,"--c2"],["Blocked by the company's filter",md.nd.blocked,"--c4"],["Temporary (soft bounce)",md.nd.soft,"--c5"]].filter(s=>s[1]);
+  if(!ndT && bad>0) segs.push(["Didn't deliver",bad,"--c2"]);
+  const deliv='<div class="rs-stack">'+segs.map(s=>'<i style="flex:'+s[1]+' 1 0;background:var('+s[2]+')" data-tip="'+esc(s[0]+": "+rsN(s[1])+" ("+pct(c.r?s[1]/c.r:0)+")")+'"></i>').join("")+'</div><div class="rs-legend col">'+segs.map(s=>'<span><i class="rs-k" style="background:var('+s[2]+')"></i>'+esc(s[0])+'<b>'+rsN(s[1])+'</b></span>').join("")+'</div>'+
+    (md.nd.hard?'<p class="rs-note">The '+rsN(md.nd.hard)+' addresses that didn\'t exist were taken off the list after this send.</p>':'');
+  const links=md.links.length?hbars(md.links.slice(0,8).map(l=>({l:l.l,v:l.v,c:"--c1"})),v=>v+" people"):'<div class="empty sm">Add the most-clicked links in Update Stats.</div>';
+  const clients=md.clients.length?hbars(md.clients.map(l=>({l:l.l,v:l.v,c:"--c3"})),v=>v.toFixed(1)+"%"):'<div class="empty sm">Add where people opened it (desktop, mobile, webmail) in Update Stats.</div>';
+  const unsubLine = (md.unsubsHL||md.unsubsPage) ? rsN(md.unsubsHL)+' in Higher Logic · '+rsN(md.unsubsPage)+' on MISMO\'s page' : '';
+  const hist=eds.slice().reverse().map(e=>{ const s=statsCalc(edStats(e)); return '<tr'+(e.id===ed.id?' class="on"':'')+'><td>'+esc(monthName(e.month))+'</td><td class="n">'+rsN(s.r)+'</td><td class="n">'+rsN(s.dl)+'</td><td class="n">'+pct(s.openRate)+'</td><td class="n">'+pct(s.cto)+'</td><td class="n">'+rsN(s.u)+'</td></tr>'; }).join("");
+  return '<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters · '+esc(monthName(ed.month))+'</h2><span class="note">'+(ed.dates&&ed.dates.publish?'sent '+esc(fS(ed.dates.publish))+' through Higher Logic':'')+(st.asOf?' · numbers as of '+esc(String(st.asOf).split(",")[0]):'')+'</span><span class="sp"></span>'+
+      (eds.length>1?'<select class="plain" id="rs-ed" aria-label="Edition">'+eds.slice().reverse().map(e=>'<option value="'+esc(e.id)+'"'+(e.id===ed.id?' selected':'')+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
+      '<button class="btn sm" type="button" id="rs-mmstats">Update Stats</button></div>'+
+    rsKpis([{v:pct(c.openRate),k:"Open Rate",s:rsN(c.o)+" opened"},{v:pct(c.ctr),k:"Click Rate",s:rsN(c.c)+" clicked"},{v:pct(c.cto),k:"Click to Open",s:"of the people who opened"},{v:pct(c.r?c.dl/c.r:0),k:"Delivered",s:rsN(c.dl)+" of "+rsN(c.r)},
+      {v:rsN(c.u),k:"Unsubscribes",s:unsubLine||pct(c.dl?c.u/c.dl:0)+" of delivered"}].concat(md.totalOpens?[{v:rsN(md.totalOpens),k:"Total Opens",s:(c.o?(md.totalOpens/c.o).toFixed(2):"0")+" per person who opened"}]:[]).concat(md.forwards?[{v:rsN(md.forwards),k:"Forwards",s:"passed along to someone else"}]:[]))+
+    '<div class="rs-g3"><div class="rs-box"><h3>From Send to Click</h3>'+funnel+'</div><div class="rs-box"><h3>The Waves</h3>'+waves+'</div><div class="rs-box"><h3>Who It Reached</h3>'+deliv+'</div></div>'+
+    '<div class="rs-g2"><div class="rs-box"><h3>Most-Clicked Links</h3>'+links+'</div><div class="rs-box"><h3>Where People Opened It</h3>'+clients+'</div></div>'+
+    (hist?'<div class="rs-box rs-hist"><h3>Every Edition</h3><div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent</th><th class="n">Delivered</th><th class="n">Open Rate</th><th class="n">Click to Open</th><th class="n">Unsubscribes</th></tr></thead><tbody>'+hist+'</tbody></table></div><p class="rs-note">Axios never shared its numbers, so the record starts with November 2026.</p></div>':'')+
+  '</div>';
+}
+function rsDMC(x){
+  const {mc,mcY,mcO,yr,sum,mcOpen,mcClick}=x;
+  if(!mc.length) return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp</h2></div><div class="empty">No Mailchimp sends logged yet. Drop the Mailchimp campaigns export in Bring In the Numbers.</div></div>';
+  const topics={}; mcY.forEach(m=>{ const t=topics[m.topic]||(topics[m.topic]={n:0,re:0,dl:0,o:0,c:0,u:0}); if(m.resend) t.re++; else { t.n++; t.o+=m.o; t.c+=m.c; t.dlO=(t.dlO||0)+m.dl; } t.dl+=m.dl; t.u+=m.u; });
+  const tRows=Object.entries(topics).sort((a,b)=>b[1].dl-a[1].dl).map(([k,t])=>'<tr><td>'+esc(k)+'</td><td class="n nw">'+t.n+(t.re?' <small class="t2">+'+t.re+'</small>':'')+'</td><td class="n">'+rsN(t.dl)+'</td><td class="n">'+(t.dlO?pct(t.o/t.dlO):"—")+'</td><td class="n">'+(t.dlO?pct(t.c/t.dlO):"—")+'</td></tr>').join("");
+  const lk={}; mcY.forEach(m=>(m.links||[]).forEach(([u,n])=>{ const k=String(u).replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/$/,""); if(!/unsubscribe|list-manage|preferences/i.test(k)) lk[k]=(lk[k]||0)+(+n||0); }));
+  const topL=Object.entries(lk).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l,v,c:"--c4"}));
+  const shown=RS.mcAll?mc:mc.slice(0,12);
+  const rows=shown.map(m=>'<tr><td class="nw">'+esc(fS(m.date))+'</td><td><b>'+esc(m.name.replace(/^Resend:\s*/i,""))+'</b>'+(m.resend?' <span class="rs-tag">Resend</span>':'')+'<small class="t2 rs-subj">'+esc(m.subject)+'</small></td><td class="n">'+rsN(m.dl)+'</td><td class="n">'+pct(m.or)+'</td><td class="n">'+pct(m.cr)+'</td><td class="n">'+rsN(m.u)+'</td></tr>').join("");
+  return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp · '+yr+'</h2><span class="note">'+mcO.length+' sends and '+(mcY.length-mcO.length)+' resends to people who didn\'t open the first time</span></div>'+
+    rsKpis([{v:rsN(mcY.length),k:"Sends",s:mcO.length+" originals · "+(mcY.length-mcO.length)+" resends"},{v:rsN(sum(mcY,"dl")),k:"Delivered",s:pct(sum(mcY,"sent")?sum(mcY,"dl")/sum(mcY,"sent"):0)+" of sent"},
+      {v:pct(mcOpen),k:"Open Rate",s:"first sends, all together",tip:"Opens divided by deliveries across every original send this year"},{v:pct(mcClick),k:"Click Rate",s:"first sends, all together"},
+      {v:rsN(sum(mcY,"u")),k:"Unsubscribes",s:pct(sum(mcY,"dl")?sum(mcY,"u")/sum(mcY,"dl"):0)+" of delivered"},{v:pct(sum(mcY,"sent")?sum(mcY,"b")/sum(mcY,"sent"):0),k:"Bounce Rate",s:rsN(sum(mcY,"b"))+" bounced"}])+
+    '<div class="rs-box"><h3>Open Rate for Every Send</h3>'+mcChart(mcY)+'</div>'+
+    '<div class="rs-g2"><div class="rs-box"><h3>By Topic</h3><div class="tw"><table class="t"><thead><tr><th>Topic</th><th class="n" title="original sends, plus resends to people who didn&rsquo;t open">Sends</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th></tr></thead><tbody>'+tRows+'</tbody></table></div></div>'+
+      '<div class="rs-box"><h3>Most-Clicked Links</h3>'+(topL.length?hbars(topL,v=>v+" clicks"):'<div class="empty sm">No link clicks logged.</div>')+'</div></div>'+
+    '<div class="rs-box rs-hist"><h3>Every Send</h3><div class="tw"><table class="t"><thead><tr><th>Sent</th><th>Campaign</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th><th class="n">Unsubs</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+      (mc.length>12?'<div class="rs-more"><button class="btn sm" type="button" id="rs-mcall">'+(RS.mcAll?"Show the Latest 12":"Show All "+mc.length)+'</button></div>':'')+'</div>'+
+  '</div>';
+}
+function rsDLI(x){
+  const posts=x.li.map(p=>({d:p.date||"", l:x.liName(p), i:+p.impressions||0, c:+p.clicks||0, r:+p.reactions||0, u:p.postedUrl||""}))
+    .concat(x.liEp.map(e=>({d:e.linkedinDate||"", l:"Mic'd Up Ep "+e.num+(e.title?": "+e.title:""), i:+e.liImpressions||0, c:+e.liClicks||0, r:+e.liReactions||0, u:e.linkedinUrl||""})))
+    .sort((a,b)=>String(b.d).localeCompare(String(a.d)) || b.i-a.i);
+  const tot=k=>posts.reduce((n,p)=>n+p[k],0), mo=x.liDayMo?MONL[+x.liDayMo.slice(5)-1]+" "+x.liDayMo.slice(0,4):"";
+  const dsum=k=>x.liMo.reduce((n,p)=>n+(+p[k]||0),0);
+  const daily=x.liMo.length?'<div class="rs-box"><h3>The Whole Page Each Day · '+esc(mo)+'</h3><div class="rs-chart">'+(()=>{ const d=x.liMo, W=760, H=170, L=44, R=8, Tp=10, B=24, max=Math.max(1,...d.map(p=>+p.impressions||0)), top=Math.ceil(max/500)*500||500, bw=(W-L-R)/d.length;
+        let g=''; for(let v=0; v<=top; v+=top/4){ const y=Tp+(1-v/top)*(H-Tp-B); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" class="rs-grid"/><text x="'+(L-6)+'" y="'+(y+4)+'" class="rs-ax" text-anchor="end">'+rsN(v)+'</text>'; }
+        return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="LinkedIn page impressions each day">'+g+d.map((p,i)=>{ const v=+p.impressions||0, h=Math.max(1,v/top*(H-Tp-B)); return '<rect class="wt-bar" x="'+(L+i*bw+bw*0.15)+'" width="'+(bw*0.7)+'" y="'+(H-B-h)+'" height="'+h+'" rx="1.5" data-tip="'+esc(fS(p.date)+"\n"+rsN(v)+" impressions · "+rsN(p.clicks)+" clicks · "+rsN(p.reactions)+" reactions")+'"/>'+((i%5===0||i===d.length-1)?'<text x="'+(L+i*bw+bw/2)+'" y="'+(H-7)+'" class="rs-ax" text-anchor="middle">'+(+p.date.slice(8))+'</text>':''); }).join("")+'</svg>'; })()+
+      '</div><p class="rs-note">Every post on MISMO\'s page added together, one bar a day. These come from the daily sheet of the LinkedIn export, so they can\'t say which post a day\'s views went to.</p></div>':'';
+  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · from the monthly export and impressions typed on a post</span></div>'+
+    ((posts.length||x.liMo.length)?rsKpis((x.liMo.length?[{v:rsN(x.liMoImp),k:"Page Impressions",s:mo+", every post together"},{v:rsN(dsum("clicks")),k:"Page Clicks",s:mo},{v:rsN(dsum("reactions")),k:"Page Reactions",s:mo},{v:x.liBest?rsN(x.liBest.impressions):"—",k:"Busiest Day",s:x.liBest?fS(x.liBest.date):""}]:[])
+        .concat(posts.length?[{v:rsN(posts.length),k:"Posts Logged",s:rsN(tot("i"))+" impressions"}]:[]))+daily+
+      (posts.length?'<div class="rs-box"><h3>Posts That Reached the Most People</h3>'+hbars(x.liAll.slice(0,10))+'</div>'+
+        '<div class="rs-box rs-hist"><h3>Every Post</h3><div class="tw"><table class="t"><thead><tr><th>Posted</th><th>Post</th><th class="n">Impressions</th><th class="n">Clicks</th><th class="n">Reactions</th></tr></thead><tbody>'+
+          posts.map(p=>'<tr><td class="nw">'+(p.d?esc(fS(p.d)):"—")+'</td><td>'+(/^https:\/\//.test(p.u)?'<a href="'+esc(p.u)+'" target="_blank" rel="noopener">'+esc(p.l)+'</a>':esc(p.l))+'</td><td class="n">'+rsN(p.i)+'</td><td class="n">'+rsN(p.c)+'</td><td class="n">'+rsN(p.r)+'</td></tr>').join("")+'</tbody></table></div></div>'
+       :'<div class="rs-box"><h3>Which Posts Did Best</h3><div class="empty sm">No single posts are here yet: the export brought in so far only had the daily sheet. Drop the LinkedIn export again in Bring In the Numbers (with its All Posts tab) and each post comes in with its words, link and numbers.</div></div>')
+    :'<div class="empty">Drop the LinkedIn export in Bring In the Numbers, or type impressions on a post.</div>')+'</div>';
+}
+function rsDMU(x){
+  const eps=vals("episodes").filter(e=>epViews(e)||+e.spotifyPlays||+e.liImpressions).sort((a,b)=>String(b.airDate||"").localeCompare(String(a.airDate||"")) || (+b.num||0)-(+a.num||0));
+  const liT=x.liEp.reduce((n,e)=>n+(+e.liImpressions||0),0);
+  return '<div class="card rs-sec" id="rs-mu"><div class="ch"><h2>Mic\'d Up</h2><span class="note">YouTube views fill in every morning; Spotify plays and LinkedIn impressions are typed on each episode or brought in</span></div>'+
+    (eps.length?rsKpis([{v:rsN(x.ytViews),k:"YouTube Views",s:x.yt.length+" episodes"},{v:rsN(Math.round(x.ytViews/Math.max(1,x.yt.length))),k:"Views per Episode",s:"on average"}]
+        .concat(x.sp.length?[{v:rsN(x.spPlays),k:"Spotify Plays",s:x.sp.length+" episodes"}]:[]).concat(liT?[{v:rsN(liT),k:"LinkedIn Impressions",s:x.liEp.length+" episode posts"}]:[]))+
+      (x.yt.length?'<div class="rs-box"><h3>Most-Watched Episodes</h3>'+hbars(x.yt.slice(0,10).map(e=>({l:"Ep "+e.num+": "+(e.title||""),v:+e.views,c:"--c2",tip:"Ep "+e.num+": "+(e.title||"")+" · "+rsN(e.views)+" views"})))+'</div>':'')+
+      '<div class="rs-box rs-hist"><h3>Every Episode</h3><div class="tw"><table class="t"><thead><tr><th>Aired</th><th>Episode</th><th class="n">YouTube</th><th class="n">Spotify</th><th class="n">LinkedIn</th></tr></thead><tbody>'+
+        eps.map(e=>'<tr><td class="nw">'+(e.airDate?esc(fS(e.airDate)):"—")+'</td><td><b>Ep '+esc(e.num||"")+'</b> '+esc(e.title||"")+'</td><td class="n">'+(epViews(e)?rsN(epViews(e)):"—")+'</td><td class="n">'+(+e.spotifyPlays?rsN(e.spotifyPlays):"—")+'</td><td class="n">'+(+e.liImpressions?rsN(e.liImpressions):"—")+'</td></tr>').join("")+'</tbody></table></div></div>'
+    :'<div class="empty">No episode numbers yet. YouTube views fill in every morning once the Results feed is running.</div>')+'</div>';
+}
+function rsDLists(x){
+  const see=(k,l)=>'<button class="btn sm" type="button" data-rs-people="'+k+'">'+l+'</button>';
+  return '<div class="card rs-sec" id="rs-lists"><div class="ch"><h2>Who Is on Our Lists</h2><span class="sp"></span><button class="btn sm" type="button" data-go="people">Open Subscribers</button></div>'+
+    rsKpis([{v:rsN(x.listSize),k:"MISMO Matters",s:x.ed?"the last edition went to":"on the list"},{v:rsN(x.web.length),k:"Website Sign-Ups",s:"May 1 to Sept 8, and since Nov 19"},{v:rsN(x.dls.length),k:"Downloaders",s:"work products"},{v:rsN(x.pros.length),k:"Prospects",s:"from Member 360"},{v:rsN(x.uns.length),k:"Unsubscribed",s:"on MISMO's page"}])+
+    '<div class="rs-box rs-src"><h3>Where the '+rsN(x.web.length)+' Website Sign-Ups Come From</h3>'+
+      '<div class="rs-srow"><b>'+rsN(x.webOld)+'</b><span>signed up on the old mismo.org between May 1 and Sept 8, 2026 (the list exported from the old site)</span></div>'+
+      '<div class="rs-srow"><b>'+rsN(x.webNew)+'</b><span>signed up on the new mismo.org form since it went live on Nov 19, 2026; new ones land here by themselves</span></div>'+
+      '<p class="rs-note">Sign-ups on the old site between Sept 8 and Nov 19 were never exported, so they aren\'t here.</p>'+
+      '<div class="rs-sbtn">'+see("subscribers","See the "+rsN(x.web.length)+" and Look Someone Up")+see("downloaders","See the Downloaders")+'</div></div>'+
+    '<div class="rs-box"><h3>Sizes Side by Side</h3>'+hbars([{l:"MISMO Matters list (last send delivered to)",v:x.listSize,c:"--c1"},{l:"Mailchimp's largest send this year",v:x.mcBig,c:"--c4"},{l:"Website sign-ups (mismo.org form)",v:x.web.length,c:"--c3"},{l:"Work product downloaders",v:x.dls.length,c:"--c6"},{l:"Prospects from Member 360",v:x.pros.length,c:"--c5"},{l:"Unsubscribed on MISMO's page",v:x.uns.length,c:"--c2"}].filter(i=>i.v))+
+    '<p class="rs-note">The full MISMO Matters list is the people the last edition went to.</p></div></div>';
+}
+function rsDDl(x){
+  return '<div class="card rs-sec" id="rs-dl"><div class="ch"><h2>What People Download</h2><span class="note">non-member downloads of MISMO work products from mismo.org</span><span class="sp"></span><button class="btn sm" type="button" data-go="people">Open Downloaders</button></div>'+
+    (x.what.length?rsKpis([{v:rsN(x.dls.length),k:"People",s:"downloaded at least one"},{v:rsN(x.what.length),k:"Work Products",s:"downloaded at least once"},{v:(x.what.reduce((n,w)=>n+w.v,0)/Math.max(1,x.dls.length)).toFixed(1),k:"Per Person",s:"work products on average"}])+
+      '<div class="rs-box"><h3>Every Work Product, Most Downloaded First</h3>'+hbars(x.what.slice(0,40),v=>v+" people")+(x.what.length>40?'<p class="rs-note">The top 40 of '+x.what.length+'.</p>':'')+'</div>'
+    :'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>')+'</div>';
+}
+function rsDTools(x){
+  return '<div class="card rs-sec rs-tools" id="rs-tools"><div class="ch"><h2>Bring In the Numbers</h2><span class="note">drop the file each platform exports; rows are matched to what\'s already here</span></div><div class="cb">'+
       '<div class="feedrow">'+[["matters","MISMO Matters"],["youtube","YouTube"],["mailchimp","Mailchimp"],["linkedin","LinkedIn"]].map(([k,l])=>'<div class="feedst"><span class="fdot'+(feed(k)?" on":"")+'"></span><b>'+l+'</b><small>'+(feed(k)?"Daily feed · updated "+esc(feedAge(k)):(k==="linkedin"?"Export by hand for now":"Daily feed not connected yet"))+'</small></div>').join("")+'</div>'+
       '<div class="fgrid" style="margin-top:14px">'+
       '<div class="field"><label class="flabel" for="rs-yt">YouTube Studio Export</label><input type="file" id="rs-yt" accept=".csv,.xlsx"><span class="hint">Analytics › Advanced mode › Content › Export. Matched to episodes by the number in the title.</span></div>'+
-      '<div class="field"><label class="flabel" for="rs-li">LinkedIn Page Analytics Export</label><input type="file" id="rs-li" accept=".csv,.xlsx,.xls"><span class="hint">MISMO page › Analytics › Content › Export (the All Posts tab). Matched by post link or date.</span></div>'+
-      '<div class="field"><label class="flabel" for="rs-mc">Mailchimp Campaigns Export</label><input type="file" id="rs-mc" accept=".csv,.xlsx"><span class="hint">Campaigns › Reports › Export. Matched by subject and send date.</span></div>'+
-    '</div><p class="hint" id="rs-msg" style="margin-top:10px"></p></div></div>'+(due?'':mnCard());
-
-  el.innerHTML='<div class="phead rs-head"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1></div>'+(due?'':rsMonthStrip())+'</div>'+
-    (due?mnCard():'')+band+mm+mcH+social+rsWebsite()+rsVoices()+people+tools;
-
-  $$("[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
-  $$("[data-rs-jump]",el).forEach(b=>b.onclick=()=>{ const t=$("#"+b.dataset.rsJump,el); if(t) t.scrollIntoView({block:"start",behavior:"smooth"}); });
-  const mms=$("#rs-mmstats",el); if(mms && ed) mms.onclick=()=>openStats(ed);
-  const pick=$("#rs-ed",el); if(pick) pick.onchange=()=>{ RS.ed=pick.value; renderResults(); };
-  const all=$("#rs-mcall",el); if(all) all.onclick=()=>{ RS.mcAll=!RS.mcAll; renderResults(); };
-  wtWire(el);
-  rsTips(el);
+      '<div class="field"><label class="flabel" for="rs-lifile">LinkedIn Page Analytics Export</label><input type="file" id="rs-lifile" accept=".csv,.xlsx,.xls"><span class="hint">MISMO page › Analytics › Content › Export (the All Posts tab). Matched by post link or date.</span></div>'+
+      '<div class="field"><label class="flabel" for="rs-mcfile">Mailchimp Campaigns Export</label><input type="file" id="rs-mcfile" accept=".csv,.xlsx"><span class="hint">Campaigns › Reports › Export. Matched by subject and send date.</span></div>'+
+    '</div><p class="hint" id="rs-msg" style="margin-top:10px">'+esc(RS.msg||"")+'</p></div></div>'+(x.due?'':mnCard());
+}
+const RS_SEC={
+  mm:{t:x=>x.ed?"MISMO Matters · "+monthName(x.ed.month):"MISMO Matters", d:rsDMM},
+  mc:{t:x=>"Mailchimp · "+x.yr, d:rsDMC},
+  web:{t:()=>"Website · www.mismo.org", d:()=>rsWebsite()},
+  li:{t:()=>"LinkedIn", d:rsDLI},
+  mu:{t:()=>"Mic'd Up", d:rsDMU},
+  voices:{t:()=>"What Visitors Told Us", d:()=>rsVoices(true)},
+  lists:{t:()=>"Who Is on Our Lists", d:rsDLists},
+  dl:{t:()=>"What People Download", d:rsDDl},
+  tools:{t:()=>"Bring In the Numbers", d:rsDTools}
+};
+/* ---- the cards ---- */
+function rsMini(items, fmt){
+  if(!items.length) return '';
+  const max=Math.max(...items.map(i=>i.v))||1;
+  return '<span class="rs-mini">'+items.map(i=>'<span class="rs-mr"><span class="rs-mlb">'+esc(i.l)+'</span><span class="rs-mb"><i style="width:'+Math.max(2,i.v/max*100)+'%;background:var('+(i.c||"--c1")+')"></i></span><b>'+(fmt?fmt(i.v):rsN(i.v))+'</b></span>').join("")+'</span>';
+}
+/* a small picture of a run of numbers: a line, or bars */
+function rsSpark(v, color, bars){
+  if(v.length<2) return '';
+  const W=240, H=48, max=Math.max(...v)||1, min=bars?0:Math.min(...v), rng=(max-min)||1, n=v.length;
+  if(bars){ const bw=W/n; return '<svg class="rs-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true">'+v.map((y,i)=>'<rect x="'+(i*bw+bw*0.15)+'" width="'+(bw*0.7)+'" y="'+(H-Math.max(1.5,y/max*(H-2)))+'" height="'+Math.max(1.5,y/max*(H-2))+'" rx="1" style="fill:var('+color+')"/>').join("")+'</svg>'; }
+  const X=i=>i/(n-1)*W, Y=y=>4+(1-(y-min)/rng)*(H-8);
+  return '<svg class="rs-spark" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+v.map((y,i)=>X(i)+","+Y(y)).join(" ")+'" style="fill:none;stroke:var('+color+');stroke-width:2;vector-effect:non-scaling-stroke"/></svg>';
+}
+function rsCard(k, o){
+  return '<button class="rs-card'+(PANE&&PANE.rsKey===k?' on':'')+'" type="button" data-rs-open="'+k+'" style="--rc:var('+o.color+')" aria-label="'+esc(o.eye+": "+o.v+" "+o.vk+". Open the details")+'">'+
+    '<span class="rs-ce">'+esc(o.eye)+'</span>'+
+    '<span class="rs-cv"><b>'+o.v+'</b><span>'+esc(o.vk)+'</span></span>'+
+    '<span class="rs-cz">'+(o.viz||'<span class="rs-cq">'+esc(o.none||"Nothing to show yet")+'</span>')+'</span>'+
+    '<span class="rs-cl">'+o.rows.filter(Boolean).map(([a,b])=>'<span class="rs-crow"><span>'+esc(a)+'</span><b>'+b+'</b></span>').join("")+'</span>'+
+    '<span class="rs-cf">'+esc(o.more)+'<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3l5 5-5 5"/></svg></span></button>';
+}
+function rsCards(x){
+  const {c,ed,mcY,mcO,sum}=x;
+  const n30=a=>a.filter(f=>f.at>=new Date(Date.now()-30*864e5).toISOString()).length;
+  const drop=((S.websiteproblems||{})._dropped||{}).total||0;
+  const wl=wtDays().filter(d=>d.pages).slice(-30), top=wl.length?wtSum(wl,"pages")[0]:null;
+  const mcSpark=mcO.filter(m=>m.date && m.dl>=1000).sort((a,b)=>a.date.localeCompare(b.date)).map(m=>m.or*100);
+  const newest=x.fb[0]||x.pr[0]||null;
+  const cards=[
+    rsCard("mm",{eye:ed?"MISMO Matters · "+monthName(ed.month):"MISMO Matters", color:"--c1", v:ed?pct(c.openRate):"—", vk:ed?"opened it":"from November on",
+      viz:ed?rsMini([{l:"Delivered",v:c.dl,c:"--c1"},{l:"Opened",v:c.o,c:"--c3"},{l:"Clicked",v:c.c,c:"--c2"}]):"", none:"Record the November stats on the MISMO Matters page",
+      rows:ed?[["Sent to",rsN(c.r)],["Click to open",pct(c.cto)],["Unsubscribes",rsN(c.u)]]:[], more:"Waves, delivery, links and every edition"}),
+    rsCard("mc",{eye:"Mailchimp · "+x.yr, color:"--c4", v:mcO.length?pct(x.mcOpen):"—", vk:"open rate, first sends",
+      viz:rsSpark(mcSpark,"--c4"), none:mcY.length?"Open rate over time shows after two larger sends":"No sends logged yet",
+      rows:[["Sends",mcO.length+(mcY.length-mcO.length?' + '+(mcY.length-mcO.length)+' resends':'')],["Delivered",rsN(sum(mcY,"dl"))],["Unsubscribes",rsN(sum(mcY,"u"))]], more:"Every send, topics and top links"}),
+    rsCard("web",{eye:"Website · www.mismo.org", color:"--c1", v:x.wt.length?rsN(x.wtVisits):"—", vk:x.wt.length?"visits, last "+x.wt.length+" day"+(x.wt.length===1?"":"s"):"counting from Nov 20, 2026",
+      viz:rsSpark(x.wt.map(d=>+d.visits||0),"--c1",true), none:x.wt.length?"A picture of each day shows from the second day":"The first nightly count arrives Nov 21",
+      rows:[["Page views",rsN(x.wtViews)],["Pages per visit",x.wtVisits?(x.wtViews/x.wtVisits).toFixed(1):"—"],["Top page",top?esc(top.k||"/"):"—"]], more:"Each day, top pages, sources and devices"}),
+    rsCard("li",{eye:"LinkedIn", color:"--c3", v:rsN(x.liMo.length?x.liMoImp:x.liImp), vk:x.liMo.length?"page impressions, "+MONL[+x.liDayMo.slice(5)-1]:"impressions",
+      viz:x.liAll.length?rsMini(x.liAll.slice(0,3).map(i=>({l:i.l,v:i.v,c:"--c3"}))):rsSpark(x.liMo.map(p=>+p.impressions||0),"--c3",true), none:"Drop the LinkedIn export in Bring In the Numbers",
+      rows:[["Busiest day",x.liBest?esc(fS(x.liBest.date))+" · "+rsN(x.liBest.impressions):"—"],["Posts logged",x.liAll.length?rsN(x.liAll.length):'<span class="rs-due">none yet</span>'],["Clicks",rsN(x.liMo.reduce((n,p)=>n+(+p.clicks||0),0)||x.li.reduce((n,p)=>n+(+p.clicks||0),0))]], more:x.liAll.length?"Every post and what reached the most people":"Each day, and how to bring in single posts"}),
+    rsCard("mu",{eye:"Mic'd Up", color:"--c2", v:rsN(x.ytViews), vk:"YouTube views", viz:rsMini(x.yt.slice(0,3).map(e=>({l:"Ep "+e.num+": "+(e.title||""),v:+e.views,c:"--c2"}))), none:"YouTube views fill in every morning",
+      rows:[["Episodes on YouTube",rsN(x.yt.length)],(MU_PAUSED.spotify&&!x.sp.length)?null:["Spotify plays",x.sp.length?rsN(x.spPlays):"—"],["LinkedIn impressions",rsN(x.liEp.reduce((n,e)=>n+(+e.liImpressions||0),0))]], more:"Every episode on YouTube, Spotify and LinkedIn"}),
+    rsCard("voices",{eye:"What Visitors Told Us", color:"--c5", v:rsN(n30(x.fb)+n30(x.pr)), vk:"in the last 30 days",
+      viz:newest?'<span class="rs-cq">“'+esc(String(newest.comment||newest.message).slice(0,140))+'”</span>':"", none:"Nothing yet. Comments and problem reports land here",
+      rows:[["AI answers marked not helpful",rsN(x.fb.length)],["Website problems",rsN(x.pr.length)],drop?["Spam dropped",rsN(drop)]:null], more:"Every comment and problem report"}),
+    rsCard("lists",{eye:"Our Lists", color:"--c6", v:rsN(x.listSize), vk:"on the MISMO Matters list", viz:rsMini([{l:"Mailchimp's largest send",v:x.mcBig,c:"--c4"},{l:"Website sign-ups",v:x.web.length,c:"--c3"},{l:"Downloaders",v:x.dls.length,c:"--c6"}].filter(i=>i.v)),
+      rows:[["Website sign-ups, old site (May–Sept 8)",rsN(x.webOld)],["Website sign-ups, new form (since Nov 19)",rsN(x.webNew)],["Prospects from Member 360",rsN(x.pros.length)]], more:"Every list, and who is on each"}),
+    rsCard("dl",{eye:"What People Download", color:"--c6", v:rsN(x.dls.length), vk:"people downloaded", viz:rsMini(x.what.slice(0,3),v=>rsN(v)), none:"Load the downloader list on Subscribers & Downloaders",
+      rows:[["Work products downloaded",rsN(x.what.length)]], more:"Every work product, most downloaded first"}),
+    rsCard("tools",{eye:"Bring In the Numbers", color:"--c4", v:[["matters"],["youtube"],["mailchimp"]].filter(([k])=>feed(k)).length+" of 3", vk:"daily feeds running",
+      viz:'<span class="rs-feeds">'+[["matters","MISMO Matters"],["youtube","YouTube"],["mailchimp","Mailchimp"],["linkedin","LinkedIn"]].map(([k,l])=>'<span><i class="fdot'+(feed(k)?" on":"")+'"></i>'+l+'<small>'+(feed(k)?"daily":"by hand")+'</small></span>').join("")+'</span>',
+      rows:[[mnName(x.per)+" numbers",x.due?'<span class="rs-due">'+mnOpen(x.per).length+' still due</span>':'all in']], more:"Drop an export from YouTube, LinkedIn or Mailchimp"})
+  ];
+  return '<div class="rs-cards" id="rs-cards">'+cards.join("")+'</div>';
+}
+/* ---- the right-hand panel ---- */
+function rsOpen(k){
+  if(!RS_SEC[k]) return;
+  const x=rsCtx(), i=RS_ORDER.indexOf(k), prev=RS_ORDER[(i+RS_ORDER.length-1)%RS_ORDER.length], next=RS_ORDER[(i+1)%RS_ORDER.length];
+  openPane({eye:"Results", title:RS_SEC[k].t(x), data:{}, fields:[], noFocus:true, extra:'<div class="rs-rail">'+RS_SEC[k].d(x)+'</div>',
+    buttons:[{label:"‹ "+RS_SEC[prev].t(x), run:()=>rsOpen(prev)},{label:RS_SEC[next].t(x)+" ›", run:()=>rsOpen(next)}],
+    after:b=>rsWireRail(b)});
+  PANE.rsKey=k;
+  $$("#rs-cards .rs-card").forEach(c=>c.classList.toggle("on", c.dataset.rsOpen===k));
+  const t=$("#pane-title"); if(t){ t.setAttribute("tabindex","-1"); setTimeout(()=>{ try{ t.focus({preventScroll:true}); }catch(e){} },60); }
+}
+/* the data changed while the panel is open: refresh what it shows, where it was scrolled to */
+function rsRefreshRail(){
+  if(!PANE || !PANE.rsKey || !RS_SEC[PANE.rsKey]) return;
+  const b=$("#pane-body"), y=b.scrollTop, x=rsCtx();
+  $("#pane-title").textContent=RS_SEC[PANE.rsKey].t(x);
+  b.innerHTML='<div class="rs-rail">'+RS_SEC[PANE.rsKey].d(x)+'</div>'; rsWireRail(b); b.scrollTop=y;
+}
+function rsWireRail(b){
+  $$("[data-go]",b).forEach(g=>g.onclick=()=>{ closePane(true); go(g.dataset.go); });
+  /* straight to that list on Subscribers & Downloaders, with the search box ready */
+  $$("[data-rs-people]",b).forEach(g=>g.onclick=()=>{ PL.list=g.dataset.rsPeople; PL.q=""; PL.limit=150; closePane(true); go("people"); setTimeout(()=>{ const q=$("#pp-q"); if(q) try{ q.focus(); }catch(e){} },120); });
+  const x=rsCtx();
+  const mms=$("#rs-mmstats",b); if(mms && x.ed) mms.onclick=()=>openStats(x.ed);
+  const pick=$("#rs-ed",b); if(pick) pick.onchange=()=>{ RS.ed=pick.value; renderResults(); };
+  const all=$("#rs-mcall",b); if(all) all.onclick=()=>{ RS.mcAll=!RS.mcAll; rsRefreshRail(); };
+  wtWire(b); rsTips(b); mnWire(b); rsWireTools(b);
+}
+function renderResults(){
+  const el=$("#page-results"), x=rsCtx();
+  const say = x.ed ? 'MISMO Matters reached <em>'+rsN(x.c.dl)+'</em> inboxes in '+esc(monthName(x.ed.month))+' and '+rsN(x.c.o)+' people opened it. Mailchimp has sent '+x.mcY.length+' emails this year'+(x.mcO.length?', opened by '+pct(x.mcOpen)+' of people on average':'')+'. All told, <em>'+rsN(x.emailsYr)+'</em> emails delivered in '+x.yr+'.'
+    : (x.mc.length||x.li.length||x.yt.length ? 'Here is how each channel is doing from the numbers brought in so far.' : 'No results brought in yet. Bring In the Numbers has the tools.');
+  el.innerHTML='<div class="phead rs-head"><div><div class="eyebrow">How Marketing Is Landing</div><h1>Results</h1></div>'+(x.due?'':rsMonthStrip())+'</div>'+
+    (x.due?mnCard():'')+'<div class="band rs-band"><div class="today">Results · '+esc(fS(T()))+'</div><div class="say">'+say+'</div><div class="rs-hint">Press any card for the full detail.</div></div>'+rsCards(x);
+  $$("[data-rs-open]",el).forEach(b=>b.onclick=()=>rsOpen(b.dataset.rsOpen));
   mnWire(el); if(LOADED.has("monthly") || !LIVE) setTimeout(()=>{ if(TAB==="results") mnPopup("results"); },400);
-
-  const msg=$("#rs-msg",el);
-  $("#rs-yt",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, miss=[];
-    for(const r of rows){ const title=col(r,/title|content|video/i); const m=title.match(/ep(?:isode)?\.?\s*(\d{1,3})/i); if(!m) continue; const ep=vals("episodes").find(x=>+x.num===+m[1]); if(!ep){ miss.push(m[1]); continue; }
+  rsRefreshRail();
+}
+/* bringing the numbers in: the export drops (now in the Bring In the Numbers panel) */
+function rsWireTools(root){
+  const msg=$("#rs-msg",root), say=t=>{ RS.msg=t; if(msg) msg.textContent=t; };
+  const yt=$("#rs-yt",root), li=$("#rs-lifile",root), mc=$("#rs-mcfile",root);
+  if(yt) yt.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, miss=[];
+    for(const r of rows){ const title=col(r,/title|content|video/i); const m=title.match(/ep(?:isode)?\.?\s*(\d{1,3})/i); if(!m) continue; const ep=vals("episodes").find(q=>+q.num===+m[1]); if(!ep){ miss.push(m[1]); continue; }
       const views=num(col(r,/^views$/i)), hrs=num(col(r,/watch time/i)), likes=num(col(r,/likes/i));
       await patch("episodes",ep.id,{views, watchHours:hrs, likes, youtubeDone:true}); n++; }
     if(n) await mnMarkFile("yt");
-    msg.textContent=n+" episode"+(n===1?"":"s")+" updated from YouTube."+(miss.length?" Not logged here yet: Ep "+miss.join(", "):""); }catch(err){ msg.textContent=err.message; } };
-  $("#rs-li",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, added=0;
-    for(const r of rows){ const link=col(r,/post link|link|url/i), text=col(r,/post title|title|update|commentary|content/i), d=isoFrom(col(r,/created|date|posted/i));
-      const st={impressions:num(col(r,/^impressions/i)), clicks:num(col(r,/^clicks/i)), reactions:num(col(r,/reactions|likes/i)), comments:num(col(r,/comments/i)), reposts:num(col(r,/reposts|shares/i))};
+    say(n+" episode"+(n===1?"":"s")+" updated from YouTube."+(miss.length?" Not logged here yet: Ep "+miss.join(", "):"")); }catch(err){ say(err.message); } };
+  if(li) li.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const sheets=await readSheets(f); let n=0, added=0, days=0;
+    /* All posts: one row a post, with its title and link. The daily sheet: one row a day for the whole page. */
+    const postsSheet=sheets.find(x=>x.head.some(h=>/^post (title|link)$/i.test(h))) || (sheets.length===1 && !sheets[0].head.some(h=>/^date$/i.test(h)) ? sheets[0] : null);
+    const daySheet=sheets.find(x=>x!==postsSheet && x.head.some(h=>/^date$/i.test(h)) && x.head.some(h=>/impressions/i.test(h)));
+    for(const r of (postsSheet?postsSheet.rows:[])){ const link=col(r,/^post link$/i,/link|url/i), text=col(r,/^post title$/i,/title|update|commentary|content/i), d=isoFrom(col(r,/^created date$/i,/created/i,/^date$/i));
+      const st={impressions:num(col(r,/^impressions$/i,/^impressions/i)), clicks:num(col(r,/^clicks$/i,/^clicks/i)), reactions:num(col(r,/^likes$/i,/reactions|likes/i)), comments:num(col(r,/^comments$/i,/comments/i)), reposts:num(col(r,/^reposts$/i,/reposts|shares/i))};
       if(!st.impressions && !text) continue;
-      const ep=vals("episodes").find(x=>(x.linkedinUrl&&link&&x.linkedinUrl===link) || (/mic.?d up/i.test(text) && x.num && new RegExp("(ep(isode)?\\.?\\s*)"+x.num+"\\b","i").test(text)));
+      const ep=vals("episodes").find(q=>(q.linkedinUrl&&link&&q.linkedinUrl===link) || (/mic.?d up/i.test(text) && q.num && new RegExp("(ep(isode)?\\.?\\s*)"+q.num+"\\b","i").test(text)));
       if(ep){ await patch("episodes",ep.id,{liImpressions:st.impressions, liClicks:st.clicks, liReactions:st.reactions, linkedinDone:true, linkedinUrl:ep.linkedinUrl||link}); n++; continue; }
-      const p=vals("pieces").find(x=>x.channel==="linkedin" && ((x.postedUrl&&x.postedUrl===link) || (d && x.date===d && text && x.title && text.toLowerCase().includes(x.title.toLowerCase().slice(0,25)))));
-      if(p){ await patch("pieces",p.id,Object.assign({status:"done"},st)); n++; }
-      else { await put("pieces",uid("p"),Object.assign({channel:"linkedin",title:text.slice(0,90)||"LinkedIn post",copy:text,date:d,status:"done",postedUrl:link,kind:/\bin the news\b|#inthenews\b/i.test(text)?"In the News":"Other",owner:""},st)); added++; } }
-    if(n+added) await mnMarkFile("li");
-    msg.textContent=n+" matched and "+added+" new LinkedIn posts brought in."; }catch(err){ msg.textContent=err.message; } };
-  $("#rs-mc",el).onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, added=0;
+      const p=vals("pieces").find(q=>q.channel==="linkedin" && !liIsDay(q) && ((q.postedUrl&&q.postedUrl===link) || (d && q.date===d && text && q.title && text.toLowerCase().includes(q.title.toLowerCase().slice(0,25)))));
+      if(p){ await patch("pieces",p.id,Object.assign({status:"done"},p.postedUrl?{}:{postedUrl:link},p.copy?{}:{copy:text},st)); n++; }
+      else { await put("pieces",uid("p"),Object.assign({channel:"linkedin",title:text.split("\n")[0].slice(0,90)||"LinkedIn post",copy:text,date:d,status:"done",postedUrl:link,kind:/\bin the news\b|#inthenews\b/i.test(text)?"In the News":"Other",owner:""},st)); added++; } }
+    for(const r of (daySheet?daySheet.rows:[])){ const d=isoFrom(col(r,/^date$/i)); if(!d) continue;
+      const st={impressions:num(col(r,/^impressions \(total\)/i,/^impressions/i)), clicks:num(col(r,/^clicks \(total\)/i,/^clicks/i)), reactions:num(col(r,/^reactions \(total\)/i,/reactions|likes/i)), comments:num(col(r,/^comments \(total\)/i,/comments/i)), reposts:num(col(r,/^reposts \(total\)/i,/reposts|shares/i))};
+      const had=vals("pieces").find(q=>q.channel==="linkedin" && liIsDay(q) && q.date===d);
+      if(had) await patch("pieces",had.id,st); else await put("pieces",uid("p"),Object.assign({channel:"linkedin",title:"LinkedIn page, "+fS(d),date:d,status:"done",kind:"Daily totals",owner:""},st)); days++; }
+    if(n+added+days) await mnMarkFile("li");
+    say(n+" posts matched and "+added+" new posts brought in"+(days?", plus the page's totals for "+days+" day"+(days===1?"":"s"):"")+"."+(postsSheet?"":" This file had no All Posts sheet, so no posts came in; export with the All Posts tab.")); }catch(err){ say(err.message); } };
+  if(mc) mc.onchange=async e=>{ const f=e.target.files[0]; if(!f) return; try{ const rows=await readSheet(f); let n=0, added=0;
     for(const r of rows){ const subj=col(r,/subject|title|campaign/i), d=isoFrom(col(r,/send date|sent|date/i)); if(!subj) continue;
       const st={sent:num(col(r,/total recipients|recipients|emails sent|sent to/i)), opens:num(col(r,/unique opens|opens/i)), clicks:num(col(r,/unique clicks|clicks/i)), unsubs:num(col(r,/unsub/i)), audience:col(r,/list|audience/i)};
-      const p=vals("pieces").find(x=>x.channel==="mailchimp" && x.title && x.title.toLowerCase()===subj.toLowerCase());
+      const p=vals("pieces").find(q=>q.channel==="mailchimp" && q.title && q.title.toLowerCase()===subj.toLowerCase());
       if(p){ await patch("pieces",p.id,Object.assign({status:"done"},st)); n++; } else { await put("pieces",uid("p"),Object.assign({channel:"mailchimp",title:subj,date:d,status:"done"},st)); added++; } }
     if(n+added) await mnMarkFile("mc");
-    msg.textContent=n+" matched and "+added+" new Mailchimp sends brought in."; }catch(err){ msg.textContent=err.message; } };
+    say(n+" matched and "+added+" new Mailchimp sends brought in."); }catch(err){ say(err.message); } };
 }

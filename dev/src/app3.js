@@ -165,7 +165,7 @@ function wirePieceRows(el){
 /* ================= LinkedIn ================= */
 function renderLinkedin(){
   const el=$("#page-linkedin"), t=T(), wk=add(t,6);
-  const own=vals("pieces").filter(p=>p.channel==="linkedin");
+  const own=vals("pieces").filter(p=>p.channel==="linkedin" && !liIsDay(p));
   const fromEp=vals("episodes").filter(e=>liDate(e) && (owes(e)||liDone(e))).map(e=>({id:"", _ep:e.id, date:liDate(e), title:"Mic'd Up "+epWord(e)+(e.title?": "+e.title:""), kind:"Mic'd Up", owner:"Vanessa", cancelReason:e.liCancelReason||"", status:liDone(e)?"done":e.liCanceled?"canceled":(e.linkedinAuto&&e.linkedinCopy?"staged":(e.linkedinCopy?"ready":(e.bvDescription?"draft":"idea"))), notes:e.linkedinCopy?"":"Written from Brian's description"}));
   const fromSum=vals("pieces").filter(p=>p.channel==="summit" && p.via==="LinkedIn");
   const all=own.concat(fromEp).concat(fromSum);
