@@ -335,18 +335,28 @@ function openNews(id){
 }
 
 /* ================= Lists & Unsubscribes ================= */
+/* The band over the Compound: worked out from the list records and the last refresh's cleaned count (settings
+   "compound": {on, unique, lists, leftOut, from, waiting}), not typed text (Nov 22, 2026: Ciara Durkan's Nov 19 refresh). */
+function compoundBand(lists, have, missing, totalRows){
+  const c=(S.settings||{}).compound||{}, last=have.map(l=>l.refreshed||"").filter(Boolean).sort().pop()||"";
+  const lastLbl=last?MON[+last.slice(5,7)-1]+" "+(+last.slice(8,10))+", "+last.slice(0,4):"not yet";
+  const fresh=last?have.filter(l=>l.refreshed===last).length:0;
+  return '<div class="band"><div class="today">The Compound · last refreshed '+esc(lastLbl)+(c.from?' by '+esc(c.from):'')+'</div><div class="say">'+
+      (c.unique?'The '+fresh+' list'+(fresh===1?'':'s')+' refreshed then hold <em>'+(+c.unique).toLocaleString()+'</em> unique addresses once duplicates, MISMO unsubscribes and bounced addresses are left out. ':'')+
+      (missing.length?'Still to come: '+esc(missing.map(l=>l.name).join("; "))+'.':'Every list is in.')+(c.waiting?' '+esc(c.waiting):'')+'</div><div class="tiles">'+
+      '<div class="tile"><div class="v sky">30,000+</div><div class="k">Expected Audience</div><div class="s">what Axios sent to</div></div>'+
+      '<div class="tile"><div class="v">'+(c.unique?(+c.unique).toLocaleString():'—')+'</div><div class="k">Unique in the Last Refresh</div><div class="s">'+(c.unique?fresh+' list'+(fresh===1?'':'s')+', '+(+c.leftOut||0).toLocaleString()+' left out':'across '+have.length+' lists, '+totalRows.toLocaleString()+' rows')+'</div></div>'+
+      '<div class="tile"><div class="v'+(missing.length?" hot":"")+'">'+missing.length+'</div><div class="k">Still Needed</div><div class="s">lists not received</div></div>'+
+      '<div class="tile"><div class="v">'+esc(last?MON[+last.slice(5,7)-1]:"—")+'</div><div class="k">Last Refresh</div><div class="s">Ciara Durkan, MBA</div></div>'+
+    '</div></div>';
+}
 function renderLists(){
   const el=$("#page-lists");
   const lists=vals("lists").sort((a,b)=>(a.order||99)-(b.order||99));
   const have=lists.filter(l=>+l.unique), missing=lists.filter(l=>!+l.unique);
   const totalRows=have.reduce((n,l)=>n+(+l.rows||0),0);
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Who MISMO Matters Goes To</div><h1>Lists &amp; Unsubscribes</h1><div class="sub">The compound lists behind the MISMO Matters group in Higher Logic, and the one unsubscribe list every send respects.</div></div><div class="tools"><button class="btn" type="button" id="ls-new">+ Add a List</button></div></div>'+
-    '<div class="band"><div class="today">The Compound · last refreshed September 2026 · next refresh November</div><div class="say">Kelly expects <em>30,000+</em> recipients. The lists forwarded so far hold about <em>16,500</em> unique addresses once duplicates are removed, so the member contacts, the VIPs and the existing Axios audience still need to come in before the November send.</div><div class="tiles">'+
-      '<div class="tile"><div class="v sky">30,000+</div><div class="k">Expected Audience</div><div class="s">what Axios sent to</div></div>'+
-      '<div class="tile"><div class="v">16,499</div><div class="k">Unique in Hand</div><div class="s">across '+have.length+' lists, '+totalRows.toLocaleString()+' rows</div></div>'+
-      '<div class="tile"><div class="v'+(missing.length?" hot":"")+'">'+missing.length+'</div><div class="k">Still Needed</div><div class="s">lists not received</div></div>'+
-      '<div class="tile"><div class="v">Nov</div><div class="k">Next Refresh</div><div class="s">Ciara Durkan, MBA</div></div>'+
-    '</div></div>'+
+    compoundBand(lists, have, missing, totalRows)+
     downloadsCard()+
     '<div class="card"><div class="ch"><h2>The Compound</h2><span class="cnt">'+lists.length+'</span></div>'+(lists.length?'<div class="tw"><table class="t"><thead><tr><th>List</th><th>From</th><th class="n">Rows</th><th class="n">Unique Emails</th><th>Covers</th><th>Notes</th></tr></thead><tbody>'+
       lists.map(l=>'<tr class="click" data-ls="'+esc(l.id)+'"><td><b>'+esc(l.name)+'</b></td><td>'+esc(l.source||"")+'</td><td class="n">'+(+l.rows?(+l.rows).toLocaleString():"—")+'</td><td class="n">'+(+l.unique?(+l.unique).toLocaleString():'<span class="chip changes">Not received</span>')+'</td><td>'+esc(l.covers||"")+'</td><td class="note">'+esc(mdPlain(l.notes))+'</td></tr>').join("")+
@@ -363,7 +373,7 @@ function renderLists(){
       '<div class="chk"><span class="ct"><b>Prospects</b><small>Come straight from Member 360 instead of a separate list from Kelly.</small></span></div>'+
       '<div class="chk"><span class="ct"><b>Segments from Aptify</b><small>e.g. three years of MBA compliance conference attendees, or anyone with "marketing" in their title, for targeted sends.</small></span></div>'+
     '</div></div></div>'+
-    '<p class="foot">Counts come from the attachments on Kelly\'s two "MISMO compound lists" emails (Ciara Durkan\'s September 2–3 update and Kelly\'s September 8 subscriber and downloader lists). Work Product Downloads holds names and email addresses; share this page only with the MISMO team.</p>';
+    '<p class="foot">Counts come from the lists Ciara Durkan (MBA Membership) sends: the September 2–3 update, Kelly\'s September 8 subscriber and downloader lists, and the November 19 refresh Amy forwarded. Work Product Downloads holds names and email addresses; share this page only with the MISMO team.</p>';
   wireDownloads(el, renderLists);
   $("#ls-new",el).onclick=()=>openList(null);
   $$("[data-ls]",el).forEach(r=>r.onclick=()=>openList(r.dataset.ls));
