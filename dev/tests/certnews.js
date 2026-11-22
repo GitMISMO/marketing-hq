@@ -67,6 +67,10 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   document.getElementById("f-text").value="Actualize Consulting joins MISMO's FRAME Advisory Partners."; document.getElementById("pf-save").click(); await wait(500);
   out.edited=/joins MISMO/.test(S.certnews[by("Actualize Consulting").id].text) && S.certnews[by("Actualize Consulting").id].status==="draft";
   out.health=(hhCertNews()||{}).level==="ok" && /13 certifications/.test(hhCertNews().line) && /5 new providers; renewals and companies already certified left out/.test(hhCertNews().line);
+  /* the CMS's own newProvider field (added Nov 21, 2026) decides for records already read: Crittora set aside */
+  feed.certifications[4].newProvider=false; CN.at=0; await cnSync(true); await wait(400);
+  out.cmsField=by("Crittora").id && S.certnews[by("Crittora").id].status==="skipped" && /CMS's newProvider field/.test(S.certnews[by("Crittora").id].skipReason)
+    && S.certnews[by("Take Three Technologies").id].status==="approved";
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
 await b.close(); process.exit(r.ok?0:1);})();
