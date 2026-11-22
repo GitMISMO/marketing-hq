@@ -150,4 +150,4 @@ jobs:
           if ! git push origin HEAD:main; then
             echo "::warning::main moved on while this was publishing; the run for the newer change publishes instead."; exit 0
           fi
-          echo "Published. GitHub Pages serves it at resources.mismo.org/marketing-hq/ within a couple of minutes."
+          echo "Published. GitHub Pages serves it at resources.mismo.org/media/ within a couple of minutes."
