@@ -394,7 +394,7 @@ const HELP = [
   </ul>`},
  {id:"saving", t:"Saving, Access and Where Things Live", g:"Behind the Scenes", b:`
   <ul>
-   <li><b>The page</b> lives at <b>resources.mismo.org/marketing-hq/</b>, behind the shared MISMO sign-in (the same one as Summit HQ and Member 360).</li>
+   <li><b>The page</b> lives at <b>resources.mismo.org/media/</b> (it was resources.mismo.org/marketing-hq/ until Nov 22, 2026; the old address still opens it), behind the shared MISMO sign-in (the same one as Summit HQ and Member 360).</li>
    <li><b>The records</b> live in a private GitHub repository, GitMISMO/marketing-hq-data, and are read and saved through the resources.mismo.org relay. Every save is a real change with a record of who made it and when, so anything can be rolled back.</li>
    <li><b>Two people at once:</b> if someone saved the same part a moment before you, your change is laid on top of theirs and saved again, so nobody's work is lost. Other people's changes show up within about a minute.</li>
    <li><b>Access</b> is set per person in People &amp; Access: <b>Admin</b> and <b>Staff</b> can change anything; <b>View</b> can look but not save, and the page says so at the top.</li>

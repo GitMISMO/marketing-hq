@@ -209,15 +209,15 @@ function checksView(ed){
 /* ---- the newsletter itself: email-safe HTML for Higher Logic ---- */
 function paras(s){ return String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean); }
 function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" style="color:#14486e">$1</a>').replace(/\n/g,"<br>"); }
-/* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org (GitMISMO/marketing-hq, mm-headers/).
+/* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org/media/ (GitMISMO/media, mm-headers/; the copies at the old /marketing-hq/ address stay for emails already sent).
    The drawing source is mm-headers/source.html. Mic'd Up is a short animated GIF; Outlook shows its first frame. */
-const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
+const HDR2_BASE="https://resources.mismo.org/media/mm-headers/v1/";
 const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","thanks","education","cert","events","news"];
 /* Vieaux Point and Workgroup Highlights each have a page on the website with every month's
    article; #vp-YYYY-MM / #wg-YYYY-MM opens straight to that month. */
 const FULL_ARTICLE = {vieaux:["about-mismo/vieaux-point","vp","Continue Reading"], workgroup:["about-mismo/workgroup-highlights","wg","Read the Full Article"]};
 /* Every edition also lives on the web at its own address, so a reader can link to one section (Copy Link). */
-const MM_WEB_BASE="https://resources.mismo.org/marketing-hq/matters/";
+const MM_WEB_BASE="https://resources.mismo.org/media/matters/";
 /* Copy Link is off for now (Jonna, Nov 18, 2026: "take out copy link on all pages for now and we'll address next edition").
    Set back to true to bring it back at the foot of every section. */
 const MM_COPY_LINK=false;
