@@ -2722,7 +2722,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}, informz:{}};
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -3729,7 +3729,7 @@ function statsView(ed){
   const top = (st.topLinks||"").split("\n").filter(Boolean);
   const rows = editionsSorted().filter(e=>+edStats(e).recipients).reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td><td class="n">'+pct(x.cto)+'</td><td class="n">'+x.u.toLocaleString()+'</td></tr>'; }).join("");
   return '<div class="grid2"><div class="card"><div class="ch"><h2>This Edition</h2><div class="r"><button class="btn pri" type="button" id="ms-stats">'+(has?"Update Stats":"Record Stats")+'</button></div></div>'+
-    (has?'<div class="cb"><dl class="kv"><dt>Open Rate</dt><dd>'+pct(c.openRate)+'</dd><dt>Click Rate</dt><dd>'+pct(c.ctr)+'</dd><dt>Click to Open</dt><dd>'+pct(c.cto)+'</dd><dt>Unsubscribes</dt><dd>'+c.u.toLocaleString()+'</dd></dl></div>'+fun:'<div class="empty"><b>No stats yet.</b> A week after sending, copy the numbers from Higher Logic\'s marketing report into Record Stats. Axios never gave us these, so every edition from November on is the first real record.</div>')+
+    (has && st.fromInformz?'<p class="hint pad">From Higher Logic automatically'+(st.informzSends>1?' ('+st.informzSends+' sends)':'')+(st.informzAt?', read '+esc(hhWhen(st.informzAt)):'')+'. Nothing to type in; the top links can still be added with Update Stats.</p>':'')+(has?'<div class="cb"><dl class="kv"><dt>Open Rate</dt><dd>'+pct(c.openRate)+'</dd><dt>Click Rate</dt><dd>'+pct(c.ctr)+'</dd><dt>Click to Open</dt><dd>'+pct(c.cto)+'</dd><dt>Unsubscribes</dt><dd>'+c.u.toLocaleString()+'</dd></dl></div>'+fun:'<div class="empty"><b>No stats yet.</b> Once MISMO Media is connected to Higher Logic, they fill in by themselves after the send. Until then, copy the numbers from Higher Logic\'s marketing report into Record Stats a week after sending. Axios never gave us these, so every edition from November on is the first real record.</div>')+
     '</div><div class="card"><div class="ch"><h2>Most-Clicked Links</h2></div>'+(top.length?'<div class="checks">'+top.map(l=>'<div class="chk"><span class="ct">'+linkify(l)+'</span></div>').join("")+'</div>':'<div class="empty">Add the top links when you record the stats.</div>')+'</div></div>'+
     (rows?'<div class="card"><div class="ch"><h2>Every Edition with Stats</h2></div><div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent To</th><th class="n">Open Rate</th><th class="n">Click Rate</th><th class="n">Click to Open</th><th class="n">Unsubscribes</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'');
 }
@@ -4341,6 +4341,7 @@ function ytId(u){ const m=String(u||"").match(/(?:v=|youtu\.be\/|shorts\/)([\w-]
 function ytStat(e,k){ if(+e[k]) return +e[k]; const f=feed("youtube"); const v=f&&f.videos&&f.videos[ytId(e.youtubeUrl)]; return v? (+v[k]||0) : 0; }
 function epViews(e){ return ytStat(e,"views"); }
 function edStats(ed){
+  const iz=typeof izMerge==="function" ? izMerge(ed) : null; if(iz) return iz;   /* Higher Logic, read automatically (Nov 21, 2026) */
   if(ed.stats && +ed.stats.recipients) return ed.stats;
   const f=feed("matters"); const m=f && (f.mailings||[]).find(x=>x.month===ed.month);
   return m ? {recipients:m.sent, delivered:m.delivered||m.sent, opens:m.opens, clicks:m.clicks, unsubs:m.unsubs, bounces:m.bounces, topLinks:(m.topLinks||[]).join("\n"), fromFeed:true} : (ed.stats||{});
@@ -7800,7 +7801,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 15:57 ET · 1096ff0";
+const BUILD = "2026-11-21 20:13 ET · e619962";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8008,7 +8009,7 @@ function hhDates(){
   const w=dateWarnings(); if(!w.length) return null;
   return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
 }
-function hhVersion(){ return hhRow("ver","This Copy","ok","Version "+(BUILD.indexOf("__")===0?"development copy":BUILD)+"."); }
+function hhVersion(){ return hhRow("ver","This Copy","ok",BUILD.indexOf("__")===0 ? "Version: development copy." : "Version "+BUILD+". Published automatically by GitHub from the source, only after every check and browser test passed."); }
 function hhErrors(){
   const L=window.__mmErrs||[];
   if(!L.length) return hhRow("err","Errors on This Page","ok","None since this page was opened.");
@@ -8016,7 +8017,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -9504,6 +9505,53 @@ function hhCertNews(){
   if(CN.err) return hhRow("cnfeed","CMS New Certifications","bad","Couldn't read the CMS feed: "+CN.err+". Questions go to certifications@mismo.org.");
   if(!CN.at) return hhRow("cnfeed","CMS New Certifications","off","Reads the CMS's new certifications when MISMO Media opens.");
   return hhRow("cnfeed","CMS New Certifications","ok","Read "+hhWhen(CN.at)+(CN.feedAt?" (the CMS updated it "+fS(CN.feedAt)+")":"")+": "+CN.n+" certifications in the last 180 days ("+vals("certnews").filter(x=>x.first && x.newProvider!==false).length+" new providers; renewals and companies already certified left out), "+wait+" waiting for Jonna.");
+}
+/* ================= MISMO Matters email numbers from Higher Logic, read automatically (Nov 21, 2026) =================
+   Jonna: "then we have automated stats from Informz". The "MISMO Matters email numbers (Informz)" workflow in
+   marketing-hq-data reads Higher Logic's Thrive Marketing Professional (formerly Informz) every 6 hours through its
+   GridRequest API (read only) into data/informz.json: "informz/send-<mailing_instance_id>" for each send (sent,
+   delivered, unique opens and clicks, bounces, unsubscribes, forwards, mobile and desktop opens) and "informz/_run".
+   Here, each edition's MISMO Matters sends (one or two waves) are found by name and date and become the edition's
+   numbers on Results and the MISMO Matters page, so nobody types them in. Anything typed by hand that Higher Logic
+   doesn't give (top links, webmail and browser opens, total opens) stays. Nothing is written back. */
+function izRun(){ return (S.informz||{})._run || null; }
+function izSends(){ return Object.values(S.informz||{}).filter(d=>d && d.instanceId && d.date && +d.sent); }
+const izIsMM = d=>/mismo\s*matters/i.test((d.name||"")+" "+(d.subject||""));
+/* the edition's sends: MISMO Matters sends from the day before its publish date up to the day before the next one */
+function izEdSends(ed){
+  const pub=(ed && ed.dates && ed.dates.publish) || ""; if(!pub) return [];
+  const later=editionsSorted().map(e=>(e.dates||{}).publish||"").filter(p=>p>pub).sort()[0] || add(pub,28);
+  const from=add(pub,-1), to=add(later,-1);
+  return izSends().filter(d=>izIsMM(d) && d.date>=from && d.date<to).sort((a,b)=>String(a.at||a.date).localeCompare(String(b.at||b.date)));
+}
+/* the edition's numbers from Higher Logic in the shape the edition's stats use, or null */
+function izFor(ed){
+  const xs=izEdSends(ed); if(!xs.length) return null;
+  const sum=k=>xs.reduce((n,d)=>n+(+d[k]||0),0);
+  const o={recipients:sum("sent"), delivered:sum("delivered"), opens:sum("opensUnique"), clicks:sum("clicksUnique"), unsubs:sum("unsubs")+sum("optOuts"),
+    bounces:sum("bounces"), hard:sum("hardBounces"), soft:sum("softBounces"), blocked:sum("blocked"), forwards:sum("forwards"), unsubsHL:sum("unsubs")+sum("optOuts"),
+    fromInformz:true, informzAt:xs.map(d=>d.statsAt||"").sort().pop()||"", informzSends:xs.length};
+  /* where people read, as a share of the unique opens (the edition's fields are percentages) */
+  if(o.opens && (sum("opensMobile")||sum("opensDesktop"))){ o.cMobile=Math.round(sum("opensMobile")/o.opens*1000)/10; o.cDesktop=Math.round(sum("opensDesktop")/o.opens*1000)/10; }
+  if(xs.length>1) xs.slice(0,2).forEach((d,i)=>{ const w="w"+(i+1); o[w+"Label"]="Wave "+(i+1)+" · "+fS(d.date); o[w+"Sent"]=+d.sent||0; o[w+"Delivered"]=+d.delivered||0; o[w+"Opens"]=+d.opensUnique||0; o[w+"Clicks"]=+d.clicksUnique||0; });
+  return o;
+}
+/* what the edition shows: Higher Logic's numbers over anything typed in, keeping what Higher Logic doesn't give */
+function izMerge(ed){
+  const iz=izFor(ed); if(!iz) return null;
+  const typed=ed.stats||{}, out=Object.assign({}, typed, iz);
+  ["w1Label","w2Label"].forEach(k=>{ if(typed[k] && out[k]) out[k]=typed[k]; });
+  return out;
+}
+/* System Health */
+function hhInformz(){
+  const r=izRun();
+  if(!r) return LOADED.has("informz") ? hhRow("informz","MISMO Matters Email Numbers","off","Not connected yet. Once Higher Logic sets up an API user and its details are saved on marketing-hq-data, each edition's numbers fill in by themselves every 6 hours.") : null;
+  if(r.waiting) return hhRow("informz","MISMO Matters Email Numbers","off",r.error||"Not connected yet.");
+  if(!r.ok) return hhRow("informz","MISMO Matters Email Numbers","bad","The read from Higher Logic failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+" The numbers can still be typed in on the MISMO Matters page.");
+  if((Date.now()-Date.parse(r.at))/36e5>14) return hhRow("informz","MISMO Matters Email Numbers","warn","Last read "+hhWhen(r.at)+", more than 14 hours ago (it runs every 6). The \"MISMO Matters email numbers (Informz)\" workflow in marketing-hq-data may be paused.");
+  const mm=izSends().filter(izIsMM).length;
+  return hhRow("informz","MISMO Matters Email Numbers","ok","Read from Higher Logic "+hhWhen(r.at)+": "+rsN(r.sends)+" sends, "+rsN(mm)+" of them MISMO Matters.");
 }
 
 /* ================= MISMO Mic'd Up ================= */
