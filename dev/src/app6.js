@@ -5,6 +5,7 @@ function ytId(u){ const m=String(u||"").match(/(?:v=|youtu\.be\/|shorts\/)([\w-]
 function ytStat(e,k){ if(+e[k]) return +e[k]; const f=feed("youtube"); const v=f&&f.videos&&f.videos[ytId(e.youtubeUrl)]; return v? (+v[k]||0) : 0; }
 function epViews(e){ return ytStat(e,"views"); }
 function edStats(ed){
+  const iz=typeof izMerge==="function" ? izMerge(ed) : null; if(iz) return iz;   /* Higher Logic, read automatically (Nov 21, 2026) */
   if(ed.stats && +ed.stats.recipients) return ed.stats;
   const f=feed("matters"); const m=f && (f.mailings||[]).find(x=>x.month===ed.month);
   return m ? {recipients:m.sent, delivered:m.delivered||m.sent, opens:m.opens, clicks:m.clicks, unsubs:m.unsubs, bounces:m.bounces, topLinks:(m.topLinks||[]).join("\n"), fromFeed:true} : (ed.stats||{});

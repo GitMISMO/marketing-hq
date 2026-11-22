@@ -212,7 +212,7 @@ function hhDates(){
   const w=dateWarnings(); if(!w.length) return null;
   return hhRow("dates","Holidays and Key Dates","warn",w.join(" "));
 }
-function hhVersion(){ return hhRow("ver","This Copy","ok","Version "+(BUILD.indexOf("__")===0?"development copy":BUILD)+"."); }
+function hhVersion(){ return hhRow("ver","This Copy","ok",BUILD.indexOf("__")===0 ? "Version: development copy." : "Version "+BUILD+". Published automatically by GitHub from the source, only after every check and browser test passed."); }
 function hhErrors(){
   const L=window.__mmErrs||[];
   if(!L.length) return hhRow("err","Errors on This Page","ok","None since this page was opened.");
@@ -220,7 +220,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
