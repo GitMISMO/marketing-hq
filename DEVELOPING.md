@@ -7,7 +7,7 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The live page. GitHub Pages publishes it as is. It is **built**, never hand-edited. |
+| `index.html` | The live page. The **publish** job in `.github/workflows/check.yml` builds it from `dev/` and commits it; GitHub Pages serves it. Never upload or hand-edit it. |
 | `dev/src/app*.js` | The code, in 23 files that are joined in a fixed order (see `ORDER` in `dev/build.py`). |
 | `dev/src/head.html`, `dev/src/body.html` | Styles and page skeleton. |
 | `dev/shim.html` | The door to the save relay: sign-in, loading, saving, conflict handling. |
@@ -27,14 +27,20 @@ through the relay after sign-in. Never put a token, a subscriber list or any rec
 1. Start from the latest `main`. Two people (or Claude sessions) may work on MISMO Media; always build on
    what is live now, never on an older copy.
 2. Change `dev/src/` (and `dev/shim.html` if saving is involved).
-3. `python3 dev/build.py` then `bash dev/tests/run.sh`. All five test sets must pass:
-   every tab opens cleanly at desktop, dark and phone sizes; 24 interaction checks; the save checks;
-   the Informz unsubscribe import; Remind Amy. The Check MISMO Media action runs the same tests on every push.
-4. Copy `dev/out/site.html` over `index.html`, and commit **both** `dev/` and `index.html` together,
-   with a line in `CHANGELOG.md`.
-5. GitHub Pages publishes in about a minute. The **Check MISMO Media** action runs on every push; a red X
-   means look before trusting that version. Its warning "index.html is not what dev/src builds" means
-   someone edited the live page without the source; fix the source first.
+3. `python3 dev/build.py` then `bash dev/tests/run.sh`. Every test set must pass: every tab opens cleanly
+   at desktop, dark and phone sizes; the interaction checks; the save checks; and one test file per feature
+   (all listed in `run.sh`).
+4. Commit `dev/` and a line in `CHANGELOG.md`. **Do not touch `index.html`.**
+5. Publishing is automatic (since Nov 21, 2026). On every push to `main`, the **Check MISMO Media** action
+   checks the code (valid scripts, no tokens, code check) and runs the browser tests. Only if all of that
+   passes does its **publish** job build `index.html` from `dev/` and commit it ("Publish MISMO Media (built
+   from …)"). GitHub Pages serves it a minute or two later. A red X means nothing was published; the reason
+   is in the step that failed.
+   - Only the newest change publishes: if `main` moved on while a run was checking, the newer run publishes.
+   - If someone hand-edited `index.html` since it was last built, the publish job stops rather than undo
+     that edit. Bring the edit into `dev/src`, then run the workflow again (Actions > Check MISMO Media >
+     Run workflow).
+   - To republish without a code change, use Run workflow; it publishes only if `index.html` is out of date.
 6. Open tabs notice the new version within 3 minutes, show "MISMO Media has been updated", and stop saving
    until refreshed, so an old tab can't save over new data.
 

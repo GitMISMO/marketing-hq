@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-21 · MISMO Media publishes itself
+
+- GitHub now builds and publishes MISMO Media from the source after every change, and only once every code check and browser test has passed. Nobody uploads the page by hand any more, so nobody can overwrite anyone else's work. If the page was hand-edited since its last build, publishing stops instead of undoing that edit.
+- Help > System Health's This Copy row says the version was published this way.
+
 ## 2026-11-21 · MISMO Matters: new providers only, CMS card below the sections
 
 - Jonna: "put the section below the larger MISMO Matters section and Snapdocs is not new, it's a renewal; make sure they are only initial new providers."
