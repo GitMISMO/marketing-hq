@@ -1,6 +1,10 @@
 # Developing MISMO Media
 
-MISMO Media is the Strategic Growth team's marketing hub at <https://resources.mismo.org/marketing-hq/>.
+MISMO Media is the Strategic Growth team's marketing hub at <https://resources.mismo.org/media/> (this repository,
+GitMISMO/media; it was GitMISMO/marketing-hq at resources.mismo.org/marketing-hq/ until Nov 22, 2026). The old address
+still works: GitMISMO.github.io/marketing-hq/ sends old bookmarks here and keeps copies of the pictures, the Higher
+Logic bridge and the web versions that sent emails and mismo.org already point to. The save relay's project key and
+the data repository keep the old name (`marketing-hq`, `GitMISMO/marketing-hq-data`); nobody sees those.
 This page is for whoever changes its code. For how to *use* it, see Help inside MISMO Media.
 
 ## What is where

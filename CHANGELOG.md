@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-22 · MISMO Media moves to resources.mismo.org/media/
+
+- Jonna: "update MISMO Media's web address to media instead of marketing-hq", with a redirect first so bookmarks keep working.
+- The old address sends anyone to the same place at /media/ (keeping #results and the like). Pictures, the Higher Logic bridge and web versions that sent emails and mismo.org already use stay at the old address as copies.
+- New section header pictures, web versions and the weekly summary link use /media/. The save relay project key and the data repository keep their old names.
+
 ## 2026-11-21 · MISMO Media publishes itself
 
 - GitHub now builds and publishes MISMO Media from the source after every change, and only once every code check and browser test has passed. Nobody uploads the page by hand any more, so nobody can overwrite anyone else's work. If the page was hand-edited since its last build, publishing stops instead of undoing that edit.
