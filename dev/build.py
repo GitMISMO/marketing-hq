@@ -1,5 +1,5 @@
 """Builds MISMO Media from src/ into two pages:
-  - the copy served at resources.mismo.org/marketing-hq/ (the repo's index.html), with the sign-in gate and the
+  - the copy served at resources.mismo.org/media/ (the repo's index.html; /marketing-hq/ until Nov 22, 2026), with the sign-in gate and the
     save-relay door (shim.html) wrapped around it
   - a plain copy with no sign-in, which the tests open with sample data
 Run: python3 build.py   (in the repo it lives in dev/; see DEVELOPING.md at the top of the repo)"""
@@ -64,7 +64,7 @@ CSP = "; ".join([
 ])
 top='''<!doctype html>
 <!--
-  MISMO Media (formerly Marketing HQ), resources.mismo.org/marketing-hq/
+  MISMO Media (formerly Marketing HQ), resources.mismo.org/media/ (resources.mismo.org/marketing-hq/ until Nov 22, 2026)
   BEFORE UPLOADING A NEW COPY OF THIS FILE: download the current index.html from GitHub first
   and make your changes to that copy. Uploading an older copy silently undoes everything that
   changed since.
