@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-22 · Lists: the November compound refresh
+
+- Ciara Durkan's November 19 lists (forwarded by Amy) are logged on Lists & Unsubscribes: Annual, IMB and LIRC registrants (8,100 rows), MBA Associates (3,985) and ResTech Forum (499). Together 9,541 unique addresses once duplicates, MISMO unsubscribes and bounced addresses are left out.
+- The band over the Compound is worked out from the list records instead of fixed September text: last refresh, what's still to come (the Membership Tracker list and the Higher Logic list) and the cleaned unique count.
+
 ## 2026-11-22 · MISMO Media moves to resources.mismo.org/media/
 
 - Jonna: "update MISMO Media's web address to media instead of marketing-hq", with a redirect first so bookmarks keep working.
