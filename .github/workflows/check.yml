@@ -1,6 +1,8 @@
-# Checks every change to MISMO Media (added Nov 7, 2026, after the application review).
-# It never changes the site: GitHub Pages still publishes index.html as it is. A red X here means
-# "look before trusting this version"; the reason is in the step that failed.
+# Checks every change to MISMO Media (added Nov 7, 2026, after the application review), then publishes it
+# (added Nov 21, 2026). The "publish" job builds index.html from dev/ only after every check and browser test
+# has passed, and commits it to main; GitHub Pages then serves it. Nobody uploads index.html by hand any more.
+# A red X here means "look before trusting this version"; the reason is in the step that failed, and nothing
+# was published.
 name: Check MISMO Media
 on:
   push:
@@ -48,7 +50,7 @@ jobs:
           python3 dev/build.py
           norm() { sed 's/const BUILD = "[^"]*"/const BUILD = ""/' "$1"; }
           if ! cmp -s <(norm index.html) <(norm dev/out/site.html); then
-            echo "::warning::index.html is not what dev/src builds. Someone changed one without the other; bring dev/src up to date before the next change."
+            echo "::notice::index.html is not yet what dev/src builds. On main, the publish job below brings it up to date once every check passes."
           fi
       - name: Code check (common mistakes, not style)
         run: |
@@ -73,3 +75,79 @@ jobs:
           npm install --no-save --no-audit --no-fund playwright@1.48.2
           npx playwright install --with-deps chromium
           bash dev/tests/run.sh
+
+  # Publishing (Nov 21, 2026): only on main, only after the check job above passed, one run at a time.
+  publish:
+    needs: check
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    concurrency:
+      group: publish-mismo-media
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Only the newest change publishes
+        id: newest
+        run: |
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+            echo "main has moved on since this change was checked; the run for the newer change publishes instead."
+            echo "go=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Nobody changed index.html by hand
+        if: steps.newest.outputs.go == 'yes'
+        run: |
+          norm() { sed 's/const BUILD = "[^"]*"/const BUILD = ""/' "$1"; }
+          last=$(git log -1 --format=%H -- index.html)
+          git worktree add -q /tmp/last "$last"
+          python3 /tmp/last/dev/build.py >/dev/null
+          python3 dev/build.py >/dev/null
+          if cmp -s <(norm index.html) <(norm /tmp/last/dev/out/site.html) || cmp -s <(norm index.html) <(norm dev/out/site.html); then
+            echo "index.html is exactly what dev/ built (as of ${last:0:7}), so publishing undoes nothing."
+          else
+            echo "::error::index.html was changed by hand after it was last built (commit ${last:0:7}). Publishing now would undo that change, so nothing was published. Bring the change into dev/src, then run this workflow again."
+            exit 1
+          fi
+      - name: Build and publish
+        if: steps.newest.outputs.go == 'yes'
+        run: |
+          norm() { sed 's/const BUILD = "[^"]*"/const BUILD = ""/' "$1"; }
+          python3 dev/build.py
+          if cmp -s <(norm index.html) <(norm dev/out/site.html); then
+            echo "index.html is already what dev/ builds; nothing to publish."; exit 0
+          fi
+          cp dev/out/site.html index.html
+          python3 - <<'PY'
+          import re, subprocess, sys, pathlib
+          s = pathlib.Path('index.html').read_text()
+          blocks = re.findall(r'<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>', s, re.S)
+          bad = 0
+          for i, b in enumerate(blocks):
+              p = pathlib.Path(f'/tmp/pub{i}.js'); p.write_text(b)
+              r = subprocess.run(['node', '--check', str(p)], capture_output=True, text=True)
+              if r.returncode: bad += 1; print(f'Script block {i}:', r.stderr[:2000])
+          for bad_word in ['ghp_', 'github_pat_', 'Bearer ey']:
+              if bad_word in s: bad += 1; print('Something that looks like a token is in the page')
+          print(f'{len(blocks)} script blocks checked, {bad} problems'); sys.exit(1 if bad else 0)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -q -m "Publish MISMO Media (built from ${GITHUB_SHA:0:7})" -m "Built from dev/ by the Check MISMO Media action after every check and browser test passed."
+          if ! git push origin HEAD:main; then
+            echo "::warning::main moved on while this was publishing; the run for the newer change publishes instead."; exit 0
+          fi
+          echo "Published. GitHub Pages serves it at resources.mismo.org/marketing-hq/ within a couple of minutes."
