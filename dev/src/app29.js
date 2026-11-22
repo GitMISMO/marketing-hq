@@ -103,10 +103,12 @@ async function cnSync(force){
       if(!x.first && x.status==="draft"){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:"Renewals aren't announced; new providers only (Jonna, Nov 21, 2026)"})); continue; }
       if(!x.first) continue;
       /* a company's first certification in a second program isn't a new provider: put aside, not deleted */
-      const np=cnNewProvider(x.feed||x, list);
+      /* judged on the CMS's current entry, so its newProvider field (added Nov 21, 2026) decides once it's there */
+      const now=list.find(c=>c && cnKey(c)===x.key), cmsSays=!!now && typeof now.newProvider==="boolean";
+      const np=cnNewProvider(now||x.feed||x, list);
       if(np!==(x.newProvider!==false) || x.newProvider===undefined){
-        if(!np && !x.decidedBy && ["draft","covered"].includes(x.status)){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:x.org+" already holds another MISMO certification, so it isn't a new provider (Jonna, Nov 21, 2026)"})); continue; }
-        await put("certnews", x.id, Object.assign({}, x, {newProvider:np})); if(!np) continue;
+        if(!np && !x.decidedBy && ["draft","covered"].includes(x.status)){ await put("certnews", x.id, Object.assign({}, x, now?{feed:now}:{}, {status:"skipped", newProvider:false, skipReason:x.org+(cmsSays?" isn't a new provider by the CMS's newProvider field":" already holds another MISMO certification, so it isn't a new provider")+" (Jonna, Nov 21, 2026)"})); continue; }
+        await put("certnews", x.id, Object.assign({}, x, now?{feed:now}:{}, {newProvider:np})); if(!np) continue;
       }
       if(x.newProvider===false) continue;
       if(x.decidedBy || !["draft","covered"].includes(x.status)) continue;
