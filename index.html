@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  MISMO Media (formerly Marketing HQ), resources.mismo.org/marketing-hq/
+  MISMO Media (formerly Marketing HQ), resources.mismo.org/media/ (resources.mismo.org/marketing-hq/ until Nov 22, 2026)
   BEFORE UPLOADING A NEW COPY OF THIS FILE: download the current index.html from GitHub first
   and make your changes to that copy. Uploading an older copy silently undoes everything that
   changed since.
@@ -3457,15 +3457,15 @@ function checksView(ed){
 /* ---- the newsletter itself: email-safe HTML for Higher Logic ---- */
 function paras(s){ return String(s||"").split(/\n\s*\n/).map(p=>p.trim()).filter(Boolean); }
 function linkify(s){ return esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" style="color:#14486e">$1</a>').replace(/\n/g,"<br>"); }
-/* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org (GitMISMO/marketing-hq, mm-headers/).
+/* Option 2 section headers: drawn for MISMO Media, served from resources.mismo.org/media/ (GitMISMO/media, mm-headers/; the copies at the old /marketing-hq/ address stay for emails already sent).
    The drawing source is mm-headers/source.html. Mic'd Up is a short animated GIF; Outlook shows its first frame. */
-const HDR2_BASE="https://resources.mismo.org/marketing-hq/mm-headers/v1/";
+const HDR2_BASE="https://resources.mismo.org/media/mm-headers/v1/";
 const HDR2_KEYS=["vieaux","summit","highlight","workgroup","sponsor","impl","micdup","member","welcome","thanks","education","cert","events","news"];
 /* Vieaux Point and Workgroup Highlights each have a page on the website with every month's
    article; #vp-YYYY-MM / #wg-YYYY-MM opens straight to that month. */
 const FULL_ARTICLE = {vieaux:["about-mismo/vieaux-point","vp","Continue Reading"], workgroup:["about-mismo/workgroup-highlights","wg","Read the Full Article"]};
 /* Every edition also lives on the web at its own address, so a reader can link to one section (Copy Link). */
-const MM_WEB_BASE="https://resources.mismo.org/marketing-hq/matters/";
+const MM_WEB_BASE="https://resources.mismo.org/media/matters/";
 /* Copy Link is off for now (Jonna, Nov 18, 2026: "take out copy link on all pages for now and we'll address next edition").
    Set back to true to bring it back at the foot of every section. */
 const MM_COPY_LINK=false;
@@ -4730,7 +4730,7 @@ const HELP = [
   </ul>`},
  {id:"saving", t:"Saving, Access and Where Things Live", g:"Behind the Scenes", b:`
   <ul>
-   <li><b>The page</b> lives at <b>resources.mismo.org/marketing-hq/</b>, behind the shared MISMO sign-in (the same one as Summit HQ and Member 360).</li>
+   <li><b>The page</b> lives at <b>resources.mismo.org/media/</b> (it was resources.mismo.org/marketing-hq/ until Nov 22, 2026; the old address still opens it), behind the shared MISMO sign-in (the same one as Summit HQ and Member 360).</li>
    <li><b>The records</b> live in a private GitHub repository, GitMISMO/marketing-hq-data, and are read and saved through the resources.mismo.org relay. Every save is a real change with a record of who made it and when, so anything can be rolled back.</li>
    <li><b>Two people at once:</b> if someone saved the same part a moment before you, your change is laid on top of theirs and saved again, so nobody's work is lost. Other people's changes show up within about a minute.</li>
    <li><b>Access</b> is set per person in People &amp; Access: <b>Admin</b> and <b>Staff</b> can change anything; <b>View</b> can look but not save, and the page says so at the top.</li>
@@ -6600,7 +6600,7 @@ function amyRemindEmail(w, from){
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, a quick reminder. These are ready for your OK.</div></td></tr>'+
     '<tr><td style="padding:6px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+
       w.kits.map(kitRow).join("")+w.secs.map(t=>row(t)).join("")+w.posts.map(t=>row(t)).join("")+'</table></td></tr>'+
-    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/marketing-hq/#home" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
+    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/media/#home" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
     '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'.</td></tr>'+
     '</table></td></tr></table>';
 }
@@ -7801,7 +7801,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 20:27 ET · 5001679";
+const BUILD = "2026-11-22 10:16 ET · 8b484b5";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
