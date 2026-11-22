@@ -7801,7 +7801,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-21 20:13 ET · e619962";
+const BUILD = "2026-11-21 20:27 ET · 5001679";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -9413,10 +9413,12 @@ async function cnSync(force){
       if(!x.first && x.status==="draft"){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:"Renewals aren't announced; new providers only (Jonna, Nov 21, 2026)"})); continue; }
       if(!x.first) continue;
       /* a company's first certification in a second program isn't a new provider: put aside, not deleted */
-      const np=cnNewProvider(x.feed||x, list);
+      /* judged on the CMS's current entry, so its newProvider field (added Nov 21, 2026) decides once it's there */
+      const now=list.find(c=>c && cnKey(c)===x.key), cmsSays=!!now && typeof now.newProvider==="boolean";
+      const np=cnNewProvider(now||x.feed||x, list);
       if(np!==(x.newProvider!==false) || x.newProvider===undefined){
-        if(!np && !x.decidedBy && ["draft","covered"].includes(x.status)){ await put("certnews", x.id, Object.assign({}, x, {status:"skipped", newProvider:false, skipReason:x.org+" already holds another MISMO certification, so it isn't a new provider (Jonna, Nov 21, 2026)"})); continue; }
-        await put("certnews", x.id, Object.assign({}, x, {newProvider:np})); if(!np) continue;
+        if(!np && !x.decidedBy && ["draft","covered"].includes(x.status)){ await put("certnews", x.id, Object.assign({}, x, now?{feed:now}:{}, {status:"skipped", newProvider:false, skipReason:x.org+(cmsSays?" isn't a new provider by the CMS's newProvider field":" already holds another MISMO certification, so it isn't a new provider")+" (Jonna, Nov 21, 2026)"})); continue; }
+        await put("certnews", x.id, Object.assign({}, x, now?{feed:now}:{}, {newProvider:np})); if(!np) continue;
       }
       if(x.newProvider===false) continue;
       if(x.decidedBy || !["draft","covered"].includes(x.status)) continue;
