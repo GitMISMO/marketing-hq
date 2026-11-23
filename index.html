@@ -2925,7 +2925,8 @@ function newsInWindow(ed){
 function normUrl(u){ return String(u||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
 function fridays(from, n){ const out=[]; let d=nextDow(from,5); for(let i=0;i<n;i++){ out.push(d); d=add(d,7); } return out; }
 function epOn(fri){ return vals("episodes").find(e=>e.airDate===fri); }
-function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,3) : ""); }
+/* Mic'd Up's MISMO LinkedIn post goes up the Tuesday after the Friday episode at 1 PM ET (Jonna, Nov 23, 2026; was Monday) */
+function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,4) : ""); }
 
 /* every dated thing, for the calendar, the agenda and the counts */
 function allEvents(){
@@ -4380,7 +4381,7 @@ const HELP = [
   <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
    <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
    <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Approves who is quoted in each press release by replying to an email. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
-   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
+   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Tuesday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
    <tr><td><b>Perry</b></td><td>Owns press releases: reviews Claude's first draft of each MMS announcement, picks who to quote, sends the quote request as himself, puts in the approved quote and gives final approval before it goes to MISMO Connect, MBA and MISMO Matters.</td></tr>
    <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
    <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
@@ -4517,7 +4518,7 @@ const HELP = [
    <div><span>Same Day</span><b>Into SharePoint</b><small>Video, thumbnails and transcript in the episode folder</small></div>
    <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile</small></div>
    <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with the written description and proofed captions</small></div>
-   <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
+   <div><span>Tuesday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
   </div>
   <h3>Before Recording</h3>
@@ -4531,7 +4532,7 @@ const HELP = [
   <h3>Release Week</h3>
   <ol>
    <li><b>Friday afternoon:</b> work the YouTube Kit (below) and upload. Title: <i>MISMO Mic'd Up Season 2, Ep. N: Title</i>, the way the channel has always done it. Upload the proofed captions; never burn captions into the video.</li>
-   <li><b>Monday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
+   <li><b>Tuesday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
    <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips, so the clip steps are hidden for now.</li>
    <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
    <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube.</li>
@@ -4548,7 +4549,7 @@ const HELP = [
    <li><b>MISMO's LinkedIn post</b> is Brian's own LinkedIn post retold from MISMO's side: same guest, same topics, in the third person. Paste the words of his post first (a link alone isn't enough: LinkedIn won't let MISMO Media read it). The guest named in Brian's Drive folder always counts as the guest.</li>
    <li><b>Titles, Descriptions and Posts:</b> press <b>Write Everything</b>. In about 20 seconds, the "MISMO Media - Writer" prompt reads the transcript and the guest's answers and writes title options, the YouTube title and description, chapters, a longer description, Brian's promo post, the LinkedIn Live event name and description, the MISMO Matters blurb, a post for the guest and clip captions. Copy what you need. <b>Write Again</b> asks for a new version; <b>Draft Article</b> writes a 600–800 word viewpoint piece in Brian's voice.</li>
    <li><b>YouTube:</b> post it, then paste the link. The kit also notices it by itself once the channel lists it.</li>
-   <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Monday.</li>
+   <li><b>MISMO LinkedIn Live, Tuesday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Tuesday.</li>
    <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips.</li>
    <li><b>Guest share kit:</b> copy the guest's post, <b>Email the Guest</b>, then <b>Mark as Sent</b>.</li>
   </ol>
@@ -4557,7 +4558,7 @@ const HELP = [
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
-   <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
+   <li><b>Coming Up</b> lists every post in the next six weeks, including the Tuesday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
    <li><b>MISMO Matters as LinkedIn Posts</b> turns every section of the current edition into its own post with its own graphic. Press <b>Make a Post for Every Section</b>. If one doesn't work, or a section gets added later, a <b>Make the Missing Posts</b> button appears for just those; once every section has its post, there's no button. The edition list starts with November 2026. For each section Claude writes the post from that section's own words and links, never adding facts, and MISMO Media draws a 1080 x 1080 graphic: the section's header banner from the newsletter, the headline, and the section's picture or logo (or its key line when there's no picture). The graphic is saved in the Image Library under LinkedIn.</li>
    <li>Each section is one row: its graphic, the start of the post and where it stands. Every post starts as <b>Ready for Review</b> with no date. Click a row to open it in the panel on the right: the graphic, the words (change them and press Save), the link, the post date and the owner. There <b>Amy</b> presses <b>Approve</b>, or <b>Don't Post</b> if that section shouldn't go on LinkedIn (it shows as Not Posting, and <b>Bring It Back</b> undoes it); only she can do either. <b>Copy Post</b> and <b>Download Graphic</b> are for posting; <b>Write It Again</b> redoes the post and its graphic (it goes back to Amy) and <b>Redraw Graphic</b> makes a new graphic and keeps the words. Once approved, give it a date when you're ready to post; nothing goes on LinkedIn by itself. Click the card's title to fold it up or open it again; MISMO Media remembers which way you left it.</li>
    <li><b>Company logos.</b> A post about one company (Sponsor Highlight, Member Highlight, Certifications, Implementation Success) shows that company's logo under the picture, taken from the Image Library by the name the section uses most. Thank You to Our Sponsors shows every sponsor's logo. If a logo is missing or wrong, add it to the Image Library (campaign Logos, with the company's name) and press <b>Redraw Graphic</b>.</li>
@@ -4570,7 +4571,7 @@ const HELP = [
  {id:"posting", t:"Posting and Scheduling", g:"Channels", b:`
   <p>Everything starts as a draft in MISMO Media. Here's what can go out on its own and what's still done in the platform.</p>
   <table class="t"><thead><tr><th>Where</th><th>Can MISMO Media Post It?</th><th>How</th></tr></thead><tbody>
-   <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Monday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
+   <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Tuesday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
    <tr><td>LinkedIn, image, video or document posts</td><td>No</td><td>Power Automate's LinkedIn connector only posts link posts. Schedule these in LinkedIn itself (the clock icon next to Post on the MISMO page), then set the post's Status to Approved and note the time.</td></tr>
    <tr><td>YouTube uploads</td><td>No</td><td>Power Automate can't upload to YouTube. Upload in YouTube Studio and set Visibility to <b>Schedule</b> for the time you want; it goes public by itself. MISMO Media marks it on YouTube once it's up.</td></tr>
    <tr><td>MISMO Matters</td><td>No</td><td>Built and scheduled in Higher Logic from the HTML.</td></tr>
@@ -4578,7 +4579,7 @@ const HELP = [
   </tbody></table>
   <h3>How the Posting Flow Works</h3>
   <ol>
-   <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Monday posts).</li>
+   <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Tuesday posts).</li>
    <li>Any whose date and time have arrived, and that haven't gone out, are posted on the MISMO page.</li>
    <li>It writes what it posted, with each post's link, to <code>data/posted.json</code>. Only the flow writes that file. MISMO Media reads it and marks each post as posted, the same way Member 360 reads what its email flow has sent.</li>
   </ol>
@@ -5710,7 +5711,7 @@ async function kitLoadTranscript(epId){
   return KIT.tx[epId];
 }
 
-/* ---------- MISMO LinkedIn Live (Monday 1 PM ET, streamed from Riverside, after Amy approves the wording) ---------- */
+/* ---------- MISMO LinkedIn Live (Tuesday 1 PM ET, streamed from Riverside, after Amy approves the wording) ---------- */
 const LI_STAT = {draft:["Draft","in"], review:["With Amy","review"], changes:["Changes Requested","changes"], approved:["Approved by Amy","ok"], edits:["Amy Replied with Edits","review"]};
 function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'?d Up\s*(Season\s*\d+,\s*)?(Episode|Ep\.)\s*\d+\s*:\s*/i,"").trim(); t=liLabel(e)+": "+t; return t.length>75 ? t.slice(0,72).replace(/\s+\S*$/,"")+"…" : t; }
 const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};
@@ -5989,7 +5990,7 @@ function linkedinHero(all){
   const days=[0,1,2,3,4,5,6].map(i=>{ const d=add(t,i); const here=all.filter(x=>x.date===d);
     return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()])+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x._ep?"live":(x.status==="staged"?"st":"")))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
   let card;
-  if(!p) card='<div class="lipost empty-post"><div class="lip-b">Nothing is lined up yet. Press <b>+ New Post</b>, or add a Mic\'d Up episode and its Monday LinkedIn Live appears here by itself.</div></div>';
+  if(!p) card='<div class="lipost empty-post"><div class="lip-b">Nothing is lined up yet. Press <b>+ New Post</b>, or add a Mic\'d Up episode and its Tuesday LinkedIn Live appears here by itself.</div></div>';
   else{
     const e=p._ep?S.episodes[p._ep]:null, k=p._ep?kitOf(p._ep)||{}:null;
     const text=liPostText(p); const st=k?(k.liStatus||"draft"):null;
@@ -6560,7 +6561,7 @@ function hmNodes(){
   N.push({id:"brand", col:1, go:"branding", k:"other", t:"Rebranding & Orders", big:old, unit:"still old branding", next:ords?hmPl(ords,"order")+" at risk":br.length?(br.length-old)+" of "+br.length+" updated":"Track what still needs the new look", st:ords?"late":old?"soon":"ok", pct:br.length?(br.length-old)/br.length:0});
   /* goes out */
   const li=ev.filter(e=>e.k==="linkedin" && !e.done && e.date>=t && e.date<=wk).length;
-  N.push({id:"linkedin", col:2, go:"linkedin", k:"linkedin", t:"LinkedIn", big:li, unit:"this week", next:late("linkedin")?hmPl(late("linkedin"),"post")+" past due":"Posts and Monday LinkedIn Live", st:late("linkedin")?"late":"ok"});
+  N.push({id:"linkedin", col:2, go:"linkedin", k:"linkedin", t:"LinkedIn", big:li, unit:"this week", next:late("linkedin")?hmPl(late("linkedin"),"post")+" past due":"Posts and Tuesday LinkedIn Live", st:late("linkedin")?"late":"ok"});
   const yt=vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=t && !e.youtubeDone).length;
   N.push({id:"youtube", col:2, go:"youtube", k:"youtube", t:"YouTube", big:yt, unit:"to upload", next:yt?"Open the YouTube Kit":"All caught up", st:yt?"late":"ok"});
   const mc=vals("pieces").filter(p=>p.channel==="mailchimp" && pOpen(p) && p.date && p.date>=t && p.date<=add(t,14)).length;
@@ -7180,10 +7181,10 @@ function rtState(w){
    It leaves the to-do counts and the overdue list, shows as Canceled with its reason, and can be
    restored. Staged auto-posting is switched off when it's canceled.
      items:    status "canceled", cancelReason, canceledOn, prevStatus
-     episodes: liCanceled, liCancelReason, liCanceledOn  (the Monday LinkedIn post / Live) */
+     episodes: liCanceled, liCancelReason, liCanceledOn  (the Tuesday LinkedIn post / Live) */
 function pOpen(p){ return p.status!=="done" && p.status!=="canceled"; }
 function pClosed(p){ return !pOpen(p); }
-/* the Monday LinkedIn post or Live counts as done once it's ticked, or once its link is in and its day has come
+/* the Tuesday LinkedIn post or Live counts as done once it's ticked, or once its link is in and its day has come
    (pasting the link after it ran is how people record it; Nov 10, 2026) */
 function liDone(e){ return !!(e && (e.linkedinDone || (e.linkedinUrl && liDate(e) && liDate(e)<=T()))); }
 function liClosed(e){ return !!(e && (liDone(e) || e.liCanceled)); }
@@ -7823,7 +7824,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-22 21:44 ET · 604f54b";
+const BUILD = "2026-11-23 12:11 ET · dfffbda";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -9255,7 +9256,7 @@ function hhSponsorFeed(){
    data/linkedin.json: "linkedin/post-<id>" for each post (link, date, words, impressions, clicks, likes, comments,
    reposts), "linkedin/day-<date>" for the page's daily totals and "linkedin/_run" for the last read.
    Here, whoever has MISMO Media open with saving rights matches each post to its own record: the post is marked
-   Posted with its live link and its numbers fill in (the MISMO Matters posts, Sponsor Highlights, the Monday Mic'd Up
+   Posted with its live link and its numbers fill in (the MISMO Matters posts, Sponsor Highlights, the Tuesday Mic'd Up
    posts). A post MISMO Media didn't know about (dated Oct 1, 2026 or later) is added, the way the monthly export did.
    The page's daily totals become the LinkedIn page's Daily totals records that Results charts. */
 const LI_API={done:"", busy:false, timer:0, from:"2026-10-01"};
@@ -9599,22 +9600,22 @@ function renderMicdup(){
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td>'+(MU_PAUSED.spotify?'':'<td></td>')+'</tr>';
     const ed=editionFor(f);
     return '<tr class="click'+(past&&e.youtubeDone&&liClosed(e)?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
-      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td>'+(MU_PAUSED.spotify?'':'<td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td>')+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
+      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td>'+(MU_PAUSED.spotify?'':'<td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td>')+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Tuesday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
   const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(mdPlain(e.notes))+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn'+(MU_PAUSED.spotify?'':' and Spotify (6:30 AM)')+', on YouTube that afternoon, MISMO\'s LinkedIn Live Monday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn'+(MU_PAUSED.spotify?'':' and Spotify (6:30 AM)')+', on YouTube that afternoon, MISMO\'s LinkedIn Live Tuesday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
     '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 8:30 AM ET</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 8:30 AM ET</div></button>'+
       '<div class="tile"><div class="v'+(notRec.length?" hot":"")+'">'+notRec.length+'</div><div class="k">Not Recorded Yet</div><div class="s">running in the next two weeks</div></div>'+
       '<div class="tile"><div class="v'+(ytDue.length?" hot":"")+'">'+ytDue.length+'</div><div class="k">Waiting for YouTube</div><div class="s">aired, not uploaded</div></div>'+
-      '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Monday after each episode</div></div>'+
+      '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Tuesday after each episode</div></div>'+
       '<div class="tile"><div class="v'+(webMissing.length?" hot":"")+'">'+webMissing.length+'</div><div class="k">Missing from Website</div><div class="s">on YouTube, not on the site\'s list</div></div>'+
       '<div class="tile"><div class="v">'+eps.length+'</div><div class="k">Episodes Logged</div><div class="s">'+(eps[0]?"latest: Ep "+esc(eps[0].num):"")+'</div></div>'+
     '</div></div>'+
     '<div class="flow"><div class="st"><div class="when">1–2 Weeks Ahead</div><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>'+
       '<div class="st"><div class="when">Friday · 8:30 AM ET</div><b>Live</b><small>LinkedIn Live on Brian\'s profile'+(MU_PAUSED.spotify?'':'; Spotify at 6:30 AM')+'</small></div>'+
       '<div class="st"><div class="when">Friday Afternoon</div><b>YouTube</b><small>Upload with Brian\'s description and proofed captions</small></div>'+
-      '<div class="st"><div class="when">Monday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
+      '<div class="st"><div class="when">Tuesday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
       '<div class="st"><div class="when">Next MISMO Matters</div><b>Mic\'d Up Section</b><small>Listed automatically once it\'s on YouTube</small></div></div>'+
     kitCardHtml()+
     '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Recorded · Captions · '+(MU_PAUSED.spotify?'':'Spotify · ')+'YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck">Recorded</th><th class="ck">Captions</th>'+(MU_PAUSED.spotify?'':'<th class="ck">Spotify</th>')+'<th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
@@ -9629,7 +9630,7 @@ function isRecorded(e){ return !!(e.recordDate && e.recordDate<=T()); }
 function newEpisode(fri){
   const season = Math.max(1,...vals("episodes").map(e=>+e.season||1));
   const max = Math.max(0,...vals("episodes").filter(e=>(+e.season||1)===season).map(e=>+e.num||0));
-  openEpisode(null, {num:max+1, season:String(season), airDate:fri, linkedinDate:add(fri,3)});
+  openEpisode(null, {num:max+1, season:String(season), airDate:fri, linkedinDate:add(fri,4)});
 }
 function openEpisode(id, seed){
   const e = id ? Object.assign({}, S.episodes[id]) : Object.assign({}, seed||{});
@@ -9662,11 +9663,11 @@ function openEpisode(id, seed){
     {k:"captions",label:"Captions uploaded and names proofed (MISMO spelled right, no burned-in captions)",type:"cb",wide:true},
     {k:"youtubeDone",label:"Posted to YouTube",type:"cb"},
     {k:"youtubeUrl",label:"YouTube Link",type:"url",ph:"https://www.youtube.com/watch?v=…"},
-    {sec:"MISMO LinkedIn Live · Monday 1:00 PM ET"},
+    {sec:"MISMO LinkedIn Live · Tuesday 1:00 PM ET"},
     {k:"_cx",type:"html",html:()=>id?cxBox("ep",id,"LinkedIn Post"):""},
-    {k:"linkedinDate",label:"LinkedIn Post Date",type:"date",hint:"The Monday after the episode"},
+    {k:"linkedinDate",label:"LinkedIn Post Date",type:"date",hint:"The Tuesday after the episode"},
     {k:"linkedinTime",label:"Post Time",ph:"e.g. 9:00 AM"},
-    {k:"linkedinAuto",label:"Stage it: post on the MISMO page automatically Monday (links to YouTube)",type:"cb",wide:true},
+    {k:"linkedinAuto",label:"Stage it: post on the MISMO page automatically Tuesday (links to YouTube)",type:"cb",wide:true},
     {k:"linkedinDone",label:"Posted on LinkedIn",type:"cb"},
     {k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},
     {k:"linkedinCopy",label:"LinkedIn Post",type:"textarea",rows:7,ph:"Written from Brian's description. Ends with the YouTube link."},
@@ -9681,7 +9682,7 @@ function openEpisode(id, seed){
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
-    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const sp=sbRead($("#pane-body"), e); if(sp) Object.assign(v, sp); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); sbSoon(); },
+    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,4); const sp=sbRead($("#pane-body"), e); if(sp) Object.assign(v, sp); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); sbSoon(); },
     del: id ? async()=>remove("episodes",id) : null,
     after:b=>{ wireCx(b); wireGuestPane(b, id); sbWirePicker(b, e, ""); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
       const pa=$("#ep-paste",b); if(pa) pa.addEventListener("input",()=>{ const txt=pa.value; const urls=txt.match(/https?:\/\/[^\s<>"')\]]+/g)||[]; const drive=urls.find(u=>/drive\.google|docs\.google|sharepoint|onedrive|1drv/.test(u))||urls[0];
@@ -9773,7 +9774,7 @@ function renderLinkedin(){
   const postedMonth=all.filter(p=>p.status==="done"&&p.date&&p.date.slice(0,7)===t.slice(0,7)).length;
   const ed=curEdition(); const reuse = ed ? edSections(ed).filter(s=>s.on && s.doc.reuse && s.doc.reuse.linkedin) : [];
   const newsTodo = newsAll().filter(n=>!n.linkedinDone && n.date>=add(t,-30)).sort((a,b)=>a.date<b.date?1:-1);
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Monday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+mnCard("li")+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Tuesday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+mnCard("li")+
     '<div class="band">'+linkedinHero(all)+'<div class="say">'+(thisWeek?'<em>'+thisWeek+' post'+(thisWeek>1?"s":"")+'</em> going up this week. ':'Nothing is set for this week yet. ')+(newsTodo.length?newsTodo.length+' news mention'+(newsTodo.length>1?"s haven't":" hasn't")+' been shared yet.':'')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+thisWeek+'</div><div class="k">Posting This Week</div><div class="s">through '+esc(fS(wk))+'</div></div>'+
       '<div class="tile"><div class="v">'+upcoming.length+'</div><div class="k">Coming Up</div><div class="s">next six weeks</div></div>'+
