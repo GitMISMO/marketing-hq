@@ -7824,7 +7824,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-23 12:11 ET · dfffbda";
+const BUILD = "2026-11-23 12:52 ET · 46f08d2";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -9048,7 +9048,8 @@ function wtRefName(h){ h=String(h||"").toLowerCase(); if(!h) return "Direct or n
   return h.replace(/^www\./,""); }
 function wtDevice(d){ d=String(d||"").toLowerCase(); return d==="desktop"?"Desktop":d==="mobile"?"Phone":d==="tablet"?"Tablet":d?d.charAt(0).toUpperCase()+d.slice(1):"Not known"; }
 /* visits as bars and page views as a line, one shared count axis */
-function wtChart(days){
+function wtChart(days, o){
+  o=o||{}; const U=o.unit||"visits", Uc=U.charAt(0).toUpperCase()+U.slice(1);
   if(!days.length) return '';
   const W=760, H=210, L=48, R=12, Tp=14, B=28, n=days.length;
   const top=Math.max(10, ...days.map(d=>Math.max(+d.views||0,+d.visits||0)));
@@ -9057,18 +9058,47 @@ function wtChart(days){
   let g=''; for(let k=0;k<=4;k++){ const v=nice*k/4; g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" class="rs-grid"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" class="rs-ax" text-anchor="end">'+rsN(Math.round(v))+'</text>'; }
   const every=Math.max(1, Math.ceil(n/8));
   days.forEach((d,i)=>{ if(i%every===0 || i===n-1){ const dt=P(d.date); g+='<text x="'+X(i)+'" y="'+(H-8)+'" class="rs-ax" text-anchor="middle">'+MON[dt.getMonth()]+' '+dt.getDate()+'</text>'; } });
-  const bars=days.map((d,i)=>{ const v=+d.visits||0, w=Math.max(2,Math.min(26,bw*0.62)); return '<rect class="wt-bar'+(d.partial?' wt-part':'')+'" x="'+(X(i)-w/2)+'" y="'+Y(v)+'" width="'+w+'" height="'+Math.max(0,Y(0)-Y(v))+'" rx="2" data-tip="'+esc(fS(d.date)+(d.partial?" so far (as of "+wtTime(d.pulledAt)+")":"")+"\n"+rsN(v)+" visits · "+rsN(d.views)+" page views")+'"/>'; }).join("");
+  const bars=days.map((d,i)=>{ const v=+d.visits||0, w=Math.max(2,Math.min(26,bw*0.62)); return '<rect class="wt-bar'+(d.partial?' wt-part':'')+'" x="'+(X(i)-w/2)+'" y="'+Y(v)+'" width="'+w+'" height="'+Math.max(0,Y(0)-Y(v))+'" rx="2" data-tip="'+esc(fS(d.date)+(d.partial?" so far (as of "+wtTime(d.pulledAt)+")":"")+"\n"+rsN(v)+" "+U+" · "+rsN(d.views)+" page views")+'"/>'; }).join("");
   const line=n>1?'<polyline class="wt-line" points="'+days.map((d,i)=>X(i)+","+Y(+d.views||0)).join(" ")+'"/>':'';
-  const dots=days.map((d,i)=>'<circle class="wt-dot" cx="'+X(i)+'" cy="'+Y(+d.views||0)+'" r="'+(n>60?2:3.5)+'" data-tip="'+esc(fS(d.date)+"\n"+rsN(d.views)+" page views · "+rsN(d.visits)+" visits")+'"/>').join("");
-  return '<div class="rs-chart"><div class="rs-legend"><span><i class="rs-k wt-kb"></i>Visits</span><span><i class="rs-k wt-kl"></i>Page views</span></div>'+
-    '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Visits and page views on www.mismo.org each day">'+g+bars+line+dots+'</svg></div>';
+  const dots=days.map((d,i)=>'<circle class="wt-dot" cx="'+X(i)+'" cy="'+Y(+d.views||0)+'" r="'+(n>60?2:3.5)+'" data-tip="'+esc(fS(d.date)+"\n"+rsN(d.views)+" page views · "+rsN(d.visits)+" "+U)+'"/>').join("");
+  /* a dashed line where something changed (the new site going live) */
+  const mi=o.mark?days.findIndex(d=>d.date===o.mark.date):-1;
+  const mark=mi>=0?'<line class="wt-mark" x1="'+(X(mi)-bw/2)+'" x2="'+(X(mi)-bw/2)+'" y1="'+Tp+'" y2="'+(H-B)+'" stroke="currentColor" stroke-dasharray="4 4" opacity=".55"/><text x="'+(X(mi)-bw/2+6)+'" y="'+(Tp+12)+'" class="rs-ax">'+esc(o.mark.label)+'</text>':'';
+  return '<div class="rs-chart"><div class="rs-legend"><span><i class="rs-k wt-kb"></i>'+Uc+'</span><span><i class="rs-k wt-kl"></i>Page views</span></div>'+
+    '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+esc(o.aria||"Visits and page views on www.mismo.org each day")+'">'+g+mark+bars+line+dots+'</svg></div>';
+}
+/* Before Cloudflare: Higher Logic's own count (Jonna, Nov 23, 2026: "why are the website stats from the 20th?").
+   Cloudflare only counts from Nov 20, 2026. Higher Logic's Microsite Traffic report (Admin › Reports › Site Traffic and Ads)
+   keeps the last 31 days, so the days before Nov 20 were copied once by Claude into settings/webtraffic-hl:
+   {source, copiedAt, from, to, launch, days:{"YYYY-MM-DD":{viewsIn, viewsOut, visIn, visOut}}, pages:[[name, views]], refs:[[host, views]]}.
+   Higher Logic counts every page load, signed-in staff and robots included, so its numbers run several times Cloudflare's
+   and the two are shown apart, never added together. */
+function wtHL(){ const h=(S.settings||{})["webtraffic-hl"]; return h && h.days ? h : null; }
+function wtHLDays(h){ return Object.keys(h.days).sort().map(d=>{ const x=h.days[d]||{}; return {date:d, views:(+x.viewsIn||0)+(+x.viewsOut||0), visits:(+x.visIn||0)+(+x.visOut||0), viewsIn:+x.viewsIn||0, visIn:+x.visIn||0}; }); }
+function rsWebsiteHL(){
+  const h=wtHL(); if(!h) return "";
+  const days=wtHLDays(h), live=days.filter(d=>!h.launch || d.date>=h.launch), before=days.filter(d=>h.launch && d.date<h.launch);
+  const sum=(L,k)=>L.reduce((n,d)=>n+(+d[k]||0),0);
+  const kp=[];
+  if(live.length) kp.push({v:rsN(sum(live,"visits")),k:"Visitors",s:fS(live[0].date)+" to "+fS(live[live.length-1].date)},{v:rsN(sum(live,"views")),k:"Page Views",s:"since the new site went live"},
+    {v:rsN(Math.round(sum(live,"visits")/live.length)),k:"Visitors a Day",s:"on average, "+live.length+" day"+(live.length===1?"":"s")},
+    {v:pct(sum(live,"viewsIn")/Math.max(1,sum(live,"views"))),k:"Signed In",s:"share of page views"});
+  if(before.length) kp.push({v:rsN(Math.round(sum(before,"visits")/before.length)),k:"Visitors a Day Before",s:fS(before[0].date)+" to "+fS(before[before.length-1].date)});
+  const pages=(h.pages||[]).slice().sort((x,y)=>(+y[1]||0)-(+x[1]||0)).slice(0,10).map(r=>({l:String(r[0]),v:+r[1]||0,c:"--c1",tip:r[0]+"\n"+rsN(r[1])+" page views"}));
+  const refs=(h.refs||[]).filter(r=>!/^not specified$/i.test(r[0])).sort((x,y)=>(+y[1]||0)-(+x[1]||0)).slice(0,9).map(r=>({l:wtRefName(r[0]),v:+r[1]||0,c:"--c4",tip:wtRefName(r[0])+" · "+rsN(r[1])+" page views"}));
+  return '<div class="rs-box"><h3>Before Nov 20: Higher Logic\'s Count</h3>'+rsKpis(kp)+
+    wtChart(days,{unit:"visitors", mark:h.launch?{date:h.launch,label:"New site live"}:null, aria:"Visitors and page views on the new www.mismo.org each day, counted by Higher Logic"})+
+    '<p class="rs-note">From Higher Logic\'s Microsite Traffic report, copied '+esc(fS(String(h.copiedAt||"").slice(0,10)))+'. Higher Logic counts every page load, signed-in staff and robots included, so its numbers run several times Cloudflare\'s: read them on their own, not against the days above. '+
+    (h.launch?'The new site went live '+esc(fS(h.launch))+'; before that, www.mismo.org was the old site and these are visits to the new one while it was being built. ':'')+'Higher Logic keeps only 31 days, and the old site\'s numbers aren\'t kept anywhere MISMO Media can reach.</p>'+
+    ((pages.length||refs.length)?'<div class="rs-g2"><div class="rs-box"><h3>Top Pages, '+esc(fS(h.from))+' to '+esc(fS(h.windowTo||h.to))+'</h3>'+hbars(pages,v=>rsN(v)+" views")+'</div><div class="rs-box"><h3>Where Visitors Came From</h3>'+hbars(refs,v=>rsN(v)+" views")+'</div></div>':'')+
+  '</div>';
 }
 function rsWebsite(){
   const all=wtDays(), run=wtRun();
   const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted</span><span class="sp"></span>'+
     '<select class="plain" id="wt-days" aria-label="Days shown">'+[[7,"Last 7 Days"],[30,"Last 30 Days"],[90,"Last 90 Days"],[0,"Since Nov 20, 2026"]].map(([v,l])=>'<option value="'+v+'"'+(WT.days===v?' selected':'')+'>'+l+'</option>').join("")+'</select></div>';
   if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first pull from Cloudflare hasn\'t run yet. It runs every 3 hours and brings today so far; numbers start with Nov 20, 2026.')+
-    ' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.</div></div>';
+    (wtHL()?'':' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.')+'</div>'+rsWebsiteHL()+'</div>';
   const days=WT.days?all.slice(-WT.days):all, withLists=days.filter(d=>d.pages);
   const visits=days.reduce((n,d)=>n+(+d.visits||0),0), views=days.reduce((n,d)=>n+(+d.views||0),0), last=all[all.length-1];
   const full=days.filter(d=>!d.partial), best=(full.length?full:days).reduce((b,d)=>(+d.visits||0)>(+b.visits||0)?d:b, (full.length?full:days)[0]);
@@ -9085,11 +9115,12 @@ function rsWebsite(){
       {v:full.length?rsN(Math.round(full.reduce((n,d)=>n+(+d.visits||0),0)/full.length)):"—",k:"Visits a Day",s:full.length?"on average, whole days":"after the first whole day"},
       last.partial?{v:rsN(last.visits),k:"Today So Far",s:"as of "+wtTime(last.pulledAt)+" · "+rsN(last.views)+" views"}:{v:rsN(last.visits),k:"Latest Day",s:fS(last.date)+" · "+rsN(last.views)+" views"},
       {v:rsN(best.visits),k:"Busiest Day",s:fS(best.date)}])+
-    '<div class="rs-box"><h3>Visits and Page Views Each Day</h3>'+wtChart(days)+'<p class="rs-note">Days run midnight to midnight Eastern time.'+(last.partial?' The lighter bar is today so far: Cloudflare\'s count as of '+esc(wtTime(last.pulledAt))+', refreshed every 3 hours.':'')+' For anything before Nov 20, 2026, use Higher Logic\'s Site Traffic report.</p></div>'+
+    '<div class="rs-box"><h3>Visits and Page Views Each Day</h3>'+wtChart(days)+'<p class="rs-note">Days run midnight to midnight Eastern time.'+(last.partial?' The lighter bar is today so far: Cloudflare\'s count as of '+esc(wtTime(last.pulledAt))+', refreshed every 3 hours.':'')+(wtHL()?' Days before Nov 20 are further down, from Higher Logic.':' For anything before Nov 20, 2026, use Higher Logic\'s Site Traffic report.')+'</p></div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>Top Pages</h3>'+(pages.length?hbars(pages,v=>rsN(v)+" views"):'<div class="empty sm">No pages counted for these days.</div>')+'</div>'+
       '<div class="rs-box"><h3>Where Visitors Come From</h3>'+(refs.length?hbars(refs,v=>rsN(v)+" visits"):'<div class="empty sm">No referrers counted for these days.</div>')+'<p class="rs-note">"Direct or not shared" is people who typed the address, used a bookmark, or came from an app or email that doesn\'t say where they came from.</p></div></div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>Devices</h3>'+devices+'</div>'+
       '<div class="rs-box"><h3>Countries</h3>'+(countries.length?hbars(countries,v=>rsN(v)+" visits"):'<div class="empty sm">No countries counted for these days.</div>')+'</div></div>'+
+    rsWebsiteHL()+
   '</div>';
 }
 /* what people on the website told MISMO: "Not helpful" comments on AI answers, and problem reports */
