@@ -530,7 +530,7 @@ document.addEventListener("visibilitychange", ()=>{ if(document.visibilityState=
 /* the background jobs (episode files, sponsor logos, certified lists) run from here, but through runJob:
    at most once a minute, only in one tab per browser, and with a growing pause after a failure */
 function renderAll(){ applyPosted(); if(typeof applySettings==="function") applySettings(); renderTab(TAB); badges();
-  if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); runJob("Press release drafts", typeof prSync==="function"?prSync:null, 5*60000); }
+  if(typeof runJob==="function"){ runJob("Mic'd Up files", typeof kitSync==="function"?kitSync:null); runJob("Sponsor logos", typeof sponsorSync==="function"?sponsorSync:null); runJob("Certified lists", typeof certSync==="function"?certSync:null); runJob("Press release drafts", typeof prSync==="function"?prSync:null, 5*60000); runJob("Industry Events graphics", typeof teamEventsSync==="function"?teamEventsSync:null, 5*60000); }
   if(typeof a11yRows==="function") a11yRows(); }
 /* what each page needs before it can draw truthfully; until then it shows a quiet "loading" panel
    instead of a wrong picture (an open slot, zero counts) that then corrects itself */

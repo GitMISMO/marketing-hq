@@ -75,17 +75,25 @@ const HELP = [
    <li><b>Behind the scenes:</b> the form uses the same Power Automate flow and GitHub workflow as the Subscribe form. The workflow files each request in <code>data/inbox.json</code> (only the workflow writes there), and the team's review is kept in <code>data/requests.json</code>. If a Higher Logic step is ever added to that flow, give it a condition so it only runs when <code>form</code> is <code>mismo-matters-subscribe</code>; otherwise requesters would be added to the MISMO Matters list.</li>
   </ul>`},
  {id:"press", t:"Press Releases", g:"Pages", b:`
-  <p class="lead">Every announcement from the MMS becomes a press release here. <b>Perry Williams</b> owns them; <b>Amy Moses</b> approves who is quoted. Nothing is ever sent unless a person presses Send, and every email that goes out as Perry needs Perry's own sign-in.</p>
+  <p class="lead">Every release announcement from the MMS becomes a press release here. A public comment period gets no press release and no LinkedIn post. <b>Perry Williams</b> owns them; <b>Amy Moses</b> approves who is quoted. Nothing is ever sent unless a person presses Send, and every email that goes out as Perry needs Perry's own sign-in.</p>
   <h3>The Page</h3>
   <ul>
-   <li><b>The boxes at the top</b> count releases at each stage: <b>Perry's Review</b> (first drafts to read over), <b>With Amy</b> (who to quote), <b>Waiting on a Quote</b> (turns red when a request is past 3 business days), <b>Ready for Final</b> and <b>Approved This Month</b>.</li>
+   <li><b>Draft Now</b> and <b>Ready to Post</b>, the first two boxes, count the releases written ahead and the ones whose work has reached Release. Press either box to list just those; press it again (or <b>Show All Releases</b>) to go back.</li>
+   <li><b>The other boxes</b> count releases at each stage: <b>Perry's Review</b> (first drafts to read over), <b>With Amy</b> (who to quote), <b>Waiting on a Quote</b> (turns red when a request is past 3 business days), <b>Ready for Final</b> and <b>Approved This Month</b>.</li>
    <li><b>The feed line</b> under them says how many entries the MMS feed has and when it was last updated. <b>Check the Feed Now</b> reads it straight away instead of waiting for the next five-minute check.</li>
    <li><b>Releases</b> lists each one with its type, workgroup, start date and status. Click a row to open it below. <b>Search releases</b> finds one by title or workgroup; finished releases are hidden until you show them.</li>
    <li>If the MMS changes the facts after a release has started, the row says so, and the release shows what changed.</li>
   </ul>
+  <h3>Draft Now, Ready to Post and Out for Comment</h3>
+  <ul>
+   <li><b>Draft Now</b> (blue): the work is still on its way to its Final or Candidate Recommendation in the MMS. Start the release, take it through Perry's review, the quote and final approval, then it's held: the row says <b>Finished, Held</b> and Distribution stays closed.</li>
+   <li><b>Ready to Post</b> (green): the MMS has moved the work to Release. It's the same release, not a new one: the finished draft moves to Distribution and its history says when it turned ready. Releases from before this change arrive Ready to Post.</li>
+   <li><b>Out for Comment</b> (purple), with the date comments close: the work is still out for public comment in the MMS, so the team knows. The tag goes by itself once the comment period is over. A release written ahead announces the Final or Candidate Recommendation; it must never say the work is going out for comment or is in comment. Claude is told so, the comment dates aren't given to it, and a release that mentions comments can't get final approval until that's taken out.</li>
+   <li>The MMS sets all of this in its feed (pressRelease, draftNow, readyToPost and readyAt, stage and inComment); nobody sets it here.</li>
+  </ul>
   <h3>Where the Facts Come From</h3>
   <ul>
-   <li>The MMS Robot rebuilds <b>resources.mismo.org/mms/announcements.json</b> every 30 minutes: calls for participation, public comment periods and releases, with the work product, workgroup, status, dates, links and the workgroup leaders.</li>
+   <li>The MMS Robot rebuilds <b>resources.mismo.org/mms/announcements.json</b> every 30 minutes: calls for participation and releases, with the work product, workgroup, status, dates, links and the workgroup leaders.</li>
    <li>When the announcement has a website id, the work-product catalog (<b>resources.mismo.org/work-products/catalog.json</b>) adds the Resource Library summary.</li>
    <li>Claude writes only from those facts. Anything the structure calls for that the MMS didn't give shows as a gap in [SQUARE BRACKETS] instead of being made up. Each release shows the facts it was written from under <b>Facts from the MMS</b>.</li>
   </ul>
@@ -97,7 +105,7 @@ const HELP = [
    <li><b>The quote request.</b> Once Amy approves, Claude drafts the email: the ask, a suggested quote they can edit or replace, and the draft release below. Perry can change any of it. It goes from Perry's own address (pwilliams@mismo.org) with Amy copied, only when Perry presses <b>Send as Perry</b>. Replies come back to Perry's inbox. If there's no quote after 3 business days, the release turns red and shows on Perry's plate. Nothing follows up by itself; Perry sends any reminder.</li>
    <li><b>The approved quote.</b> A quote only goes in after the person has approved it in writing, Brian included. Perry pastes the quote exactly as approved, their approval email and its date, and presses <b>Put the Quote In</b>. It replaces [QUOTE] in the release, and the approval is kept with it. Without the approval text and date, the quote won't go in.</li>
    <li><b>Final approval.</b> Perry presses <b>Give Final Approval</b> once the checklist is clear: quote in with its approval on file, release date set, no gaps, names matching the leaders list.</li>
-   <li><b>Distribution.</b> Each is its own button, and each one is marked Done with its date:
+   <li><b>Distribution.</b> Opens after final approval, and for a Draft Now release only once it's Ready to Post. Each is its own button, and each one is marked Done with its date:
     <ul>
      <li><b>MISMO Connect:</b> a branded HTML post sent as Perry to Vanessa Rios to post (<b>Copy Connect HTML</b> copies it too).</li>
      <li><b>MBA newsroom:</b> a copy sent as Perry to Brittney Prophete (bprophete@mba.org). Her edits stay on her side. If MBA's contact changes, press <b>MBA Newsroom Contact</b> at the top of the page.</li>
@@ -342,6 +350,13 @@ const HELP = [
    <li><b>Download many:</b> tick the box on each picture you want and press <b>Download Selected (ZIP)</b>. With nothing ticked, <b>Download All (ZIP)</b> zips everything the filters are showing, for example every picture for the November MISMO Matters.</li>
    <li><b>In a MISMO Matters section:</b> <b>Upload Image</b> adds the picture to the section and to the library, tagged to that edition. <b>Pick from Image Library</b> reuses one that's already there.</li>
    <li><b>Nothing is deleted:</b> tick <b>Archived</b> to hide a picture you no longer need. <b>Show Archived</b> brings archived pictures back into view.</li>
+  </ul>
+  <h3>Industry Events (from Team HQ)</h3>
+  <ul>
+   <li>The graphics each industry event gives us (logos, speaker cards, banners, social posts, booth art) are uploaded on the event in Team HQ (Industry Events, Graphics tab). MISMO Media brings each one into the library by itself, every 30 minutes while it's open, under the campaign <b>Industry Events</b> with the event's name and what it's for.</li>
+   <li>Pick <b>Industry Events</b> under campaigns, then an event, to see just that event's graphics. <b>Check Team HQ Now</b> brings in new ones straight away.</li>
+   <li>A copy of each is kept in SharePoint like every other picture. Pictures, PDFs, PowerPoint, Illustrator, EPS and ZIP files come in; anything else stays on the event in Team HQ.</li>
+   <li>If Team HQ renames the event or changes what a graphic is for, the library follows. A graphic removed from the event stays here; archive it if it's no longer wanted. MISMO Media only reads Team HQ, never changes it, and only for someone whose sign-in can open Team HQ.</li>
   </ul>
   <h3>Pictures in the Email (Higher Logic)</h3>
   <ul>

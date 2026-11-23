@@ -2,6 +2,19 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Press Releases: drafted ahead, posted on release (CN-010)
+
+- Approved by Jonna (Nov 22 and 23, 2026), from the MMS: no press release and no LinkedIn post for a public comment period. The release for a Final or Candidate Recommendation is written while the work is still on its way.
+- New tags on each release: **Draft Now** (finish it through review, the quote and final approval, then it's held), **Ready to Post** (the MMS moved the work to Release: the same release moves to Distribution, nothing new is started) and **Out for Comment** with the closing date, in its own color, while the work is still in comment. Two new boxes at the top count and list Draft Now and Ready to Post.
+- Distribution (MISMO Connect, MBA newsroom, MISMO Matters, LinkedIn) stays closed for a held release.
+- A release must never say the work is going out for comment: Claude is told so and isn't given the comment dates, and a release that mentions comments can't get final approval.
+- The four comment-period drafts started before the change are archived (nothing deleted).
+
+## 2026-11-23 · Image Library: Industry Events graphics from Team HQ (CN-004)
+
+- Approved by Jonna (Nov 23, 2026). The graphics uploaded on each event in Team HQ's Industry Events come into the Image Library by themselves (every 30 minutes while MISMO Media is open, or **Check Team HQ Now**), under the new campaign **Industry Events**, with the event's name and what each is for, and an event picker.
+- A copy of each is kept in SharePoint with the other pictures. MISMO Media only reads Team HQ; it never changes it. Help > System Health has an Industry Events Graphics row.
+
 ## 2026-11-23 · Website: the days before Nov 20, from Higher Logic
 
 - Jonna: "why are the website stats from the 20th?" Cloudflare only started counting Nov 20. Higher Logic's Microsite Traffic report keeps 31 days, so Oct 23 to Nov 19 was copied once into settings/webtraffic-hl (page views and visitors each day, signed in and not, plus top pages and referrers).

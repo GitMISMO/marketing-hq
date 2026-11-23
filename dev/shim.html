@@ -692,6 +692,23 @@
       .then(function (b) { var d = b && b.data; if (typeof d === 'string') d = JSON.parse(d); d = (d && d.docs) || d || {};
         return Object.keys(d).map(function (k) { return Object.assign({ id: k }, d[k]); }); });
   };
+  /* Team HQ's Industry Events (relay project "team-hq", collection events), read-only, for the Image Library's
+     Industry Events section (CN-004, Nov 23, 2026): the graphics listed on each event, and each graphic's file as
+     Team HQ keeps it. MISMO Media never writes to Team HQ. Anyone without access to Team HQ simply gets nothing. */
+  function teamHq(path) {
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Not signed in', 401));
+    return fetch(RELAY_URL + '/team-hq' + path, { cache: 'no-store', headers: { 'Authorization': 'Bearer ' + tok } })
+      .then(function (r) { if (!r.ok) throw err(r.status === 403 ? 'DENIED' : 'HTTP_' + r.status, r.status === 403 ? 'This sign-in can’t read Team HQ' : 'Team HQ didn’t answer (' + r.status + ')', r.status); return r.json(); });
+  }
+  window.__hqTeamEvents = function () {
+    return teamHq('/data/events').then(function (b) { var d = b && b.data; if (typeof d === 'string') d = JSON.parse(d); d = (d && d.docs) || d || {};
+      return Object.keys(d).map(function (k) { return Object.assign({ id: k }, d[k]); }); });
+  };
+  window.__hqTeamFile = function (id, type) {
+    if (!/^(receipts|attachments)\/[^\/]+$/.test(String(id))) return Promise.reject(err('invalid_argument', 'Not a Team HQ file: ' + id));
+    return teamHq('/file/' + String(id).split('/').map(encodeURIComponent).join('/')).then(function (b) { return unb64((b && b.content) || '', type); });
+  };
   /* a plain data file of MISMO Media's own, not records: the feeds other systems read, such as the sponsor benefits
      feed the Sponsorship Portal reads (data/feed-sponsor-benefits.json, Nov 21, 2026). Only names starting "feed-". */
   window.__hqFile = {

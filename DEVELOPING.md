@@ -12,12 +12,14 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 | Path | What it is |
 | --- | --- |
 | `index.html` | The live page. The **publish** job in `.github/workflows/check.yml` builds it from `dev/` and commits it; GitHub Pages serves it. Never upload or hand-edit it. |
-| `dev/src/app*.js` | The code, in 23 files that are joined in a fixed order (see `ORDER` in `dev/build.py`). |
+| `dev/src/app*.js` | The code, in 31 files that are joined in a fixed order (see `ORDER` in `dev/build.py`). |
 | `dev/src/head.html`, `dev/src/body.html` | Styles and page skeleton. |
 | `dev/shim.html` | The door to the save relay: sign-in, loading, saving, conflict handling. |
 | `dev/gate.html` | The shared resources.mismo.org sign-in gate (copied from Member 360). |
 | `dev/logo.txt` | The MISMO logo symbol. |
 | `dev/build.py` | Builds `dev/out/site.html` (the live page) and `dev/out/plain.html` (no sign-in, for tests). The live page carries a safety list (Content-Security-Policy, `CSP` in build.py) of the only sites it may load code from or send data to; add a new service there first. |
+| `dev/src/app31.js` | Industry Events graphics: reads Team HQ's events (read only, relay project `team-hq`, through `__hqTeamEvents` and `__hqTeamFile` in `dev/shim.html`) and keeps a SharePoint copy of each graphic in the Image Library (campaign `events`, record ids `imte-…`). Contract: Connections Map row "Team HQ (Industry Events) → MISMO Media (Image Library)". |
+| `dev/src/app24.js` | Press Releases. Reads the MMS announcements feed; the draft-ahead fields (pressRelease, draftNow, readyToPost, readyAt, stage, inComment; CN-010) decide which entries get a release, which are held after final approval and when one moves to Distribution. Contract: Connections Map row "MMS → MISMO Media". |
 | `dev/tests/` | Browser tests and a stand-in for the save relay. They run on made-up records (`fixture.html`, made by `make-fixture.py`), or on MISMO's real sample (`marketing-hq-data/dev/sample-data.html` in the private repo) when that file is copied next to `run.sh`. |
 | `hl-bridge/` | The script the Higher Logic website loads to upload pictures and read certified lists. |
 | `mm-headers/` | Newsletter header images and icons. |

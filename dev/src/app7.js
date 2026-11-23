@@ -5,9 +5,9 @@
    resources.mismo.org: files will go to MISMO's SharePoint through a Power Automate flow.
    Emails can't show private pictures, so each one also goes into the Higher Logic image
    library before a send (its link is pasted into the section). */
-const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["logos","Member & Sponsor Logos"],["other","Other"]];
+const IMG_CAMPS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community Posts"],["brand","Logos & Brand"],["logos","Member & Sponsor Logos"],["events","Industry Events"],["other","Other"]];
 const IMG_CAMP = Object.fromEntries(IMG_CAMPS);
-const IM = {camp:"", ed:"", q:"", arch:false, sel:new Set(), type:"", view:"lib"};
+const IM = {camp:"", ed:"", ev:"", q:"", arch:false, sel:new Set(), type:"", view:"lib"};
 const imNorm = x=>String(x||"").replace(/\s+/g," ").trim().toLowerCase();
 let DL = null;
 const IMG_LOCAL = {};   // just-uploaded files shown from memory while the web copy publishes
@@ -184,7 +184,7 @@ function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
   const q=imNorm(IM.q);
-  const list=imgsLive().filter(im=>!isLogo(im) && (!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign]].join(" ")).indexOf(q)>=0));
+  const list=imgsLive().filter(im=>!isLogo(im) && (!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!IM.ev||im.eventId===IM.ev) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign],im.eventName,im.eventUse].join(" ")).indexOf(q)>=0));
   const logos=live.filter(isLogo), logosOut=logos.filter(i=>!i.hlUrl).length, shelf=IM.view==="logos";
   const forEd = ced ? live.filter(i=>i.campaign==="matters" && i.edition===ced.id).length : 0;
   const month = live.filter(i=>String(i.at||"").slice(0,7)===t.slice(0,7)).length;
@@ -203,12 +203,13 @@ function renderImages(){
       '<select id="im-type" aria-label="Kind"><option value="">Pictures and Files</option><option value="pic"'+(IM.type==="pic"?" selected":"")+'>Pictures</option><option value="file"'+(IM.type==="file"?" selected":"")+'>Brand Files</option></select>'+
       '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
+      (IM.camp==="events"&&typeof teEvents==="function"?'<select id="im-ev" aria-label="Event"><option value="">Every Event</option>'+teEvents().map(e=>'<option value="'+esc(e.id)+'"'+(IM.ev===e.id?" selected":"")+'>'+esc(e.name)+(e.start?' ('+esc(fS(e.start))+')':'')+'</option>').join("")+'</select>'+(window.__hqTeamEvents&&CANWRITE&&SP_IMG()?'<button class="btn sm" type="button" id="im-te" title="Bring in new graphics from Team HQ\'s Industry Events now">Check Team HQ Now</button>':''):'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
       (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-arcsel">'+([...IM.sel].every(i=>S.images[i]&&S.images[i].archived)?'Bring Back ':'Archive ')+IM.sel.size+' Selected</button><button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
       (list.length?'<div class="imgrid">'+list.map(im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
           '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgThumb(im)?'<img src="'+esc(imgThumb(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
-          '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
+          '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.eventName?'<span class="chip ch" title="From Team HQ Industry Events">'+esc(im.eventName)+(im.eventUse&&im.eventUse!=="Other"?' · '+esc(im.eventUse):'')+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
           '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(localDay(im.at))].filter(Boolean).map(esc).join(" · ")+'</div>'+
           '<div class="imact">'+(isFile(im)?'<a class="btn sm" href="'+esc(spFileUrl(im.spPath))+'" target="_blank" rel="noopener" data-stop>Open ↗</a><a class="btn sm" href="'+esc(spFileUrl(im.spPath,true))+'" target="_blank" rel="noopener" data-stop>Download</a><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>':'<button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>')+'</div></div></div>').join("")+'</div>'
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
@@ -226,7 +227,9 @@ function renderImages(){
   if(file) file.onchange=async()=>{ await addImages(file.files); file.value=""; };
   $("#im-type",el).onchange=e=>{ IM.type=e.target.value; renderImages(); };
   $$("a[data-stop]",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
-  $("#im-camp",el).onchange=e=>{ IM.camp=e.target.value; if(IM.camp && IM.camp!=="matters") IM.ed=""; renderImages(); };
+  $("#im-camp",el).onchange=e=>{ IM.camp=e.target.value; if(IM.camp && IM.camp!=="matters") IM.ed=""; if(IM.camp!=="events") IM.ev=""; renderImages(); };
+  const sev=$("#im-ev",el); if(sev) sev.onchange=e=>{ IM.ev=e.target.value; renderImages(); };
+  const tb=$("#im-te",el); if(tb) tb.onclick=async()=>{ toast("Checking Team HQ's Industry Events…", 60000); const was=TE.added; try{ await teamEventsSync(true); toast(TE.denied?"This sign-in can't read Team HQ's Industry Events.":(TE.added-was)?(TE.added-was)+" new graphic"+(TE.added-was===1?"":"s")+" added.":"Nothing new from Team HQ.", 4000); }catch(e){ toast("Couldn't read Team HQ: "+(e.message||"try again"), 6000); } renderImages(); };
   const se=$("#im-ed",el); if(se) se.onchange=e=>{ IM.ed=e.target.value; renderImages(); };
   const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
   $("#im-arch",el).onchange=e=>{ IM.arch=e.target.checked; renderImages(); };

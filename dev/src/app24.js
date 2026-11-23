@@ -10,7 +10,14 @@
      5 Perry puts in the approved quote, with the person's written approval kept on the release
      6 Perry gives final approval  7 MISMO Connect post to Vanessa, newsroom copy to Brittney at MBA, offered to
        MISMO Matters and as a LinkedIn post request.
-   Nothing is ever sent unless a person presses Send. Every name and company is checked against the MMS leaders list. */
+   Nothing is ever sent unless a person presses Send. Every name and company is checked against the MMS leaders list.
+   Draft ahead, post on release (CN-010, approved by Jonna Nov 22 and 23, 2026): the feed marks each entry
+     pressRelease (false = no release at all: a comment period gets no press release and no LinkedIn post),
+     draftNow (true while the work is out for comment: draft it, take it through review, the quote and final
+     approval, then hold it), readyToPost + readyAt (the same entry, same id, once the work reaches Release: the
+     finished release moves to Distribution; nothing new is started), stage (the MMS step) and inComment (true while
+     the work is out for public comment: shown as an Out for Comment tag with commentCloses, gone once it's false).
+     A release drafted ahead announces the Final or Candidate Recommendation; it never says the work is in comment. */
 const PR_FEED = "/mms/announcements.json", PR_CATALOG = "/work-products/catalog.json";
 const PR_OWNER = {name:"Perry Williams", first:"Perry", email:"pwilliams@mismo.org"};
 const PR_AMY = {name:"Amy Moses", first:"Amy", email:"amoses@mismo.org"};
@@ -23,7 +30,21 @@ const PR_BRIAN = {name:"Brian Vieaux", title:"President", company:"MISMO"};
 const PR_SEND_FLOW = "https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com:443/powerautomate/automations/direct/cu/25/workflows/2a698d168d65408bbb85bcaae6ed3dcf/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=eNy4l66TJLJEvGIksG63ppyy8SES_GqXFWbWD3B_pm0";
 const PR_TYPE = {cfp:"Call for Participation", comment:"Public Comment", release:"Release"};
 const PR_STEPS = [["draft","First Draft"],["review","Perry's Review"],["source","Quote Source: Amy"],["request","Quote Request"],["quote","Approved Quote"],["final","Final Approval"],["out","Distribution"]];
-const PR = {sel:null, feed:null, feedErr:"", feedAt:0, cat:null, catAt:0, writing:{}, q:"", showDone:false};
+const PR = {sel:null, feed:null, feedErr:"", feedAt:0, cat:null, catAt:0, writing:{}, q:"", showDone:false, view:""};
+/* CN-010: the MMS's own fields about when a release is written and when it goes out (never part of the facts) */
+const PR_FLAGS = ["pressRelease","draftNow","readyToPost","readyAt","stage","inComment"];
+const prNoRelease = a=>!!a && (a.pressRelease===false || a.type==="comment");
+/* drafted ahead and held: the work is still on its way to Release */
+function prHeld(r){ const a=(r&&r.ann)||{}; return a.draftNow===true && a.readyToPost!==true; }
+function prToPost(r){ const a=(r&&r.ann)||{}; return a.readyToPost===true; }
+function prPosted(r){ const o=(r&&r.out)||{}; return !!(o.vanessaAt || o.mbaAt); }
+function prFactsSig(a){ const x=Object.assign({}, a||{}); PR_FLAGS.forEach(k=>delete x[k]); return JSON.stringify(x); }
+function prTags(r){ const a=(r&&r.ann)||{}; let h="";
+  if(prHeld(r)) h+='<span class="pr-tag dn" title="The work is still on its way to Release. Draft it, get the quote and final approval, then hold it.">Draft Now</span>';
+  else if(prToPost(r)) h+='<span class="pr-tag rp" title="The work has reached Release'+(a.readyAt?' ('+esc(fS(a.readyAt))+')':'')+'. The finished release can go out.">Ready to Post</span>';
+  if(a.inComment===true) h+='<span class="pr-tag oc" title="The work is still out for public comment in the MMS. The release must not say so.">Out for Comment'+(a.commentCloses?' · closes '+esc(fS(a.commentCloses)):'')+'</span>';
+  return h; }
+function prHoldStop(r){ if(r && prHeld(r)){ toast("This release is held: it goes out once the MMS marks it Ready to Post.", 5000); return true; } return false; }
 
 function prAll(){ return vals("releases").filter(r=>!r.archived); }
 function prGet(id){ return (S.releases||{})[id]||null; }
@@ -76,31 +97,42 @@ async function prSync(){
   for(const a of feed.list){
     if(!a || !a.id) continue;
     const id=prIdFor(a.id), cur=prGet(id);
+    if(prNoRelease(a)) continue;   /* CN-010: no press release (or LinkedIn post) for a comment period */
     if(!cur){
       await put("releases", id, {annId:a.id, ann:a, cat:prCatFor(a,cat), type:a.type||"release", status:"draft", createdAt:new Date().toISOString(),
         log:[{at:new Date().toISOString(), by:"MISMO Media", what:"Started from the MMS announcement"}]});
       await prWrite(id, true);
-    } else if(!cur.archived && cur.status!=="final" && JSON.stringify(cur.ann)!==JSON.stringify(a)){
-      /* the MMS adds fields over time (never renames): keep the latest facts, say so on the release */
-      await prSave(id, {ann:a, cat:prCatFor(a,cat)||cur.cat||null, annChangedAt:new Date().toISOString()}, "The MMS updated the facts");
+    } else if(!cur.archived && JSON.stringify(cur.ann)!==JSON.stringify(a)){
+      /* the MMS adds fields over time (never renames): keep the latest facts, say so on the release. The draft-ahead
+         fields (Draft Now, Ready to Post, Out for Comment) follow the feed even after final approval. */
+      const part={ann:a}, said=[], was=cur.ann||{};
+      if(a.readyToPost===true && was.readyToPost!==true){ part.readyAt=a.readyAt||T(); if(was.draftNow===true) said.push("Ready to post: the MMS moved the work to Release"+(cur.status==="final"?". The finished release can go out now":". Finish it, then it can go out")); }
+      if(a.inComment!==true && was.inComment===true) said.push("No longer out for comment in the MMS");
+      if(prFactsSig(was)!==prFactsSig(a)){ part.cat=prCatFor(a,cat)||cur.cat||null; if(cur.status!=="final") part.annChangedAt=new Date().toISOString(); said.push(cur.status==="final"?"The MMS updated the facts after final approval":"The MMS updated the facts"); }
+      await prSave(id, part, said.join(". "));
     } else if(cur && !cur.archived && !(cur.draft&&cur.draft.body) && !PR.writing[id] && !cur.draftErrAt) await prWrite(id, true);
   }
+  /* CN-010: releases started for a comment period before the change are put aside (archived, never deleted) */
+  for(const r of prAll()) if(r.type==="comment" && r.status!=="final")
+    await prSave(r.id, {archived:true, archivedAt:new Date().toISOString()}, "Archived: MISMO makes no press release or LinkedIn post for a comment period (CN-010)");
   await prApplyApprovals();
 }
 
 /* ---------- Claude's writing ---------- */
 const PR_STYLE = `You write press releases for MISMO, the real estate finance industry's standards organization (a wholly owned subsidiary of the Mortgage Bankers Association). Match the house style of MISMO's published releases exactly. American spelling. Plain, factual, confident; no hype, no exclamation marks.
 
+NEVER MENTION PUBLIC COMMENT. MISMO issues no press release for a comment period. A release is often written ahead, while the work is still out for public comment, and goes out only once the work reaches the status given: write it as announcing that Final or Candidate Recommendation status, never say the work is going out for comment, is in or was in a comment period, or invite comments, and never give comment dates.
+
 NEVER INVENT FACTS. Use only the facts given in the material (the MMS announcement and, when present, the work-product catalog entry). If something the structure calls for is not in the material, write a clearly marked gap in square brackets, e.g. [KICKOFF DATE AND TIME NEEDED] or [WHO SHOULD DOWNLOAD IT: CONFIRM], instead of making it up. Spell every person's name and company exactly as the leaders list gives it. Brian Vieaux is spelled V-i-e-a-u-x.
 
 STRUCTURE (one paragraph per item, blank line between paragraphs):
 1. Headline: "MISMO [verb] [work product] [benefit]" (e.g. "MISMO Publishes AVM Accuracy Testing Guidance for Lenders", "MISMO Enhances SMART Doc® Implementation Guide to Support Secure, Digital Mortgage Processes", "MISMO Launches Workgroup to Standardize eNote Bailee Agreement"). Title case.
-2. First paragraph begins exactly: "WASHINGTON, D.C. ([DATE]) – MISMO®, the real estate finance industry's standards organization, today announced…" (keep [DATE] as written; it is filled in when the release goes out). For a call for participation: "…today issued a call for participation in…". For public comment: "…today announced that it is seeking public comment on…" and give the comment period from the dates provided.
+2. First paragraph begins exactly: "WASHINGTON, D.C. ([DATE]) – MISMO®, the real estate finance industry's standards organization, today announced…" (keep [DATE] as written; it is filled in when the release goes out). For a call for participation: "…today issued a call for participation in…".
 3. What it is.
 4. Why it matters.
 5. The quote: a line that is exactly [QUOTE] on its own. Never write a quote yourself.
 6. Who built it: "The [work product] was developed by MISMO's [workgroup]… The [Workgroup/Community of Practice] is led by co-chairs [Name, Company], [Name, Company]; and vice-chair [Name, Company]." Use the leaders list positions; omit what is not given.
-7. Status: e.g. "The [work product] has achieved "Candidate Recommendation" status, indicating that the work product has achieved broad industry consensus and is ready for implementation." or Final status ("…has been thoroughly reviewed, and is ready for industry use."), then "MISMO encourages [who] to download and review the [work product]." Use the release status given. For public comment, say how to comment and the closing date instead.
+7. Status: e.g. "The [work product] has achieved "Candidate Recommendation" status, indicating that the work product has achieved broad industry consensus and is ready for implementation." or Final status ("…has been thoroughly reviewed, and is ready for industry use."), then "MISMO encourages [who] to download and review the [work product]." Use the release status given.
 8. Close, exactly: "MISMO's work to solve key industry challenges is made possible through the support of its members, champions, sponsors, and lenders (via the Innovation Investment Fee). To learn more about MISMO and opportunities to participate, visit MISMO.org."
 
 A CALL FOR PARTICIPATION also gives: the kickoff date and time (only if given), who should participate as a bulleted list (lines starting "- "), that MISMO members can join through MISMO Connect, and the sponsor ask ("This MISMO workgroup is seeking a sponsor. Organizations interested in sponsoring this workgroup can contact info@mismo.org.").
@@ -122,6 +154,8 @@ MISMO members can join the workgroup through MISMO Connect. This MISMO workgroup
 
 function prFacts(r){
   const a=Object.assign({}, r.ann||{}); delete a.mmsUrl;   /* the MMS link is for staff, not the release */
+  /* the draft-ahead fields and comment dates are about timing, not facts for the release (CN-010) */
+  PR_FLAGS.concat(["commentOpens","commentCloses"]).forEach(k=>delete a[k]);
   if(prIsUrl(a.publicName)){ a.websitePage=String(a.publicName).trim(); delete a.publicName; }   /* an address, not a name */
   return "MMS ANNOUNCEMENT (the only source of facts):\n"+JSON.stringify(a,null,1)+(r.cat?"\n\nWORK-PRODUCT CATALOG ENTRY:\n"+JSON.stringify(r.cat,null,1):"");
 }
@@ -213,6 +247,9 @@ function prChecks(r){
     if(p.company && text.slice(i, i+p.name.length+160).indexOf(p.company)<0 && text.indexOf(p.company)<0) out.push({level:"warn", msg:p.name+" is named, but not their company as the MMS has it ("+p.company+")."}); });
   ((r.ann&&r.ann.leaders)||[]).forEach(l=>{ if(l && l.name && /chair/i.test(l.position||"") && text.indexOf(l.name)<0) out.push({level:"warn", msg:l.name+" ("+(l.position||"leader")+", "+(l.company||"")+") isn't named in the release."}); });
   PR_UK.forEach(([uk,us])=>{ const re=new RegExp("\\b"+uk+"(s|d|ing)?\\b","i"); const m=text.match(re); if(m) out.push({level:"warn", msg:'"'+m[0]+'" is British spelling; use "'+us+(m[1]||"")+'".'}); });
+  /* CN-010: a release never says the work is going out for, or is in, public comment */
+  const cm=text.match(/[^.\n]*\b(?:comment(?:s|ing|ed)?|comment period)\b[^.\n]*/i);
+  if(cm && r.type!=="cfp") out.push({level:"bad", kind:"comment", msg:'The release mentions comments ("'+cm[0].trim().slice(0,90)+'"). It announces the '+(((r.ann||{}).releaseStatus)||"Final or Candidate Recommendation")+' only: take any mention of public comment out.'});
   const gaps=(text.match(/\[[A-Z][^\]]{1,80}\]/g)||[]).filter(g=>g!=="[QUOTE]" && g!=="[DATE]");
   [...new Set(gaps)].forEach(g=>out.push({level:"warn", msg:"Still to fill in: "+g}));
   return out;
@@ -326,7 +363,7 @@ function prConnectHtml(r){
 }
 function prSettings(){ const s=(S.settings||{}).press||{}; return Object.assign({}, s, {brittney:String(s.brittney||"").trim()||PR_BRITTNEY.email}); }
 async function prSendVanessa(id){
-  const r=prGet(id); if(!r) return;
+  const r=prGet(id); if(!r || prHoldStop(r)) return;
   try{ toast("Sending to Vanessa as Perry…", 30000);
     await prSendAs({kind:"connect", to:PR_VANESSA.email, ccAmy:false, subject:"For MISMO Connect: "+prTitle(r),
       html:prEmailShell('<p>Hi Vanessa,</p><p>Here is the final press release for MISMO Connect, ready to post'+(r.releaseDate?' on '+esc(prLongDate(r.releaseDate)):'')+'. The branded version is below; the HTML is also attached in MISMO Media (Press Releases &rsaquo; Copy Connect HTML).</p><p>Thanks,<br>Perry</p>'+
@@ -336,7 +373,7 @@ async function prSendVanessa(id){
   renderPress();
 }
 async function prSendBrittney(id){
-  const r=prGet(id), to=String(prSettings().brittney||"").trim(); if(!r) return;
+  const r=prGet(id), to=String(prSettings().brittney||"").trim(); if(!r || prHoldStop(r)) return;
   if(!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(to)){ toast("Add Brittney's email address under MBA Newsroom first.", 5000); return; }
   try{ toast("Sending to Brittney as Perry…", 30000);
     await prSendAs({kind:"newsroom", to, ccAmy:false, subject:"MISMO press release for the MBA newsroom: "+prTitle(r),
@@ -346,14 +383,14 @@ async function prSendBrittney(id){
   renderPress();
 }
 async function prOfferMatters(id){
-  const r=prGet(id); if(!r) return; const o=r.out||{};
+  const r=prGet(id); if(!r || prHoldStop(r)) return; const o=r.out||{};
   const nid="n-"+r.id; const cur=(S.news||{})[nid]||{};
   await put("news", nid, Object.assign({}, cur, {id:nid, headline:prTitle(r), outlet:"MISMO Press Release", date:r.releaseDate||T(), kind:"press", url:o.link||"https://www.mismo.org/about-mismo/news", notes:"From Press Releases ("+prTitle(r)+").", fromRelease:r.id}));
   await prSave(id, {out:Object.assign({}, o, {mattersAt:new Date().toISOString(), mattersNewsId:nid})}, "Offered to MISMO Matters (In the News)");
   toast("Added to In the News for that month's MISMO Matters.", 4000); renderPress();
 }
 async function prAskLinkedin(id){
-  const r=prGet(id); if(!r) return; const o=r.out||{}; const rid="rq-"+r.id;
+  const r=prGet(id); if(!r || prHoldStop(r)) return; const o=r.out||{}; const rid="rq-"+r.id;
   await put("requests", rid, Object.assign({}, (S.requests||{})[rid]||{}, {id:rid, title:"LinkedIn post: "+prTitle(r), type:"linkedin", status:"new", n:PR_OWNER.name, e:PR_OWNER.email, role:"MISMO Staff",
     neededBy:r.releaseDate||T(), at:new Date().toISOString(), details:"Please share MISMO's press release on the MISMO LinkedIn page"+(o.link?": "+o.link:".")+"\n\n"+prText(r), fromRelease:r.id}));
   await prSave(id, {out:Object.assign({}, o, {linkedinAt:new Date().toISOString(), linkedinReq:rid})}, "Asked for a LinkedIn post (Requests)");
@@ -371,33 +408,40 @@ function prEvents(){
 
 /* ---------- the page ---------- */
 const PR_STAT = {draft:["Perry's Review","review"], source:["With Amy","wait"], request:["Quote Request","in"], quote:["Ready for Final","in"], final:["Approved","ok"]};
-function prChip(r){ if(PR.writing[r.id]) return '<span class="chip wait">Writing…</span>'; if(prLate(r)) return '<span class="chip changes">Follow Up</span>'; if(r.status==="source" && r.amy && r.amy.decision==="edits") return '<span class="chip changes">Amy Asked for Changes</span>'; return chip(PR_STAT, r.status||"draft"); }
+function prChip(r){ if(PR.writing[r.id]) return '<span class="chip wait">Writing…</span>'; if(prLate(r)) return '<span class="chip changes">Follow Up</span>'; if(r.status==="source" && r.amy && r.amy.decision==="edits") return '<span class="chip changes">Amy Asked for Changes</span>'; if(r.status==="final" && prHeld(r)) return '<span class="chip wait">Finished, Held</span>'; return chip(PR_STAT, r.status||"draft"); }
 function renderPress(){
   const el=$("#page-press"); if(!el) return;
   const all=prAll().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||""))), feed=PR.feed;
   const n=k=>all.filter(r=>(r.status||"draft")===k).length, late=all.filter(prLate).length;
   const mo=T().slice(0,7), outMo=all.filter(r=>r.status==="final" && String((r.final||{}).at||"").slice(0,7)===mo).length;
   if(PR.sel && !prGet(PR.sel)) PR.sel=null;
-  const q=PR.q.trim().toLowerCase(), list=all.filter(r=>(PR.showDone || r.status!=="final" || r.id===PR.sel) && (!q || [prTitle(r), r.ann&&r.ann.workgroup, r.ann&&r.ann.name].join(" ").toLowerCase().includes(q)));
+  /* CN-010: Draft Now (drafted ahead, held) and Ready to Post (the work reached Release, not posted yet) */
+  const dnAll=all.filter(prHeld), rpAll=all.filter(r=>prToPost(r) && !prPosted(r));
+  const inView=r=>PR.view==="draftnow"?prHeld(r):PR.view==="ready"?(prToPost(r) && !prPosted(r)):(PR.showDone || r.status!=="final" || r.id===PR.sel || (prToPost(r) && !prPosted(r)));
+  const q=PR.q.trim().toLowerCase(), list=all.filter(r=>inView(r) && (!q || [prTitle(r), r.ann&&r.ann.workgroup, r.ann&&r.ann.name].join(" ").toLowerCase().includes(q)));
   const feedLine = PR.feedErr ? '<span class="pr-bad">Can\'t read the MMS announcements feed right now ('+esc(PR.feedErr)+').</span>' :
     feed ? 'MMS announcements feed: '+feed.list.length+' entr'+(feed.list.length===1?'y':'ies')+(feed.updated?', updated '+esc(hhWhen?hhWhen(feed.updated):feed.updated):'')+'. New entries start a release with a first draft.' : 'Reading the MMS announcements feed…';
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">Perry Williams &middot; Quote Sources Approved by Amy Moses</div><h1>Press Releases</h1><div class="sub">Every announcement from the MMS gets a first draft here. Perry edits it, Amy approves who is quoted, the quote request goes out as Perry, and the final release goes to MISMO Connect, the MBA newsroom, MISMO Matters and LinkedIn.</div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Perry Williams &middot; Quote Sources Approved by Amy Moses</div><h1>Press Releases</h1><div class="sub">Every release announcement from the MMS gets a first draft here. Perry edits it, Amy approves who is quoted, the quote request goes out as Perry, and the final release goes to MISMO Connect, the MBA newsroom, MISMO Matters and LinkedIn. <b>Draft Now</b> releases are finished and held while the work is still on its way; they go out once the MMS marks them <b>Ready to Post</b>. Comment periods get no release.</div></div>'+
       '<div class="tools"><button class="btn" type="button" id="pr-feed">Check the Feed Now</button><button class="btn" type="button" id="pr-mba">MBA Newsroom Contact</button></div></div>'+
     '<div class="band"><div class="tiles">'+
+      '<button type="button" class="tile pr-vt'+(PR.view==="draftnow"?" on":"")+'" data-prv="draftnow" aria-pressed="'+(PR.view==="draftnow")+'"><div class="v sky">'+dnAll.length+'</div><div class="k">Draft Now</div><div class="s">finish and hold'+(dnAll.filter(r=>r.status==="final").length?' · '+dnAll.filter(r=>r.status==="final").length+' held':'')+'</div></button>'+
+      '<button type="button" class="tile pr-vt'+(PR.view==="ready"?" on":"")+'" data-prv="ready" aria-pressed="'+(PR.view==="ready")+'"><div class="v'+(rpAll.length?" hot":"")+'">'+rpAll.length+'</div><div class="k">Ready to Post</div><div class="s">the work reached Release</div></button>'+
       '<div class="tile"><div class="v'+(n("draft")?" hot":"")+'">'+n("draft")+'</div><div class="k">Perry\'s Review</div><div class="s">first drafts to read over</div></div>'+
       '<div class="tile"><div class="v">'+n("source")+'</div><div class="k">With Amy</div><div class="s">who to quote</div></div>'+
       '<div class="tile"><div class="v'+(late?" hot":"")+'">'+n("request")+'</div><div class="k">Waiting on a Quote</div><div class="s">'+(late?late+" past 3 business days":"quote requests out")+'</div></div>'+
       '<div class="tile"><div class="v sky">'+n("quote")+'</div><div class="k">Ready for Final</div><div class="s">quote in, approval kept</div></div>'+
       '<div class="tile"><div class="v">'+outMo+'</div><div class="k">Approved This Month</div><div class="s">'+esc(MONL[+mo.slice(5)-1])+'</div></div>'+
     '</div><div class="pr-feedline">'+feedLine+'</div></div>'+
-    '<div class="card"><div class="ch"><h2>Releases</h2><span class="cnt">'+list.length+'</span><div class="r" style="align-items:center"><input type="search" class="plain" id="pr-q" placeholder="Search releases" value="'+esc(PR.q)+'" style="width:200px"><button class="btn sm" type="button" id="pr-done" aria-pressed="'+PR.showDone+'">'+(PR.showDone?"Hide":"Show")+' Approved</button></div></div>'+
+    '<div class="card"><div class="ch"><h2>'+(PR.view==="draftnow"?"Draft Now":PR.view==="ready"?"Ready to Post":"Releases")+'</h2><span class="cnt">'+list.length+'</span>'+(PR.view?'<button class="btn sm" type="button" id="pr-all">Show All Releases</button>':'')+'<div class="r" style="align-items:center"><input type="search" class="plain" id="pr-q" placeholder="Search releases" value="'+esc(PR.q)+'" style="width:200px"><button class="btn sm" type="button" id="pr-done" aria-pressed="'+PR.showDone+'">'+(PR.showDone?"Hide":"Show")+' Approved</button></div></div>'+
       (list.length?'<div class="tw"><table class="t"><thead><tr><th>Release</th><th>Type</th><th>Workgroup</th><th>Started</th><th>Status</th></tr></thead><tbody>'+
-        list.map(r=>'<tr class="click'+(r.id===PR.sel?" sel":"")+'" data-pr="'+esc(r.id)+'"><td><b>'+esc(prTitle(r))+'</b>'+(r.annChangedAt&&r.status!=="final"?'<span class="t2">The MMS updated the facts '+esc(fS(localDay(r.annChangedAt)))+'</span>':'')+'</td><td>'+esc(PR_TYPE[r.type]||"Release")+'</td><td>'+esc((r.ann&&r.ann.workgroup)||"")+'</td><td>'+esc(fS(localDay(r.createdAt)))+'</td><td>'+prChip(r)+'</td></tr>').join("")+'</tbody></table></div>'
+        list.map(r=>'<tr class="click'+(r.id===PR.sel?" sel":"")+'" data-pr="'+esc(r.id)+'"><td><b>'+esc(prTitle(r))+'</b>'+(prTags(r)?'<span class="pr-tags">'+prTags(r)+'</span>':'')+(r.annChangedAt&&r.status!=="final"?'<span class="t2">The MMS updated the facts '+esc(fS(localDay(r.annChangedAt)))+'</span>':'')+'</td><td>'+esc(PR_TYPE[r.type]||"Release")+'</td><td>'+esc((r.ann&&r.ann.workgroup)||"")+'</td><td>'+esc(fS(localDay(r.createdAt)))+'</td><td>'+prChip(r)+'</td></tr>').join("")+'</tbody></table></div>'
         :'<div class="empty"><b>No releases yet.</b> When the MMS adds an announcement to its feed (it checks every 30 minutes), a release starts here with Claude\'s first draft.</div>')+'</div>'+
     (PR.sel?prDetail(prGet(PR.sel)):'');
   $("#pr-feed",el).onclick=async()=>{ toast("Checking the MMS feed…", 20000); await prLoadFeed(true); if(LEADER) await prSync(); toast("Checked.", 2000); renderPress(); };
   $("#pr-mba",el).onclick=prOpenSettings;
   $("#pr-done",el).onclick=()=>{ PR.showDone=!PR.showDone; renderPress(); };
+  $$("[data-prv]",el).forEach(b=>b.onclick=()=>{ PR.view=PR.view===b.dataset.prv?"":b.dataset.prv; renderPress(); });
+  const pa=$("#pr-all",el); if(pa) pa.onclick=()=>{ PR.view=""; renderPress(); };
   const qi=$("#pr-q",el); qi.oninput=()=>{ PR.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderPress(); const x=$("#pr-q"); if(x){ x.focus(); x.setSelectionRange(x.value.length,x.value.length); } },250); };
   $$("[data-pr]",el).forEach(t=>t.onclick=()=>{ PR.sel=t.dataset.pr; renderPress(); const d=$("#pr-detail"); if(d) d.scrollIntoView({behavior:"smooth",block:"start"}); });
   if(PR.sel) prWire(el, prGet(PR.sel));
@@ -417,12 +461,13 @@ function prDetail(r){
   const st=k=>{ const i=PR_STEPS.findIndex(s=>s[0]===k); return i<si?"done":i===si?"now":"later"; };
   const onlyPerry=perry?'':'<div class="pr-note">Perry does this step from his own sign-in.</div>';
   const checks=prChecks(r);
-  const facts=[["Type",PR_TYPE[r.type]||"Release"],["Work product",prName(a)],["Workgroup",[a.workgroup,a.groupType].filter(Boolean).join(" · ")],["Classification",a.classification],["Release status",a.releaseStatus],["Version",a.version],
+  const facts=[["Type",PR_TYPE[r.type]||"Release"],["Work product",prName(a)],["Workgroup",[a.workgroup,a.groupType].filter(Boolean).join(" · ")],["Classification",a.classification],["Release status",a.releaseStatus],["MMS step",a.stage],["Ready to post",a.readyToPost===true?(a.readyAt?fS(a.readyAt):"Yes"):a.draftNow===true?"Not yet: Draft Now (finish and hold)":""],["Version",a.version],
     ["Comment period",(a.commentOpens||a.commentCloses)?(fS(a.commentOpens)+" – "+fS(a.commentCloses)):""],["License",a.license],["Available to",a.availableTo],["Members",a.memberUrl],["Non-members",a.nonMemberUrl],["Facilitator",a.facilitator],["Summary",a.summary]].filter(x=>x[1]);
   const leaders=(a.leaders||[]).map(l=>'<li><b>'+esc(l.name)+'</b>'+(l.position?', '+esc(l.position):'')+(l.company?', '+esc(l.company):'')+'</li>').join("");
   const d=r.draft||{}, s=r.source||{}, q=r.request||{}, qt=r.quote||{}, o=r.out||{};
+  const held=prHeld(r), go=!!r.final && !held;   /* CN-010: a Draft Now release is finished and held */
   const sug=(r.suggestions||[]);
-  const html='<div class="card pr-detail" id="pr-detail"><div class="ch"><h2>'+esc(prTitle(r))+'</h2>'+prChip(r)+'<div class="r"><button class="btn sm" type="button" id="pr-close">Close</button></div></div>'+
+  const html='<div class="card pr-detail" id="pr-detail"><div class="ch"><h2>'+esc(prTitle(r))+'</h2>'+prChip(r)+prTags(r)+'<div class="r"><button class="btn sm" type="button" id="pr-close">Close</button></div></div>'+
     '<ol class="pr-steps">'+PR_STEPS.map(([k,l],i)=>'<li class="'+st(k)+'"><span>'+(i+1)+'</span>'+esc(l)+'</li>').join("")+'</ol>'+
     '<div class="pr-grid">'+
     '<div class="pr-main">'+
@@ -463,13 +508,13 @@ function prDetail(r){
         (r.final?'<div class="pr-note ok"><b>Approved by '+esc(r.final.by||"Perry")+'</b> · '+esc(fS(localDay(r.final.at)))+'</div>':'')+
         '<div class="pr-btns"><button class="btn pri" type="button" id="pr-final"'+(perry&&!r.final&&prReady(r).every(x=>x[0])?"":" disabled")+'>Give Final Approval</button>'+(r.final&&perry?'<button class="btn" type="button" id="pr-unfinal">Reopen for Changes</button>':'')+'</div>'+onlyPerry)+
       prSec(6,"Distribution",st("out"),
-        (r.final?'':'<div class="pr-note">Opens after Perry\'s final approval.</div>')+
+        (held?'<div class="pr-note">'+(r.final?'<b>Finished and held.</b> ':'')+'Draft Now: the work is still on its way to Release in the MMS'+(a.stage?' ('+esc(a.stage)+')':'')+'. This release goes out once the MMS marks it <b>Ready to Post</b>; the same release moves here, nothing is started again.</div>':r.final?'':'<div class="pr-note">Opens after Perry\'s final approval.</div>')+
         '<label class="pr-l">Link to the published release (MBA newsroom), once it\'s up<input type="url" id="pr-link" value="'+esc(o.link||"")+'"></label>'+
         '<div class="pr-dist">'+
-          prDist("MISMO Connect post","Branded HTML post, sent to Vanessa Rios to post on MISMO Connect.",o.vanessaAt,'<button class="btn" type="button" id="pr-chtml">Copy Connect HTML</button><button class="btn pri" type="button" id="pr-van"'+(perry&&r.final?"":" disabled")+'>Send to Vanessa as Perry</button>')+
-          prDist("MBA newsroom","A copy for Brittney Prophete at MBA ("+prSettings().brittney+"). Her edits stay on her side.",o.mbaAt,'<button class="btn pri" type="button" id="pr-brit"'+(perry&&r.final?"":" disabled")+'>Send to Brittney as Perry</button>')+
-          prDist("MISMO Matters","Adds the release to In the News for that month's edition.",o.mattersAt,'<button class="btn" type="button" id="pr-mat"'+(r.final?"":" disabled")+'>'+(o.mattersAt?"Update in MISMO Matters":"Offer to MISMO Matters")+'</button>')+
-          prDist("LinkedIn","Adds a LinkedIn post request to Requests.",o.linkedinAt,'<button class="btn" type="button" id="pr-li"'+(r.final?"":" disabled")+'>'+(o.linkedinAt?"Request Again":"Request a LinkedIn Post")+'</button>')+
+          prDist("MISMO Connect post","Branded HTML post, sent to Vanessa Rios to post on MISMO Connect.",o.vanessaAt,'<button class="btn" type="button" id="pr-chtml">Copy Connect HTML</button><button class="btn pri" type="button" id="pr-van"'+(perry&&go?"":" disabled")+'>Send to Vanessa as Perry</button>')+
+          prDist("MBA newsroom","A copy for Brittney Prophete at MBA ("+prSettings().brittney+"). Her edits stay on her side.",o.mbaAt,'<button class="btn pri" type="button" id="pr-brit"'+(perry&&go?"":" disabled")+'>Send to Brittney as Perry</button>')+
+          prDist("MISMO Matters","Adds the release to In the News for that month's edition.",o.mattersAt,'<button class="btn" type="button" id="pr-mat"'+(go?"":" disabled")+'>'+(o.mattersAt?"Update in MISMO Matters":"Offer to MISMO Matters")+'</button>')+
+          prDist("LinkedIn","Adds a LinkedIn post request to Requests.",o.linkedinAt,'<button class="btn" type="button" id="pr-li"'+(go?"":" disabled")+'>'+(o.linkedinAt?"Request Again":"Request a LinkedIn Post")+'</button>')+
         '</div>'+onlyPerry)+
     '</div>'+
     '<div class="pr-side">'+
@@ -491,7 +536,8 @@ function prReady(r){
     [!!(qt.text && qt.approval && qt.approvalAt), "The quoted person's written approval is kept with the release"+(qt.name?" ("+qt.name+")":"")],
     [!!r.releaseDate, "Release date set"],
     [!/\[[A-Z][^\]]{1,80}\]/.test(text), "No [GAPS] left to fill in"],
-    [!checks.some(c=>c.level==="bad"), "Names and companies match the MMS leaders list"]];
+    [!checks.some(c=>c.level==="bad" && c.kind!=="comment"), "Names and companies match the MMS leaders list"],
+    [!checks.some(c=>c.kind==="comment"), "Says nothing about public comment"]];
 }
 function prWire(el, r){
   if(!r) return; const id=r.id, v=s=>{ const x=$(s,el); return x?x.value:""; };
@@ -510,7 +556,7 @@ function prWire(el, r){
   $("#pr-qsave",el).onclick=async()=>{ await prSave(id, {request:Object.assign({}, r.request||{}, reqFrom())}, "Edited the quote request"); toast("Saved"); renderPress(); };
   $("#pr-qsend",el).onclick=async()=>{ await prSave(id, {request:Object.assign({}, r.request||{}, reqFrom())}, ""); await prSendRequest(id); };
   $("#pr-tput",el).onclick=()=>prPutQuote(id, {text:v("#pr-tt"), name:v("#pr-tn"), title:v("#pr-ti"), company:v("#pr-tc"), approval:v("#pr-ta"), approvalAt:v("#pr-td")});
-  const fin=$("#pr-final",el); if(fin) fin.onclick=async()=>{ await saveDraft("Saved the draft before final approval"); const r2=prGet(id); if(!prReady(r2).every(x=>x[0])){ toast("Not ready yet: see the list above.", 5000); renderPress(); return; } await prSave(id, {status:"final", final:{at:new Date().toISOString(), by:prWho()}}, "Perry gave final approval"); toast("Approved. Distribution is open.", 4000); renderPress(); };
+  const fin=$("#pr-final",el); if(fin) fin.onclick=async()=>{ await saveDraft("Saved the draft before final approval"); const r2=prGet(id); if(!prReady(r2).every(x=>x[0])){ toast("Not ready yet: see the list above.", 5000); renderPress(); return; } await prSave(id, {status:"final", final:{at:new Date().toISOString(), by:prWho()}}, "Perry gave final approval"); toast(prHeld(prGet(id))?"Approved and held. It goes out once the MMS marks it Ready to Post.":"Approved. Distribution is open.", 5000); renderPress(); };
   const unf=$("#pr-unfinal",el); if(unf) unf.onclick=async()=>{ await prSave(id, {status:"quote", final:null}, "Reopened for changes"); renderPress(); };
   const link=$("#pr-link",el); if(link) link.onchange=async()=>{ await prSave(id, {out:Object.assign({}, r.out||{}, {link:link.value.trim()})}, "Added the published link"); };
   $("#pr-chtml",el).onclick=()=>copyText(prConnectHtml(prGet(id)),"The MISMO Connect post (HTML)");
