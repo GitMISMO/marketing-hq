@@ -35,7 +35,7 @@ function linkedinHero(all){
   const days=[0,1,2,3,4,5,6].map(i=>{ const d=add(t,i); const here=all.filter(x=>x.date===d);
     return '<div class="wkd'+(d===t?" now":"")+'"><span>'+esc(DOW[P(d).getDay()])+'</span><b>'+P(d).getDate()+'</b><div class="wkdots">'+here.map(x=>'<i class="'+(x.status==="done"?"ok":(x._ep?"live":(x.status==="staged"?"st":"")))+'" title="'+esc(x.title||"")+'"></i>').join("")+'</div></div>'; }).join("");
   let card;
-  if(!p) card='<div class="lipost empty-post"><div class="lip-b">Nothing is lined up yet. Press <b>+ New Post</b>, or add a Mic\'d Up episode and its Monday LinkedIn Live appears here by itself.</div></div>';
+  if(!p) card='<div class="lipost empty-post"><div class="lip-b">Nothing is lined up yet. Press <b>+ New Post</b>, or add a Mic\'d Up episode and its Tuesday LinkedIn Live appears here by itself.</div></div>';
   else{
     const e=p._ep?S.episodes[p._ep]:null, k=p._ep?kitOf(p._ep)||{}:null;
     const text=liPostText(p); const st=k?(k.liStatus||"draft"):null;

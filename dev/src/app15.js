@@ -43,7 +43,7 @@ function hmNodes(){
   N.push({id:"brand", col:1, go:"branding", k:"other", t:"Rebranding & Orders", big:old, unit:"still old branding", next:ords?hmPl(ords,"order")+" at risk":br.length?(br.length-old)+" of "+br.length+" updated":"Track what still needs the new look", st:ords?"late":old?"soon":"ok", pct:br.length?(br.length-old)/br.length:0});
   /* goes out */
   const li=ev.filter(e=>e.k==="linkedin" && !e.done && e.date>=t && e.date<=wk).length;
-  N.push({id:"linkedin", col:2, go:"linkedin", k:"linkedin", t:"LinkedIn", big:li, unit:"this week", next:late("linkedin")?hmPl(late("linkedin"),"post")+" past due":"Posts and Monday LinkedIn Live", st:late("linkedin")?"late":"ok"});
+  N.push({id:"linkedin", col:2, go:"linkedin", k:"linkedin", t:"LinkedIn", big:li, unit:"this week", next:late("linkedin")?hmPl(late("linkedin"),"post")+" past due":"Posts and Tuesday LinkedIn Live", st:late("linkedin")?"late":"ok"});
   const yt=vals("episodes").filter(e=>owes(e) && e.airDate && e.airDate<=t && !e.youtubeDone).length;
   N.push({id:"youtube", col:2, go:"youtube", k:"youtube", t:"YouTube", big:yt, unit:"to upload", next:yt?"Open the YouTube Kit":"All caught up", st:yt?"late":"ok"});
   const mc=vals("pieces").filter(p=>p.channel==="mailchimp" && pOpen(p) && p.date && p.date>=t && p.date<=add(t,14)).length;

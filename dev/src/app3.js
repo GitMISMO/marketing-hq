@@ -15,22 +15,22 @@ function renderMicdup(){
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td>'+(MU_PAUSED.spotify?'':'<td></td>')+'</tr>';
     const ed=editionFor(f);
     return '<tr class="click'+(past&&e.youtubeDone&&liClosed(e)?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
-      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td>'+(MU_PAUSED.spotify?'':'<td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td>')+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Monday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
+      '<td class="ck">'+tk(isRecorded(e), f<=add(t,7), e.recordDate?"Recorded "+fS(e.recordDate):"Not recorded yet")+'</td><td class="ck">'+tk(e.captions, past, "Captions proofed and uploaded")+'</td>'+(MU_PAUSED.spotify?'':'<td class="ck">'+tk(e.spotifyDone, past, "On Spotify Friday 6:30 AM")+'</td>')+'</td><td class="ck">'+tk(e.youtubeDone, past, "On YouTube Friday afternoon")+'</td><td class="ck">'+tk(e.linkedinDone, liDate(e)<t, "MISMO LinkedIn Live Tuesday "+fS(liDate(e)))+'</td><td class="ck">'+tk(e.websiteDone, false, "On the website's episode list")+'</td><td>'+(ed?esc(MONL[+ed.month.slice(5)-1]):"—")+'</td></tr>';
   }).join("");
   const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(mdPlain(e.notes))+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn'+(MU_PAUSED.spotify?'':' and Spotify (6:30 AM)')+', on YouTube that afternoon, MISMO\'s LinkedIn Live Monday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn'+(MU_PAUSED.spotify?'':' and Spotify (6:30 AM)')+', on YouTube that afternoon, MISMO\'s LinkedIn Live Tuesday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
     '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 8:30 AM ET</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 8:30 AM ET</div></button>'+
       '<div class="tile"><div class="v'+(notRec.length?" hot":"")+'">'+notRec.length+'</div><div class="k">Not Recorded Yet</div><div class="s">running in the next two weeks</div></div>'+
       '<div class="tile"><div class="v'+(ytDue.length?" hot":"")+'">'+ytDue.length+'</div><div class="k">Waiting for YouTube</div><div class="s">aired, not uploaded</div></div>'+
-      '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Monday after each episode</div></div>'+
+      '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Tuesday after each episode</div></div>'+
       '<div class="tile"><div class="v'+(webMissing.length?" hot":"")+'">'+webMissing.length+'</div><div class="k">Missing from Website</div><div class="s">on YouTube, not on the site\'s list</div></div>'+
       '<div class="tile"><div class="v">'+eps.length+'</div><div class="k">Episodes Logged</div><div class="s">'+(eps[0]?"latest: Ep "+esc(eps[0].num):"")+'</div></div>'+
     '</div></div>'+
     '<div class="flow"><div class="st"><div class="when">1–2 Weeks Ahead</div><b>Recorded</b><small>Brian records with the guest in Riverside</small></div>'+
       '<div class="st"><div class="when">Friday · 8:30 AM ET</div><b>Live</b><small>LinkedIn Live on Brian\'s profile'+(MU_PAUSED.spotify?'':'; Spotify at 6:30 AM')+'</small></div>'+
       '<div class="st"><div class="when">Friday Afternoon</div><b>YouTube</b><small>Upload with Brian\'s description and proofed captions</small></div>'+
-      '<div class="st"><div class="when">Monday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
+      '<div class="st"><div class="when">Tuesday · 1:00 PM ET</div><b>MISMO LinkedIn Live</b><small>Streamed from Riverside to MISMO\'s page, once Amy approves the wording</small></div>'+
       '<div class="st"><div class="when">Next MISMO Matters</div><b>Mic\'d Up Section</b><small>Listed automatically once it\'s on YouTube</small></div></div>'+
     kitCardHtml()+
     '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Recorded · Captions · '+(MU_PAUSED.spotify?'':'Spotify · ')+'YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck">Recorded</th><th class="ck">Captions</th>'+(MU_PAUSED.spotify?'':'<th class="ck">Spotify</th>')+'<th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
@@ -45,7 +45,7 @@ function isRecorded(e){ return !!(e.recordDate && e.recordDate<=T()); }
 function newEpisode(fri){
   const season = Math.max(1,...vals("episodes").map(e=>+e.season||1));
   const max = Math.max(0,...vals("episodes").filter(e=>(+e.season||1)===season).map(e=>+e.num||0));
-  openEpisode(null, {num:max+1, season:String(season), airDate:fri, linkedinDate:add(fri,3)});
+  openEpisode(null, {num:max+1, season:String(season), airDate:fri, linkedinDate:add(fri,4)});
 }
 function openEpisode(id, seed){
   const e = id ? Object.assign({}, S.episodes[id]) : Object.assign({}, seed||{});
@@ -78,11 +78,11 @@ function openEpisode(id, seed){
     {k:"captions",label:"Captions uploaded and names proofed (MISMO spelled right, no burned-in captions)",type:"cb",wide:true},
     {k:"youtubeDone",label:"Posted to YouTube",type:"cb"},
     {k:"youtubeUrl",label:"YouTube Link",type:"url",ph:"https://www.youtube.com/watch?v=…"},
-    {sec:"MISMO LinkedIn Live · Monday 1:00 PM ET"},
+    {sec:"MISMO LinkedIn Live · Tuesday 1:00 PM ET"},
     {k:"_cx",type:"html",html:()=>id?cxBox("ep",id,"LinkedIn Post"):""},
-    {k:"linkedinDate",label:"LinkedIn Post Date",type:"date",hint:"The Monday after the episode"},
+    {k:"linkedinDate",label:"LinkedIn Post Date",type:"date",hint:"The Tuesday after the episode"},
     {k:"linkedinTime",label:"Post Time",ph:"e.g. 9:00 AM"},
-    {k:"linkedinAuto",label:"Stage it: post on the MISMO page automatically Monday (links to YouTube)",type:"cb",wide:true},
+    {k:"linkedinAuto",label:"Stage it: post on the MISMO page automatically Tuesday (links to YouTube)",type:"cb",wide:true},
     {k:"linkedinDone",label:"Posted on LinkedIn",type:"cb"},
     {k:"linkedinUrl",label:"LinkedIn Post Link",type:"url"},
     {k:"linkedinCopy",label:"LinkedIn Post",type:"textarea",rows:7,ph:"Written from Brian's description. Ends with the YouTube link."},
@@ -97,7 +97,7 @@ function openEpisode(id, seed){
   ];
   const nid = id || uid("ep");
   openPane({eye:"MISMO Mic'd Up", title: e.num?(epWord(e)+(e.title?": "+e.title:"")):"New Episode", fields, data:e,
-    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,3); const sp=sbRead($("#pane-body"), e); if(sp) Object.assign(v, sp); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); sbSoon(); },
+    save:async v=>{ if(!v.linkedinDate && v.airDate) v.linkedinDate=add(v.airDate,4); const sp=sbRead($("#pane-body"), e); if(sp) Object.assign(v, sp); const r=Object.assign({},e,v); if(r.linkedinUrl && !r.linkedinDone && liDate(r) && liDate(r)<=T()) r.linkedinDone=true; await put("episodes",nid,r); sbSoon(); },
     del: id ? async()=>remove("episodes",id) : null,
     after:b=>{ wireCx(b); wireGuestPane(b, id); sbWirePicker(b, e, ""); const d=$("#ep-draft",b); if(d) d.onclick=()=>draftLinkedIn(b);
       const pa=$("#ep-paste",b); if(pa) pa.addEventListener("input",()=>{ const txt=pa.value; const urls=txt.match(/https?:\/\/[^\s<>"')\]]+/g)||[]; const drive=urls.find(u=>/drive\.google|docs\.google|sharepoint|onedrive|1drv/.test(u))||urls[0];
@@ -189,7 +189,7 @@ function renderLinkedin(){
   const postedMonth=all.filter(p=>p.status==="done"&&p.date&&p.date.slice(0,7)===t.slice(0,7)).length;
   const ed=curEdition(); const reuse = ed ? edSections(ed).filter(s=>s.on && s.doc.reuse && s.doc.reuse.linkedin) : [];
   const newsTodo = newsAll().filter(n=>!n.linkedinDone && n.date>=add(t,-30)).sort((a,b)=>a.date<b.date?1:-1);
-  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Monday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+mnCard("li")+
+  el.innerHTML='<div class="phead"><div><div class="eyebrow">MISMO Company Page</div><h1>LinkedIn</h1><div class="sub">Tuesday Mic\'d Up posts, MISMO in the News, summit pushes and anything reused from MISMO Matters.</div></div><div class="tools"><button class="btn pri" type="button" id="li-new">+ New Post</button></div></div>'+mnCard("li")+
     '<div class="band">'+linkedinHero(all)+'<div class="say">'+(thisWeek?'<em>'+thisWeek+' post'+(thisWeek>1?"s":"")+'</em> going up this week. ':'Nothing is set for this week yet. ')+(newsTodo.length?newsTodo.length+' news mention'+(newsTodo.length>1?"s haven't":" hasn't")+' been shared yet.':'')+'</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+thisWeek+'</div><div class="k">Posting This Week</div><div class="s">through '+esc(fS(wk))+'</div></div>'+
       '<div class="tile"><div class="v">'+upcoming.length+'</div><div class="k">Coming Up</div><div class="s">next six weeks</div></div>'+

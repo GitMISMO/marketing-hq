@@ -44,7 +44,7 @@ const HELP = [
   <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
    <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
    <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Approves who is quoted in each press release by replying to an email. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
-   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Monday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
+   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Tuesday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
    <tr><td><b>Perry</b></td><td>Owns press releases: reviews Claude's first draft of each MMS announcement, picks who to quote, sends the quote request as himself, puts in the approved quote and gives final approval before it goes to MISMO Connect, MBA and MISMO Matters.</td></tr>
    <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
    <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
@@ -181,7 +181,7 @@ const HELP = [
    <div><span>Same Day</span><b>Into SharePoint</b><small>Video, thumbnails and transcript in the episode folder</small></div>
    <div><span>Friday · 8:30 AM ET</span><b>Live</b><small>LinkedIn Live on Brian's profile</small></div>
    <div><span>Friday Afternoon</span><b>YouTube</b><small>Upload with the written description and proofed captions</small></div>
-   <div><span>Monday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
+   <div><span>Tuesday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
   </div>
   <h3>Before Recording</h3>
@@ -195,7 +195,7 @@ const HELP = [
   <h3>Release Week</h3>
   <ol>
    <li><b>Friday afternoon:</b> work the YouTube Kit (below) and upload. Title: <i>MISMO Mic'd Up Season 2, Ep. N: Title</i>, the way the channel has always done it. Upload the proofed captions; never burn captions into the video.</li>
-   <li><b>Monday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
+   <li><b>Tuesday:</b> MISMO's LinkedIn Live at 1:00 PM ET, once Amy approves.</li>
    <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips, so the clip steps are hidden for now.</li>
    <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
    <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube.</li>
@@ -212,7 +212,7 @@ const HELP = [
    <li><b>MISMO's LinkedIn post</b> is Brian's own LinkedIn post retold from MISMO's side: same guest, same topics, in the third person. Paste the words of his post first (a link alone isn't enough: LinkedIn won't let MISMO Media read it). The guest named in Brian's Drive folder always counts as the guest.</li>
    <li><b>Titles, Descriptions and Posts:</b> press <b>Write Everything</b>. In about 20 seconds, the "MISMO Media - Writer" prompt reads the transcript and the guest's answers and writes title options, the YouTube title and description, chapters, a longer description, Brian's promo post, the LinkedIn Live event name and description, the MISMO Matters blurb, a post for the guest and clip captions. Copy what you need. <b>Write Again</b> asks for a new version; <b>Draft Article</b> writes a 600–800 word viewpoint piece in Brian's voice.</li>
    <li><b>YouTube:</b> post it, then paste the link. The kit also notices it by itself once the channel lists it.</li>
-   <li><b>MISMO LinkedIn Live, Monday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Monday.</li>
+   <li><b>MISMO LinkedIn Live, Tuesday 1:00 PM ET:</b> streamed from Riverside to MISMO's page. Press <b>Send to Amy for Approval</b>: Amy gets an email and just replies <b>Approved</b>, or replies with her edits. Her reply lands in the kit by itself. If she hasn't answered, <b>Resend to Amy</b> emails the same wording again. With edits, update the description and press <b>Edits Made: Ready to Set Up</b>. Once approved, the copy buttons and setup steps appear (cover image: the thumbnail from step 2). Paste the event link, and press <b>Mark as Streamed</b> after Tuesday.</li>
    <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips.</li>
    <li><b>Guest share kit:</b> copy the guest's post, <b>Email the Guest</b>, then <b>Mark as Sent</b>.</li>
   </ol>
@@ -221,7 +221,7 @@ const HELP = [
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
-   <li><b>Coming Up</b> lists every post in the next six weeks, including the Monday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
+   <li><b>Coming Up</b> lists every post in the next six weeks, including the Tuesday Mic'd Up LinkedIn Live events (they appear by themselves once an episode is added) and summit tasks going to LinkedIn.</li>
    <li><b>MISMO Matters as LinkedIn Posts</b> turns every section of the current edition into its own post with its own graphic. Press <b>Make a Post for Every Section</b>. If one doesn't work, or a section gets added later, a <b>Make the Missing Posts</b> button appears for just those; once every section has its post, there's no button. The edition list starts with November 2026. For each section Claude writes the post from that section's own words and links, never adding facts, and MISMO Media draws a 1080 x 1080 graphic: the section's header banner from the newsletter, the headline, and the section's picture or logo (or its key line when there's no picture). The graphic is saved in the Image Library under LinkedIn.</li>
    <li>Each section is one row: its graphic, the start of the post and where it stands. Every post starts as <b>Ready for Review</b> with no date. Click a row to open it in the panel on the right: the graphic, the words (change them and press Save), the link, the post date and the owner. There <b>Amy</b> presses <b>Approve</b>, or <b>Don't Post</b> if that section shouldn't go on LinkedIn (it shows as Not Posting, and <b>Bring It Back</b> undoes it); only she can do either. <b>Copy Post</b> and <b>Download Graphic</b> are for posting; <b>Write It Again</b> redoes the post and its graphic (it goes back to Amy) and <b>Redraw Graphic</b> makes a new graphic and keeps the words. Once approved, give it a date when you're ready to post; nothing goes on LinkedIn by itself. Click the card's title to fold it up or open it again; MISMO Media remembers which way you left it.</li>
    <li><b>Company logos.</b> A post about one company (Sponsor Highlight, Member Highlight, Certifications, Implementation Success) shows that company's logo under the picture, taken from the Image Library by the name the section uses most. Thank You to Our Sponsors shows every sponsor's logo. If a logo is missing or wrong, add it to the Image Library (campaign Logos, with the company's name) and press <b>Redraw Graphic</b>.</li>
@@ -234,7 +234,7 @@ const HELP = [
  {id:"posting", t:"Posting and Scheduling", g:"Channels", b:`
   <p>Everything starts as a draft in MISMO Media. Here's what can go out on its own and what's still done in the platform.</p>
   <table class="t"><thead><tr><th>Where</th><th>Can MISMO Media Post It?</th><th>How</th></tr></thead><tbody>
-   <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Monday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
+   <tr><td>LinkedIn, posts with a link</td><td>Yes, once the posting flow is set up</td><td>Stage the post with a date and time. A Power Automate flow checks every 15 minutes and posts it on the MISMO company page with "Post an article on company page," using the copy as the post text and the link as the article. The Tuesday Mic'd Up post links to YouTube, so it fits exactly.</td></tr>
    <tr><td>LinkedIn, image, video or document posts</td><td>No</td><td>Power Automate's LinkedIn connector only posts link posts. Schedule these in LinkedIn itself (the clock icon next to Post on the MISMO page), then set the post's Status to Approved and note the time.</td></tr>
    <tr><td>YouTube uploads</td><td>No</td><td>Power Automate can't upload to YouTube. Upload in YouTube Studio and set Visibility to <b>Schedule</b> for the time you want; it goes public by itself. MISMO Media marks it on YouTube once it's up.</td></tr>
    <tr><td>MISMO Matters</td><td>No</td><td>Built and scheduled in Higher Logic from the HTML.</td></tr>
@@ -242,7 +242,7 @@ const HELP = [
   </tbody></table>
   <h3>How the Posting Flow Works</h3>
   <ol>
-   <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Monday posts).</li>
+   <li>Every 15 minutes it reads the staged LinkedIn posts from marketing-hq-data (posts and the Mic'd Up Tuesday posts).</li>
    <li>Any whose date and time have arrived, and that haven't gone out, are posted on the MISMO page.</li>
    <li>It writes what it posted, with each post's link, to <code>data/posted.json</code>. Only the flow writes that file. MISMO Media reads it and marks each post as posted, the same way Member 360 reads what its email flow has sent.</li>
   </ol>

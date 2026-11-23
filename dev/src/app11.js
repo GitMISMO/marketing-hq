@@ -231,7 +231,7 @@ async function kitLoadTranscript(epId){
   return KIT.tx[epId];
 }
 
-/* ---------- MISMO LinkedIn Live (Monday 1 PM ET, streamed from Riverside, after Amy approves the wording) ---------- */
+/* ---------- MISMO LinkedIn Live (Tuesday 1 PM ET, streamed from Riverside, after Amy approves the wording) ---------- */
 const LI_STAT = {draft:["Draft","in"], review:["With Amy","review"], changes:["Changes Requested","changes"], approved:["Approved by Amy","ok"], edits:["Amy Replied with Edits","review"]};
 function liEventName(ytTitle, e){ let t=String(ytTitle||"").replace(/^MISMO Mic'?d Up\s*(Season\s*\d+,\s*)?(Episode|Ep\.)\s*\d+\s*:\s*/i,"").trim(); t=liLabel(e)+": "+t; return t.length>75 ? t.slice(0,72).replace(/\s+\S*$/,"")+"…" : t; }
 const LI_APPROVER = {name:"Amy", email:"amoses@mismo.org"};

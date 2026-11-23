@@ -356,7 +356,8 @@ function newsInWindow(ed){
 function normUrl(u){ return String(u||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
 function fridays(from, n){ const out=[]; let d=nextDow(from,5); for(let i=0;i<n;i++){ out.push(d); d=add(d,7); } return out; }
 function epOn(fri){ return vals("episodes").find(e=>e.airDate===fri); }
-function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,3) : ""); }
+/* Mic'd Up's MISMO LinkedIn post goes up the Tuesday after the Friday episode at 1 PM ET (Jonna, Nov 23, 2026; was Monday) */
+function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,4) : ""); }
 
 /* every dated thing, for the calendar, the agenda and the counts */
 function allEvents(){

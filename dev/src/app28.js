@@ -5,7 +5,7 @@
    data/linkedin.json: "linkedin/post-<id>" for each post (link, date, words, impressions, clicks, likes, comments,
    reposts), "linkedin/day-<date>" for the page's daily totals and "linkedin/_run" for the last read.
    Here, whoever has MISMO Media open with saving rights matches each post to its own record: the post is marked
-   Posted with its live link and its numbers fill in (the MISMO Matters posts, Sponsor Highlights, the Monday Mic'd Up
+   Posted with its live link and its numbers fill in (the MISMO Matters posts, Sponsor Highlights, the Tuesday Mic'd Up
    posts). A post MISMO Media didn't know about (dated Oct 1, 2026 or later) is added, the way the monthly export did.
    The page's daily totals become the LinkedIn page's Daily totals records that Results charts. */
 const LI_API={done:"", busy:false, timer:0, from:"2026-10-01"};
