@@ -37,4 +37,5 @@ out=$(node liapi.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fai
 out=$(node certnews.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node informz.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node writerjson.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node webhl.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
