@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Mic'd Up: MISMO's LinkedIn post moves to Tuesday at 1 PM
+
+- Jonna: "we're doing linked in posts for mismo mic'd up on tuesdays at 1pm now not mondays".
+- A new episode's LinkedIn Post Date is the Tuesday after its Friday episode (was the Monday). The Mic'd Up page, LinkedIn page, Home tile and the Guide say Tuesday · 1:00 PM ET.
+- Upcoming episodes already lined up for a Monday were moved to the Tuesday.
+
 ## 2026-11-22 · Lists: the November compound refresh
 
 - Ciara Durkan's November 19 lists (forwarded by Amy) are logged on Lists & Unsubscribes: Annual, IMB and LIRC registrants (8,100 rows), MBA Associates (3,985) and ResTech Forum (499). Together 9,541 unique addresses once duplicates, MISMO unsubscribes and bounced addresses are left out.
