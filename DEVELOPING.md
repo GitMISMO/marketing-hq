@@ -19,7 +19,7 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 | `dev/logo.txt` | The MISMO logo symbol. |
 | `dev/build.py` | Builds `dev/out/site.html` (the live page) and `dev/out/plain.html` (no sign-in, for tests). The live page carries a safety list (Content-Security-Policy, `CSP` in build.py) of the only sites it may load code from or send data to; add a new service there first. |
 | `dev/src/app31.js` | Industry Events graphics: reads Team HQ's events (read only, relay project `team-hq`, through `__hqTeamEvents` and `__hqTeamFile` in `dev/shim.html`) and keeps a SharePoint copy of each graphic in the Image Library (campaign `events`, record ids `imte-…`). Contract: Connections Map row "Team HQ (Industry Events) → MISMO Media (Image Library)". |
-| `dev/src/app24.js` | Press Releases. Reads the MMS announcements feed; the draft-ahead fields (pressRelease, draftNow, readyToPost, readyAt, stage, inComment; CN-010) decide which entries get a release, which are held after final approval and when one moves to Distribution. Contract: Connections Map row "MMS → MISMO Media". |
+| `dev/src/app24.js` | Press Releases. Reads the MMS announcements feed; the draft-ahead fields (pressRelease, draftNow, readyToPost, readyAt, stage, inComment; CN-010) decide which entries get a release, which are held after final approval and when one moves to Distribution. A release for a comment period (type comment, or a feed entry marked pressRelease false) is erased outright on each feed check, archived ones included, and never shown or started again; a Final or Candidate Recommendation draft still headed "Seeks Public Comment" is rewritten (CN-013). Contract: Connections Map row "MMS → MISMO Media". |
 | `dev/tests/` | Browser tests and a stand-in for the save relay. They run on made-up records (`fixture.html`, made by `make-fixture.py`), or on MISMO's real sample (`marketing-hq-data/dev/sample-data.html` in the private repo) when that file is copied next to `run.sh`. |
 | `hl-bridge/` | The script the Higher Logic website loads to upload pictures and read certified lists. |
 | `mm-headers/` | Newsletter header images and icons. |
@@ -69,4 +69,4 @@ The version (build time and code fingerprint) shows on **Help > System Health**.
   be checked server-side (see the review) and rotated if it leaks further.
 - Emails from MISMO Media go only to @mismo.org or @mba.org addresses.
 - Teams chat text is never stored; only Drive folder links.
-- Archive, never delete, for anything a person made.
+- Archive, never delete, for anything a person made. The one exception: comment-period press releases are erased (Jonna, CN-013, Nov 23, 2026).

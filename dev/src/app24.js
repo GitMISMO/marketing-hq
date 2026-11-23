@@ -46,7 +46,14 @@ function prTags(r){ const a=(r&&r.ann)||{}; let h="";
   return h; }
 function prHoldStop(r){ if(r && prHeld(r)){ toast("This release is held: it goes out once the MMS marks it Ready to Post.", 5000); return true; } return false; }
 
-function prAll(){ return vals("releases").filter(r=>!r.archived); }
+/* CN-013 (approved by Jonna Nov 23, 2026): MISMO makes no comment-period releases, and none is kept. A release that
+   announces a comment period (started for a comment entry, or for an entry the MMS now marks as no release) is
+   erased, archived ones included, and never shown or started again. A Final or Candidate Recommendation release
+   whose first draft still reads "Seeks Public Comment" is rewritten as that announcement. */
+const PR_SEEKS = /\b(?:seek(?:s|ing)?|invit(?:es|ing)|request(?:s|ing)?|open(?:s|ed)?)\s+(?:for\s+)?(?:public\s+)?comments?\b|\bpublic comment\b|\bcomment period\b/i;
+function prIsCommentRel(r){ return !!r && (r.type==="comment" || prNoRelease(r.ann)); }
+function prSeeksHeadline(r){ return !!(r && r.draft && PR_SEEKS.test(r.draft.headline||"")); }
+function prAll(){ return vals("releases").filter(r=>!r.archived && !prIsCommentRel(r)); }
 function prGet(id){ return (S.releases||{})[id]||null; }
 function prMe(){ const s=window.ResourcesSession && window.ResourcesSession.current && window.ResourcesSession.current(); return {name:(s&&s.name)||window.__hqWho||"", email:String((s&&s.email)||"").toLowerCase()}; }
 function prIsPerry(){ return prMe().email===PR_OWNER.email; }
@@ -97,7 +104,7 @@ async function prSync(){
   for(const a of feed.list){
     if(!a || !a.id) continue;
     const id=prIdFor(a.id), cur=prGet(id);
-    if(prNoRelease(a)) continue;   /* CN-010: no press release (or LinkedIn post) for a comment period */
+    if(prNoRelease(a)) continue;   /* CN-010/CN-013: no release for a comment period, ever (the facts refresh never brings one back) */
     if(!cur){
       await put("releases", id, {annId:a.id, ann:a, cat:prCatFor(a,cat), type:a.type||"release", status:"draft", createdAt:new Date().toISOString(),
         log:[{at:new Date().toISOString(), by:"MISMO Media", what:"Started from the MMS announcement"}]});
@@ -112,9 +119,12 @@ async function prSync(){
       await prSave(id, part, said.join(". "));
     } else if(cur && !cur.archived && !(cur.draft&&cur.draft.body) && !PR.writing[id] && !cur.draftErrAt) await prWrite(id, true);
   }
-  /* CN-010: releases started for a comment period before the change are put aside (archived, never deleted) */
-  for(const r of prAll()) if(r.type==="comment" && r.status!=="final")
-    await prSave(r.id, {archived:true, archivedAt:new Date().toISOString()}, "Archived: MISMO makes no press release or LinkedIn post for a comment period (CN-010)");
+  /* CN-013: comment-period releases are erased (not archived), archived ones included */
+  for(const r of vals("releases")) if(prIsCommentRel(r)) await remove("releases", r.id, true);
+  /* CN-013: a Final or Candidate Recommendation release still headed "Seeks Public Comment" is rewritten as that
+     announcement (the old draft is kept on the release) */
+  for(const r of prAll()) if(prSeeksHeadline(r) && r.status!=="final" && !PR.writing[r.id]){
+    await prSave(r.id, {draftOld:r.draft}, "Rewritten: the draft announced a comment period (CN-013)"); await prWrite(r.id, true); }
   await prApplyApprovals();
 }
 

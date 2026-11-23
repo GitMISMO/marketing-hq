@@ -1,6 +1,7 @@
 // Press releases drafted ahead and posted on release (CN-010, approved by Jonna Nov 22 and 23, 2026): comment
 // periods get no release; Draft Now releases are finished and held; the same release moves to Distribution when
 // the MMS marks it Ready to Post; Out for Comment shows while inComment is true; the draft never mentions comment.
+// CN-013 (approved by Jonna Nov 23, 2026): comment-period releases are erased, archived ones included, and never come back.
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -24,10 +25,20 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   window.ResourcesSession={current:()=>({name:"Perry Williams",email:"pwilliams@mismo.org"}), token:()=>"tok"};
   /* an old comment-period release from before the change */
   await put("releases","pr-old-comment",{annId:"WR2099_09-LinkedIn-Post",type:"comment",status:"draft",ann:{id:"WR2099_09-LinkedIn-Post",type:"comment"},createdAt:new Date().toISOString(),draft:{headline:"x",body:"seeking public comment"}});
+  /* CN-013: an archived one is erased too, and a Final release still headed "Seeks Public Comment" is rewritten */
+  await put("releases","pr-old-archived",{annId:"WR2099_08-LinkedIn-Post",type:"comment",status:"draft",archived:true,ann:{id:"WR2099_08-LinkedIn-Post",type:"comment",pressRelease:false},createdAt:new Date().toISOString(),draft:{headline:"MISMO Seeks Public Comment on Old Thing",body:"x"}});
+  const seeks=Object.assign({},ready,{id:"WR2099_04-Final-Release-Announcement",name:"Seeks Dataset",publicName:"Seeks Dataset"});
+  await put("releases",prIdFor(seeks.id),{annId:seeks.id,type:"release",status:"draft",ann:seeks,createdAt:new Date().toISOString(),draft:{headline:"MISMO Seeks Public Comment on Seeks Dataset",body:"MISMO is seeking public comment."}});
+  feed=[ahead, ready, comment, seeks];
   await prSync(); await wait(300);
-  const idA=prIdFor(ahead.id), idR=prIdFor(ready.id), idC=prIdFor(comment.id);
+  const idA=prIdFor(ahead.id), idR=prIdFor(ready.id), idC=prIdFor(comment.id), idS=prIdFor(seeks.id);
   out.noComment=!prGet(idC);
-  out.oldArchived=prGet("pr-old-comment").archived===true;
+  out.oldRemoved=!prGet("pr-old-comment") && !prGet("pr-old-archived") && !Object.keys(TRASH.releases||{}).length;
+  out.seeksRewritten=!!prGet(idS) && !/comment/i.test(prGet(idS).draft.headline) && /Seeks Public Comment/.test((prGet(idS).draftOld||{}).headline||"");
+  /* the MMS refreshes the facts of a comment entry: nothing comes back */
+  feed=[ahead, ready, Object.assign({},comment,{summary:"changed"}), seeks]; await prSync(); await wait(200);
+  out.notRecreated=!prGet(idC) && !prGet("pr-old-comment") && !prAll().some(r=>/comment/i.test(prTitle(r)));
+  feed=[ahead, ready, comment];
   out.started=!!prGet(idA) && !!prGet(idR);
   /* the Writer never sees the comment dates or the timing fields, and is told never to mention public comment */
   const t=tasks.find(x=>/Test Dataset/.test(x.material))||{};

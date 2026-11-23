@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Press Releases: comment-period releases removed (CN-013)
+
+- Approved by Jonna (Nov 23, 2026): MISMO isn't doing comment-period releases, and nothing is kept as archived or canceled.
+- The four "MISMO Seeks Public Comment on …" releases (AI Glossary Update, Minor Reference Model Release v3.6.4, Business Glossary Maintenance 2026.02, ALTA Settlement Statement Dataset Revisions) are erased, not archived. Each work request keeps only its Final or Candidate Recommendation release.
+- Press Releases erases any release for a comment period on every feed check (archived ones too) and never starts one again when the MMS updates its facts. A Final or Candidate Recommendation draft still headed "Seeks Public Comment" is rewritten, with the old draft kept on the release.
+
 ## 2026-11-23 · Press Releases: drafted ahead, posted on release (CN-010)
 
 - Approved by Jonna (Nov 22 and 23, 2026), from the MMS: no press release and no LinkedIn post for a public comment period. The release for a Final or Candidate Recommendation is written while the work is still on its way.
