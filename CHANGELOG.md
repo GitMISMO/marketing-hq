@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Website: the days before Nov 20, from Higher Logic
+
+- Jonna: "why are the website stats from the 20th?" Cloudflare only started counting Nov 20. Higher Logic's Microsite Traffic report keeps 31 days, so Oct 23 to Nov 19 was copied once into settings/webtraffic-hl (page views and visitors each day, signed in and not, plus top pages and referrers).
+- Results › Website shows them in their own box, Before Nov 20: Higher Logic's Count, with a line where the new site went live (Nov 16). Higher Logic counts every page load, signed-in staff and robots included, so its numbers are shown apart and never added to Cloudflare's.
+
 ## 2026-11-23 · Mic'd Up: MISMO's LinkedIn post moves to Tuesday at 1 PM
 
 - Jonna: "we're doing linked in posts for mismo mic'd up on tuesdays at 1pm now not mondays".
