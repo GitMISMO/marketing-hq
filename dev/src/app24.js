@@ -42,7 +42,11 @@ async function prSave(id, part, what){
 function prStepOf(r){ if(!r) return "draft";
   if(r.status==="final") return "out"; if(r.status==="quote") return "final"; if(r.status==="request") return r.quote&&r.quote.text?"final":(r.request&&r.request.sentAt?"quote":"request");
   if(r.status==="source") return "source"; return r.draft&&r.draft.body?"review":"draft"; }
-function prTitle(r){ return (r.draft&&r.draft.headline) || (r.ann&&(r.ann.publicName||r.ann.name)) || "Untitled release"; }
+/* the work product's public name. The MMS sometimes has a web address typed in the public-name field (Nov 23, 2026:
+   the eHELOC FAQ), so a name that is only an address falls back to the MMS name. */
+const prIsUrl=v=>/^\s*https?:\/\/\S+\s*$/i.test(String(v||""));
+function prName(a){ a=a||{}; return (!prIsUrl(a.publicName) && a.publicName) || a.name || ""; }
+function prTitle(r){ return (r.draft&&r.draft.headline) || prName(r.ann) || "Untitled release"; }
 function prLongDate(d){ const x=P(d); return x?MONL[x.getMonth()]+" "+x.getDate()+", "+x.getFullYear():""; }
 /* 3 business days after a day (weekends and MBA holidays skipped) */
 function prBizAdd(d, n){ let x=d, k=0; while(k<n){ x=add(x,1); if(!offDay(x)) k++; } return x; }
@@ -118,6 +122,7 @@ MISMO members can join the workgroup through MISMO Connect. This MISMO workgroup
 
 function prFacts(r){
   const a=Object.assign({}, r.ann||{}); delete a.mmsUrl;   /* the MMS link is for staff, not the release */
+  if(prIsUrl(a.publicName)){ a.websitePage=String(a.publicName).trim(); delete a.publicName; }   /* an address, not a name */
   return "MMS ANNOUNCEMENT (the only source of facts):\n"+JSON.stringify(a,null,1)+(r.cat?"\n\nWORK-PRODUCT CATALOG ENTRY:\n"+JSON.stringify(r.cat,null,1):"");
 }
 async function prWrite(id, quiet){
@@ -412,7 +417,7 @@ function prDetail(r){
   const st=k=>{ const i=PR_STEPS.findIndex(s=>s[0]===k); return i<si?"done":i===si?"now":"later"; };
   const onlyPerry=perry?'':'<div class="pr-note">Perry does this step from his own sign-in.</div>';
   const checks=prChecks(r);
-  const facts=[["Type",PR_TYPE[r.type]||"Release"],["Work product",a.publicName||a.name],["Workgroup",[a.workgroup,a.groupType].filter(Boolean).join(" · ")],["Classification",a.classification],["Release status",a.releaseStatus],["Version",a.version],
+  const facts=[["Type",PR_TYPE[r.type]||"Release"],["Work product",prName(a)],["Workgroup",[a.workgroup,a.groupType].filter(Boolean).join(" · ")],["Classification",a.classification],["Release status",a.releaseStatus],["Version",a.version],
     ["Comment period",(a.commentOpens||a.commentCloses)?(fS(a.commentOpens)+" – "+fS(a.commentCloses)):""],["License",a.license],["Available to",a.availableTo],["Members",a.memberUrl],["Non-members",a.nonMemberUrl],["Facilitator",a.facilitator],["Summary",a.summary]].filter(x=>x[1]);
   const leaders=(a.leaders||[]).map(l=>'<li><b>'+esc(l.name)+'</b>'+(l.position?', '+esc(l.position):'')+(l.company?', '+esc(l.company):'')+'</li>').join("");
   const d=r.draft||{}, s=r.source||{}, q=r.request||{}, qt=r.quote||{}, o=r.out||{};
