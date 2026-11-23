@@ -134,7 +134,29 @@ const MU_STYLE = [
 ].join("\n\n");
 function txPlain(t){ return String(t||"").replace(/^WEBVTT.*$/m,"").replace(/^\d+\s*$/gm,"").replace(/^\d{1,2}:\d{2}(:\d{2})?[.,]\d{3}\s*-->.*$/gm,"").replace(/\n{2,}/g,"\n").trim(); }
 async function writer(task, material){ const sp=SPX(); if(!sp) throw new Error("Writing works on resources.mismo.org"); return sp.writer(task, material); }
-function parseJson(s){ const m=String(s||"").replace(/^```(?:json)?\s*|\s*```$/g,"").trim(); try{ return JSON.parse(m); }catch(e){ const a=m.indexOf("{"), b=m.lastIndexOf("}"); if(a>=0&&b>a){ try{ return JSON.parse(m.slice(a,b+1)); }catch(e2){} } return null; } }
+/* The Writer's answer as an object. It sometimes puts real line breaks (or tabs) inside a JSON string instead of
+   \n, which JSON.parse refuses ("Bad control character"; Nov 23, 2026: press releases failed about one time in four),
+   so on a refusal those are escaped and it's read again. */
+function jsonFixControls(t){
+  let out="", inStr=false, esc=false;
+  for(const ch of t){
+    if(inStr){
+      if(esc){ out+=ch; esc=false; continue; }
+      if(ch==="\\"){ out+=ch; esc=true; continue; }
+      if(ch==='"'){ out+=ch; inStr=false; continue; }
+      if(ch==="\n"){ out+="\\n"; continue; } if(ch==="\r"){ out+="\\r"; continue; } if(ch==="\t"){ out+="\\t"; continue; }
+      if(ch<" "){ out+="\\u"+ch.charCodeAt(0).toString(16).padStart(4,"0"); continue; }
+      out+=ch;
+    } else { if(ch==='"') inStr=true; out+=ch; }
+  }
+  return out;
+}
+function parseJson(s){
+  const m=String(s||"").replace(/^```(?:json)?\s*|\s*```$/g,"").trim();
+  const a=m.indexOf("{"), b=m.lastIndexOf("}"), tries=[m]; if(a>=0&&b>a) tries.push(m.slice(a,b+1));
+  for(const t of tries){ try{ return JSON.parse(t); }catch(e){} try{ return JSON.parse(jsonFixControls(t)); }catch(e){} }
+  return null;
+}
 function guestFor(e){ if(!e) return null; const g=vals("guests").filter(x=>x.ep===e.id || (e.guestEmail && x.e===String(e.guestEmail).toLowerCase())).sort((a,b)=>String(b.at).localeCompare(String(a.at))); return g[0]||null; }
 function styleSamples(e){
   return epsSorted().filter(x=>x.id!==e.id && (x.bvDescription||(kitOf(x.id)||{}).written)).slice(0,3).map(x=>{ const w=(kitOf(x.id)||{}).written||{}; return "• "+(w.title||x.title||"")+"\n"+String(w.long||w.desc||x.bvDescription||"").slice(0,900); }).join("\n\n");
