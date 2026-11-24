@@ -53,7 +53,11 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   document.querySelector('[data-imnav="lib:headshot"]').click(); await wait(100);
   out.oneSection=document.querySelectorAll('section[id^="lib-"]').length===1 && !!document.getElementById("lib-headshot") && /Headshots/.test(document.querySelector("#page-images .card .ch h2").textContent) && document.querySelector('[data-imnav="lib:headshot"]').getAttribute("aria-pressed")==="true";
   IM.sec=""; IM.more={}; renderImages();
-  out.noBrandOption=!document.querySelector('#im-camp option[value="brand"]');
+  /* the one row replaces the Kind and Campaign dropdowns (Nov 23, 2026); the edition dropdown and search stay */
+  out.noDropdowns=!document.getElementById("im-camp") && !document.getElementById("im-type") && !!document.getElementById("im-ed") && !!document.getElementById("im-q");
+  /* a picture added while Headshots is open lands in Headshots; one added under Mic'd Up gets the Mic'd Up campaign */
+  IM.view="lib"; IM.sec="headshot"; const keepIM=IM.sec; out.upHeadshot=imUpCamp()==="matters"; IM.sec="micdup"; out.upMicdup=imUpCamp()==="micdup"; IM.view="kit"; out.upKit=imUpCamp()==="brand"; IM.view="lib"; IM.sec="";
+  out.upLibGroup=/IM\.view==="lib"&&\["social","emailhdr","emaildesign","headshot"\]\.includes\(IM\.sec\)\)\?IM\.sec/.test(String(addImages));
   /* a Library search for "eps" points to the Brand Kit */
   IM.q="eps"; renderImages(); await wait(100);
   const hint=document.querySelector(".bkhint"); out.hint=!!hint && /3 Brand Kit files also match/.test(hint.innerText);
@@ -81,7 +85,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   out.download=/download/i.test(opened) || /MISMO%20FINAL|MISMO FINAL/.test(opened);
   BKIT.fmt=""; renderImages();
   /* new uploads from the Brand Kit land there */
-  out.uploadPreset=/IM\.view==="kit"\?"brand"/.test(String(addImages));
+  out.uploadPreset=/imUpCamp\(\)/.test(String(addImages));
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
 await b.close(); process.exit(r.ok?0:1);})();
