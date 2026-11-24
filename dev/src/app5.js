@@ -397,11 +397,44 @@ function rsDLists(x){
     '<div class="rs-box"><h3>Sizes Side by Side</h3>'+hbars([{l:"MISMO Matters list (last send delivered to)",v:x.listSize,c:"--c1"},{l:"Mailchimp's largest send this year",v:x.mcBig,c:"--c4"},{l:"Website sign-ups (mismo.org form)",v:x.web.length,c:"--c3"},{l:"Work product downloaders",v:x.dls.length,c:"--c6"},{l:"Prospects from Member 360",v:x.pros.length,c:"--c5"},{l:"Unsubscribed on MISMO's page",v:x.uns.length,c:"--c2"}].filter(i=>i.v))+
     '<p class="rs-note">The full MISMO Matters list is the people the last edition went to.</p></div></div>';
 }
+/* What People Download, for a date range (Jonna, Nov 24, 2026). Website pop-up downloads count on the day of each
+   person's first and latest download of that work product; the old site's list kept only each person's first and last
+   download dates, so a person from it counts when either date falls in the range. */
+let RSDL={range:"", from:"", to:""};
+try{ const v=JSON.parse(localStorage.getItem("mm.rsdl")||"null"); if(v && typeof v==="object") RSDL=Object.assign(RSDL,v); }catch(e){}
+function rsDlRange(){ const t=T(), r=RSDL.range;
+  if(r==="week") return [add(t,-6),t]; if(r==="month") return [t.slice(0,7)+"-01",t];
+  if(r==="last"){ const end=add(t.slice(0,7)+"-01",-1); return [end.slice(0,7)+"-01",end]; }
+  if(r==="90") return [add(t,-89),t]; if(r==="year") return [t.slice(0,4)+"-01-01",t];
+  if(r==="custom") return [RSDL.from||"", RSDL.to||""]; return ["",""]; }
+function rsDlData(x){
+  if(!RSDL.range) return {dls:x.dls.length, what:x.what, approx:false, from:"", to:""};
+  const [f,to]=rsDlRange(), inR=d=>!!d && (!f||d>=f) && (!to||d<=to);
+  const who={}, what={}; let approx=false;
+  const hit=(e,w)=>{ e=(e||"").toLowerCase(); if(!e||!w) return; who[e]=1; (what[w]=what[w]||{})[e]=1; };
+  audienceRows("downloaders").forEach(r=>{ if(!(inR(r.f)||inR(r.l))) return; if(r.f && r.l && r.f!==r.l) approx=true; (r.x||[]).forEach(w=>hit(r.e,w)); });
+  vals("wpdl").forEach(r=>{ if(inR(localDay(r.at))||inR(localDay(r.firstAt))) hit(r.e, r.product||r.pid||r.file); });
+  const list=Object.entries(what).map(([l,m])=>[l,Object.keys(m).length]).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v,c:"--c6",tip:l+" · "+v+" people"}));
+  return {dls:Object.keys(who).length, what:list, approx, from:f, to:to};
+}
+function rsDlPicker(){
+  return '<span class="rsdl-pick"><select id="rsdl-range" aria-label="When downloaded">'+DL_RANGES.map(([v,l])=>'<option value="'+v+'"'+(RSDL.range===v?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
+    (RSDL.range==="custom"?'<input type="date" id="rsdl-from" aria-label="From" value="'+esc(RSDL.from)+'"><span class="t2">to</span><input type="date" id="rsdl-to" aria-label="To" value="'+esc(RSDL.to)+'">':'')+'</span>';
+}
+function rsDlWire(b){
+  const save=()=>{ try{ localStorage.setItem("mm.rsdl", JSON.stringify(RSDL)); }catch(e){} rsRefreshRail(); };
+  const rg=$("#rsdl-range",b); if(rg) rg.onchange=()=>{ RSDL.range=rg.value; if(RSDL.range==="custom" && !RSDL.from){ RSDL.from=T().slice(0,7)+"-01"; RSDL.to=T(); } save(); };
+  const df=$("#rsdl-from",b), dt=$("#rsdl-to",b); if(df) df.onchange=()=>{ RSDL.from=df.value; save(); }; if(dt) dt.onchange=()=>{ RSDL.to=dt.value; save(); };
+}
 function rsDDl(x){
-  return '<div class="card rs-sec" id="rs-dl"><div class="ch"><h2>What People Download</h2><span class="note">non-member downloads of MISMO work products from mismo.org</span><span class="sp"></span><button class="btn sm" type="button" data-go="people">Open Downloaders</button></div>'+
-    (x.what.length?rsKpis([{v:rsN(x.dls.length),k:"People",s:"downloaded at least one"},{v:rsN(x.what.length),k:"Work Products",s:"downloaded at least once"},{v:(x.what.reduce((n,w)=>n+w.v,0)/Math.max(1,x.dls.length)).toFixed(1),k:"Per Person",s:"work products on average"}])+
-      '<div class="rs-box"><h3>Every Work Product, Most Downloaded First</h3>'+hbars(x.what.slice(0,40),v=>v+" people")+(x.what.length>40?'<p class="rs-note">The top 40 of '+x.what.length+'.</p>':'')+'</div>'
-    :'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>')+'</div>';
+  const d=rsDlData(x), any=x.what.length;
+  const when=RSDL.range?(d.from&&d.to?fS(d.from)+" to "+fS(d.to):d.from?"from "+fS(d.from):d.to?"through "+fS(d.to):""):"";
+  return '<div class="card rs-sec" id="rs-dl"><div class="ch"><h2>What People Download</h2><span class="note">non-member downloads of MISMO work products from mismo.org</span><span class="sp"></span>'+(any?rsDlPicker():'')+'<button class="btn sm" type="button" data-go="people">Open Downloaders</button></div>'+
+    (!any?'<div class="empty">Load the website downloader list on Subscribers &amp; Downloaders.</div>'
+    :!d.what.length?'<div class="empty">No downloads '+(when?esc(when):"in those dates")+'.</div>'
+    :rsKpis([{v:rsN(d.dls),k:"People",s:"downloaded at least one"},{v:rsN(d.what.length),k:"Work Products",s:"downloaded at least once"},{v:(d.what.reduce((n,w)=>n+w.v,0)/Math.max(1,d.dls)).toFixed(1),k:"Per Person",s:"work products on average"}])+
+      '<div class="rs-box"><h3>Every Work Product, Most Downloaded First'+(when?' · '+esc(when):'')+'</h3>'+hbars(d.what.slice(0,40),v=>v+" people")+(d.what.length>40?'<p class="rs-note">The top 40 of '+d.what.length+'.</p>':'')+
+      (d.approx?'<p class="rs-note">The old website\'s list kept only each person\'s first and last download dates, so its people count here when either date is in range, with everything they downloaded.</p>':'')+'</div>')+'</div>';
 }
 function rsDTools(x){
   return '<div class="card rs-sec rs-tools" id="rs-tools"><div class="ch"><h2>Bring In the Numbers</h2><span class="note">drop the file each platform exports; rows are matched to what\'s already here</span></div><div class="cb">'+
@@ -506,7 +539,7 @@ function rsWireRail(b){
   const mms=$("#rs-mmstats",b); if(mms && x.ed) mms.onclick=()=>openStats(x.ed);
   const pick=$("#rs-ed",b); if(pick) pick.onchange=()=>{ RS.ed=pick.value; renderResults(); };
   const all=$("#rs-mcall",b); if(all) all.onclick=()=>{ RS.mcAll=!RS.mcAll; rsRefreshRail(); };
-  wtWire(b); rsTips(b); mnWire(b); rsWireTools(b);
+  wtWire(b); rsDlWire(b); rsTips(b); mnWire(b); rsWireTools(b);
 }
 function renderResults(){
   const el=$("#page-results"), x=rsCtx();
