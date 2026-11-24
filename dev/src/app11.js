@@ -269,17 +269,43 @@ async function liSendAmy(e, k, name, desc, to, rev){
 function kitsWithAmy(){ return vals("kits").filter(k=>k.liStatus==="review" && S.episodes[k.id]); }
 /* Amy's emailed reply, made ready to paste: email line-wraps joined back into paragraphs, then proofread
    (spelling, typos and MISMO terms only; her wording is kept). The result is kept on the kit, so it runs once per reply. */
+/* Amy's reply as she wrote it (Nov 24, 2026; Jonna: "make sure the way she responds in the email and formatting translate
+   accurately"). Her email arrives as plain text cut into ~80-character lines, with her note on top ("Changes: (revised post
+   below)") and, below the wording, what's left of her signature logo ("MISMO"). Here:
+   - the note line and the signature leftover are taken off;
+   - a line break is joined back only where the email wrapped the line (the next word wouldn't have fit), so her own line
+     breaks stay: each of her paragraphs becomes its own paragraph, with a blank line between, the way LinkedIn shows them;
+   - bullet and hashtag lines stay on their own lines. */
 function amyUnwrap(t){
-  return String(t||"").replace(/\r/g,"").split(/\n\s*\n/).map(p=>p.split("\n").map(l=>l.trim()).filter(Boolean).join(" ").replace(/\s{2,}/g," ")).filter(Boolean).join("\n\n");
+  let L=String(t||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/\s+$/,"").replace(/^[ \t]+/,""));
+  while(L.length && !L[0].trim()) L.shift();
+  if(L.length){ const m=L[0].match(/^(changes?|edits?|revisions?|revised|updated|suggested edits?)\s*:\s*(.*)$/i);
+    if(m){ const rest=m[2].replace(/^\(?\s*(see\s+)?(the\s+)?(revised|updated|new|edited)?\s*(post|version|wording|description|copy|text)?\s*(is\s+)?(below|above|attached)?\s*[.:]?\s*\)?$/i,"").trim(); if(rest) L[0]=rest; else L.shift(); } }
+  const lone=/^[A-Za-z][A-Za-z.&'’ -]{0,30}$/;
+  for(;;){ while(L.length && !L[L.length-1].trim()) L.pop(); const n=L.length; if(n<2) break;
+    const last=L[n-1].trim(); if(lone.test(last) && last.split(/\s+/).length<=3 && !/[.!?:]$/.test(last) && !L[n-2].trim()) { L.pop(); continue; } break; }
+  const W=Math.max(0, ...L.map(l=>l.length)), wrapped=W>=60 && L.filter(l=>l.length>=W-12).length>=2;
+  const own=l=>/^([-•*–]|\d+[.)])\s/.test(l)||/^#\w/.test(l);
+  const out=[]; let cur="";
+  for(let i=0;i<L.length;i++){ const l=L[i];
+    if(!l.trim()){ if(cur){ out.push(cur); cur=""; } out.push(""); continue; }
+    cur=cur?cur+" "+l:l;
+    const nx=L[i+1]||"", w=(nx.trim().split(/\s+/)[0]||"").length;
+    if(!(wrapped && nx.trim() && !own(nx) && !own(l) && l.length+1+w>W)){ out.push(cur); cur=""; } }
+  if(cur) out.push(cur);
+  let txt=""; let prev=null;
+  for(const p of out){ if(!p.trim()){ continue; } const q=p.replace(/\s{2,}/g," ").trim();
+    txt += prev===null ? q : (own(prev)&&own(q) ? "\n" : "\n\n")+q; prev=q; }
+  return txt;
 }
 function amyFixHtml(k){
-  if(!k.amyClean || k.amyFrom!==k.liReplyId) return '<div class="amy-fix" id="kit-amyfix" hidden></div>';
+  if(!k.amyClean || k.amyFrom!==k.liReplyId || k.amyVer!==2) return '<div class="amy-fix" id="kit-amyfix" hidden></div>';
   const f=k.amyFixes||[];
   return '<div class="amy-fix" id="kit-amyfix">'+(f.length?'<b>Spelling fixed:</b> '+f.map(x=>'<span><s>'+esc(x.from)+'</s> → '+esc(x.to)+'</span>').join(""):'<b>No spelling mistakes found.</b>')+'</div>';
 }
 async function amyCleanVersion(eid){
   const k=kitOf(eid)||{}; if(!k.liNote) return "";
-  if(k.amyClean && k.amyFrom===k.liReplyId) return k.amyClean;
+  if(k.amyClean && k.amyFrom===k.liReplyId && k.amyVer===2) return k.amyClean;
   const plain=amyUnwrap(k.liNote);
   let text=plain, fixes=[];
   const iss=txCheck(plain, eid); if(iss.length){ text=txFixed(plain, iss); fixes=iss.map(x=>({from:x.found,to:x.fix})); }
@@ -291,7 +317,7 @@ async function amyCleanVersion(eid){
       /* keep her words: only accept a proofread that stays within a few percent of her length */
       if(Math.abs(t2.length-text.length) <= Math.max(12, text.length*0.04)){ text=t2; fixes=fixes.concat((o.fixes||[]).filter(x=>x&&x.from&&x.to&&x.from!==x.to).map(x=>({from:String(x.from),to:String(x.to)}))); } }
   }catch(e){}
-  await put("kits", eid, Object.assign({}, kitOf(eid), {amyClean:text, amyFixes:fixes, amyFrom:k.liReplyId||""}));
+  await put("kits", eid, Object.assign({}, kitOf(eid), {amyClean:text, amyFixes:fixes, amyFrom:k.liReplyId||"", amyVer:2}));
   return text;
 }
 /* names from the episode plan (company, guests) that MISMO's wording uses but Brian's own post doesn't */
@@ -324,7 +350,7 @@ function liLiveHtml(e,k,liText,thumbs){
     '<div class="kli-cmp"><div class="kli-mine">'+box("kit-li","MISMO\'s Event Description"+(st==="edits"?" (put Amy\'s edits in here)":""),liText,9)+'</div>'+liBrianHtml(e,k,liText)+'</div>';
   const reviseBtn='<button class="btn sm" type="button" id="kit-lirevise">Revise and Send Back to Amy</button>';
   const amyTools=(use)=>'<div class="amy-tools"><button class="btn sm" type="button" id="kit-amycopy">Copy Amy\'s Version</button>'+(use?'<button class="btn sm" type="button" id="kit-amyuse">Put It in the Description</button>':'')+'<span class="hint">Cleaned up from her email and checked for spelling.</span></div>'+amyFixHtml(k);
-  if((st==="changes"||st==="edits") && k.liNote) h+='<div class="kli-note'+(st==="edits"?' kli-edits':'')+'"><b>'+(st==="edits"?"Amy\'s edits (from her email reply). Use her wording:":"Amy:")+'</b><br>'+esc(k.liNote).replace(/\n/g,"<br>")+(st==="edits"?amyTools(true):'')+'</div>';
+  if((st==="changes"||st==="edits") && k.liNote) h+='<div class="kli-note'+(st==="edits"?' kli-edits':'')+'"><b>'+(st==="edits"?"Amy\'s edits (from her email reply). Use her wording:":"Amy:")+'</b><div class="amy-text">'+esc(st==="edits"?amyUnwrap(k.liNote):k.liNote).replace(/\n/g,"<br>")+'</div>'+(st==="edits"?amyTools(true):'')+'</div>';
   if(st==="approved" && k.liNote && k.liReplyId) h+='<div class="kli-note kli-ok"><b>Amy replied:</b> '+esc(k.liNote).replace(/\n/g,"<br>")+amyTools(false)+'</div>';
   if(rev) h+='<div class="kli-rev"><b>Revising the wording Amy already has.</b> Fix the description above (or have the Writer redo it), then send it back. Amy\'s email says to use this version instead.'+
     '<textarea id="kit-revnote" rows="2" placeholder="What changed, for Amy (e.g. Brian recorded this one on his own, so Xactus is out)">'+esc(k.liRevNote||"")+'</textarea>'+
