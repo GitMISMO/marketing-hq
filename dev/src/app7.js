@@ -180,14 +180,6 @@ async function downloadImage(im){
 function imgLink(im){ return im.hlUrl || im.url || (im.assetId ? location.origin+"/_blob/"+im.assetId : ""); }
 function copyImageLink(im){ if(im && isFile(im)){ if(!im.spPath){ toast("This file has no SharePoint location to link to."); return; } copyText(spFileUrl(im.spPath), "File link (opens for anyone at MISMO/MBA with access to the Marketing folder)"); return; } const u=imgLink(im); if(!u){ toast("This one isn't in Higher Logic yet, so there's no link to share. Upload it there and paste its link on the picture.", 5000); return; } copyText(u, im.hlUrl ? "Image link (public, works in emails)" : "Image link (works for the MISMO team while signed in, not in emails)"); }
 
-/* the Library grid in months, newest first; the two newest months open, older ones folded (Nov 23, 2026) */
-function imMonths(list, card){
-  const by={}, keys=[]; list.forEach(im=>{ const m=String(localDay(im.at)||"").slice(0,7)||"undated"; if(!by[m]){ by[m]=[]; keys.push(m); } by[m].push(im); });
-  keys.sort((a,b)=>a<b?1:-1);
-  return keys.map((m,i)=>{ const open=(IM.open&&m in IM.open) ? IM.open[m] : i<2 || !!IM.q;
-    const label=m==="undated"?"No Date":MONL[+m.slice(5)-1]+" "+m.slice(0,4);
-    return '<details class="immonth" data-immonth="'+esc(m)+'"'+(open?" open":"")+'><summary><h3>'+esc(label)+'</h3><span class="cnt">'+by[m].length+'</span></summary><div class="imgrid">'+by[m].map(card).join("")+'</div></details>'; }).join("");
-}
 function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
@@ -218,7 +210,7 @@ function renderImages(){
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
       (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-arcsel">'+([...IM.sel].every(i=>S.images[i]&&S.images[i].archived)?'Bring Back ':'Archive ')+IM.sel.size+' Selected</button><button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
-      (bkHits?'<div class="bkhint">'+bkHits+' Brand Kit file'+(bkHits===1?'':'s')+' also match'+(bkHits===1?'es':'')+' "'+esc(IM.q)+'". <button class="btn sm" type="button" id="im-tokit">Show in the Brand Kit</button></div>':'')+(list.length?imMonths(list, im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
+      (bkHits?'<div class="bkhint">'+bkHits+' Brand Kit file'+(bkHits===1?'':'s')+' also match'+(bkHits===1?'es':'')+' "'+esc(IM.q)+'". <button class="btn sm" type="button" id="im-tokit">Show in the Brand Kit</button></div>':'')+(list.length?imSections(list, im=>'<div class="imcard'+(im.archived?" arch":"")+'" data-im="'+esc(im.id)+'" tabindex="0" role="button" aria-label="'+esc(im.name||im.file||"Image")+'">'+
           '<label class="imsel" title="Select for a ZIP download" onclick="event.stopPropagation()"><input type="checkbox" data-imsel="'+esc(im.id)+'"'+(IM.sel.has(im.id)?" checked":"")+' aria-label="Select '+esc(im.name||im.file||"image")+'"></label><div class="imthumb">'+(isFile(im)?fileTile(im):imgThumb(im)?'<img src="'+esc(imgThumb(im))+'" alt="'+esc(im.alt||"")+'" loading="lazy">':'<span class="imload">'+(im.spPath&&SP_IMG()?"Loading…":"In SharePoint")+'</span>')+'</div>'+
           '<div class="imbody"><b>'+esc(im.name||im.file||"Untitled")+'</b><div class="immeta"><span class="chip ch">'+esc(IMG_CAMP[im.campaign]||"Other")+'</span>'+(im.edition&&S.editions[im.edition]?'<span class="chip ch">'+esc(MONL[+S.editions[im.edition].month.slice(5)-1])+'</span>':'')+(im.eventName?'<span class="chip ch" title="From Team HQ Industry Events">'+esc(im.eventName)+(im.eventUse&&im.eventUse!=="Other"?' · '+esc(im.eventUse):'')+'</span>':'')+(im.archived?'<span class="chip wait">Archived</span>':'')+'</div>'+
           '<div class="imsub">'+[im.w?im.w+" × "+im.h:"", +im.size?imgKB(im.size):"", im.spPath?"SharePoint":"", fS(localDay(im.at))].filter(Boolean).map(esc).join(" · ")+'</div>'+
@@ -227,7 +219,8 @@ function renderImages(){
     '</div>');
   $$("[data-imview]",el).forEach(b=>b.onclick=()=>{ IM.view=b.dataset.imview; IM.q=""; renderImages(); });
   const tk=$("#im-tokit",el); if(tk) tk.onclick=()=>{ BKIT.q=IM.q; IM.q=""; IM.view="kit"; renderImages(); };
-  $$("[data-immonth]",el).forEach(d=>d.ontoggle=()=>{ IM.open=IM.open||{}; IM.open[d.dataset.immonth]=d.open; });
+  $$("[data-imsec]",el).forEach(b=>b.onclick=()=>{ IM.sec=b.dataset.imsec; renderImages(); });
+  $$("[data-immore]",el).forEach(b=>b.onclick=()=>{ IM.more=IM.more||{}; IM.more[b.dataset.immore]=true; renderImages(); });
   if(bkView){ brandKitWire(el); const sb=$("#im-sp",el); if(sb) sb.onclick=openAddFromSharePoint; const ad=$("#im-add",el), fi=$("#im-file",el); if(ad) ad.onclick=()=>fi.click(); if(fi) fi.onchange=async()=>{ await addImages(fi.files,{campaign:"brand"}); fi.value=""; }; return; }
   if(shelf){ hlPaint(); $$(".lgs-card",el).forEach(c=>{ c.onclick=()=>openImage(c.dataset.im); c.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openImage(c.dataset.im); } }; });
     const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
@@ -280,12 +273,13 @@ async function openImage(id){
     {k:"alt",label:"Alt Text",wide:true,ph:"What the picture shows, for screen readers and email clients that block images"},
     {k:"hlUrl",label:"Link in Higher Logic's Image Library",type:"url",wide:true,ph:"Paste once it's uploaded to Higher Logic; MISMO Matters sections then use it automatically"},
     ...(im.campaign==="logos"||im.company||im.site?[{k:"company",label:"Company (for member and sponsor logos)",ph:"e.g. Ameriprise Financial"},{k:"site",label:"Company Website",type:"url",ph:"https://"},{k:"group",label:"Member Level or Sponsor Tier",ph:"e.g. Corporate Members"}]:[]),
+    ...(im.campaign!=="logos"&&im.campaign!=="brand"?[{k:"libGroup",label:"Library Section",type:"select",blank:true,opts:LIB_SECS,hint:"Blank: worked out from the name and campaign ("+(LIB_SEC[libSec(Object.assign({},im,{libGroup:""}))]||"Other Pictures")+")"}]:[]),
     {k:"credit",label:"Credit or Source",ph:"Photographer, partner or where it came from"},
     {k:"notes",label:"Notes",type:"rich",rows:3,ph:"Where it has been used, rights or size limits"},
     {k:"archived",label:"Archived (hidden from the library, kept on file)",type:"cb",wide:true}
   ];
   openPane({eye:"Image Library", title:im.name||im.file||"Image", fields, data:im, noFocus:true,
-    save:async v=>{ await patch("images",id,Object.assign({name:v.name, campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, hlUrl:v.hlUrl||"", credit:v.credit, notes:v.notes, archived:!!v.archived}, v.company!==undefined?{company:v.company||"", site:v.site||"", group:v.group||""}:{})); },
+    save:async v=>{ await patch("images",id,Object.assign({name:v.name, libGroup:v.libGroup||"", campaign:v.campaign, edition:v.campaign==="matters"?v.edition:"", alt:v.alt, hlUrl:v.hlUrl||"", credit:v.credit, notes:v.notes, archived:!!v.archived}, v.company!==undefined?{company:v.company||"", site:v.site||"", group:v.group||""}:{})); },
     buttons:[{label:"Download Original", run:async()=>downloadImage(S.images[id])},{label:"Copy Link", run:async()=>copyImageLink(S.images[id])}]
   });
 }

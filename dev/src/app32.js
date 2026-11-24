@@ -103,3 +103,38 @@ function brandKitWire(el){
   /* only the picture each card shows is loaded, one at a time (SharePoint turns away bursts) */
   bkCards(imgsLive().filter(isBrandKit)).forEach(c=>{ if(c.pic && !imgThumb(c.pic)) imgEnsureThumb(c.pic); });
 }
+
+/* ================= Image Library: the Library in sections (Nov 23, 2026) =================
+   Jonna: "a LinkedIn post and Mic'd Up, then there are others like social templates, email headers, email designs,
+   headshots, industry events". The Library's pictures are shown in those sections, newest first. A section shows its
+   newest eight with Show All; the section buttons show one section in full. The section comes from the name, the
+   campaign and the folder; Library Section on a picture moves it (libGroup). */
+const LIB_SECS = [["linkedin","LinkedIn Posts"],["micdup","Mic'd Up"],["social","Social Templates"],["emailhdr","Email Headers"],["emaildesign","Email Designs"],
+  ["headshot","Headshots"],["events","Industry Events"],["matters","MISMO Matters Pictures"],["other","Other Pictures"]];
+const LIB_SEC = Object.fromEntries(LIB_SECS);
+const LIB_SHOW = 8;
+function libSec(im){
+  if(im.libGroup && LIB_SEC[im.libGroup]) return im.libGroup;
+  const n=String(im.name||""), dir=String(im.spPath||"").replace(/[^/]*$/,"");
+  if(/social template/i.test(n) || /social templates/i.test(dir)) return "social";
+  if(/email header/i.test(n) || /email headers/i.test(dir)) return "emailhdr";
+  if(/email design/i.test(n) || /email designs/i.test(dir)) return "emaildesign";
+  if(/head ?shot/i.test(n) || /headshots/i.test(dir)) return "headshot";
+  if(im.campaign==="events" || im.source==="team-hq") return "events";
+  if(im.campaign==="micdup" || /mic'?d up/i.test(n)) return "micdup";
+  if(im.campaign==="linkedin") return "linkedin";
+  if(im.campaign==="matters") return "matters";
+  return "other";
+}
+function imSections(list, card){
+  const by={}; list.forEach(im=>{ const k=libSec(im); (by[k]=by[k]||[]).push(im); });
+  const have=LIB_SECS.filter(([k])=>by[k]);
+  if(IM.sec && !by[IM.sec]) IM.sec="";
+  const bar='<div class="bkbar" role="group" aria-label="Library section"><span>Section</span><button type="button" class="btn sm'+(IM.sec?"":" pri")+'" data-imsec="">All</button>'+
+    have.map(([k,l])=>'<button type="button" class="btn sm'+(IM.sec===k?" pri":"")+'" data-imsec="'+k+'">'+esc(l)+' <span class="cnt">'+by[k].length+'</span></button>').join("")+'</div>';
+  return bar+have.filter(([k])=>!IM.sec || IM.sec===k).map(([k,l])=>{
+    const all=by[k], full=!!IM.sec || !!IM.q || (IM.more&&IM.more[k]) || all.length<=LIB_SHOW+2, shown=full?all:all.slice(0,LIB_SHOW);
+    return '<section class="bkgrp" id="lib-'+k+'"><div class="bkh"><h3>'+esc(l)+'</h3><span class="cnt">'+all.length+'</span></div><div class="imgrid">'+shown.map(card).join("")+'</div>'+
+      (full?'':'<div class="libmore"><button class="btn sm" type="button" data-immore="'+k+'">Show All '+all.length+' '+esc(l)+'</button></div>')+'</section>';
+  }).join("");
+}
