@@ -147,3 +147,6 @@ function imNavHtml(list, nKit, nLogos, shelf, bkView){
     LIB_SECS.filter(([k])=>by[k]).map(([k,l])=>b("lib:"+k, l, by[k], lib && IM.sec===k)).join("")+
     '<i class="imnav-gap" aria-hidden="true"></i>'+b("kit:", "Brand Kit", nKit, bkView)+b("logos:", "Member & Sponsor Logos", nLogos, shelf)+'</div>';
 }
+/* the campaign a new upload gets: the Brand Kit's, or the section's you're looking at (MISMO Matters otherwise) */
+function imUpCamp(){ if(IM.camp) return IM.camp; if(IM.view==="kit") return "brand"; if(IM.view==="logos") return "logos";
+  return {linkedin:"linkedin", social:"linkedin", micdup:"micdup", events:"events"}[IM.sec] || "matters"; }

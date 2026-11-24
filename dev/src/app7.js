@@ -121,7 +121,7 @@ async function addImages(files, preset, quiet){
       const ed=curEdition();
       const doc=Object.assign({
         name:f.name.replace(/\.[a-z0-9]+$/i,"").replace(/[-_]+/g," ").trim(), file:f.name,
-        campaign:IM.camp||(IM.view==="kit"?"brand":"matters"), edition:(IM.camp||(IM.view==="kit"?"brand":"matters"))==="matters" ? (IM.ed||(ed&&ed.id)||"") : "",
+        campaign:imUpCamp(), libGroup:(IM.view==="lib"&&["social","emailhdr","emaildesign","headshot"].includes(IM.sec))?IM.sec:"", edition:imUpCamp()==="matters" ? (IM.ed||(ed&&ed.id)||"") : "",
         alt:"", credit:"", notes:"", w:dims.w, h:dims.h, size:r.sizeBytes||f.size, type:r.contentType||f.type,
         url:r.url||"", assetId:/^[0-9a-f]{32}$/.test(r.id||"") ? r.id : "", path:"", spPath:r.sp ? r.id : "",
         at:new Date().toISOString(), archived:false
@@ -184,7 +184,7 @@ function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
   const q=imNorm(IM.q);
-  if(IM.camp==="brand") IM.camp="";
+  IM.camp=""; IM.type=""; if(IM.sec!=="events") IM.ev="";
   const list=imgsLive().filter(im=>!isLogo(im) && !isBrandKit(im) && (!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!IM.ev||im.eventId===IM.ev) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign],im.eventName,im.eventUse,bkExt(im)].join(" ")).indexOf(q)>=0));
   const logos=live.filter(isLogo), logosOut=logos.filter(i=>!i.hlUrl).length, shelf=IM.view==="logos", bkView=IM.view==="kit", bkAll=live.filter(isBrandKit);
   /* a Library search that also matches Brand Kit files says so (Amy looking for the logo EPS) */
@@ -203,10 +203,8 @@ function renderImages(){
     (bkView ? brandKitHtml() : shelf ? '<div class="card"><div class="ch"><h2>Member &amp; Sponsor Logos</h2><span class="cnt">'+logos.length+'</span><span class="note">from Member 360 and the logo walls</span><div class="r im-filters"><input type="search" class="plain" id="im-q" placeholder="Search companies" value="'+esc(IM.q)+'" aria-label="Search logos"><label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label></div></div><div class="cb">'+logoShelf()+'</div></div>' :
 
     '<div class="card"><div class="ch"><h2>'+esc(IM.sec&&LIB_SEC[IM.sec]?LIB_SEC[IM.sec]:"All Pictures")+'</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
-      '<select id="im-type" aria-label="Kind"><option value="">Pictures and Files</option><option value="pic"'+(IM.type==="pic"?" selected":"")+'>Pictures</option><option value="file"'+(IM.type==="file"?" selected":"")+'>Files</option></select>'+
-      '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.filter(c=>c[0]!=="brand"&&c[0]!=="logos").map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
-      (IM.camp==="events"&&typeof teEvents==="function"?'<select id="im-ev" aria-label="Event"><option value="">Every Event</option>'+teEvents().map(e=>'<option value="'+esc(e.id)+'"'+(IM.ev===e.id?" selected":"")+'>'+esc(e.name)+(e.start?' ('+esc(fS(e.start))+')':'')+'</option>').join("")+'</select>'+(window.__hqTeamEvents&&CANWRITE&&SP_IMG()?'<button class="btn sm" type="button" id="im-te" title="Bring in new graphics from Team HQ\'s Industry Events now">Check Team HQ Now</button>':''):'')+
+      (IM.sec==="events"&&typeof teEvents==="function"?'<select id="im-ev" aria-label="Event"><option value="">Every Event</option>'+teEvents().map(e=>'<option value="'+esc(e.id)+'"'+(IM.ev===e.id?" selected":"")+'>'+esc(e.name)+(e.start?' ('+esc(fS(e.start))+')':'')+'</option>').join("")+'</select>'+(window.__hqTeamEvents&&CANWRITE&&SP_IMG()?'<button class="btn sm" type="button" id="im-te" title="Bring in new graphics from Team HQ\'s Industry Events now">Check Team HQ Now</button>':''):'')+
       '<input type="search" class="plain" id="im-q" placeholder="Search names and notes" value="'+esc(IM.q)+'" aria-label="Search images">'+
       '<label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label>'+
       (list.some(i=>!isFile(i))?'<button class="btn sm" type="button" id="im-zip">'+(IM.sel.size?'Download '+IM.sel.size+' Selected (ZIP)':'Download All '+list.filter(i=>!isFile(i)).length+' Pictures (ZIP)')+'</button>'+(IM.sel.size?'<button class="btn sm" type="button" id="im-arcsel">'+([...IM.sel].every(i=>S.images[i]&&S.images[i].archived)?'Bring Back ':'Archive ')+IM.sel.size+' Selected</button><button class="btn sm" type="button" id="im-clr">Clear Selection</button>':''):'')+'</div></div>'+
@@ -233,16 +231,14 @@ function renderImages(){
   const add=$("#im-add",el), file=$("#im-file",el);
   if(add) add.onclick=()=>file.click();
   if(file) file.onchange=async()=>{ await addImages(file.files); file.value=""; };
-  $("#im-type",el).onchange=e=>{ IM.type=e.target.value; renderImages(); };
   $$("a[data-stop]",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
-  $("#im-camp",el).onchange=e=>{ IM.camp=e.target.value; if(IM.camp && IM.camp!=="matters") IM.ed=""; if(IM.camp!=="events") IM.ev=""; renderImages(); };
   const sev=$("#im-ev",el); if(sev) sev.onchange=e=>{ IM.ev=e.target.value; renderImages(); };
   const tb=$("#im-te",el); if(tb) tb.onclick=async()=>{ toast("Checking Team HQ's Industry Events…", 60000); const was=TE.added; try{ await teamEventsSync(true); toast(TE.denied?"This sign-in can't read Team HQ's Industry Events.":(TE.added-was)?(TE.added-was)+" new graphic"+(TE.added-was===1?"":"s")+" added.":"Nothing new from Team HQ.", 4000); }catch(e){ toast("Couldn't read Team HQ: "+(e.message||"try again"), 6000); } renderImages(); };
   const se=$("#im-ed",el); if(se) se.onchange=e=>{ IM.ed=e.target.value; renderImages(); };
   const qi=$("#im-q",el); qi.oninput=()=>{ IM.q=qi.value; clearTimeout(qi._t); qi._t=setTimeout(()=>{ renderImages(); const n=$("#im-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },250); };
   $("#im-arch",el).onchange=e=>{ IM.arch=e.target.checked; renderImages(); };
   $$("[data-imsel]",el).forEach(c=>c.onchange=()=>{ if(c.checked) IM.sel.add(c.dataset.imsel); else IM.sel.delete(c.dataset.imsel); renderImages(); });
-  const z=$("#im-zip",el); if(z) z.onclick=()=>{ const pick=IM.sel.size ? [...IM.sel].map(i=>S.images[i]) : list; const ced=IM.ed&&S.editions[IM.ed]; downloadZip(pick, "MISMO Images"+(IM.camp?" - "+IMG_CAMP[IM.camp]:"")+(ced?" - "+monthName(ced.month):"")); };
+  const z=$("#im-zip",el); if(z) z.onclick=()=>{ const pick=IM.sel.size ? [...IM.sel].map(i=>S.images[i]) : list; const ced=IM.ed&&S.editions[IM.ed]; downloadZip(pick, "MISMO Images"+(IM.sec&&LIB_SEC[IM.sec]?" - "+LIB_SEC[IM.sec]:"")+(ced?" - "+monthName(ced.month):"")); };
   const zc=$("#im-clr",el); if(zc) zc.onclick=()=>{ IM.sel.clear(); renderImages(); };
   /* archive (or bring back) the ticked pictures in one go: they leave the library but stay on file (Nov 7, 2026) */
   const za=$("#im-arcsel",el); if(za) za.onclick=async()=>{ const ids=[...IM.sel].filter(i=>S.images[i]); const back=ids.every(i=>S.images[i].archived);
