@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Image Library: fewer dropdowns
+
+- Jonna said yes to taking out Every Campaign (and Pictures and Files): the one row of sections replaces them. The edition dropdown and search stay; the event picker shows under Industry Events.
+- A picture added while a section is open lands there: LinkedIn Posts and Social Templates get LinkedIn, Mic'd Up gets Mic'd Up, Industry Events gets Industry Events, the Brand Kit gets Logos & Brand, anything else MISMO Matters; Social Templates, Email Headers, Email Designs and Headshots keep that section. The ZIP download is named for the section.
+
 ## 2026-11-23 · Image Library: one row to get around
 
 - Jonna: "why are there the top Library, Brand Kit and Member Logos and then a separate section filter buttons, can we make this more efficient".
