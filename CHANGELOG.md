@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Image Library: one row to get around
+
+- Jonna: "why are there the top Library, Brand Kit and Member Logos and then a separate section filter buttons, can we make this more efficient".
+- One row now: All Pictures, each Library section (LinkedIn Posts, Mic'd Up, Social Templates, Email Headers, Email Designs, Headshots, Industry Events, MISMO Matters Pictures), then Brand Kit and Member & Sponsor Logos, each with its count. The second row of section buttons is gone, and the card title names the section you're in.
+
 ## 2026-11-23 · Image Library: the Library in sections
 
 - Jonna: LinkedIn posts and Mic'd Up, then social templates, email headers, email designs, headshots and industry events.
