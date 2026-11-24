@@ -1,6 +1,6 @@
 // Image Library: the Brand Kit (Nov 23, 2026). Logos & Brand files leave the Library grid for their own tab: the MISMO
 // logo as one card per color with a button per format, each badge as one card, then guides, print, video and swag.
-// The Library keeps campaign pictures, by month, and says when a search also matches Brand Kit files.
+// The Library keeps campaign pictures, in sections (LinkedIn posts, Mic'd Up, social templates, email headers and designs, headshots, industry events), and says when a search also matches Brand Kit files.
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -30,8 +30,26 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   let t=document.getElementById("page-images").innerText;
   /* the Library: no brand files, a Brand Kit tile and tab, months folded */
   out.libNoBrand=!document.querySelector('.imcard[data-im="k-fc-png"]') && !!document.querySelector('[data-imview="kit"]');
-  const aug=document.querySelector('details.immonth[data-immonth="2026-08"]');
-  out.months=!!aug && !aug.open && /August 2026/i.test(aug.querySelector("summary").innerText) && !document.querySelector("script#x");
+  /* the Library in sections (Nov 23, 2026): LinkedIn posts, Mic'd Up, social templates, email headers and designs, headshots, industry events */
+  add("s-soc",{name:"Social Template: Event Announcement", file:"s.png", type:"image/png", campaign:"linkedin"});
+  add("s-hdr",{name:"Email Header: Welcome", file:"h.png", type:"image/png", campaign:"matters", spPath:"/x/Email Headers - Cropped/h.png"});
+  add("s-des",{name:"Email Design: Welcome", file:"d.png", type:"image/png", campaign:"matters"});
+  add("s-head",{name:"Michele White Headshot2026", file:"m.jpg", type:"image/jpeg", campaign:"matters"});
+  add("s-ev",{name:"Example Speaker Card", file:"e.png", type:"image/png", campaign:"events", source:"team-hq"});
+  add("s-mu",{name:"Mic'd Up Ep 3 Thumbnail", file:"t.png", type:"image/png", campaign:"micdup"});
+  add("s-moved",{name:"Brian Photo", file:"b.jpg", type:"image/jpeg", campaign:"matters", libGroup:"headshot"});
+  for(let i=0;i<12;i++) add("s-li"+i,{name:"LinkedIn: Post "+i, file:"l"+i+".png", type:"image/png", campaign:"linkedin", at:new Date(Date.now()-i*864e5).toISOString()});
+  renderImages(); await wait(150);
+  const sec=k=>document.getElementById("lib-"+k), has=(k,id)=>!!(sec(k)&&sec(k).querySelector('.imcard[data-im="'+id+'"]'));
+  out.sections=has("social","s-soc") && has("emailhdr","s-hdr") && has("emaildesign","s-des") && has("headshot","s-head") && has("headshot","s-moved") && has("events","s-ev") && has("micdup","s-mu") && !has("linkedin","s-soc");
+  const order=[...document.querySelectorAll('section[id^="lib-"]')].map(x=>x.id.slice(4));
+  out.order=order.indexOf("linkedin")<order.indexOf("micdup") && order.indexOf("micdup")<order.indexOf("social") && order.indexOf("headshot")<order.indexOf("events");
+  out.more=sec("linkedin").querySelectorAll(".imcard").length===8 && !!sec("linkedin").querySelector("[data-immore]") && !document.querySelector("script#x");
+  sec("linkedin").querySelector("[data-immore]").click(); await wait(100);
+  out.showAll=document.getElementById("lib-linkedin").querySelectorAll(".imcard").length>=13;
+  document.querySelector('[data-imsec="headshot"]').click(); await wait(100);
+  out.oneSection=document.querySelectorAll('section[id^="lib-"]').length===1 && !!document.getElementById("lib-headshot");
+  IM.sec=""; IM.more={}; renderImages();
   out.noBrandOption=!document.querySelector('#im-camp option[value="brand"]');
   /* a Library search for "eps" points to the Brand Kit */
   IM.q="eps"; renderImages(); await wait(100);
