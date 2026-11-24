@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-24 · Results: date filter on What People Download
+
+- Jonna: "this was the product download she wanted the date picker on" (Results › What People Download).
+- The section now has the same choices as the downloads list: Any Time, Last 7 Days, This Month, Last Month, Last 90 Days, This Year or Pick Dates (remembered in this browser). People, Work Products, Per Person and every work-product bar count only downloads in those dates, and the heading shows the dates.
+- Website pop-up downloads count on each person's first and latest download of that work product. The old website's list kept only each person's first and last download dates, so its people count when either date is in range, with everything they downloaded; a note says so when that applies.
+
 ## 2026-11-24 · Schedule: calendar filter and + on a day; Downloads: date filter
 
 - Jonna: "need to add date filter on downloads" and "add calendar filter and add ability to add new comms tracking task to it".
