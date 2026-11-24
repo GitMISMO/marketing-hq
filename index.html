@@ -1181,6 +1181,22 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .ev:hover{background:var(--accent-soft)}
 .ev.done span{text-decoration:line-through;color:var(--ink-3)}
 .ev.big{font-weight:700}
+/* calendar filter and + on a day (Nov 24, 2026) */
+.calfil{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-top:1px solid var(--rule)}
+.calfil>span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin-right:4px}
+.calfil button{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink);border-radius:5px;padding:4px 9px;font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+.calfil button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+:root[data-theme="dark"] .calfil button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:var(--navy-deep)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .calfil button[aria-pressed="true"]{background:var(--sky);border-color:var(--sky);color:var(--navy-deep)}}
+.cal .dtop{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.cal .dadd{width:20px;height:20px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--ink-2);font:700 13px/1 inherit;cursor:pointer;padding:0;opacity:0;transition:opacity .12s}
+.cal .d:hover .dadd,.cal .dadd:focus-visible{opacity:1}
+@media (hover:none){.cal .dadd{opacity:.8}}
+.calmenu{position:absolute;z-index:60;background:var(--surface);border:1px solid var(--border-strong);border-radius:8px;box-shadow:0 12px 30px -12px rgba(7,29,46,.45);padding:6px;display:flex;flex-direction:column;min-width:200px}
+.calmenu small{font-size:11px;color:var(--ink-3);padding:4px 8px 6px;font-weight:600}
+.calmenu button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:7px 8px;border-radius:5px;cursor:pointer}
+.calmenu button:hover,.calmenu button:focus-visible{background:var(--surface-3);outline:none}
+.dlsum{padding:8px 16px;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--rule);background:var(--surface-2)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--rule)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:760px){.cal{grid-template-columns:repeat(7,minmax(0,1fr))}.cal .d{min-height:70px}.ev span{display:none}.ev{padding:3px;justify-content:center;width:auto}}
@@ -3206,6 +3222,26 @@ function badges(){
 /* ================= Schedule (overview) ================= */
 const OV = {month:null};
 function evHtml(e){ return '<button type="button" class="ev k-'+e.k+(e.done?" done":"")+(e.x?" x":"")+(e.big?" big":"")+'" title="'+esc(e.label)+'"'+(e.slot?' style="border-style:dashed"':'')+'><i class="dot"></i><span>'+esc(e.label)+'</span></button>'; }
+/* Calendar filter and "+ on a day" (Jonna, Nov 24, 2026: "add calendar filter and add ability to add new comms tracking
+   task to it"). The channels the calendar can show; a new item can be added on any day, for any channel that keeps its
+   own items here (MISMO Matters and Mic'd Up have their own pages). */
+const CAL_CHANS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community"],["orders","Orders"],["setup","Setup"],["other","Other"]];
+const CAL_ADD = [["linkedin","LinkedIn Post"],["mailchimp","Mailchimp Send"],["community","Community Post"],["summit","Summit Push"],["youtube","YouTube Video"],["other","Other Comms Task"],["setup","Setup Task"]];
+try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.isArray(v)) OV.chans=v; }catch(e){}
+function calAdd(btn, date){
+  const one=(OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
+  if(one){ newPiece(one, {date}); return; }
+  document.querySelectorAll(".calmenu").forEach(m=>m.remove());
+  const m=document.createElement("div"); m.className="calmenu"; m.setAttribute("role","menu");
+  m.innerHTML='<small>Add on '+esc(fD(date))+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12))+"px";
+  const close=()=>{ m.remove(); document.removeEventListener("click", away, true); document.removeEventListener("keydown", esc_); };
+  const away=e=>{ if(!m.contains(e.target)) close(); }, esc_=e=>{ if(e.key==="Escape"){ close(); btn.focus(); } };
+  setTimeout(()=>{ document.addEventListener("click", away, true); document.addEventListener("keydown", esc_); },0);
+  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newPiece(b.dataset.k, {date}); });
+  const f=m.querySelector("button"); if(f) f.focus();
+}
 function renderOverview(){
   const el=$("#page-overview"); const ev=allEvents(); const t=T();
   const ed=curEdition();
@@ -3230,13 +3266,16 @@ function renderOverview(){
   if(!OV.month) OV.month = t.slice(0,7);
   const [yy,mm]=OV.month.split("-").map(Number);
   const first=new Date(yy,mm-1,1); const startOff=(first.getDay()+6)%7; let d=new Date(yy,mm-1,1-startOff);
-  const byDate={}; ev.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
+  /* the calendar's channel filter (Nov 24, 2026): pick one or more channels; none picked shows everything */
+  OV.chans=(OV.chans||[]).filter(k=>CAL_CHANS.some(c=>c[0]===k));
+  const calOn=e=>!OV.chans.length || OV.chans.includes(e.k==="news"||e.k==="press"||e.k==="request"?"other":e.k);
+  const byDate={}; ev.filter(calOn).forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
   let cal='<div class="cal">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>'<div class="dh">'+x+'</div>').join("");
   for(let i=0;i<42;i++){
     const ds=iso(d); const out=d.getMonth()!==mm-1; const we=d.getDay()===0||d.getDay()===6;
     if(i>=35 && out && i%7===0) break;
     const list=(byDate[ds]||[]).sort((a,b)=>(b.big?1:0)-(a.big?1:0));
-    cal+='<div class="d'+(out?" out":"")+(we&&!out?" we":"")+(ds===t?" today":"")+'" data-date="'+ds+'"><span class="num">'+d.getDate()+'</span>'+list.slice(0,4).map(evHtml).join("")+(list.length>4?'<span class="note">+'+(list.length-4)+' more</span>':'')+'</div>';
+    cal+='<div class="d'+(out?" out":"")+(we&&!out?" we":"")+(ds===t?" today":"")+'" data-date="'+ds+'"><span class="dtop"><span class="num">'+d.getDate()+'</span><button type="button" class="dadd" data-add="'+ds+'" aria-label="Add an item on '+esc(fD(ds))+'" title="Add an item on '+esc(fD(ds))+'">+</button></span>'+list.slice(0,4).map(evHtml).join("")+(list.length>4?'<span class="note">+'+(list.length-4)+' more</span>':'')+'</div>';
     d.setDate(d.getDate()+1);
   }
   cal+='</div>';
@@ -3283,6 +3322,8 @@ function renderOverview(){
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>The Next Four Weeks</h2><span class="note">every channel, one line each · hover a marker for what it is</span></div>'+lanesHtml(ev)+'</div>'+
     '<div class="card"><div class="ch"><h2>Calendar</h2><div class="r calnav"><button class="btn sm" type="button" id="cal-prev" aria-label="Previous month">←</button><span class="m">'+esc(MONL[mm-1]+" "+yy)+'</span><button class="btn sm" type="button" id="cal-next" aria-label="Next month">→</button><button class="btn sm" type="button" id="cal-today">Today</button></div></div>'+
+      '<div class="calfil" role="group" aria-label="Show on the calendar"><span>Show</span><button type="button" data-calch="" aria-pressed="'+!OV.chans.length+'">All</button>'+
+        CAL_CHANS.map(([k,l])=>'<button type="button" data-calch="'+k+'" aria-pressed="'+OV.chans.includes(k)+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("")+'</div>'+
       '<div class="cb flush">'+cal+'</div>'+
       '<div class="legend">'+["matters","micdup","linkedin","youtube","mailchimp","summit","community","setup"].map(k=>'<span><i class="dot k-'+k+'"></i>'+esc(CH[k])+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
     '<div class="grid2" style="margin-top:22px">'+
@@ -3295,6 +3336,8 @@ function renderOverview(){
   $("#cal-next",el).onclick=()=>{ OV.month=iso(new Date(yy,mm,1)).slice(0,7); renderOverview(); };
   $("#cal-today",el).onclick=()=>{ OV.month=T().slice(0,7); renderOverview(); };
   $$(".cal .d",el).forEach(c=>{ const list=(byDate[c.dataset.date]||[]).sort((a,b)=>(b.big?1:0)-(a.big?1:0)); $$(".ev",c).forEach((b,i)=>b.onclick=()=>list[i].go()); });
+  $$("[data-calch]",el).forEach(b=>b.onclick=()=>{ const k=b.dataset.calch; if(!k) OV.chans=[]; else OV.chans=OV.chans.includes(k)?OV.chans.filter(x=>x!==k):OV.chans.concat([k]); try{ localStorage.setItem("mm.cal.chans", JSON.stringify(OV.chans)); }catch(e){} renderOverview(); });
+  $$("[data-add]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); calAdd(b, b.dataset.add); });
   $$(".agi",el).forEach(b=>b.onclick=()=>agList[+b.dataset.agi].go());
   const sd=$("#ov-sdone",el); if(sd) sd.onclick=()=>{ OV.showDone=!OV.showDone; renderOverview(); };
   const sl=$("#ov-slater",el); if(sl) sl.onclick=()=>{ OV.showLater=!OV.showLater; renderOverview(); };
@@ -3894,22 +3937,36 @@ function peopleIndex(){
    Downloading never signs anyone up for MISMO Matters. */
 function dlSorted(){ return vals("wpdl").filter(d=>d.e).sort((a,b)=>String(b.at||"").localeCompare(String(a.at||""))); }
 function dlCSV(list){ const q=v=>'"'+String(v||"").replace(/"/g,'""')+'"'; return ["Downloaded,First Name,Last Name,Email,Company,Title,Work Product,File,Times,First Download"].concat(list.map(d=>[localDay(d.at),d.first,d.last,d.e,d.o,d.t,d.product||d.pid,d.file,d.times||1,localDay(d.firstAt||d.at)].map(q).join(","))).join("\n"); }
-let DLQ={q:"", limit:25};
+let DLQ={q:"", limit:25, range:"", from:"", to:""};
+/* the date filter on downloads (Jonna, Nov 24, 2026): by when each was downloaded (Eastern days) */
+const DL_RANGES=[["","Any Time"],["week","Last 7 Days"],["month","This Month"],["last","Last Month"],["90","Last 90 Days"],["year","This Year"],["custom","Pick Dates"]];
+function dlRange(){ const t=T(), r=DLQ.range;
+  if(r==="week") return [add(t,-6),t]; if(r==="month") return [t.slice(0,7)+"-01",t];
+  if(r==="last"){ const end=add(t.slice(0,7)+"-01",-1); return [end.slice(0,7)+"-01",end]; }
+  if(r==="90") return [add(t,-89),t]; if(r==="year") return [t.slice(0,4)+"-01-01",t];
+  if(r==="custom") return [DLQ.from||"", DLQ.to||""]; return ["",""]; }
+function dlMatch(d){ const q=DLQ.q.trim().toLowerCase(), [f,to]=dlRange(), day=localDay(d.at);
+  return (!f||day>=f) && (!to||day<=to) && (!q||[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q)); }
 function downloadsCard(){
   const all=dlSorted(), t=T(), wk=all.filter(d=>localDay(d.at)>=add(t,-6)), mo=all.filter(d=>String(d.at||"").slice(0,7)===t.slice(0,7));
-  const q=DLQ.q.trim().toLowerCase(), list=q?all.filter(d=>[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q)):all;
+  const list=all.filter(dlMatch), filtered=!!(DLQ.q.trim()||DLQ.range), [rf,rt]=dlRange();
   const people=new Set(all.map(d=>d.e)).size, tops={}; all.forEach(d=>{ const k=d.product||d.pid||d.file||"—"; tops[k]=(tops[k]||0)+(+d.times||1); });
   const top=Object.entries(tops).sort((a,b)=>b[1]-a[1])[0];
   return '<div class="card" style="margin-bottom:22px"><div class="ch"><h2>Work Product Downloads</h2><span class="cnt">'+all.length.toLocaleString()+'</span><span class="note">'+wk.length+' this week · '+mo.length+' this month · '+people.toLocaleString()+' people'+(top?' · most downloaded: '+esc(top[0]):'')+'</span><div class="r" style="align-items:center">'+
-      (all.length?'<input type="search" class="plain" id="dl-q" placeholder="Name, email, company or work product" value="'+esc(DLQ.q)+'" style="width:240px"><button class="btn sm" type="button" id="dl-csv">Copy as CSV</button>':'')+'</div></div>'+
+      (all.length?'<select id="dl-range" aria-label="When downloaded">'+DL_RANGES.map(([v,l])=>'<option value="'+v+'"'+(DLQ.range===v?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
+        (DLQ.range==="custom"?'<input type="date" id="dl-from" aria-label="From" value="'+esc(DLQ.from)+'"><span class="t2">to</span><input type="date" id="dl-to" aria-label="To" value="'+esc(DLQ.to)+'">':'')+
+        '<input type="search" class="plain" id="dl-q" placeholder="Name, email, company or work product" value="'+esc(DLQ.q)+'" style="width:240px"><button class="btn sm" type="button" id="dl-csv">Copy '+(filtered?list.length.toLocaleString()+' as CSV':'as CSV')+'</button>':'')+'</div></div>'+
+    (filtered&&all.length?'<div class="dlsum"><b>'+list.length.toLocaleString()+'</b> download'+(list.length===1?'':'s')+' by <b>'+new Set(list.map(d=>d.e)).size.toLocaleString()+'</b> '+(new Set(list.map(d=>d.e)).size===1?'person':'people')+(rf||rt?', '+esc(rf?fS(rf):"start")+' to '+esc(rt?fS(rt):"today"):'')+(DLQ.q.trim()?', matching "'+esc(DLQ.q.trim())+'"':'')+'</div>':'')+
     (list.length?'<div class="tw"><table class="t"><thead><tr><th>Downloaded</th><th>Name</th><th>Email</th><th>Company</th><th>Work Product</th><th class="n">Times</th></tr></thead><tbody>'+
       list.slice(0,DLQ.limit).map(d=>'<tr class="click" data-dl="'+esc(d.id)+'"><td><b>'+esc(fS(localDay(d.at)))+'</b></td><td>'+esc(d.n||"—")+(d.t?'<span class="t2">'+esc(d.t)+'</span>':'')+'</td><td>'+esc(d.e)+'</td><td>'+esc(d.o||"")+'</td><td>'+esc(d.product||d.pid||d.file||"")+'</td><td class="n">'+(+d.times||1)+'</td></tr>').join("")+
       '</tbody></table></div>'+(list.length>DLQ.limit?'<div class="cb"><button class="btn sm" type="button" id="dl-more">Show More ('+(list.length-DLQ.limit).toLocaleString()+' left)</button></div>':'')
-    :'<div class="empty">'+(all.length?"Nobody matches that.":"Everyone who fills in the website's Before You Download form (and accepts the licence) lands here the moment they press Accept and Download, with what they downloaded.")+'</div>')+'</div>';
+    :'<div class="empty">'+(all.length?(DLQ.range?"No downloads in those dates"+(DLQ.q.trim()?" that match":"")+".":"Nobody matches that."):"Everyone who fills in the website's Before You Download form (and accepts the licence) lands here the moment they press Accept and Download, with what they downloaded.")+'</div>')+'</div>';
 }
 function wireDownloads(el, redraw){
   const qi=$("#dl-q",el); if(qi) qi.oninput=()=>{ DLQ.q=qi.value; DLQ.limit=25; clearTimeout(DLQ._t); DLQ._t=setTimeout(()=>{ redraw(); const n=$("#dl-q"); if(n){ n.focus(); n.setSelectionRange(n.value.length,n.value.length); } },180); };
-  const cv=$("#dl-csv",el); if(cv) cv.onclick=()=>{ const q=DLQ.q.trim().toLowerCase(); copyText(dlCSV(dlSorted().filter(d=>!q||[d.e,d.n,d.o,d.t,d.product,d.file].join(" ").toLowerCase().includes(q))),"Work product downloads (CSV)"); };
+  const cv=$("#dl-csv",el); if(cv) cv.onclick=()=>{ copyText(dlCSV(dlSorted().filter(dlMatch)),"Work product downloads (CSV)"); };
+  const rg=$("#dl-range",el); if(rg) rg.onchange=()=>{ DLQ.range=rg.value; DLQ.limit=25; if(DLQ.range==="custom" && !DLQ.from){ DLQ.from=T().slice(0,7)+"-01"; DLQ.to=T(); } redraw(); };
+  const df=$("#dl-from",el), dt=$("#dl-to",el); if(df) df.onchange=()=>{ DLQ.from=df.value; DLQ.limit=25; redraw(); }; if(dt) dt.onchange=()=>{ DLQ.to=dt.value; DLQ.limit=25; redraw(); };
   const mo=$("#dl-more",el); if(mo) mo.onclick=()=>{ DLQ.limit+=100; redraw(); };
   $$("[data-dl]",el).forEach(r=>r.onclick=()=>{ const d=S.wpdl[r.dataset.dl]; if(!d) return;
     openPane({eye:"Work Product Downloads", title:d.n||d.e, data:{}, fields:[{k:"_d",type:"html",html:()=>'<dl class="kv"><dt>Email</dt><dd>'+esc(d.e)+'</dd><dt>Company</dt><dd>'+esc(d.o||"—")+'</dd><dt>Title</dt><dd>'+esc(d.t||"—")+'</dd><dt>Work Product</dt><dd>'+esc(d.product||d.pid||"—")+'</dd>'+(d.file?'<dt>File</dt><dd>'+esc(d.file)+'</dd>':'')+'<dt>Licence</dt><dd>'+(d.accepted?"Accepted":"—")+(d.licence?' · '+esc(d.licence):'')+'</dd><dt>Downloaded</dt><dd>'+esc(fS(localDay(d.at)))+((+d.times||1)>1?' · '+(+d.times)+' times since '+esc(fS(localDay(d.firstAt||d.at))):'')+'</dd>'+(d.page?'<dt>From</dt><dd>'+esc(d.page)+'</dd>':'')+'</dl>'}]}); });
@@ -7943,7 +8000,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-24 13:08 ET · c396d87";
+const BUILD = "2026-11-24 18:33 ET · 1122cd6";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
