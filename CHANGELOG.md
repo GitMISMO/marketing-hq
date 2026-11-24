@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Results: the website numbers say when they were last updated
+
+- Jonna: "a time stamp of last time updated". The Website card on Results has an Updated row, and the Website section's note starts with Updated and the date and time (Eastern), from the last good pull from Cloudflare (every 3 hours).
+
 ## 2026-11-23 · Image Library: fewer dropdowns
 
 - Jonna said yes to taking out Every Campaign (and Pictures and Files): the one row of sections replaces them. The edition dropdown and search stay; the event picker shows under Industry Events.
