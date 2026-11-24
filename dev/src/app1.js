@@ -569,6 +569,26 @@ function badges(){
 /* ================= Schedule (overview) ================= */
 const OV = {month:null};
 function evHtml(e){ return '<button type="button" class="ev k-'+e.k+(e.done?" done":"")+(e.x?" x":"")+(e.big?" big":"")+'" title="'+esc(e.label)+'"'+(e.slot?' style="border-style:dashed"':'')+'><i class="dot"></i><span>'+esc(e.label)+'</span></button>'; }
+/* Calendar filter and "+ on a day" (Jonna, Nov 24, 2026: "add calendar filter and add ability to add new comms tracking
+   task to it"). The channels the calendar can show; a new item can be added on any day, for any channel that keeps its
+   own items here (MISMO Matters and Mic'd Up have their own pages). */
+const CAL_CHANS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community"],["orders","Orders"],["setup","Setup"],["other","Other"]];
+const CAL_ADD = [["linkedin","LinkedIn Post"],["mailchimp","Mailchimp Send"],["community","Community Post"],["summit","Summit Push"],["youtube","YouTube Video"],["other","Other Comms Task"],["setup","Setup Task"]];
+try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.isArray(v)) OV.chans=v; }catch(e){}
+function calAdd(btn, date){
+  const one=(OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
+  if(one){ newPiece(one, {date}); return; }
+  document.querySelectorAll(".calmenu").forEach(m=>m.remove());
+  const m=document.createElement("div"); m.className="calmenu"; m.setAttribute("role","menu");
+  m.innerHTML='<small>Add on '+esc(fD(date))+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12))+"px";
+  const close=()=>{ m.remove(); document.removeEventListener("click", away, true); document.removeEventListener("keydown", esc_); };
+  const away=e=>{ if(!m.contains(e.target)) close(); }, esc_=e=>{ if(e.key==="Escape"){ close(); btn.focus(); } };
+  setTimeout(()=>{ document.addEventListener("click", away, true); document.addEventListener("keydown", esc_); },0);
+  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newPiece(b.dataset.k, {date}); });
+  const f=m.querySelector("button"); if(f) f.focus();
+}
 function renderOverview(){
   const el=$("#page-overview"); const ev=allEvents(); const t=T();
   const ed=curEdition();
@@ -593,13 +613,16 @@ function renderOverview(){
   if(!OV.month) OV.month = t.slice(0,7);
   const [yy,mm]=OV.month.split("-").map(Number);
   const first=new Date(yy,mm-1,1); const startOff=(first.getDay()+6)%7; let d=new Date(yy,mm-1,1-startOff);
-  const byDate={}; ev.forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
+  /* the calendar's channel filter (Nov 24, 2026): pick one or more channels; none picked shows everything */
+  OV.chans=(OV.chans||[]).filter(k=>CAL_CHANS.some(c=>c[0]===k));
+  const calOn=e=>!OV.chans.length || OV.chans.includes(e.k==="news"||e.k==="press"||e.k==="request"?"other":e.k);
+  const byDate={}; ev.filter(calOn).forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
   let cal='<div class="cal">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>'<div class="dh">'+x+'</div>').join("");
   for(let i=0;i<42;i++){
     const ds=iso(d); const out=d.getMonth()!==mm-1; const we=d.getDay()===0||d.getDay()===6;
     if(i>=35 && out && i%7===0) break;
     const list=(byDate[ds]||[]).sort((a,b)=>(b.big?1:0)-(a.big?1:0));
-    cal+='<div class="d'+(out?" out":"")+(we&&!out?" we":"")+(ds===t?" today":"")+'" data-date="'+ds+'"><span class="num">'+d.getDate()+'</span>'+list.slice(0,4).map(evHtml).join("")+(list.length>4?'<span class="note">+'+(list.length-4)+' more</span>':'')+'</div>';
+    cal+='<div class="d'+(out?" out":"")+(we&&!out?" we":"")+(ds===t?" today":"")+'" data-date="'+ds+'"><span class="dtop"><span class="num">'+d.getDate()+'</span><button type="button" class="dadd" data-add="'+ds+'" aria-label="Add an item on '+esc(fD(ds))+'" title="Add an item on '+esc(fD(ds))+'">+</button></span>'+list.slice(0,4).map(evHtml).join("")+(list.length>4?'<span class="note">+'+(list.length-4)+' more</span>':'')+'</div>';
     d.setDate(d.getDate()+1);
   }
   cal+='</div>';
@@ -646,6 +669,8 @@ function renderOverview(){
     '</div></div>'+
     '<div class="card"><div class="ch"><h2>The Next Four Weeks</h2><span class="note">every channel, one line each · hover a marker for what it is</span></div>'+lanesHtml(ev)+'</div>'+
     '<div class="card"><div class="ch"><h2>Calendar</h2><div class="r calnav"><button class="btn sm" type="button" id="cal-prev" aria-label="Previous month">←</button><span class="m">'+esc(MONL[mm-1]+" "+yy)+'</span><button class="btn sm" type="button" id="cal-next" aria-label="Next month">→</button><button class="btn sm" type="button" id="cal-today">Today</button></div></div>'+
+      '<div class="calfil" role="group" aria-label="Show on the calendar"><span>Show</span><button type="button" data-calch="" aria-pressed="'+!OV.chans.length+'">All</button>'+
+        CAL_CHANS.map(([k,l])=>'<button type="button" data-calch="'+k+'" aria-pressed="'+OV.chans.includes(k)+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("")+'</div>'+
       '<div class="cb flush">'+cal+'</div>'+
       '<div class="legend">'+["matters","micdup","linkedin","youtube","mailchimp","summit","community","setup"].map(k=>'<span><i class="dot k-'+k+'"></i>'+esc(CH[k])+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
     '<div class="grid2" style="margin-top:22px">'+
@@ -658,6 +683,8 @@ function renderOverview(){
   $("#cal-next",el).onclick=()=>{ OV.month=iso(new Date(yy,mm,1)).slice(0,7); renderOverview(); };
   $("#cal-today",el).onclick=()=>{ OV.month=T().slice(0,7); renderOverview(); };
   $$(".cal .d",el).forEach(c=>{ const list=(byDate[c.dataset.date]||[]).sort((a,b)=>(b.big?1:0)-(a.big?1:0)); $$(".ev",c).forEach((b,i)=>b.onclick=()=>list[i].go()); });
+  $$("[data-calch]",el).forEach(b=>b.onclick=()=>{ const k=b.dataset.calch; if(!k) OV.chans=[]; else OV.chans=OV.chans.includes(k)?OV.chans.filter(x=>x!==k):OV.chans.concat([k]); try{ localStorage.setItem("mm.cal.chans", JSON.stringify(OV.chans)); }catch(e){} renderOverview(); });
+  $$("[data-add]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); calAdd(b, b.dataset.add); });
   $$(".agi",el).forEach(b=>b.onclick=()=>agList[+b.dataset.agi].go());
   const sd=$("#ov-sdone",el); if(sd) sd.onclick=()=>{ OV.showDone=!OV.showDone; renderOverview(); };
   const sl=$("#ov-slater",el); if(sl) sl.onclick=()=>{ OV.showLater=!OV.showLater; renderOverview(); };
