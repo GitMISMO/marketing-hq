@@ -9,6 +9,10 @@
 const WT = {days:30};
 const WT_START = "2026-11-20", WT_TOKEN_EXPIRES = "2027-11-20";
 /* today's record holds the numbers so far (partial: true) until the day is over */
+/* when the website numbers were last brought in (Jonna, Nov 23, 2026: "a time stamp of last time updated"): the last good
+   pull from Cloudflare, e.g. "Nov 23, 2:49 AM ET" */
+function wtStamp(iso){ const d=new Date(iso||""); if(isNaN(d)) return ""; return d.toLocaleString("en-US",{timeZone:"America/New_York",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET"; }
+function wtUpdated(){ const r=wtRun(); return r ? wtStamp(r.lastOk||(r.ok?r.at:"")) : ""; }
 function wtTime(iso){ const d=new Date(iso||""); return isNaN(d)?"":d.toLocaleTimeString("en-US",{timeZone:"America/New_York",hour:"numeric",minute:"2-digit"})+" ET"; }
 function wtRun(){ return (S.webtraffic||{})._run || null; }
 function wtDays(){ return Object.values(S.webtraffic||{}).filter(d=>d && /^\d{4}-\d\d-\d\d$/.test(d.date||"")).sort((a,b)=>a.date.localeCompare(b.date)); }
@@ -72,7 +76,7 @@ function rsWebsiteHL(){
 }
 function rsWebsite(){
   const all=wtDays(), run=wtRun();
-  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted</span><span class="sp"></span>'+
+  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed every 3 hours</span><span class="sp"></span>'+
     '<select class="plain" id="wt-days" aria-label="Days shown">'+[[7,"Last 7 Days"],[30,"Last 30 Days"],[90,"Last 90 Days"],[0,"Since Nov 20, 2026"]].map(([v,l])=>'<option value="'+v+'"'+(WT.days===v?' selected':'')+'>'+l+'</option>').join("")+'</select></div>';
   if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first pull from Cloudflare hasn\'t run yet. It runs every 3 hours and brings today so far; numbers start with Nov 20, 2026.')+
     (wtHL()?'':' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.')+'</div>'+rsWebsiteHL()+'</div>';
