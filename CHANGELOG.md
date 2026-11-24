@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-24 · Mic'd Up: Amy's emailed wording comes through as she wrote it
+
+- Jonna: "make sure the way that she responds in the email and formatting translate accurately in MISMO Media".
+- Amy's reply arrives as plain text cut into about 80-character lines, with her note on top ("Changes: (revised post below)") and the signature logo's "MISMO" below. Step 6 now takes those off, joins a line back only where the email wrapped it, and keeps each of her paragraphs as its own paragraph (bullets and hashtags stay on their own lines). Copy Amy's Version and Put It in the Description use the same text; a copy cleaned the old way is redone.
+
 ## 2026-11-23 · Results: the website numbers say when they were last updated
 
 - Jonna: "a time stamp of last time updated". The Website card on Results has an Updated row, and the Website section's note starts with Updated and the date and time (Eastern), from the last good pull from Cloudflare (every 3 hours).
