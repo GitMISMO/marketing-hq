@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-25 · Website downloads for Member 360 (CN-017)
+
+- Member 360 can take the website's work-product downloads from MISMO Media instead of a hand-uploaded export: a read-only copy (data/member-360/downloads.json in marketing-hq-data, test entries left out) is refreshed after every download and every morning. Help describes it. Nothing changes in how MISMO Media saves.
+
 ## 2026-11-25 · The browser's Back button works
 
 - CN-033 (approved by Jonna, Nov 25, 2026): the browser's Back button goes to the last page you were on and closes an open panel first (a record's panel, System Health, the monthly reminder); it never undoes a change. Forward goes again. The address bar doesn't change, and MISMO Media still opens on Home. A panel with unsaved changes isn't thrown away by Back: it gives Close's "changes that aren't saved" warning and stays open. It comes from the one shared file every MISMO app loads (https://resources.mismo.org/assets/back.js); `dev/tests/backbtn.js` checks it.
