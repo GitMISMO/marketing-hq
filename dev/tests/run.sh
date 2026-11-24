@@ -40,4 +40,5 @@ out=$(node writerjson.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' |
 out=$(node pressahead.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node teamevents.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node webhl.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node brandkit.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail
