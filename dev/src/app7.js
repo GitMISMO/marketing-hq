@@ -184,6 +184,8 @@ function renderImages(){
   const el=$("#page-images"), t=T(), all=vals("images"), live=all.filter(i=>!i.archived);
   const eds=editionsSorted().filter(e=>!e.archived), ced=curEdition();
   const q=imNorm(IM.q);
+  /* the Kind and Campaign dropdowns are gone (Nov 23, 2026): a campaign set elsewhere opens its section instead */
+  if(IM.camp){ const k={events:"events", linkedin:"linkedin", micdup:"micdup", matters:"matters"}[IM.camp]; if(k){ IM.view="lib"; IM.sec=k; } }
   IM.camp=""; IM.type=""; if(IM.sec!=="events") IM.ev="";
   const list=imgsLive().filter(im=>!isLogo(im) && !isBrandKit(im) && (!IM.type||(IM.type==="file")===isFile(im)) && (!IM.camp||im.campaign===IM.camp) && (!IM.ed||im.edition===IM.ed) && (!IM.ev||im.eventId===IM.ev) && (!q || imNorm([im.name,im.file,im.alt,im.credit,im.notes,IMG_CAMP[im.campaign],im.eventName,im.eventUse,bkExt(im)].join(" ")).indexOf(q)>=0));
   const logos=live.filter(isLogo), logosOut=logos.filter(i=>!i.hlUrl).length, shelf=IM.view==="logos", bkView=IM.view==="kit", bkAll=live.filter(isBrandKit);
