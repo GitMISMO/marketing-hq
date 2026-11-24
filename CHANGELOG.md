@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Image Library: the Library in sections
+
+- Jonna: LinkedIn posts and Mic'd Up, then social templates, email headers, email designs, headshots and industry events.
+- The Library tab shows its pictures in those sections (then MISMO Matters Pictures and Other Pictures), newest first. Each section shows its newest eight with Show All; the Section buttons show one section in full. This replaces the by-month view added earlier today.
+- The section comes from the picture's name, campaign and folder. Library Section on a picture moves it (libGroup), e.g. a headshot whose name doesn't say so.
+
 ## 2026-11-23 · Image Library: the Brand Kit, and the Library by month
 
 - Jonna: "organize the image library, it's going to get unruly, Amy was looking for the eps of the logo and had to scroll forever".
