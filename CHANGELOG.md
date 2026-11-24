@@ -2,6 +2,13 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-23 · Image Library: the Brand Kit, and the Library by month
+
+- Jonna: "organize the image library, it's going to get unruly, Amy was looking for the eps of the logo and had to scroll forever".
+- Logos & Brand files have their own Brand Kit tab: the MISMO logo as one card per color with a button for each format (PNG, JPG, SVG, EPS, AI), each certification and member badge as one card with its sizes and vector PDF, then Guides & Templates, Print & Trade Show, Video and Swag Mockups. File-type buttons show only what has that format; a search box and jump links to each group.
+- The Library keeps the campaign pictures, grouped by month (the two newest open, older months folded). A Library search that also matches Brand Kit files says so, with a button to see them.
+- The ten badge PDFs named 1 to 10 are now named for their badge, and the Logo Reveal DRAFT is archived (nothing deleted). Groups come from each file's name, type and folder; bkGroup on a file overrides it.
+
 ## 2026-11-23 · Press Releases: comment-period releases removed (CN-013)
 
 - Approved by Jonna (Nov 23, 2026): MISMO isn't doing comment-period releases, and nothing is kept as archived or canceled.
