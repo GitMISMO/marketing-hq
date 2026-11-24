@@ -130,11 +130,20 @@ function imSections(list, card){
   const by={}; list.forEach(im=>{ const k=libSec(im); (by[k]=by[k]||[]).push(im); });
   const have=LIB_SECS.filter(([k])=>by[k]);
   if(IM.sec && !by[IM.sec]) IM.sec="";
-  const bar='<div class="bkbar" role="group" aria-label="Library section"><span>Section</span><button type="button" class="btn sm'+(IM.sec?"":" pri")+'" data-imsec="">All</button>'+
-    have.map(([k,l])=>'<button type="button" class="btn sm'+(IM.sec===k?" pri":"")+'" data-imsec="'+k+'">'+esc(l)+' <span class="cnt">'+by[k].length+'</span></button>').join("")+'</div>';
-  return bar+have.filter(([k])=>!IM.sec || IM.sec===k).map(([k,l])=>{
+  return have.filter(([k])=>!IM.sec || IM.sec===k).map(([k,l])=>{
     const all=by[k], full=!!IM.sec || !!IM.q || (IM.more&&IM.more[k]) || all.length<=LIB_SHOW+2, shown=full?all:all.slice(0,LIB_SHOW);
     return '<section class="bkgrp" id="lib-'+k+'"><div class="bkh"><h3>'+esc(l)+'</h3><span class="cnt">'+all.length+'</span></div><div class="imgrid">'+shown.map(card).join("")+'</div>'+
       (full?'':'<div class="libmore"><button class="btn sm" type="button" data-immore="'+k+'">Show All '+all.length+' '+esc(l)+'</button></div>')+'</section>';
   }).join("");
+}
+/* one row to get around the Image Library (Nov 23, 2026; Jonna: "why are there the top Library, Brand Kit and Member Logos and
+   then separate section filter buttons, can we make this more efficient"): All Pictures, each Library section, Brand Kit and
+   Member & Sponsor Logos side by side, each with its count. */
+function imNavHtml(list, nKit, nLogos, shelf, bkView){
+  const by={}; list.forEach(im=>{ const k=libSec(im); by[k]=(by[k]||0)+1; });
+  const lib=!shelf && !bkView, b=(nav,label,n,on)=>'<button type="button" data-imnav="'+nav+'" aria-pressed="'+on+'">'+esc(label)+'<span class="cnt">'+n+'</span></button>';
+  return '<div class="subtabs imnav" role="group" aria-label="Which pictures">'+
+    b("lib:", "All Pictures", list.length, lib && !IM.sec)+
+    LIB_SECS.filter(([k])=>by[k]).map(([k,l])=>b("lib:"+k, l, by[k], lib && IM.sec===k)).join("")+
+    '<i class="imnav-gap" aria-hidden="true"></i>'+b("kit:", "Brand Kit", nKit, bkView)+b("logos:", "Member & Sponsor Logos", nLogos, shelf)+'</div>';
 }

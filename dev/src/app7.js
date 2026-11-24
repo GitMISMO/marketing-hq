@@ -199,10 +199,10 @@ function renderImages(){
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<button class="tile" type="button" data-imview="kit"><div class="v">'+bkAll.length+'</div><div class="k">Brand Kit</div><div class="s">logos in every format, badges, guides</div></button>'+
         '<button class="tile" type="button" data-imview="logos"><div class="v">'+logos.length+'</div><div class="k">Member Logos</div><div class="s">'+(logosOut?logosOut+' not in Higher Logic yet':'all in Higher Logic')+'</div></button></div></div>'+
-    '<div class="subtabs" role="group" aria-label="Which pictures"><button type="button" data-imview="lib" aria-pressed="'+(!shelf&&!bkView)+'">Library<span class="cnt">'+live.filter(i=>!isLogo(i)&&!isBrandKit(i)).length+'</span></button><button type="button" data-imview="kit" aria-pressed="'+bkView+'">Brand Kit<span class="cnt">'+bkAll.length+'</span></button><button type="button" data-imview="logos" aria-pressed="'+shelf+'">Member &amp; Sponsor Logos<span class="cnt">'+logos.length+'</span></button></div>'+
+    imNavHtml(list, bkAll.length, logos.length, shelf, bkView)+
     (bkView ? brandKitHtml() : shelf ? '<div class="card"><div class="ch"><h2>Member &amp; Sponsor Logos</h2><span class="cnt">'+logos.length+'</span><span class="note">from Member 360 and the logo walls</span><div class="r im-filters"><input type="search" class="plain" id="im-q" placeholder="Search companies" value="'+esc(IM.q)+'" aria-label="Search logos"><label class="im-arch"><input type="checkbox" id="im-arch"'+(IM.arch?" checked":"")+'> Show Archived</label></div></div><div class="cb">'+logoShelf()+'</div></div>' :
 
-    '<div class="card"><div class="ch"><h2>All Images</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
+    '<div class="card"><div class="ch"><h2>'+esc(IM.sec&&LIB_SEC[IM.sec]?LIB_SEC[IM.sec]:"All Pictures")+'</h2><span class="cnt">'+list.length+'</span><div class="r im-filters">'+
       '<select id="im-type" aria-label="Kind"><option value="">Pictures and Files</option><option value="pic"'+(IM.type==="pic"?" selected":"")+'>Pictures</option><option value="file"'+(IM.type==="file"?" selected":"")+'>Files</option></select>'+
       '<select id="im-camp" aria-label="Campaign"><option value="">Every Campaign</option>'+IMG_CAMPS.filter(c=>c[0]!=="brand"&&c[0]!=="logos").map(([k,l])=>'<option value="'+k+'"'+(IM.camp===k?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
       (IM.camp==="matters"||!IM.camp?'<select id="im-ed" aria-label="Edition"><option value="">Every Edition</option>'+eds.map(e=>'<option value="'+esc(e.id)+'"'+(IM.ed===e.id?" selected":"")+'>'+esc(monthName(e.month))+'</option>').join("")+'</select>':'')+
@@ -217,7 +217,8 @@ function renderImages(){
           '<div class="imact">'+(isFile(im)?'<a class="btn sm" href="'+esc(spFileUrl(im.spPath))+'" target="_blank" rel="noopener" data-stop>Open ↗</a><a class="btn sm" href="'+esc(spFileUrl(im.spPath,true))+'" target="_blank" rel="noopener" data-stop>Download</a><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>':'<button class="btn sm" type="button" data-imdl="'+esc(im.id)+'">Download</button><button class="btn sm" type="button" data-imcp="'+esc(im.id)+'">Copy Link</button>')+'</div></div></div>')
         :'<div class="empty">'+(all.length?"No images match. Clear the search or pick another campaign.":(ASSETS?"Drop pictures here or press Add Images. JPG, PNG, GIF, SVG and WebP all work.":"No images yet."))+'</div>')+
     '</div>');
-  $$("[data-imview]",el).forEach(b=>b.onclick=()=>{ IM.view=b.dataset.imview; IM.q=""; renderImages(); });
+  $$("[data-imview]",el).forEach(b=>b.onclick=()=>{ IM.view=b.dataset.imview; IM.sec=""; IM.q=""; renderImages(); });
+  $$("[data-imnav]",el).forEach(b=>b.onclick=()=>{ const [v,k]=b.dataset.imnav.split(":"); if(v!==IM.view) IM.q=""; IM.view=v; IM.sec=k||""; renderImages(); });
   const tk=$("#im-tokit",el); if(tk) tk.onclick=()=>{ BKIT.q=IM.q; IM.q=""; IM.view="kit"; renderImages(); };
   $$("[data-imsec]",el).forEach(b=>b.onclick=()=>{ IM.sec=b.dataset.imsec; renderImages(); });
   $$("[data-immore]",el).forEach(b=>b.onclick=()=>{ IM.more=IM.more||{}; IM.more[b.dataset.immore]=true; renderImages(); });
