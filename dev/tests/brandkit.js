@@ -56,6 +56,10 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   /* the one row replaces the Kind and Campaign dropdowns (Nov 23, 2026); the edition dropdown and search stay */
   out.noDropdowns=!document.getElementById("im-camp") && !document.getElementById("im-type") && !!document.getElementById("im-ed") && !!document.getElementById("im-q");
   /* a picture added while Headshots is open lands in Headshots; one added under Mic'd Up gets the Mic'd Up campaign */
+  /* a campaign set from elsewhere (the Industry Events check sets IM.camp) opens its section */
+  IM.camp="events"; renderImages(); await wait(80);
+  out.campToSection=IM.sec==="events" && IM.camp==="" && !!document.getElementById("im-ev") === (typeof teEvents==="function") && !!document.getElementById("lib-events");
+  IM.sec=""; renderImages();
   IM.view="lib"; IM.sec="headshot"; const keepIM=IM.sec; out.upHeadshot=imUpCamp()==="matters"; IM.sec="micdup"; out.upMicdup=imUpCamp()==="micdup"; IM.view="kit"; out.upKit=imUpCamp()==="brand"; IM.view="lib"; IM.sec="";
   out.upLibGroup=/IM\.view==="lib"&&\["social","emailhdr","emaildesign","headshot"\]\.includes\(IM\.sec\)\)\?IM\.sec/.test(String(addImages));
   /* a Library search for "eps" points to the Brand Kit */
