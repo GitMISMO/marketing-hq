@@ -25,6 +25,9 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   S.webtraffic._run={id:"_run", at:new Date().toISOString(), ok:true, days:[day(1)], lastOk:new Date().toISOString(), error:""};
   WT.days=7; renderResults(); rsOpen("web"); await wait(300);
   const t2=document.getElementById("rs-web").innerText.replace(/\s+/g," ");
+  /* when the numbers were last brought in, on the section and on its Results card (Nov 23, 2026) */
+  const stamp=wtStamp(S.webtraffic._run.lastOk);
+  out.updated=/ ET$/.test(stamp) && t2.indexOf("Updated "+stamp)>=0 && (document.querySelector('[data-rs-open="web"]')||{innerText:""}).innerText.indexOf(stamp)>=0;
   out.apart=/300 Visits/.test(t2) && /Days before Nov 20 are further down/.test(t2) && /Higher Logic's Count/i.test(t2);
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
