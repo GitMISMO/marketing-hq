@@ -24,6 +24,12 @@ This page is for whoever changes its code. For how to *use* it, see Help inside 
 | `hl-bridge/` | The script the Higher Logic website loads to upload pictures and read certified lists. |
 | `mm-headers/` | Newsletter header images and icons. |
 
+Work-product downloads for Member 360 (CN-017, Nov 23, 2026): `marketing-hq-data` keeps a read-only copy of
+`data/wpdl.json` at `data/member-360/downloads.json` (test entries left out), made by `.github/member360-downloads.mjs`
+there after each download is filed (Website sign-ups workflow) and every morning (workflow Member 360 downloads).
+Member 360 reads it and never writes. Its field names are a contract: add fields, never rename. Contract: Connections
+Map row "MISMO Media → Member 360 (website downloads)".
+
 Records are **not** here. They live in the private repo `GitMISMO/marketing-hq-data`, reached only
 through the relay after sign-in. Never put a token, a subscriber list or any record in this repo
 (`.gitignore` and the checks block the usual mistakes).
