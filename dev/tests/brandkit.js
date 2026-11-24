@@ -47,14 +47,18 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   out.more=sec("linkedin").querySelectorAll(".imcard").length===8 && !!sec("linkedin").querySelector("[data-immore]") && !document.querySelector("script#x");
   sec("linkedin").querySelector("[data-immore]").click(); await wait(100);
   out.showAll=document.getElementById("lib-linkedin").querySelectorAll(".imcard").length>=13;
-  document.querySelector('[data-imsec="headshot"]').click(); await wait(100);
-  out.oneSection=document.querySelectorAll('section[id^="lib-"]').length===1 && !!document.getElementById("lib-headshot");
+  /* one row for everything (Nov 23, 2026): All Pictures, each section, Brand Kit, Member & Sponsor Logos; no second row of section buttons */
+  const nav=[...document.querySelectorAll(".imnav [data-imnav]")].map(b=>b.dataset.imnav);
+  out.oneRow=document.querySelectorAll(".subtabs").length===1 && !document.querySelector("[data-imsec]") && nav[0]==="lib:" && nav.includes("lib:headshot") && nav.slice(-2).join(",")==="kit:,logos:";
+  document.querySelector('[data-imnav="lib:headshot"]').click(); await wait(100);
+  out.oneSection=document.querySelectorAll('section[id^="lib-"]').length===1 && !!document.getElementById("lib-headshot") && /Headshots/.test(document.querySelector("#page-images .card .ch h2").textContent) && document.querySelector('[data-imnav="lib:headshot"]').getAttribute("aria-pressed")==="true";
   IM.sec=""; IM.more={}; renderImages();
   out.noBrandOption=!document.querySelector('#im-camp option[value="brand"]');
   /* a Library search for "eps" points to the Brand Kit */
   IM.q="eps"; renderImages(); await wait(100);
   const hint=document.querySelector(".bkhint"); out.hint=!!hint && /3 Brand Kit files also match/.test(hint.innerText);
   document.getElementById("im-tokit").click(); await wait(150);
+  out.kitPressed=document.querySelector('[data-imnav="kit:"]').getAttribute("aria-pressed")==="true";
   out.toKit=IM.view==="kit" && BKIT.q==="eps" && document.querySelectorAll(".bkcard").length===3;
   /* the Brand Kit: one card per logo color, every format on it */
   BKIT.q=""; renderImages(); await wait(100);
