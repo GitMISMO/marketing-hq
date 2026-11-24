@@ -5070,7 +5070,7 @@ function renderImages(){
       (SP_IMG()?'<button class="btn" type="button" id="im-sp">Add from SharePoint</button>':'')+(ASSETS?'<button class="btn pri" type="button" id="im-add">+ Add Images</button><input type="file" id="im-file" accept="image/*" multiple hidden>':'')+'</div></div>'+
     '<div class="band"><div class="today">Image Library</div><div class="say">'+(live.length?'<em>'+live.filter(i=>!isFile(i)&&!isLogo(i)).length+'</em> picture'+(live.filter(i=>!isFile(i)&&!isLogo(i)).length===1?"":"s")+(live.some(isFile)?' and <em>'+live.filter(isFile).length+'</em> brand file'+(live.filter(isFile).length===1?"":"s"):'')+' in the library'+(ced?', <em>'+forEd+'</em> tagged to the '+esc(monthName(ced.month))+' MISMO Matters':'')+'. ':'No images yet. ')+
       (ASSETS ? 'Drop pictures anywhere on this page or press Add Images. Tick pictures to download them together as a ZIP.'+(!SP_IMG()&&live.some(i=>i.spPath)?' Pictures kept in SharePoint show their previews on resources.mismo.org.':'') : (SP_IMG()?'Pictures load straight from SharePoint. Adding new ones here opens when MISMO Media is switched on.':'Adding pictures here opens when MISMO Media is switched on. Use the Claude version until then.'))+'</div>'+
-      '<div class="tiles"><button class="tile" type="button" data-imview="lib"><div class="v sky">'+live.filter(i=>!isFile(i)&&!isLogo(i)&&!isBrandKit(i)).length+'</div><div class="k">Pictures</div><div class="s">for campaigns, by month</div></button>'+
+      '<div class="tiles"><button class="tile" type="button" data-imview="lib"><div class="v sky">'+live.filter(i=>!isFile(i)&&!isLogo(i)&&!isBrandKit(i)).length+'</div><div class="k">Pictures</div><div class="s">LinkedIn, Mic\'d Up, email, headshots</div></button>'+
         '<div class="tile"><div class="v">'+forEd+'</div><div class="k">This Edition</div><div class="s">'+(ced?esc(monthName(ced.month))+" MISMO Matters":"no edition open")+'</div></div>'+
         '<button class="tile" type="button" data-imview="kit"><div class="v">'+bkAll.length+'</div><div class="k">Brand Kit</div><div class="s">logos in every format, badges, guides</div></button>'+
         '<button class="tile" type="button" data-imview="logos"><div class="v">'+logos.length+'</div><div class="k">Member Logos</div><div class="s">'+(logosOut?logosOut+' not in Higher Logic yet':'all in Higher Logic')+'</div></button></div></div>'+
@@ -7916,7 +7916,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-23 20:13 ET · 4b3a426";
+const BUILD = "2026-11-23 20:21 ET · dc853d9";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
