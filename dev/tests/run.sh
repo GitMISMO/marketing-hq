@@ -46,4 +46,5 @@ out=$(node calfil.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fa
 out=$(node rsdl.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node rsperiod.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node tabicon.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node backbtn.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail

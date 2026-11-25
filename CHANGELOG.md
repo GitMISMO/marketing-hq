@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-25 · The browser's Back button works
+
+- CN-033 (approved by Jonna, Nov 25, 2026): the browser's Back button goes to the last page you were on and closes an open panel first (a record's panel, System Health, the monthly reminder); it never undoes a change. Forward goes again. The address bar doesn't change, and MISMO Media still opens on Home. A panel with unsaved changes isn't thrown away by Back: it gives Close's "changes that aren't saved" warning and stays open. It comes from the one shared file every MISMO app loads (https://resources.mismo.org/assets/back.js); `dev/tests/backbtn.js` checks it.
+
 ## 2026-11-25 · Browser tab icon now matches mismo.org
 
 - CN-030 (approved by Jonna, Nov 25, 2026): MISMO Media's browser tab shows the same icon as www.mismo.org, from the one shared copy at https://resources.mismo.org/assets/favicon-48x48.png. Every page has this one icon line in its head and no other: the main page, MISMO Matters web editions (November's too, and every one built from now on) and the newsletter header drawing page. Nothing else on the pages changed.

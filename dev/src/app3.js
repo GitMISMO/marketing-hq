@@ -485,6 +485,24 @@ function openList(id){
 
 /* ================= start ================= */
 $("#pane-x").onclick=()=>closePane();
+/* The browser's Back button (CN-033, Nov 25, 2026). The shared /assets/back.js (loaded in <head> right after
+   session.js) makes each change of page in the left menu a Back step. These are the things Back closes first,
+   bottom layer first; each close does exactly what that layer's own Close button or Escape does, so an
+   unsaved panel still asks before it throws changes away. Never add our own pushState or change the address. */
+if(window.MismoBack){
+  /* The panel: like Close, except Back never throws away unsaved changes. back.js may call close() a few times in a
+     row while a panel stays open, and a second Close means "leave without saving", so with unsaved changes Back
+     only gives Close's warning and stays; the person then presses Save, or Close to leave without saving. */
+  MismoBack.layer({ isOpen:()=>!!PANE, close:()=>{
+    if(!PANE) return;
+    if(!PANE.dirty) return closePane();
+    const m=$("#pf-msg"); if(!m) return;
+    if(!m.dataset.warned) return closePane();   /* the first Close only warns */
+    m.textContent="You have changes that aren't saved. Press Close again to leave without saving.";
+  } });
+  MismoBack.layer({ isOpen:()=>!!HH.modal, close:()=>{ const b=HH.modal && HH.modal.querySelector(".hh-hd .btn"); if(b) b.click(); } });
+  MismoBack.layer({ isOpen:()=>!!$("#mn-pop"), close:()=>{ const d=$("#mn-pop"); if(d) d.dispatchEvent(new KeyboardEvent("keydown",{key:"Escape",bubbles:false,cancelable:true})); } });
+}
 window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TABS.includes(h) && h!==TAB) show(h); });
 (function(){
   /* MISMO Media always opens on Home, including a refresh or a reopened tab.

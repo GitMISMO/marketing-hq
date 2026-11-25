@@ -23,6 +23,7 @@ const HELP = [
    <li><b>Search</b> at the top of the menu finds sections, episodes, posts, articles and help topics. Press <kbd>Ctrl</kbd>+<kbd>K</kbd> (<kbd>⌘</kbd>+<kbd>K</kbd> on a Mac) from anywhere.</li>
    <li><b>Narrow the menu</b> with the arrow at its top, or press <kbd>\\</kbd>. Your choice is remembered.</li>
    <li><b>Dark Mode</b> is at the foot of the menu. It carries across every MISMO tool.</li>
+   <li><b>The browser's Back button</b> goes to the last page you were on and closes an open panel first; it never undoes a change.</li>
   </ul>
   <h3>How Editing Works</h3>
   <ul>
