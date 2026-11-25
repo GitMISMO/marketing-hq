@@ -4350,7 +4350,7 @@ function rsDLists(x){
   const see=(k,l)=>'<button class="btn sm" type="button" data-rs-people="'+k+'">'+l+'</button>';
   return '<div class="card rs-sec" id="rs-lists"><div class="ch"><h2>Who Is on Our Lists</h2><span class="sp"></span><button class="btn sm" type="button" data-go="people">Open Subscribers</button></div>'+
     rsKpis([{v:rsN(x.listSize),k:"MISMO Matters",s:x.ed?"the last edition went to":"on the list"},{v:rsN(x.web.length),k:"Website Sign-Ups",s:"May 1 to Sept 8, and since Nov 19"},{v:rsN(x.dls.length),k:"Downloaders",s:"work products"},{v:rsN(x.pros.length),k:"Prospects",s:"from Member 360"},{v:rsN(x.uns.length),k:"Unsubscribed",s:"on MISMO's page"}])+
-    (RSP.range!=="all"?'<div class="rs-box"><h3>New '+esc(rsPerIn().replace(/^in /,"In ").replace(/^from /,"From ").replace(/^so far$/,""))+'</h3>'+rsKpis([{v:rsN(x.newSub),k:"Website Sign-Ups",s:"signed up in these dates"},{v:rsN(x.newDl),k:"New Downloaders",s:"first download in these dates"},{v:rsN(x.newUns),k:"Unsubscribed",s:"on MISMO's page in these dates"}])+'<p class="rs-note">The numbers above are the lists as of today; these are the people who joined or left '+esc(rsPerIn())+'.</p></div>':'')+
+    (RSP.range!=="all"?'<div class="rs-box"><h3>New '+esc(rsPerIn().replace(/^in /,"In ").replace(/^from /,"From ").replace(/^so far$/,""))+'</h3>'+rsKpis([{v:rsN(x.newSub),k:"Website Sign-Ups",s:"signed up in these dates"},{v:rsN(x.newDl),k:"New Downloaders",s:"first download in these dates"},{v:rsN(x.newUns),k:"Unsubscribed",s:"on MISMO's page in these dates"}])+'<p class="rs-note">The numbers above are the lists as of today; these are the people who joined or left '+esc(rsPerIn())+'. The old site\'s sign-up list (May 1 to Sept 8) has no dates, so only sign-ups on the new form count here.</p></div>':'')+
     '<div class="rs-box rs-src"><h3>Where the '+rsN(x.web.length)+' Website Sign-Ups Come From</h3>'+
       '<div class="rs-srow"><b>'+rsN(x.webOld)+'</b><span>signed up on the old mismo.org between May 1 and Sept 8, 2026 (the list exported from the old site)</span></div>'+
       '<div class="rs-srow"><b>'+rsN(x.webNew)+'</b><span>signed up on the new mismo.org form since it went live on Nov 19, 2026; new ones land here by themselves</span></div>'+
@@ -8071,7 +8071,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-24 19:40 ET · 66a90b1";
+const BUILD = "2026-11-24 19:48 ET · 17b2835";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
