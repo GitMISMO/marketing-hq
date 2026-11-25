@@ -12,6 +12,7 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' data: blob: https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws https://default867e5d11bde4499fb45e61572f9f33.7c.environment.api.powerplatform.com https://higherlogicdownload.s3.amazonaws.com https://cdn.sheetjs.com; frame-src 'self' blob: https://collaborate.mismo.org https://www.mismo.org; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <title>MISMO Media</title>
+<link rel="icon" type="image/png" sizes="48x48" href="https://resources.mismo.org/assets/favicon-48x48.png">
 <!-- Hide the app until someone is signed in. If this file is replaced by an upload, carry this block across. -->
 <style>html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:hidden}</style>
 <script>(function(){
@@ -3600,6 +3601,8 @@ function mmWebUrl(ed){ return MM_WEB_BASE+(ed&&ed.month||"")+"/"; }
 function buildWebPage(ed){
   const t="MISMO Matters | "+monthName(ed.month);
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(t)+'</title>'+
+    /* browser tab icon: the shared mismo.org icon, the one icon line on the page (CN-030, Nov 25, 2026) */
+    '<link rel="icon" type="image/png" sizes="48x48" href="https://resources.mismo.org/assets/favicon-48x48.png">'+
     /* anyone with the link can open it, but it stays out of search results (Jonna, Nov 18, 2026) */
     '<meta name="robots" content="noindex,nofollow">'+
     '<meta property="og:title" content="'+esc(t)+'"><meta property="og:image" content="'+esc(MAST_IMG)+'">'+
@@ -8076,7 +8079,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-24 20:34 ET · 91ab6a9";
+const BUILD = "2026-11-25 10:24 ET · b656654";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
