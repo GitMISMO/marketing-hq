@@ -287,9 +287,13 @@ function rsPerName(){ const r=RSP.range, t=T(), mo=d=>MONL[+d.slice(5,7)-1]+" "+
   if(r==="year") return t.slice(0,4); if(r==="month") return mo(t); if(r==="last") return mo(rsRange()[0]); if(r==="all") return "All Time"; if(r==="custom") return rsPerText();
   return (RS_RANGES.find(x=>x[0]===r)||["","All Time"])[1]; }
 function rsPerIn(){ const r=RSP.range; if(r==="all") return "so far"; if(r==="custom") return "from "+rsPerText(); if(["week","30","90"].includes(r)) return "in the "+rsPerName().toLowerCase(); return "in "+rsPerName(); }
-function rsPicker(pre){
+/* MISMO Matters' numbers start with its first send through Higher Logic (Informz), Nov 19, 2026: Axios never shared
+   numbers and they can't be got, so for MISMO Matters the period never reaches back before that send (Jonna, Nov 24, 2026). */
+function rsMMStart(){ const d=editionsSorted().filter(e=>!e.archived && e.dates && e.dates.publish && +edStats(e).recipients).map(e=>e.dates.publish).sort()[0]; return d || "2026-11-19"; }
+function rsMMText(){ const st=rsMMStart(), [f,to]=rsRange(); if(to && to<st) return "Before "+rsDY(st)+", when MISMO Matters' numbers start"; const a=(!f||f<st)?st:f; return rsDY(a)+" to "+rsDY(to||T()); }
+function rsPicker(pre, mm){
   return '<span class="rs-per"><label class="rs-perl" for="'+pre+'-range">Showing</label><select id="'+pre+'-range" data-rsp="range" aria-label="Period shown on Results">'+RS_RANGES.map(([v,l])=>'<option value="'+v+'"'+(RSP.range===v?" selected":"")+'>'+esc(l)+'</option>').join("")+'</select>'+
-    (RSP.range==="custom"?'<input type="date" data-rsp="from" aria-label="From" value="'+esc(RSP.from)+'"><span class="rs-pert">to</span><input type="date" data-rsp="to" aria-label="To" value="'+esc(RSP.to)+'">':'<span class="rs-pert">'+esc(rsPerText())+'</span>')+'</span>';
+    (RSP.range==="custom"?'<input type="date" data-rsp="from" aria-label="From"'+(mm?' min="'+esc(rsMMStart())+'"':'')+' value="'+esc(RSP.from)+'"><span class="rs-pert">to</span><input type="date" data-rsp="to" aria-label="To" value="'+esc(RSP.to)+'">':'<span class="rs-pert">'+esc(mm?rsMMText():rsPerText())+'</span>')+(mm?'<span class="rs-pert rs-mmnote">MISMO Matters\' numbers start with its first Higher Logic send, '+esc(fS(rsMMStart())+", "+rsMMStart().slice(0,4))+'</span>':'')+'</span>';
 }
 function rsPerWire(root){
   $$("[data-rsp]",root).forEach(el=>el.onchange=()=>{ const k=el.dataset.rsp, inRail=!!el.closest("#pane-body");
@@ -305,7 +309,7 @@ function rsCtx(){
   x.pn=rsPerName(); x.pt=rsPerText();
   x.edsAll=editionsSorted().filter(e=>+edStats(e).recipients); x.edLast=x.edsAll[x.edsAll.length-1]||null;
   /* an edition is in the period when it was sent then (or, with no send date, when its month overlaps) */
-  x.eds=x.edsAll.filter(e=>{ const p=e.dates&&e.dates.publish; if(p) return rsIn(p); const m=String(e.month||""); return /^\d{4}-\d\d/.test(m) && rsSpanIn(m.slice(0,7)+"-01", add(add(m.slice(0,7)+"-01",40).slice(0,7)+"-01",-1)); });
+  x.eds=x.edsAll.filter(e=>{ if(e.archived) return false; const p=e.dates&&e.dates.publish; if(p) return p>=rsMMStart() && rsIn(p); const m=String(e.month||""); return /^\d{4}-\d\d/.test(m) && m.slice(0,7)>=rsMMStart().slice(0,7) && rsSpanIn(m.slice(0,7)+"-01", add(add(m.slice(0,7)+"-01",40).slice(0,7)+"-01",-1)); });
   x.ed=(RS.ed && x.eds.find(e=>e.id===RS.ed)) || x.eds[x.eds.length-1] || null;
   x.st=x.ed?edStats(x.ed):{}; x.c=statsCalc(x.st); x.md=mmDetail(x.st);
   x.mc=mcSends(); x.yr=x.pn; x.mcY=x.mc.filter(m=>rsIn(m.date)); x.mcO=x.mcY.filter(m=>!m.resend);
@@ -346,7 +350,7 @@ function rsCtx(){
 /* ---- the detail for each channel (the right-hand panel) ---- */
 function rsDMM(x){
   const {ed,eds,st,c,md}=x;
-  if(!ed && x.edsAll.length) return '<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters</h2></div><div class="empty">No edition went out '+esc(rsPerIn())+'. The latest was '+esc(monthName(x.edLast.month))+'.</div></div>';
+  if(!ed && x.edsAll.length) return '<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters</h2></div><div class="empty">'+((rsRange()[1]&&rsRange()[1]<rsMMStart())?'MISMO Matters\' numbers start with its first Higher Logic send, '+esc(rsDY(rsMMStart()))+'. Axios never shared numbers for the editions before it.':'No edition went out '+esc(rsPerIn())+'. The latest was '+esc(monthName(x.edLast.month))+'.')+'</div></div>';
   if(!ed) return '<div class="card rs-sec" id="rs-mm"><div class="ch"><h2>MISMO Matters</h2></div><div class="empty">Axios never shared numbers, so the first edition here is November 2026. Record its stats on the MISMO Matters page.</div></div>';
   const funnel='<div class="rs-funnel">'+[["Sent",c.r,""],["Delivered",c.dl,pct(c.r?c.dl/c.r:0)+" of sent"],["Opened",c.o,pct(c.openRate)+" of delivered"],["Clicked",c.c,pct(c.cto)+" of openers"]].map(([l,v,s],i)=>
     '<div class="rs-fstep"><div class="rs-fl"><b>'+l+'</b><span>'+rsN(v)+'</span></div><div class="rs-fb"><i style="width:'+Math.max(0.6,c.r?v/c.r*100:0)+'%;background:var(--c'+(i<2?1:i===2?3:2)+')"></i></div>'+(s?'<small>'+s+'</small>':'')+'</div>').join("")+'</div>';
@@ -509,7 +513,7 @@ function rsCards(x){
   const mcSpark=mcO.filter(m=>m.date && m.dl>=1000).sort((a,b)=>a.date.localeCompare(b.date)).map(m=>m.or*100);
   const newest=x.fb[0]||x.pr[0]||null;
   const cards=[
-    rsCard("mm",{eye:ed?"MISMO Matters · "+monthName(ed.month):"MISMO Matters", color:"--c1", v:ed?pct(c.openRate):"—", vk:ed?"opened it":x.edsAll.length?"no edition "+rsPerIn():"from November on",
+    rsCard("mm",{eye:ed?"MISMO Matters · "+monthName(ed.month):"MISMO Matters", color:"--c1", v:ed?pct(c.openRate):"—", vk:ed?"opened it":x.edsAll.length?((rsRange()[1]&&rsRange()[1]<rsMMStart())?"numbers start "+rsDY(rsMMStart()):"no edition "+rsPerIn()):"from November on",
       viz:ed?rsMini([{l:"Delivered",v:c.dl,c:"--c1"},{l:"Opened",v:c.o,c:"--c3"},{l:"Clicked",v:c.c,c:"--c2"}]):"", none:x.edsAll.length?"Pick another period to see an edition":"Record the November stats on the MISMO Matters page",
       rows:ed?[["Sent to",rsN(c.r)],["Click to open",pct(c.cto)],["Unsubscribes",rsN(c.u)]]:[], more:"Waves, delivery, links and every edition"}),
     rsCard("mc",{eye:"Mailchimp · "+x.yr, color:"--c4", v:mcO.length?pct(x.mcOpen):"—", vk:"open rate, first sends",
@@ -537,7 +541,7 @@ function rsCards(x){
   return '<div class="res-cards" id="res-cards">'+cards.join("")+'</div>';
 }
 /* ---- the right-hand panel ---- */
-function rsRailHtml(k,x){ return '<div class="rs-rail">'+(k!=="tools"?'<div class="rs-perbar">'+rsPicker("rspr")+'</div>':'')+RS_SEC[k].d(x)+'</div>'; }
+function rsRailHtml(k,x){ return '<div class="rs-rail">'+(k!=="tools"?'<div class="rs-perbar">'+rsPicker("rspr",k==="mm")+'</div>':'')+RS_SEC[k].d(x)+'</div>'; }
 function rsOpen(k){
   if(!RS_SEC[k]) return;
   const x=rsCtx(), i=RS_ORDER.indexOf(k), prev=RS_ORDER[(i+RS_ORDER.length-1)%RS_ORDER.length], next=RS_ORDER[(i+1)%RS_ORDER.length];
