@@ -7,7 +7,7 @@ const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file://'+process.cwd()+'/live.html#results');await p.waitForTimeout(2500);
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
   RSP.range="all"; /* the records below are dated 2026; the period picker has its own test (rsperiod.js) */
-  const ed=editionsSorted()[0]; ed.dates=Object.assign({},ed.dates,{publish:ed.month+"-15"});
+  const ed=editionsSorted().find(e=>!e.archived); ed.dates=Object.assign({},ed.dates,{publish:ed.month+"-15"}); /* a Higher Logic edition: Axios editions never count (Nov 24, 2026) */
   ed.stats={recipients:1000, delivered:950, opens:190, clicks:19, unsubs:3, unsubsHL:1, unsubsPage:2, hard:30, blocked:15, soft:5, totalOpens:240, forwards:12,
     cDesktop:40, cMobile:35, cUnknown:25, w1Label:"Recent Openers", w1Sent:400, w1Delivered:395, w1Opens:120, w1Clicks:12, w2Label:"Everyone Else", w2Sent:600, w2Delivered:555, w2Opens:70, w2Clicks:7,
     topLinks:"President's Vieaux Point (mismo.org/about-mismo) — 37 people\nMCD page — 12 people"};

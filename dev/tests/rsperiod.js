@@ -1,4 +1,4 @@
-// Results: one period (Showing ...) drives every card and panel (Jonna, Nov 24, 2026).
+// Results: one period (Showing ...) drives every card and panel; MISMO Matters starts at its first Higher Logic send (Jonna, Nov 24, 2026).
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -34,6 +34,12 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   /* last month is the whole of the month before */
   RSP.range="last"; const [f,to]=rsRange(); out.last=f.slice(8)==="01" && to.slice(0,7)===f.slice(0,7) && add(to,1).slice(8)==="01" && add(to,1).slice(0,7)===t.slice(0,7);
   rsOpen("tools"); await wait(150); out.toolsNoPicker=!document.querySelector("#pane-body [data-rsp]");
+  /* MISMO Matters never reaches back before its first Higher Logic send (Jonna, Nov 24, 2026) */
+  const st=rsMMStart(); RSP.range="all"; x=rsCtx();
+  out.mmStart=/^\d{4}-\d\d-\d\d$/.test(st) && x.eds.every(e=>!e.archived && (!(e.dates&&e.dates.publish) || e.dates.publish>=st));
+  rsOpen("mm"); await wait(200); out.mmRail=new RegExp("^"+rsDY(st)+" to ").test(rsMMText()) && /first Higher Logic send/.test(document.querySelector("#pane-body .rs-perbar").innerText);
+  RSP.range="custom"; RSP.from="2020-01-01"; RSP.to="2020-02-01"; renderResults(); await wait(200);
+  out.mmBefore=/numbers start with its first Higher Logic send/.test(document.querySelector("#pane-body").innerText) && document.querySelector("#pane-body [data-rsp=from]").getAttribute("min")===st;
   RSP.range="year"; try{ localStorage.removeItem("mm.rs.period"); }catch(e){} if(typeof closePane==="function") closePane();
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
