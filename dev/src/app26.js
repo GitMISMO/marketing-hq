@@ -58,7 +58,9 @@ function wtHL(){ const h=(S.settings||{})["webtraffic-hl"]; return h && h.days ?
 function wtHLDays(h){ return Object.keys(h.days).sort().map(d=>{ const x=h.days[d]||{}; return {date:d, views:(+x.viewsIn||0)+(+x.viewsOut||0), visits:(+x.visIn||0)+(+x.visOut||0), viewsIn:+x.viewsIn||0, visIn:+x.visIn||0}; }); }
 function rsWebsiteHL(){
   const h=wtHL(); if(!h) return "";
-  const days=wtHLDays(h), live=days.filter(d=>!h.launch || d.date>=h.launch), before=days.filter(d=>h.launch && d.date<h.launch);
+  /* only the days in the Results period */
+  const days=wtHLDays(h).filter(d=>typeof rsIn!=="function" || rsIn(d.date)); if(!days.length) return "";
+  const live=days.filter(d=>!h.launch || d.date>=h.launch), before=days.filter(d=>h.launch && d.date<h.launch);
   const sum=(L,k)=>L.reduce((n,d)=>n+(+d[k]||0),0);
   const kp=[];
   if(live.length) kp.push({v:rsN(sum(live,"visits")),k:"Visitors",s:fS(live[0].date)+" to "+fS(live[live.length-1].date)},{v:rsN(sum(live,"views")),k:"Page Views",s:"since the new site went live"},
@@ -76,12 +78,13 @@ function rsWebsiteHL(){
 }
 function rsWebsite(){
   const all=wtDays(), run=wtRun();
-  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed every 3 hours</span><span class="sp"></span>'+
-    '<select class="plain" id="wt-days" aria-label="Days shown">'+[[7,"Last 7 Days"],[30,"Last 30 Days"],[90,"Last 90 Days"],[0,"Since Nov 20, 2026"]].map(([v,l])=>'<option value="'+v+'"'+(WT.days===v?' selected':'')+'>'+l+'</option>').join("")+'</select></div>';
+  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed every 3 hours</span></div>';
   if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first pull from Cloudflare hasn\'t run yet. It runs every 3 hours and brings today so far; numbers start with Nov 20, 2026.')+
     (wtHL()?'':' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.')+'</div>'+rsWebsiteHL()+'</div>';
-  const days=WT.days?all.slice(-WT.days):all, withLists=days.filter(d=>d.pages);
-  const visits=days.reduce((n,d)=>n+(+d.visits||0),0), views=days.reduce((n,d)=>n+(+d.views||0),0), last=all[all.length-1];
+  /* the days in the Results period */
+  const days=all.filter(d=>typeof rsIn!=="function" || rsIn(d.date)), withLists=days.filter(d=>d.pages);
+  if(!days.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">No website counts '+esc(rsPerIn())+'. Cloudflare\'s count starts Nov 20, 2026.</div>'+rsWebsiteHL()+'</div>';
+  const visits=days.reduce((n,d)=>n+(+d.visits||0),0), views=days.reduce((n,d)=>n+(+d.views||0),0), last=days[days.length-1];
   const full=days.filter(d=>!d.partial), best=(full.length?full:days).reduce((b,d)=>(+d.visits||0)>(+b.visits||0)?d:b, (full.length?full:days)[0]);
   const pages=wtSum(withLists,"pages").slice(0,10).map(x=>({l:x.k||"/",v:x.views,c:"--c1",tip:(x.k||"/")+"\n"+rsN(x.views)+" page views · "+rsN(x.visits)+" visits"}));
   const refsM={}; wtSum(withLists,"refs").forEach(x=>{ const k=wtRefName(x.k); const r=refsM[k]||(refsM[k]={l:k,v:0}); r.v+=x.visits||x.views; });
@@ -90,7 +93,7 @@ function rsWebsite(){
   const dev=wtSum(days,"devices"), devT=dev.reduce((n,x)=>n+(x.visits||x.views),0)||1, devC=["--c1","--c2","--c3","--c4","--c5"];
   const devices=dev.length?'<div class="rs-stack">'+dev.map((x,i)=>'<i style="flex:'+(x.visits||x.views)+' 1 0;background:var('+devC[i%5]+')" data-tip="'+esc(wtDevice(x.k)+": "+rsN(x.visits||x.views)+" visits ("+pct((x.visits||x.views)/devT)+")")+'"></i>').join("")+'</div>'+
     '<div class="rs-legend col">'+dev.map((x,i)=>'<span><i class="rs-k" style="background:var('+devC[i%5]+')"></i>'+esc(wtDevice(x.k))+'<b>'+pct((x.visits||x.views)/devT)+'</b></span>').join("")+'</div>':'<div class="empty sm">No device counts yet.</div>';
-  const span=WT.days?'last '+days.length+' day'+(days.length===1?'':'s'):'since Nov 20';
+  const span=typeof rsPerText==="function"?rsPerText():'since Nov 20';
   return '<div class="card rs-sec" id="rs-web">'+head+
     rsKpis([{v:rsN(visits),k:"Visits",s:span},{v:rsN(views),k:"Page Views",s:span},{v:visits?(views/visits).toFixed(1):"—",k:"Pages per Visit",s:"page views ÷ visits"},
       {v:full.length?rsN(Math.round(full.reduce((n,d)=>n+(+d.visits||0),0)/full.length)):"—",k:"Visits a Day",s:full.length?"on average, whole days":"after the first whole day"},
@@ -107,21 +110,21 @@ function rsWebsite(){
 /* what people on the website told MISMO: "Not helpful" comments on AI answers, and problem reports */
 /* full: everything (the right-hand panel on Results); otherwise the newest 6 */
 function rsVoices(full){
-  const lim=full?300:6;
+  const lim=full?300:6, inP=x=>!full || typeof rsIn!=="function" || rsIn(x.at);
   const since=new Date(Date.now()-30*864e5).toISOString();
-  const fb=vals("aifeedback").filter(x=>x.at && x.comment).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
-  const pr=vals("websiteproblems").filter(x=>x.at && x.message).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const fb=vals("aifeedback").filter(x=>x.at && x.comment && inP(x)).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const pr=vals("websiteproblems").filter(x=>x.at && x.message && inP(x)).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
   const drop=(S.websiteproblems||{})._dropped||null;
   const pg=u=>{ u=String(u||""); const s=u.replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,""); return /^https:\/\//.test(u)?'<a href="'+esc(u)+'" target="_blank" rel="noopener">'+esc(s||u)+'</a>':esc(s); };
   const who=x=>x.e?esc(x.n||x.e)+' · <a href="mailto:'+esc(x.e)+'">'+esc(x.e)+'</a>':'anonymous'+(x.reply?' · left <a href="mailto:'+esc(x.reply)+'">'+esc(x.reply)+'</a>':'');
   const fbRows=fb.slice(0,lim).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+esc(x.assistant||"AI")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(x.comment)+'”</div><div class="vo-m">Asked: '+esc(String(x.question||"").slice(0,180))+'</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+'</div></li>').join("");
   const prRows=pr.slice(0,lim).map(x=>'<li class="vo-i"><div class="vo-h"><span class="rs-tag">'+(x.via==="mimi"?"From Mimi":"Page Link")+'</span><span>'+esc(fS(x.at.slice(0,10)))+'</span></div><div class="vo-q">“'+esc(String(x.message).slice(0,400))+'”</div><div class="vo-m">'+(x.page?pg(x.page)+' · ':'')+who(x)+(x.signedIn?' · signed in':'')+'</div></li>').join("");
   const n30=a=>a.filter(x=>x.at>=since).length;
-  return '<div class="grid2 rs-row" id="rs-voices"><div class="card"><div class="ch"><h2>AI Answer Feedback</h2><span class="cnt">'+fb.length+'</span><span class="note">"Not helpful" on Mimi and Ask MISMO · '+n30(fb)+' in the last 30 days</span></div>'+
-      (fbRows?'<ul class="vo-list">'+fbRows+'</ul>':'<div class="empty">No comments yet. They arrive when someone marks a Mimi or Ask MISMO answer "Not helpful" and says why.</div>')+
+  return '<div class="grid2 rs-row" id="rs-voices"><div class="card"><div class="ch"><h2>AI Answer Feedback</h2><span class="cnt">'+fb.length+'</span><span class="note">"Not helpful" on Mimi and Ask MISMO · '+(full?esc(rsPerIn()):n30(fb)+' in the last 30 days')+'</span></div>'+
+      (fbRows?'<ul class="vo-list">'+fbRows+'</ul>':full&&vals("aifeedback").some(x=>x.at&&x.comment)?'<div class="empty">No comments '+esc(rsPerIn())+'.</div>':'<div class="empty">No comments yet. They arrive when someone marks a Mimi or Ask MISMO answer "Not helpful" and says why.</div>')+
       (fb.length>lim?'<p class="rs-note pad">The newest '+lim+' of '+fb.length+'. Vanessa gets each day\'s in the morning email, with Jonna copied.</p>':'')+'</div>'+
-    '<div class="card"><div class="ch"><h2>Website Problems</h2><span class="cnt">'+pr.length+'</span><span class="note">reported from a page or through Mimi · '+n30(pr)+' in the last 30 days</span></div>'+
-      (prRows?'<ul class="vo-list">'+prRows+'</ul>':'<div class="empty">No problem reports yet. They arrive from the website\'s report-a-problem form and from Mimi.</div>')+
+    '<div class="card"><div class="ch"><h2>Website Problems</h2><span class="cnt">'+pr.length+'</span><span class="note">reported from a page or through Mimi · '+(full?esc(rsPerIn()):n30(pr)+' in the last 30 days')+'</span></div>'+
+      (prRows?'<ul class="vo-list">'+prRows+'</ul>':full&&vals("websiteproblems").some(x=>x.at&&x.message)?'<div class="empty">No problem reports '+esc(rsPerIn())+'.</div>':'<div class="empty">No problem reports yet. They arrive from the website\'s report-a-problem form and from Mimi.</div>')+
       (drop&&drop.total?'<p class="rs-note pad">'+rsN(drop.total)+' spam or repeat report'+(drop.total===1?' was':'s were')+' dropped and never kept'+(drop.byReason?' ('+Object.entries(drop.byReason).map(([k,v])=>esc(k)+' '+v).join(', ')+')':'')+'.</p>':'')+'</div></div>';
 }
 function wtWire(el){ const s=$("#wt-days",el); if(s) s.onchange=()=>{ WT.days=+s.value; renderResults(); }; }

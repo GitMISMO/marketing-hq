@@ -409,8 +409,20 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .calmenu button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:7px 8px;border-radius:5px;cursor:pointer}
 .calmenu button:hover,.calmenu button:focus-visible{background:var(--surface-3);outline:none}
 .dlsum{padding:8px 16px;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--rule);background:var(--surface-2)}
-.rsdl-pick{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap;margin-right:8px}
-.rsdl-pick select,.rsdl-pick input{font:inherit;font-size:12.5px}
+/* Results: one period for every card and panel (Nov 24, 2026) */
+.rs-bandtop{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:8px}
+.rs-per{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rs-perl{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700}
+.rs-per select,.rs-per input{font:inherit;font-size:13px;border-radius:5px;padding:5px 8px;min-height:32px;width:auto;flex:0 0 auto}
+.rs-per select{min-width:150px}
+.rs-pert{font-size:12.5px}
+.rs-band .rs-perl{color:rgba(255,255,255,.62)}
+.rs-band .rs-pert{color:#a9d8f3}
+.rs-band .rs-per select,.rs-band .rs-per input{background:#fff;color:#0d314c;border:1px solid rgba(255,255,255,.35)}
+.rs-band .rs-per select:focus-visible,.rs-band .rs-per input:focus-visible{outline:2px solid #74bfeb;outline-offset:2px}
+.rs-perbar{display:flex;align-items:center;padding:10px 12px;margin-bottom:12px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px}
+.rs-perbar .rs-perl,.rs-perbar .rs-pert{color:var(--ink-3)}
+.rs-perbar .rs-per select,.rs-perbar .rs-per input{background:var(--surface);color:var(--ink);border:1px solid var(--border-strong)}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);padding:10px 16px;border-top:1px solid var(--rule)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 @media(max-width:760px){.cal{grid-template-columns:repeat(7,minmax(0,1fr))}.cal .d{min-height:70px}.ev span{display:none}.ev{padding:3px;justify-content:center;width:auto}}
