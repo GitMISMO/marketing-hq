@@ -2,6 +2,13 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-24 · Results: one period for everything
+
+- Jonna: "the date thing should be a thing for all of the results so we can see for the period".
+- A Showing menu at the top of Results, and in every panel: Last 7 Days, Last 30 Days, This Month, Last Month, Last 90 Days, This Year (the starting choice), All Time or Pick Dates. It is remembered in this browser, and changing it in a panel changes the whole page.
+- Every card and panel counts only those dates: MISMO Matters editions sent then (the edition menu lists only those), Mailchimp sends, website days (this replaces the website's own Days Shown menu; Higher Logic's days before Nov 20 follow it too), LinkedIn posts and daily page totals, Mic'd Up episodes aired then (views and plays are each episode's total so far), visitor comments and problem reports, and What People Download.
+- Who Is on Our Lists keeps today's list sizes and adds who joined or left in the period: website sign-ups, first-time downloaders and unsubscribes. The MISMO Matters list size is always the latest edition's.
+
 ## 2026-11-24 · Results: date filter on What People Download
 
 - Jonna: "this was the product download she wanted the date picker on" (Results › What People Download).
