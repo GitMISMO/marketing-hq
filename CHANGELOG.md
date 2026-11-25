@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-24 · Results: MISMO Matters starts at its first Higher Logic send
+
+- Jonna: "start it from the first release of MISMO matters in Informz, we don't have and I don't think we'll be able to get the stats for before that issue".
+- For MISMO Matters, the Showing period never reaches back before the first edition sent through Higher Logic (Nov 19, 2026): its panel shows the dates from that send (This Year reads Nov 19 to today), Pick Dates can't go earlier, and Axios editions never count. A period that ends before it says the numbers start Nov 19, 2026.
+
 ## 2026-11-24 · Results: one period for everything
 
 - Jonna: "the date thing should be a thing for all of the results so we can see for the period".
