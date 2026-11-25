@@ -225,6 +225,8 @@ function mmWebUrl(ed){ return MM_WEB_BASE+(ed&&ed.month||"")+"/"; }
 function buildWebPage(ed){
   const t="MISMO Matters | "+monthName(ed.month);
   return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(t)+'</title>'+
+    /* browser tab icon: the shared mismo.org icon, the one icon line on the page (CN-030, Nov 25, 2026) */
+    '<link rel="icon" type="image/png" sizes="48x48" href="https://resources.mismo.org/assets/favicon-48x48.png">'+
     /* anyone with the link can open it, but it stays out of search results (Jonna, Nov 18, 2026) */
     '<meta name="robots" content="noindex,nofollow">'+
     '<meta property="og:title" content="'+esc(t)+'"><meta property="og:image" content="'+esc(MAST_IMG)+'">'+

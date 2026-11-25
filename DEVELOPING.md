@@ -65,6 +65,7 @@ The version (build time and code fingerprint) shows on **Help > System Health**.
 
 ## Rules that are not optional
 
+- Browser tab icon (CN-030, Nov 25, 2026): every page this repo serves or builds (the `top` in `dev/build.py`, `buildWebPage` in `dev/src/app2.js`, the web editions under `matters/`, `mm-headers/source.html`) has exactly one icon line, `<link rel="icon" type="image/png" sizes="48x48" href="https://resources.mismo.org/assets/favicon-48x48.png">`, and no other. Never a copy of the image here. `dev/tests/tabicon.js` checks it.
 - No secrets in this repo. The image flow's signed address is the one exception already here; it must
   be checked server-side (see the review) and rotated if it leaks further.
 - Emails from MISMO Media go only to @mismo.org or @mba.org addresses.

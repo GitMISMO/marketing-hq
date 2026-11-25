@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-25 · Browser tab icon now matches mismo.org
+
+- CN-030 (approved by Jonna, Nov 25, 2026): MISMO Media's browser tab shows the same icon as www.mismo.org, from the one shared copy at https://resources.mismo.org/assets/favicon-48x48.png. Every page has this one icon line in its head and no other: the main page, MISMO Matters web editions (November's too, and every one built from now on) and the newsletter header drawing page. Nothing else on the pages changed.
+
 ## 2026-11-24 · Results: MISMO Matters starts at its first Higher Logic send
 
 - Jonna: "start it from the first release of MISMO matters in Informz, we don't have and I don't think we'll be able to get the stats for before that issue".

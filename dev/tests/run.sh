@@ -45,4 +45,5 @@ out=$(node amyreply.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || 
 out=$(node calfil.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node rsdl.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node rsperiod.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node tabicon.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail

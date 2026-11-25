@@ -76,6 +76,7 @@ top='''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="'''+CSP+'''">
 <title>MISMO Media</title>
+<link rel="icon" type="image/png" sizes="48x48" href="https://resources.mismo.org/assets/favicon-48x48.png">
 '''
 out=top+gate+'\n'+shim+'\n'+h2+'\n'+extra+'\n</head><body>\n'+logo+'</defs></svg>'+b2+'<script>'+app+'</script>\n</body></html>\n'
 for bad in ['ghp_','github_pat_','Bearer ey']: assert bad not in out
