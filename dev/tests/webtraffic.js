@@ -7,7 +7,7 @@ await p.goto('file://'+process.cwd()+'/live.html#results');await p.waitForTimeou
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
   const day=n=>new Date(Date.now()-n*864e5).toISOString().slice(0,10);
   /* nothing yet: the section says the first pull hasn't run, Health says so too */
-  go("results"); await wait(300); rsOpen("web"); await wait(250);
+  RSP.range="all"; go("results"); await wait(300); rsOpen("web"); await wait(250);
   out.emptyNote=/first pull from Cloudflare/.test(document.getElementById("rs-web").innerText);
   out.healthOff=(hhWebTraffic()||{}).level!=="bad";
   /* twelve days of numbers */
@@ -26,18 +26,19 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   out.refs=/Direct or not shared/.test(t) && /Google/.test(t) && /LinkedIn/.test(t) && /Another mismo\.org page/.test(t);
   out.devices=/Desktop/.test(t) && /Phone/.test(t);
   out.countries=/United States/.test(t);
-  out.tile=/visits, last 12 days/.test(document.querySelector('[data-rs-open="web"]').innerText) && document.querySelector('[data-rs-open="web"]').classList.contains("on");
+  out.tile=/visits, all time/i.test(document.querySelector('[data-rs-open="web"]').innerText) && document.querySelector('[data-rs-open="web"]').classList.contains("on");
   rsOpen("voices"); await wait(250);
   const v=document.getElementById("rs-voices").innerText;
   out.feedback=/Missing the <b>link<\/b>/.test(v) && /What is ULDD\?/.test(v);
   out.problems=/Standards page link is broken/.test(v) && /From Mimi/i.test(v) && /3 spam or repeat reports were dropped/.test(v);
-  /* 7-day pick */
+  /* the Results period (it replaced the section's own Days Shown menu, Nov 24, 2026) */
   rsOpen("web"); await wait(250);
-  const sel=document.getElementById("wt-days"); sel.value="7"; sel.dispatchEvent(new Event("change")); await wait(200);
+  out.noOwnMenu=!document.getElementById("wt-days");
+  RSP.range="custom"; RSP.from=day(7); RSP.to=day(1); renderResults(); await wait(200);
   out.pick=document.querySelectorAll("#rs-web .wt-bar").length===7;
   /* today so far (Nov 21, 2026): a lighter bar, a Today So Far figure, left out of the daily average */
   S.webtraffic.d0={id:"d0", date:new Date().toISOString().slice(0,10), partial:true, visits:40, views:90, pulledAt:new Date().toISOString(), devices:[["desktop",30,20]]};
-  sel.value="7"; renderResults(); rsOpen("web"); await wait(250);
+  RSP.to=new Date().toISOString().slice(0,10); renderResults(); rsOpen("web"); await wait(250);
   const wt=document.getElementById("rs-web").innerText;
   out.today=document.querySelectorAll("#rs-web .wt-part").length===1 && /Today So Far/i.test(wt) && /today so far/i.test(wt) && /Today so far/.test(document.querySelector('[data-rs-open="web"]').innerText);
   /* Health */
@@ -46,6 +47,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const bad=hhWebTraffic()||{}; out.healthBad=bad.level==="bad";
   S.webtraffic._run=Object.assign({}, S.webtraffic._run, {ok:true, at:new Date(Date.now()-50*36e5).toISOString()});
   out.healthStale=(hhWebTraffic()||{}).level==="warn";
+  RSP.range="year"; try{ localStorage.removeItem("mm.rs.period"); }catch(e){}
   out.ok=Object.values(out).every(v=>v===true);
   return out;
 });

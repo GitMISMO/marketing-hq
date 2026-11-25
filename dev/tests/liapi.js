@@ -6,6 +6,7 @@ const {chromium}=require('playwright');
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file://'+process.cwd()+'/live.html#results');await p.waitForTimeout(2500);
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
+  if(typeof RSP!=="undefined") RSP.range="all"; /* fixed 2026 dates below: show All Time on Results */
   const m=document.getElementById("mn-pop"); if(m) m.remove();
   /* not connected yet */
   out.healthWaiting=(hhLinkedIn()||{}).level==="off";

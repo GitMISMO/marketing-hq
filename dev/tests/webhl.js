@@ -5,6 +5,7 @@ const {chromium}=require('playwright');
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file://'+process.cwd()+'/live.html#results');await p.waitForTimeout(2500);
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
+  if(typeof RSP!=="undefined") RSP.range="all"; /* fixed 2026 dates below: show All Time on Results */
   go("results"); await wait(300); rsOpen("web"); await wait(250);
   out.noneYet=!/Higher Logic's Count/i.test(document.getElementById("rs-web").innerText);
   const days={}; ["2026-11-13","2026-11-14","2026-11-15","2026-11-16","2026-11-17","2026-11-18","2026-11-19"].forEach((d,i)=>days[d]={viewsIn:i<3?100:1000, viewsOut:i<3?500:5000, visIn:i<3?5:40, visOut:i<3?300:3000});
