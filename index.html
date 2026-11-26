@@ -4718,6 +4718,7 @@ const HELP = [
    <li><b>Work the Send Checklist</b> and tick each step: lists refreshed, unsubscribes removed, links tested, test send reviewed, and the rest.</li>
    <li><b>Mark the milestones.</b> Click a date in the strip under the band to mark it done (click again to undo).</li>
    <li><b>Record the stats</b> a week later under <b>Stats</b>, unless the daily feed is filling them in.</li>
+   <li><b>Push to MyMISMO</b> (optional): once the edition has gone out, <b>Stats › This Edition</b> has a button that sends one notification to the MyMISMO app. See <b>Push to MyMISMO</b>.</li>
   </ol>
   <p>The panel at the top shows the edition at a glance: the days to send, the next step, and a picture of the newsletter with one block per section, colored by where it stands. Click a block to open that section.</p>`},
  {id:"sections", t:"Working a Section", g:"MISMO Matters", b:`
@@ -4773,6 +4774,7 @@ const HELP = [
    <li><b>Clips:</b> on hold until Amy decides whether MISMO posts clips, so the clip steps are hidden for now.</li>
    <li><b>Guest share kit:</b> <b>Email the Guest</b> opens an email to the guest with the links and a ready-made post; send it, then press <b>Mark as Sent</b>.</li>
    <li><b>The website</b> and <b>MISMO Matters</b> list the episode by themselves once it's on YouTube.</li>
+   <li><b>Push to MyMISMO</b> (optional): once the episode is on YouTube, the YouTube Kit's Post on YouTube step has a <b>Push to MyMISMO</b> button. See <b>Push to MyMISMO</b>.</li>
   </ol>
   <p>The checks on The Weekly Run are Recorded, Captions, YouTube, LinkedIn, Website and MISMO Matters. <b>Not Recorded Yet</b> counts episodes running in the next two weeks that haven't been recorded. A red outline means it's late. An empty Friday says "No episode yet" so a missing week is obvious.</p>
   <p><b>Fresh start:</b> Episodes 50 and earlier (everything before Friday, October 30) are history. They stay in the episode list, but they never count as late or missing anything. Everything from Episode 51 on is tracked.</p>`},
@@ -4792,6 +4794,35 @@ const HELP = [
   </ol>
   <p><b>Seasons:</b> Season 2 starts over at Episode 1 on November 6, 2026. YouTube titles read "MISMO Mic'd Up Season 2, Ep. 1: …" and MISMO's LinkedIn Live events "MISMO Mic'd Up S2 Ep. 1: …". Older Season 1 episodes that came through Google Drive keep their Drive buttons.</p>
   <p>Teams messages are never kept in MISMO Media.</p>`},
+ {id:"mymismo", t:"Push to MyMISMO", g:"Channels", b:`
+  <p>MyMISMO, MISMO's app, has a notification people can turn on in its Settings: <b>MISMO Matters and Mic'd Up</b>. It's off until they turn it on, and they can turn it off any time. MISMO Media sends it, but only when someone presses <b>Push to MyMISMO</b>. Nothing is ever sent when an edition goes out, on a schedule or on a timer.</p>
+  <h3>Where the Button Is</h3>
+  <ul>
+   <li><b>MISMO Matters:</b> on the edition's <b>Stats</b> tab, in the <b>This Edition</b> card, once the edition has gone out (its Sent date is marked done).</li>
+   <li><b>Mic'd Up:</b> in the YouTube Kit's <b>Post on YouTube</b> step, once the episode is marked on YouTube with its link.</li>
+  </ul>
+  <h3>Sending</h3>
+  <ol>
+   <li>Press <b>Push to MyMISMO</b>. A box opens with the notification filled in. MISMO Matters: Title <i>MISMO Matters: December 2026</i>, Message <i>The Vieaux Point:</i> and that edition's Vieaux Point title. Mic'd Up: Title <i>New MISMO Mic'd Up Episode</i>, Message the episode title and the guest.</li>
+   <li>Edit the words if you like. The title can be up to 80 characters and the message up to 300; phones show about the first 100 characters. The preview shows how it will look.</li>
+   <li>Press <b>Send to MyMISMO</b> (or <b>Cancel</b>). It goes to everyone who turned on MISMO Matters and Mic'd Up notifications in MyMISMO. Tapping it opens MyMISMO on that edition or episode, and a pushed episode joins the app's Mic'd Up list right away.</li>
+  </ol>
+  <h3>What You'll See</h3>
+  <ul>
+   <li><b>Sent to N phones</b>, with the date. The edition or episode then shows <i>Pushed to MyMISMO</i> and the date, and System Health shows the last push.</li>
+   <li><b>Already pushed on (date):</b> each edition or episode goes once. For a correction, press <b>Send Again</b>.</li>
+   <li><b>Only the people Jonna named can push to MyMISMO:</b> your sign-in isn't on the list.</li>
+   <li><b>MyMISMO notifications aren't switched on yet:</b> Perry hasn't put the sending side live yet.</li>
+  </ul>
+  <h3>Wording Rules (Apple and Google Play)</h3>
+  <ul>
+   <li>Only news about that edition or episode.</li>
+   <li>No sponsor ads, offers or promotions.</li>
+   <li>No personal or sensitive information.</li>
+   <li>Nothing styled as a warning or a system message.</li>
+  </ul>
+  <h3>How It's Wired</h3>
+  <p>The box sends with your own MISMO Resources sign-in to the save relay (<code>POST /mymismo/push/news</code>, relay request 16), which only lets the people Jonna named send. It carries the kind (matters or micdup), the edition month or the YouTube video id, the title, the message, the edition's web link (only a www.mismo.org or resources.mismo.org link) and, for Mic'd Up, the video's id, title, published date and duration as in /podcast/micdup.json. MyMISMO keeps the newest pushes and shows them. What happened is saved on the edition or episode.</p>`},
  {id:"linkedin", t:"LinkedIn", g:"Channels", b:`
   <ul>
    <li><b>The top panel</b> shows the next post the way it will look in the feed (Mic'd Up shows as a LIVE event card) and a strip of the next seven days with a dot for each post. Click the post to open it.</li>
@@ -8104,7 +8135,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-26 12:42 ET · 87fdbfe";
+const BUILD = "2026-11-26 12:47 ET · 5d1ed01";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
