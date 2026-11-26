@@ -481,7 +481,6 @@ function openList(id){
   try{ var saved = localStorage.getItem("mismo.portal.theme"); if(saved) document.documentElement.setAttribute("data-theme", saved); }catch(e){}
   paint();
 })();
-(function season(){ if(new Date().getMonth() === 11) document.documentElement.setAttribute("data-season","december"); })();
 
 /* ================= start ================= */
 $("#pane-x").onclick=()=>closePane();
