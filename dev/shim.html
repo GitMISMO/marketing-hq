@@ -36,7 +36,20 @@
   var RELAY_URL = 'https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws';
   var PROJECT = 'marketing-hq', TOOL = 'MISMO Media';
   var PREVIEW = false;          /* see the header: false once MISMO Media is switched on */
-  var POLL_MS = 60000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
+  /* CN-014 (Nov 23, 2026): every app on the relay shares one GitHub allowance of 5,000 calls an hour, so busy files are
+     read every 2 minutes (3 when nobody has touched the page for 10), the rest every 30, nothing in a hidden tab, and
+     after a rate-limit answer nothing is read for 5 minutes (or until GitHub's reset time, if later). */
+  var POLL_MS = 120000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
+  var RL_WAIT = 5 * 60000, rlUntil = 0;
+  function isRateLimit(e) {
+    return !!e && (e.status === 429 || e.code === 'RATE_LIMITED' || /rate.?limit/i.test(e.message || '') ||
+      ((e.gh === 403 || e.gh === 429) && /rate|limit|abuse|secondary/i.test(e.message || '')));
+  }
+  function rateLimited(e) {
+    var reset = e && e.resetAt ? e.resetAt : 0;
+    rlUntil = Math.max(rlUntil, now() + RL_WAIT, reset || 0);
+    return rlUntil - now();
+  }
   /* collections whose documents each get a file of their own (the big synced ones) */
   var OWN = ['audience'];
   function hot(name) { return !/^audience-|^own-index$/.test(name); }
@@ -89,6 +102,10 @@
         if (r.ok) return b;
         var e = err((b && b.error) || ('HTTP_' + r.status), b && b.message, r.status);
         e.gh = (b && typeof b.status === 'number') ? b.status : 0;   /* what GitHub itself answered */
+        /* when GitHub's allowance comes back, if the relay says (a time, epoch seconds, or Retry-After seconds) */
+        var rt = b && (b.reset || b.resetAt || b.retryAt), ra = +(r.headers.get('Retry-After') || (b && b.retryAfter) || 0);
+        e.resetAt = rt ? (typeof rt === 'number' ? (rt < 1e12 ? rt * 1000 : rt) : (Date.parse(rt) || 0)) : (ra ? now() + ra * 1000 : 0);
+        if (isRateLimit(e)) { e.code = 'RATE_LIMITED'; rateLimited(e); }
         if (r.status === 401 && rs) { needSignIn(); }
         throw e;
       });
@@ -271,6 +288,7 @@
   }
   function flush(f) {
     if (f.flushing || !f.pending.length) return;
+    if (now() < rlUntil) { schedule(f, rlUntil - now() + 1000); return; }   /* kept, and sent once GitHub's allowance is back (CN-014) */
     if (!(RS() && RS().token())) { f.waitingSignIn = true; needSignIn(); return; }
     f.flushing = true;
     var batch = f.pending.slice(), tries = 0;
@@ -300,13 +318,14 @@
     attempt().catch(function (e) {
       /* a 502 from the relay with TOKEN or GITHUB is a setup problem, not a blip: say so at
          once rather than retrying quietly forever */
-      var transient = e && (e.code === 'OFFLINE' || e.status === 401 || e.code === 'SIGNED_OUT' ||
+      var transient = e && (e.code === 'OFFLINE' || e.status === 401 || e.code === 'SIGNED_OUT' || isRateLimit(e) ||
         (e.status >= 500 && e.code !== 'TOKEN' && e.code !== 'GITHUB' && e.code !== 'REJECTED') ||
         (e.code === 'GITHUB' && (e.gh >= 500 || !e.gh && /timed? ?out|ETIMEDOUT|ECONNRESET|fetch failed/i.test(e.message || ''))));
       if (transient) {
         /* nothing is lost: the change stays queued and goes out once the relay is back */
         if (e.status === 401 || e.code === 'SIGNED_OUT') f.waitingSignIn = true;
-        else setTimeout(function () { schedule(f, 0); }, RETRY_MS);
+        /* a rate limit is "wait and retry": the change is kept and goes out once GitHub's allowance is back (CN-014) */
+        else setTimeout(function () { schedule(f, 0); }, isRateLimit(e) ? Math.max(RETRY_MS, rateLimited(e)) : RETRY_MS);
         (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: false });
         problem(e);
         return;
@@ -471,6 +490,7 @@
     if (!ready || !(RS() && RS().token())) return;
     if (PREVIEW && !force) return;          /* nothing changes in the preview copy */
     if (!force && document.visibilityState === 'hidden') return;
+    if (now() < rlUntil) return;            /* GitHub's allowance ran out: wait it out (CN-014) */
     var idle = now() - lastActive > IDLE_AFTER;
     Object.keys(F).forEach(function (k) {
       var f = F[k];
@@ -623,7 +643,9 @@
       toast('A change didn\u2019t save (' + why + '). It has been taken back.', 'bad'); return;
     }
     troubled = true;
-    toast(e && (e.status === 401 || e.code === 'SIGNED_OUT') ? 'Sign in again to finish saving \u2014 nothing is lost.' : 'Not saved yet \u2014 trying again. Keep this tab open.', 'bad');
+    toast(e && (e.status === 401 || e.code === 'SIGNED_OUT') ? 'Sign in again to finish saving \u2014 nothing is lost.'
+      : isRateLimit(e) ? 'GitHub is busy right now. Your change is kept and saves by itself in a few minutes. Keep this tab open.'
+      : 'Not saved yet \u2014 trying again. Keep this tab open.', 'bad');
   }
   function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
 
