@@ -75,7 +75,20 @@
   var RELAY_URL = 'https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws';
   var PROJECT = 'marketing-hq', TOOL = 'MISMO Media';
   var PREVIEW = false;          /* see the header: false once MISMO Media is switched on */
-  var POLL_MS = 60000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
+  /* CN-014 (Nov 23, 2026): every app on the relay shares one GitHub allowance of 5,000 calls an hour, so busy files are
+     read every 2 minutes (3 when nobody has touched the page for 10), the rest every 30, nothing in a hidden tab, and
+     after a rate-limit answer nothing is read for 5 minutes (or until GitHub's reset time, if later). */
+  var POLL_MS = 120000, IDLE_POLL_MS = 180000, IDLE_AFTER = 10 * 60000, COOL_POLL_MS = 1800000;
+  var RL_WAIT = 5 * 60000, rlUntil = 0;
+  function isRateLimit(e) {
+    return !!e && (e.status === 429 || e.code === 'RATE_LIMITED' || /rate.?limit/i.test(e.message || '') ||
+      ((e.gh === 403 || e.gh === 429) && /rate|limit|abuse|secondary/i.test(e.message || '')));
+  }
+  function rateLimited(e) {
+    var reset = e && e.resetAt ? e.resetAt : 0;
+    rlUntil = Math.max(rlUntil, now() + RL_WAIT, reset || 0);
+    return rlUntil - now();
+  }
   /* collections whose documents each get a file of their own (the big synced ones) */
   var OWN = ['audience'];
   function hot(name) { return !/^audience-|^own-index$/.test(name); }
@@ -128,6 +141,10 @@
         if (r.ok) return b;
         var e = err((b && b.error) || ('HTTP_' + r.status), b && b.message, r.status);
         e.gh = (b && typeof b.status === 'number') ? b.status : 0;   /* what GitHub itself answered */
+        /* when GitHub's allowance comes back, if the relay says (a time, epoch seconds, or Retry-After seconds) */
+        var rt = b && (b.reset || b.resetAt || b.retryAt), ra = +(r.headers.get('Retry-After') || (b && b.retryAfter) || 0);
+        e.resetAt = rt ? (typeof rt === 'number' ? (rt < 1e12 ? rt * 1000 : rt) : (Date.parse(rt) || 0)) : (ra ? now() + ra * 1000 : 0);
+        if (isRateLimit(e)) { e.code = 'RATE_LIMITED'; rateLimited(e); }
         if (r.status === 401 && rs) { needSignIn(); }
         throw e;
       });
@@ -310,6 +327,7 @@
   }
   function flush(f) {
     if (f.flushing || !f.pending.length) return;
+    if (now() < rlUntil) { schedule(f, rlUntil - now() + 1000); return; }   /* kept, and sent once GitHub's allowance is back (CN-014) */
     if (!(RS() && RS().token())) { f.waitingSignIn = true; needSignIn(); return; }
     f.flushing = true;
     var batch = f.pending.slice(), tries = 0;
@@ -339,13 +357,14 @@
     attempt().catch(function (e) {
       /* a 502 from the relay with TOKEN or GITHUB is a setup problem, not a blip: say so at
          once rather than retrying quietly forever */
-      var transient = e && (e.code === 'OFFLINE' || e.status === 401 || e.code === 'SIGNED_OUT' ||
+      var transient = e && (e.code === 'OFFLINE' || e.status === 401 || e.code === 'SIGNED_OUT' || isRateLimit(e) ||
         (e.status >= 500 && e.code !== 'TOKEN' && e.code !== 'GITHUB' && e.code !== 'REJECTED') ||
         (e.code === 'GITHUB' && (e.gh >= 500 || !e.gh && /timed? ?out|ETIMEDOUT|ECONNRESET|fetch failed/i.test(e.message || ''))));
       if (transient) {
         /* nothing is lost: the change stays queued and goes out once the relay is back */
         if (e.status === 401 || e.code === 'SIGNED_OUT') f.waitingSignIn = true;
-        else setTimeout(function () { schedule(f, 0); }, RETRY_MS);
+        /* a rate limit is "wait and retry": the change is kept and goes out once GitHub's allowance is back (CN-014) */
+        else setTimeout(function () { schedule(f, 0); }, isRateLimit(e) ? Math.max(RETRY_MS, rateLimited(e)) : RETRY_MS);
         (status.problems = status.problems || []).push({ at: new Date().toISOString(), code: e.code || '', msg: e.message || '', lost: false });
         problem(e);
         return;
@@ -510,6 +529,7 @@
     if (!ready || !(RS() && RS().token())) return;
     if (PREVIEW && !force) return;          /* nothing changes in the preview copy */
     if (!force && document.visibilityState === 'hidden') return;
+    if (now() < rlUntil) return;            /* GitHub's allowance ran out: wait it out (CN-014) */
     var idle = now() - lastActive > IDLE_AFTER;
     Object.keys(F).forEach(function (k) {
       var f = F[k];
@@ -662,7 +682,9 @@
       toast('A change didn\u2019t save (' + why + '). It has been taken back.', 'bad'); return;
     }
     troubled = true;
-    toast(e && (e.status === 401 || e.code === 'SIGNED_OUT') ? 'Sign in again to finish saving \u2014 nothing is lost.' : 'Not saved yet \u2014 trying again. Keep this tab open.', 'bad');
+    toast(e && (e.status === 401 || e.code === 'SIGNED_OUT') ? 'Sign in again to finish saving \u2014 nothing is lost.'
+      : isRateLimit(e) ? 'GitHub is busy right now. Your change is kept and saves by itself in a few minutes. Keep this tab open.'
+      : 'Not saved yet \u2014 trying again. Keep this tab open.', 'bad');
   }
   function saved() { if (troubled && !anyPending()) { troubled = false; toast('All changes saved.'); } }
 
@@ -3710,7 +3732,8 @@ function buildEmail(ed, preview, opt){
       else if(d.imageId||d.imageLib||d.imageNote) pic=imgBox('IMAGE: '+esc(d.imageAlt||d.imageNote||"uploaded in MISMO Media")+' &mdash; upload to Higher Logic and paste its link');
       const clear=(isz==="small" && (hl||(preview&&local))) ? '<div style="clear:both;height:0;font-size:0;line-height:0">&nbsp;</div>' : '';
       let quote='';
-      if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
+      /* every quote box is italic, whether or not the quote was typed with *asterisks* (Jonna, Nov 26, 2026) */
+      if(d.quote) quote=emGap('<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td bgcolor="#f4f9fd" style="background:#f4f9fd;border-left:4px solid #74bfeb;padding:18px 20px"><div style="'+F+'font-size:16.5px;line-height:1.62;font-style:italic;color:'+ink+'">'+(()=>{ const q=String(d.quote).trim().replace(/^([*_]{1,2})([\s\S]+)\1$/,"$2").trim(), has=/^["“”']/.test(q); return (has?'':'&ldquo;')+mdInline(q,A).replace(/\n/g,"<br>")+(has?'':'&rdquo;'); })()+'</div>'+(d.quoteBy?'<div style="'+F+'font-weight:700;font-size:13.5px;line-height:1.5;color:'+navy+';margin:12px 0 0">&mdash; '+esc(d.quoteBy)+'</div>':'')+'</td></tr></table>', 4, 22);
       if(cert){ inner+= isz=="small" ? certSpotlight(ed, s, body, clear+quote+cnew, pic) : certSpotlight(ed, s, body, pic+clear+quote+cnew); }
       else {
       inner+=pic+body(d.body)+clear+quote+cnew;
@@ -3859,7 +3882,7 @@ function statsView(ed){
   const fun = has ? '<div class="funnel">'+[["Sent",c.r],["Delivered",c.dl],["Opened",c.o],["Clicked",c.c]].map(([l,v])=>'<div class="fr"><span>'+l+'</span><span class="bar"><i style="width:'+(c.r?Math.max(1,v/c.r*100):0)+'%"></i></span><span class="fv">'+v.toLocaleString()+'</span></div>').join("")+'</div>' : '';
   const top = (st.topLinks||"").split("\n").filter(Boolean);
   const rows = editionsSorted().filter(e=>+edStats(e).recipients).reverse().map(e=>{ const x=statsCalc(edStats(e)); return '<tr><td>'+esc(monthName(e.month))+'</td><td class="n">'+x.r.toLocaleString()+'</td><td class="n">'+pct(x.openRate)+'</td><td class="n">'+pct(x.ctr)+'</td><td class="n">'+pct(x.cto)+'</td><td class="n">'+x.u.toLocaleString()+'</td></tr>'; }).join("");
-  return '<div class="grid2"><div class="card"><div class="ch"><h2>This Edition</h2><div class="r"><button class="btn pri" type="button" id="ms-stats">'+(has?"Update Stats":"Record Stats")+'</button></div></div>'+
+  return '<div class="grid2"><div class="card"><div class="ch"><h2>This Edition</h2><div class="r">'+(typeof myPushHtml==="function"?myPushHtml("matters",ed):'')+'<button class="btn pri" type="button" id="ms-stats">'+(has?"Update Stats":"Record Stats")+'</button></div></div>'+
     (has && st.fromInformz?'<p class="hint pad">From Higher Logic automatically'+(st.informzSends>1?' ('+st.informzSends+' sends)':'')+(st.informzAt?', read '+esc(hhWhen(st.informzAt)):'')+'. Nothing to type in; the top links can still be added with Update Stats.</p>':'')+(has?'<div class="cb"><dl class="kv"><dt>Open Rate</dt><dd>'+pct(c.openRate)+'</dd><dt>Click Rate</dt><dd>'+pct(c.ctr)+'</dd><dt>Click to Open</dt><dd>'+pct(c.cto)+'</dd><dt>Unsubscribes</dt><dd>'+c.u.toLocaleString()+'</dd></dl></div>'+fun:'<div class="empty"><b>No stats yet.</b> Once MISMO Media is connected to Higher Logic, they fill in by themselves after the send. Until then, copy the numbers from Higher Logic\'s marketing report into Record Stats a week after sending. Axios never gave us these, so every edition from November on is the first real record.</div>')+
     '</div><div class="card"><div class="ch"><h2>Most-Clicked Links</h2></div>'+(top.length?'<div class="checks">'+top.map(l=>'<div class="chk"><span class="ct">'+linkify(l)+'</span></div>').join("")+'</div>':'<div class="empty">Add the top links when you record the stats.</div>')+'</div></div>'+
     (rows?'<div class="card"><div class="ch"><h2>Every Edition with Stats</h2></div><div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent To</th><th class="n">Open Rate</th><th class="n">Click Rate</th><th class="n">Click to Open</th><th class="n">Unsubscribes</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>':'');
@@ -6115,7 +6138,7 @@ function kitCardHtml(){
         '<div class="kbtns">'+(hasTx?'<button class="btn sm" type="button" id="kit-writeall">Write Again</button>':'<button class="btn sm" type="button" id="kit-rewrite">Write Again</button>')+(hasTx?'<button class="btn sm" type="button" id="kit-article">'+(k.article?"Redraft":"Draft")+' Brian\'s Viewpoint Article</button>':'')+'<span class="hint">'+(k.brianPost?'MISMO\'s post retells Brian\'s LinkedIn post from MISMO\'s side'+(fromTx?'; the transcript fills in detail.':'.'):'Paste Brian\'s LinkedIn post above first: MISMO\'s post is written from his.')+'</span></div>'
       : (hasTx ? '<button class="btn sm pri" type="button" id="kit-writeall">Write Everything from the Transcript</button><span class="hint"> YouTube title and description, the long description, Brian\'s post, MISMO\'s LinkedIn Live wording, the MISMO Matters blurb'+(MU_PAUSED.clips?'':' and clip captions')+'.</span>'
         : (k.brianPost ? '<button class="btn sm" type="button" id="kit-rewrite">Write the Title and Description</button>' : '<div class="hint">Once the transcript is in the folder, it\'s all written from that. Or paste Brian\'s LinkedIn post:</div><textarea id="kit-post" rows="3" placeholder="Paste Brian\'s LinkedIn post"></textarea><div class="kbtns"><button class="btn sm" type="button" id="kit-postgo">Write It</button></div>')))+
-    step(++n,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button></div>')+
+    step(++n,"Post on YouTube", !!e.youtubeDone, '<div class="kbtns"><a class="btn sm" href="https://studio.youtube.com/" target="_blank" rel="noopener">Open YouTube Studio ↗</a><input type="url" id="kit-yt" placeholder="Paste the YouTube link once it\'s up" value="'+esc(e.youtubeUrl||"")+'"><button class="btn sm" type="button" id="kit-ytsave">'+(e.youtubeDone?"On YouTube ✓":"Save Link")+'</button>'+(typeof myPushHtml==="function"?myPushHtml("micdup",e):'')+'</div>')+
     (MU_PAUSED.spotify?'':step(++n,"On Spotify · Friday 6:30 AM", !!e.spotifyDone, '<div class="kbtns"><input type="url" id="kit-sp" placeholder="Paste the Spotify episode link" value="'+esc(e.spotifyUrl||"")+'"><button class="btn sm" type="button" id="kit-spsave">'+(e.spotifyDone?"On Spotify ✓":"Save Link")+'</button><span class="hint">Brian publishes it. Use the long description and the same thumbnail.</span></div>'))+
     step(++n,(e.liCanceled?"Canceled · ":"")+"MISMO LinkedIn Live · "+esc(fD(liDate(e)))+" at "+esc(e.linkedinTime||"1:00 PM ET"), liClosed(e), e.liCanceled ? cxBox("ep",e.id,"LinkedIn Post") : liLiveHtml(e,k,liText,thumbs)+cxBox("ep",e.id,"LinkedIn Post"))+
     (MU_PAUSED.clips?'':step(++n,"Clips for the Next Two Weeks", vals("pieces").some(p=>p.clipOf===e.id), ((k.clips||[]).length ? '<div class="kclips">'+(k.clips||[]).map((c,i)=>'<div class="kfile"><span class="kic">✂</span><div><b>'+esc(c.name)+'</b><small>'+esc(mb(c.size))+((w.clips||[])[i]?' · '+esc((w.clips||[])[i]):'')+'</small></div><a class="btn sm" href="'+esc(spFileUrl(c.path,true))+'" target="_blank" rel="noopener">Download ↓</a></div>').join("")+'</div>' : '<div class="hint">Riverside\'s Magic Clips go in the same folder. Short clips are the best way to keep an episode in front of people after Friday.</div>')+
@@ -8081,7 +8104,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-25 21:10 ET · 21b99a3";
+const BUILD = "2026-11-26 12:42 ET · 87fdbfe";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8297,7 +8320,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), (typeof hhTeamEvents==="function"?hhTeamEvents():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), (typeof hhTeamEvents==="function"?hhTeamEvents():null), (typeof hhMyMISMO==="function"?hhMyMISMO():null), (typeof hhSpelling==="function"?hhSpelling():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -10152,6 +10175,328 @@ function imNavHtml(list, nKit, nLogos, shelf, bkView){
 /* the campaign a new upload gets: the Brand Kit's, or the section's you're looking at (MISMO Matters otherwise) */
 function imUpCamp(){ if(IM.camp) return IM.camp; if(IM.view==="kit") return "brand"; if(IM.view==="logos") return "logos";
   return {linkedin:"linkedin", social:"linkedin", micdup:"micdup", events:"events"}[IM.sec] || "matters"; }
+
+/* ---------- Spelling (Jonna, Nov 26, 2026: "a spell checker on anything that has copy - text etc") ----------
+   Every box people write copy in (text areas, the rich editor, and one-line boxes for titles, headlines, names and the
+   like) has the browser's spell checker switched on, in American English: a misspelled word gets a red underline and a
+   right-click offers the right spelling. Boxes for links, email addresses, file names, codes, colors, dates, numbers and
+   searches are left alone. Boxes that appear later (panels, pop-ups, the rich editor) are switched on as they appear. */
+const SPELL_SEL = 'textarea, input:not([type]), input[type="text"], [contenteditable]:not([contenteditable="false"])';
+const SPELL_OFF = /url|link|href|e-?mail|path|file|folder|hex|colou?r|phone|code|slug|token|key|date|time|search|filter|(^|-)id$|(^|-)q$/i;
+function spellWanted(el){
+  if(el.hasAttribute("data-nospell")) return false;
+  if(el.isContentEditable) return true;
+  const who=[el.id, el.name, el.getAttribute("autocomplete"), el.getAttribute("aria-label")].join(" ");
+  if(el.tagName==="TEXTAREA") return !/html|json|css|csv|code|paste-?url/i.test(who);
+  if(el.tagName!=="INPUT") return false;
+  const t=(el.getAttribute("type")||"text").toLowerCase();
+  if(t!=="text") return false;
+  return !SPELL_OFF.test(who) && !/https?:|www\.|@|\.(com|org|net)\b|\d{4}-\d\d/i.test(el.getAttribute("placeholder")||"");
+}
+function spellOn(el){
+  if(!el || el.dataset.spell) return;
+  const on=spellWanted(el); el.dataset.spell=on?"on":"off";
+  if(on){ el.spellcheck=true; el.setAttribute("lang","en-US"); if(typeof spellNew==="function") spellNew(el); }
+}
+function spellScan(root){
+  if(!root || !root.querySelectorAll) return;
+  if(root.matches && root.matches(SPELL_SEL)) spellOn(root);
+  root.querySelectorAll(SPELL_SEL).forEach(spellOn);
+}
+
+/* ---------- The spelling line (Jonna, Nov 26, 2026) ----------
+   Chrome only underlines a box once someone clicks into it, so copy Claude wrote could hide a mistake. Every copy box
+   is also checked as it appears and as it changes, and a line under it lists the words to look at:
+   "Spelling: recieve". Press a word for the right spellings (one press puts it in), Add to MISMO Words (shared by
+   the whole team, kept in settings/spelling) or Ignore. No line when everything is spelled right.
+   The dictionary is the standard American English one (Hunspell en_US from the typo-js 1.2.4 package: its notice is in spell/README.md), kept
+   in MISMO Media's own files (spell/en_US.aff and spell/en_US.dic) and read once; nothing loads from anywhere else.
+   Words with a capital in the middle of a sentence are taken as names and left alone, as are ALL-CAPS words, words
+   with capitals inside (eNote, iPhone), links, email addresses, @handles and #hashtags. */
+const SPELL = {state:"", words:null, err:"", ignore:new Set(), loading:null, timers:new WeakMap()};
+const SPELL_MISMO = ("MISMO MBA Vieaux eNote eNotes eClosing eClosings eMortgage eMortgages eVault eVaults ULAD ULDD UCD MCD Mic'd Xactus Teraverde Veros Snapdocs "+
+  "HousingWire LinkedIn YouTube Spotify Riverside Informz Mailchimp Aptify Thrive webinar webinars workgroup workgroups fintech proptech onboarding offboarding "+
+  "roadmap roadmaps livestream livestreamed podcast podcasts podcaster cybersecurity blockchain interoperability interoperable implementers implementer signup signups "+
+  "lender lenders servicer servicers subservicer subservicers underwriter underwriters underwriting appraiser appraisers homebuyer homebuyers homeownership "+
+  "dataset datasets metadata API APIs SaaS email emails emailed inbox website websites login logins homepage username webpage nonprofit nonprofits "+
+  "summit summits keynote keynotes panelist panelists moderator moderators recap recaps upskill upskilling reskilling ecosystem ecosystems scalable "+
+  "standardization standardize standardized standardizing digitize digitized digitization tokenization tokenized AI's").split(/\s+/);
+function spellLoad(){
+  if(SPELL.loading) return SPELL.loading;
+  /* a saved copy opened from disk can't read the dictionary; Chrome's own underline still works there */
+  if(location.protocol==="file:"){ SPELL.state="off"; SPELL.err="this copy was opened from a file"; return (SPELL.loading=Promise.resolve()); }
+  SPELL.state="loading";
+  SPELL.loading=Promise.all(["spell/en_US.aff","spell/en_US.dic"].map(u=>fetch(u,{cache:"force-cache"}).then(r=>{ if(!r.ok) throw new Error("the dictionary didn't load ("+r.status+")"); return r.text(); })))
+    .then(([aff,dic])=>{ SPELL.words=spellBuild(aff,dic); SPELL.state="ready"; spellAll(); })
+    .catch(e=>{ SPELL.state="off"; SPELL.err=String((e&&e.message)||e); });
+  return SPELL.loading;
+}
+/* the dictionary: each stem plus the endings and beginnings its flags allow (Hunspell's PFX and SFX rules) */
+function spellBuild(aff, dic){
+  const rules={};
+  String(aff).split(/\r?\n/).forEach(l=>{ const p=l.trim().split(/\s+/); if((p[0]==="PFX"||p[0]==="SFX") && p.length>=5){
+    const flag=p[1], r=rules[flag]; if(!r) return; const cond=p[4]===undefined||p[4]==="."?null:new RegExp(p[0]==="SFX"?"(?:"+p[4]+")$":"^(?:"+p[4]+")");
+    r.list.push({strip:p[2]==="0"?"":p[2], add:(p[3]==="0"?"":p[3]).split("/")[0], cond}); }
+    else if((p[0]==="PFX"||p[0]==="SFX") && p.length===4) rules[p[1]]={type:p[0], cross:p[2]==="Y", list:[]}; });
+  const set=new Set(), nosug=new Set(), sfx=(w,r)=>r.list.filter(x=>(!x.cond||x.cond.test(w)) && (!x.strip||w.endsWith(x.strip))).map(x=>w.slice(0,w.length-x.strip.length)+x.add),
+    pfx=(w,r)=>r.list.filter(x=>(!x.cond||x.cond.test(w)) && (!x.strip||w.startsWith(x.strip))).map(x=>x.add+w.slice(x.strip.length));
+  String(dic).split(/\r?\n/).forEach((l,i)=>{ if(!i && /^\d+$/.test(l.trim())) return; const line=l.trim(); if(!line) return;
+    const k=line.indexOf("/"), w=k<0?line:line.slice(0,k), flags=k<0?"":line.slice(k+1).split(/\s/)[0]; set.add(w);
+    if(flags.indexOf("!")>=0) nosug.add(w.toLowerCase());          /* NOSUGGEST: never offered as a spelling */
+    const rs=[...flags].map(f=>rules[f]).filter(Boolean), sufs=rs.filter(r=>r.type==="SFX"), pres=rs.filter(r=>r.type==="PFX");
+    const withS=[]; sufs.forEach(r=>sfx(w,r).forEach(x=>{ set.add(x); if(r.cross) withS.push(x); }));
+    pres.forEach(r=>{ pfx(w,r).forEach(x=>set.add(x)); if(r.cross) withS.forEach(s=>pfx(s,r).forEach(x=>set.add(x))); }); });
+  set.nosug=nosug;
+  return set;
+}
+function spellExtra(){
+  const s=new Set(SPELL_MISMO.map(w=>w.toLowerCase()));
+  try{ ((((S.settings||{}).spelling)||{}).words||[]).forEach(w=>s.add(String(w).toLowerCase())); }catch(e){}
+  try{ vals("guests").forEach(g=>String(g.name||g.n||"").split(/[\s,]+/).forEach(w=>w&&s.add(w.toLowerCase()))); vals("episodes").forEach(e=>String(e.guests||"").split(/[\s,&]+/).forEach(w=>w&&s.add(w.toLowerCase()))); }catch(e){}
+  return s;
+}
+function spellKnown(w, extra){
+  const W=SPELL.words; if(!W) return true;
+  const lw=w.toLowerCase(); if(extra.has(lw) || SPELL.ignore.has(lw)) return true;
+  if(W.has(w) || W.has(lw) || W.has(w.charAt(0).toUpperCase()+w.slice(1))) return true;
+  if(/'/.test(w)){ const base=w.replace(/'(s|ll|re|ve|d|m)$/i,"").replace(/s'$/i,"s"); if(base!==w) return spellKnown(base, extra); if(/n't$/i.test(w)) return W.has(lw.replace(/n't$/,"")) || W.has(lw.replace(/n't$/,"")+"n") || /^(can|won|don|doesn|didn|isn|aren|wasn|weren|hasn|haven|hadn|couldn|wouldn|shouldn|mustn|ain)'t$/i.test(lw); }
+  return false;
+}
+/* the words to look at in a piece of copy */
+function spellIssues(text){
+  if(!SPELL.words) return [];
+  const extra=spellExtra(), seen=new Set(), out=[];
+  const t=String(text||"").replace(/https?:\/\/\S+|www\.\S+|\S+@\S+\.\S+|[@#][\w.-]+|<[^>]+>|&[a-z]+;/gi," ").replace(/[’‘]/g,"'");
+  const re=/[A-Za-z][A-Za-z']*[A-Za-z]|[A-Za-z]/g; let m;
+  while((m=re.exec(t))){
+    let w=m[0].replace(/^'+|'+$/g,""); if(w.length<2) continue;
+    if(/[A-Z]/.test(w.slice(1))) continue;                          /* MISMO, eNote, iPhone */
+    /* a capital mid-sentence is usually a name, or a word in a Title Case heading: flagged only when it's one letter
+       away from a real word (Standerds), so names like Vieaux are left alone */
+    let named=false;
+    if(/^[A-Z]/.test(w)){
+      const before=t.slice(0,m.index).replace(/[\s"'“(\[*_-]+$/,"");
+      named = !!before && !/[.!?:\n]$/.test(before) && !/\n\s*$/.test(t.slice(0,m.index));
+    }
+    const key=w.toLowerCase(); if(seen.has(key)) continue; seen.add(key);
+    if(spellKnown(w, extra)) continue;
+    if(named && !spellNear(w)) continue;
+    out.push(w);
+  }
+  return out;
+}
+function spellNear(word){ const W=SPELL.words, lw=word.toLowerCase(), A="abcdefghijklmnopqrstuvwxyz";
+  if(lw.length<5) return false;
+  for(let i=0;i<=lw.length;i++){ const a=lw.slice(0,i), b=lw.slice(i);
+    if(b && W.has(a+b.slice(1))) return true; if(b.length>1 && W.has(a+b[1]+b[0]+b.slice(2))) return true;
+    for(const c of A){ if(b && c!==b[0] && W.has(a+c+b.slice(1))) return true; if(W.has(a+c+b)) return true; } }
+  return false; }
+/* the right spellings: one change away, then two */
+function spellSuggest(word){
+  const W=SPELL.words; if(!W) return [];
+  const lw=word.toLowerCase(), A="abcdefghijklmnopqrstuvwxyz'", ed=w=>{ const o=new Set();
+    for(let i=0;i<=w.length;i++){ const a=w.slice(0,i), b=w.slice(i);
+      if(b) o.add(a+b.slice(1)); if(b.length>1) o.add(a+b[1]+b[0]+b.slice(2));
+      for(const c of A){ if(b) o.add(a+c+b.slice(1)); o.add(a+c+b); } } return o; };
+  const ok=w=>W.has(w) && !(W.nosug && W.nosug.has(w)), one=[...ed(lw)].filter(ok);
+  let list=one; if(!list.length && lw.length<=12){ const two=new Set(); for(const x of ed(lw)) for(const y of ed(x)) if(ok(y)) two.add(y); list=[...two]; }
+  /* closest first: same length, same first letter, and the same letters swapped round (recieve → receive) */
+  const sl=x=>[...x].sort().join(""), base=sl(lw), cap=/^[A-Z]/.test(word), score=s=>Math.abs(s.length-lw.length)+(s[0]===lw[0]?0:1)-(sl(s)===base?1:0);
+  return [...new Set(list)].sort((a,b)=>score(a)-score(b)).slice(0,5).map(s=>cap?s.charAt(0).toUpperCase()+s.slice(1):s);
+}
+function spellText(el){ return el.isContentEditable ? el.innerText : el.value; }
+function spellLineFor(el){
+  let n=el.nextElementSibling; if(n && n.classList.contains("spl") && n.__for===el) return n;
+  if(el.tagName==="INPUT"){ const p=el.parentElement; if(!p || /flex|grid/.test(getComputedStyle(p).display)) return null; }
+  n=document.createElement("div"); n.className="spl"; n.__for=el; n.hidden=true; n.setAttribute("aria-live","polite"); el.insertAdjacentElement("afterend", n); return n;
+}
+function spellCheckEl(el){
+  if(!el || !el.isConnected || el.dataset.spell!=="on" || SPELL.state!=="ready") return;
+  const text=spellText(el)||""; const words=text.trim().length>2 ? spellIssues(text) : [];
+  let line=el.nextElementSibling; if(!(line && line.classList.contains("spl") && line.__for===el)) line=words.length?spellLineFor(el):null;
+  if(!line) return;
+  if(!words.length){ line.hidden=true; line.innerHTML=""; return; }
+  line.hidden=false;
+  line.innerHTML='<span class="spl-k">Spelling</span>'+words.slice(0,10).map(w=>'<button type="button" class="spl-w" data-splw="'+esc(w)+'" title="Show the right spellings">'+esc(w)+'</button>').join("")+(words.length>10?'<span class="spl-more">and '+(words.length-10)+' more</span>':'');
+}
+function spellAll(){ if(SPELL.state!=="ready") return; document.querySelectorAll('[data-spell="on"]').forEach(spellCheckEl); }
+function spellSoon(el, ms){ clearTimeout(SPELL.timers.get(el)); SPELL.timers.set(el, setTimeout(()=>spellCheckEl(el), ms==null?600:ms)); }
+function spellReplace(el, from, to){
+  const re=new RegExp("(^|[^A-Za-z'’])"+from.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"(?![A-Za-z'’])","g");
+  if(el.isContentEditable){ const tw=document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while((n=tw.nextNode())) n.nodeValue=n.nodeValue.replace(re,"$1"+to); }
+  else el.value=el.value.replace(re,"$1"+to);
+  el.dispatchEvent(new Event("input",{bubbles:true})); el.dispatchEvent(new Event("change",{bubbles:true}));
+}
+async function spellAddWord(w){
+  const cur=(((S.settings||{}).spelling)||{}).words||[]; if(cur.map(x=>String(x).toLowerCase()).includes(w.toLowerCase())) return;
+  const words=cur.concat([w]).sort((a,b)=>a.localeCompare(b));
+  try{ if((S.settings||{}).spelling) await patch("settings","spelling",{words}); else await put("settings","spelling",{words}); toast('"'+w+'" added to MISMO Words.'); }
+  catch(e){ toast("Couldn't add the word: "+((e&&e.message)||"try again")); }
+}
+function spellMenu(btn){
+  document.querySelectorAll(".spl-menu").forEach(m=>m.remove());
+  const line=btn.closest(".spl"), el=line&&line.__for, w=btn.dataset.splw; if(!el) return;
+  const ro=el.readOnly || (el.isContentEditable===false && el.tagName!=="TEXTAREA" && el.tagName!=="INPUT"), sug=ro?[]:spellSuggest(w);
+  const m=document.createElement("div"); m.className="spl-menu"; m.setAttribute("role","group"); m.setAttribute("aria-label","Spellings for "+w);
+  m.innerHTML=(ro?'<span class="spl-ro">This copy is locked.</span>':(sug.length?sug.map(s=>'<button type="button" class="btn sm" data-splto="'+esc(s)+'">'+esc(s)+'</button>').join(""):'<span class="spl-ro">No close match.</span>'))+
+    '<button type="button" class="btn sm" data-spladd>Add to MISMO Words</button><button type="button" class="btn sm" data-splign>Ignore</button>';
+  btn.insertAdjacentElement("afterend", m);
+  m.querySelectorAll("[data-splto]").forEach(b=>b.onclick=()=>{ spellReplace(el, w, b.dataset.splto); m.remove(); spellCheckEl(el); try{ el.focus(); }catch(e){} });
+  m.querySelector("[data-spladd]").onclick=async()=>{ m.remove(); await spellAddWord(w); spellAll(); };
+  m.querySelector("[data-splign]").onclick=()=>{ SPELL.ignore.add(w.toLowerCase()); m.remove(); spellAll(); };
+  const f=m.querySelector("button"); if(f) try{ f.focus(); }catch(e){}
+}
+document.addEventListener("input", e=>{ const t=e.target; if(t && t.dataset && t.dataset.spell==="on") spellSoon(t); }, true);
+document.addEventListener("click", e=>{ const b=e.target && e.target.closest && e.target.closest(".spl-w"); if(b){ e.preventDefault(); spellMenu(b); return; }
+  if(!(e.target.closest && e.target.closest(".spl-menu"))) document.querySelectorAll(".spl-menu").forEach(m=>m.remove()); });
+document.addEventListener("keydown", e=>{ if(e.key==="Escape"){ const m=document.querySelector(".spl-menu"); if(m){ m.remove(); } } });
+/* boxes that appear get checked; the dictionary loads a few seconds after the page opens */
+function spellNew(el){ if(SPELL.state==="ready") spellSoon(el, 50); else if(!SPELL.state && document.readyState!=="loading") setTimeout(()=>{ if(!SPELL.state) spellLoad(); }, 1500); }
+(function(){
+  setTimeout(()=>{ if(!SPELL.state) spellLoad(); }, 3000);
+  const st=document.createElement("style");
+  st.textContent='.spl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;margin:5px 0 2px;font-size:12.5px;position:relative}.spl[hidden]{display:none}'+
+    '.spl-k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;color:var(--ink-3);margin-right:2px}'+
+    '.spl-w{font:inherit;background:none;border:0;border-bottom:2px dotted var(--bad);border-radius:0;padding:0 1px;color:var(--ink);cursor:pointer}.spl-w:focus-visible{outline:2px solid var(--sky);outline-offset:2px}'+
+    '.spl-more{color:var(--ink-3)}.spl-menu{display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex-basis:100%;padding:8px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px}.spl-ro{color:var(--ink-3)}';
+  document.head.appendChild(st);
+})();
+/* Help > System Health */
+function hhSpelling(){
+  const n=((((S.settings||{}).spelling)||{}).words||[]).length;
+  if(SPELL.state==="off") return hhRow("spelling","Spelling","warn","The dictionary didn't load ("+SPELL.err+"), so the spelling line under copy boxes is off. Chrome's own red underline still works.");
+  if(SPELL.state!=="ready") return hhRow("spelling","Spelling","off","The dictionary loads a few seconds after MISMO Media opens.");
+  return hhRow("spelling","Spelling","ok","Every copy box is checked as it changes: "+rsN(SPELL.words.size)+" English words, plus "+rsN(n)+" MISMO Word"+(n===1?"":"s")+" the team added.");
+}
+/* switch on every copy box now and as new ones appear (after everything above is set up) */
+(function(){
+  try{ document.documentElement.setAttribute("lang","en-US"); }catch(e){}
+  spellScan(document);
+  try{ new MutationObserver(ms=>{ for(const m of ms){ if(m.type==="attributes") spellOn(m.target); else m.addedNodes.forEach(n=>{ if(n.nodeType===1) spellScan(n); }); } })
+    .observe(document.documentElement, {childList:true, subtree:true, attributes:true, attributeFilter:["contenteditable"]}); }catch(e){}
+})();
+
+/* ================= Push to MyMISMO (CN-049, approved by Jonna Nov 26, 2026) =================
+   MyMISMO has a second, separate opt-in notification, "MISMO Matters and Mic'd Up". It is sent only when someone presses
+   Push to MyMISMO here, on a MISMO Matters edition that has gone out or a Mic'd Up episode that is public on YouTube:
+   never on publish, on a schedule or on a timer. The words are filled in and can be edited first. Sending goes through
+   the save relay (relay request 16: POST /mymismo/push/news) with the person's own resources.mismo.org sign-in; only the
+   people Jonna named (MyMISMO's alertSenders) can send. Each push is noted on the edition or episode (mymismo:{at, by,
+   n, title, body}) and the newest one shows on System Health. Tapping the notification opens MyMISMO on that edition or
+   episode; a pushed episode joins the app's Mic'd Up list right away. */
+const MYP_URL = "https://rgvdi67cg27o5kcmiytcqbqnrm0hmztx.lambda-url.us-east-1.on.aws/mymismo/push/news";
+const MYP_MAXT = 80, MYP_MAXB = 300;
+const MYP = {open:null, busy:false, last:null};
+function mypTok(){ try{ return (window.ResourcesSession && window.ResourcesSession.token()) || ""; }catch(e){ return ""; } }
+function mypEdReady(ed){ return !!(ed && !ed.archived && ed.done && ed.done.publish); }
+function mypEpReady(e){ return !!(e && e.youtubeDone && ytId(e.youtubeUrl)); }
+function mypVieaux(ed){ const s=edSections(ed).find(x=>x.k==="vieaux" && x.on); return s ? String(s.doc.headline||"").trim() : ""; }
+function mypRec(kind, x){ return (x && x.mymismo) || null; }
+function mypFill(kind, x){
+  if(kind==="matters"){ const v=mypVieaux(x); return {title:("MISMO Matters: "+monthName(x.month)).slice(0,MYP_MAXT), body:(v?"The Vieaux Point: "+v:"The "+monthName(x.month)+" edition of MISMO Matters is here.").slice(0,MYP_MAXB)}; }
+  const t=String(x.title||"").trim(), g=String(x.guests||"").trim();
+  return {title:"New MISMO Mic'd Up Episode", body:((t||epWord(x))+(g && t.toLowerCase().indexOf(g.toLowerCase())<0?" with "+g:"")).slice(0,MYP_MAXB)};
+}
+/* the button, on an edition that has gone out or an episode that is public on YouTube */
+function myPushHtml(kind, x){
+  if(!CANWRITE || !(kind==="matters"?mypEdReady(x):mypEpReady(x))) return "";
+  const r=mypRec(kind,x);
+  return '<span class="myp-wrap"><button class="btn sm" type="button" data-mypush="'+kind+'" data-myref="'+esc(x.id)+'">Push to MyMISMO</button>'+
+    (r&&r.at?'<span class="myp-done">Pushed to MyMISMO '+esc(fS(localDay(r.at)))+(r.n!=null?' · '+rsN(r.n)+' phone'+(+r.n===1?'':'s'):'')+'</span>':'')+'</span>';
+}
+function mypItem(kind, ref){ return kind==="matters" ? vals("editions").find(e=>e.id===ref) : vals("episodes").find(e=>e.id===ref); }
+function mypClose(){ const d=$("#myp-pop"); if(d){ d.remove(); } const back=MYP.open&&MYP.open.from; MYP.open=null; if(back && back.focus) try{ back.focus(); }catch(e){} }
+function mypOpen(kind, ref, from){
+  const x=mypItem(kind, ref); if(!x) return;
+  mypClose();
+  const f=mypFill(kind, x); MYP.open={kind, ref, from};
+  const d=document.createElement("div"); d.id="myp-pop"; d.setAttribute("role","dialog"); d.setAttribute("aria-modal","true"); d.setAttribute("aria-labelledby","myp-h");
+  const r=mypRec(kind,x);
+  d.innerHTML='<div class="myp-card"><div class="myp-eye">'+(kind==="matters"?"MISMO Matters · "+esc(monthName(x.month)):"Mic'd Up · "+esc(epWord(x)))+'</div><h2 id="myp-h">Push to MyMISMO</h2>'+
+    (r&&r.at?'<p class="myp-was">Already pushed '+esc(fS(localDay(r.at)))+(r.by?' by '+esc(r.by):'')+'. Sending again is only for a correction.</p>':'')+
+    '<label class="flabel" for="myp-t">Title</label><input type="text" id="myp-t" maxlength="'+MYP_MAXT+'" value="'+esc(f.title)+'"><div class="myp-cnt" id="myp-tc"></div>'+
+    '<label class="flabel" for="myp-b">Message</label><textarea id="myp-b" rows="3" maxlength="'+MYP_MAXB+'">'+esc(f.body)+'</textarea><div class="myp-cnt" id="myp-bc"></div>'+
+    '<div class="myp-prev" aria-label="Preview"><div class="myp-app">MyMISMO</div><b id="myp-pt"></b><span id="myp-pb"></span></div>'+
+    '<p class="myp-who">This goes to everyone who turned on MISMO Matters and Mic\'d Up notifications in MyMISMO.</p>'+
+    '<div class="myp-msg" id="myp-msg" role="status" aria-live="polite"></div>'+
+    '<div class="myp-btns"><button class="btn pri" type="button" id="myp-send">Send to MyMISMO</button><button class="btn" type="button" id="myp-cancel">Cancel</button></div>'+
+    '<ul class="myp-rules"><li>Only news about this '+(kind==="matters"?"edition":"episode")+'.</li><li>No sponsor ads, offers or promotions.</li><li>No personal or sensitive information.</li><li>Nothing styled as a warning or a system message.</li></ul>'+
+    '<p class="myp-note">Apple and Google Play rules for notifications. Phones show about the first 100 characters of the message.</p></div>';
+  document.body.appendChild(d);
+  const ti=$("#myp-t",d), bi=$("#myp-b",d);
+  const upd=()=>{ $("#myp-tc",d).textContent=ti.value.length+" of "+MYP_MAXT; $("#myp-bc",d).textContent=bi.value.length+" of "+MYP_MAXB+(bi.value.length>100?" · phones show about the first 100":"");
+    $("#myp-pt",d).textContent=ti.value.trim()||"Title"; $("#myp-pb",d).textContent=bi.value.trim()||"Message"; };
+  ti.oninput=upd; bi.oninput=upd; upd();
+  $("#myp-cancel",d).onclick=mypClose;
+  d.addEventListener("keydown",e=>{ if(e.key==="Escape"){ e.preventDefault(); mypClose(); } });
+  d.addEventListener("click",e=>{ if(e.target===d) mypClose(); });
+  $("#myp-send",d).onclick=()=>mypSend(false);
+  setTimeout(()=>{ try{ ti.focus(); }catch(e){} },30);
+}
+async function mypVideo(x){
+  const id=ytId(x.youtubeUrl); let v=null;
+  try{ const r=await fetch("/podcast/micdup.json",{cache:"no-store"}); if(r.ok){ const j=await r.json(); v=(j.episodes||[]).find(q=>q && q.id===id) || null; } }catch(e){}
+  return {id, title:String((v&&v.title)||x.title||epWord(x)), published:String((v&&(v.published||v.date))||x.airDate||""), duration:(v&&v.duration)||""};
+}
+async function mypSend(again){
+  const d=$("#myp-pop"); if(!d || !MYP.open || MYP.busy) return;
+  const {kind, ref}=MYP.open, x=mypItem(kind, ref); if(!x) return;
+  const msg=$("#myp-msg",d), say=(t,bad)=>{ msg.textContent=t; msg.className="myp-msg"+(bad?" bad":""); };
+  const title=$("#myp-t",d).value.trim(), body=$("#myp-b",d).value.trim();
+  if(!title || !body){ say("Fill in the title and the message.", true); return; }
+  const tok=mypTok(); if(!tok){ say("Sign in to resources.mismo.org first.", true); return; }
+  const payload={kind, ref: kind==="matters" ? x.month : ytId(x.youtubeUrl), title:title.slice(0,MYP_MAXT), body:body.slice(0,MYP_MAXB)};
+  if(kind==="matters"){ const u=mmWebUrl(x); if(/^https:\/\/(www\.mismo\.org|resources\.mismo\.org)\//.test(u)) payload.url=u; }
+  else payload.video=await mypVideo(x);
+  if(again) payload.again=true;
+  MYP.busy=true; say("Sending…"); $$("button",d).forEach(b=>b.disabled=true);
+  try{
+    const r=await fetch(MYP_URL,{method:"POST", cache:"no-store", headers:{"Authorization":"Bearer "+tok, "Content-Type":"application/json"}, body:JSON.stringify(payload)});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok){
+      const n=+j.sent||0, rec={at:new Date().toISOString(), by:window.__hqWho||"", n, title:payload.title, body:payload.body, again:!!again};
+      await patch(kind==="matters"?"editions":"episodes", x.id, {mymismo:rec});
+      MYP.last=Object.assign({kind, ref:payload.ref}, rec);
+      say("Sent to "+rsN(n)+" phone"+(n===1?"":"s")+", "+fS(T())+". Saved on this "+(kind==="matters"?"edition":"episode")+".");
+      const s=$("#myp-send",d); s.textContent="Done"; s.disabled=false; s.onclick=mypClose; $("#myp-cancel",d).hidden=true;
+      if(typeof renderTab==="function") renderTab(TAB);
+      return;
+    }
+    if(r.status===409 || j.error==="ALREADY_SENT"){
+      const when=j.at?fS(localDay(j.at)):"before";
+      say("Already pushed on "+when+". Send it again only to correct it.", true);
+      const s=$("#myp-send",d); s.textContent="Send Again"; s.disabled=false; s.onclick=()=>mypSend(true); $("#myp-cancel",d).disabled=false;
+      return;
+    }
+    say(r.status===403 ? "Only the people Jonna named can push to MyMISMO."
+      : r.status===404 ? "MyMISMO notifications aren't switched on yet."
+      : r.status===401 ? "Sign in to resources.mismo.org again, then try."
+      : "MyMISMO didn't take it ("+(j.error||r.status)+"). Nothing was sent.", true);
+  }catch(e){ say("Couldn't reach MyMISMO. Nothing was sent. Check your connection and try again.", true); }
+  finally{ MYP.busy=false; if($("#myp-pop")) $$("#myp-pop button").forEach(b=>{ if(b.textContent!=="Done") b.disabled=false; }); }
+}
+document.addEventListener("click", e=>{ const b=e.target && e.target.closest && e.target.closest("[data-mypush]"); if(!b) return; e.preventDefault(); mypOpen(b.dataset.mypush, b.dataset.myref, b); });
+if(window.MismoBack) MismoBack.layer({ isOpen:()=>!!$("#myp-pop"), close:()=>mypClose() });
+/* Help > System Health: the newest push */
+function hhMyMISMO(){
+  const recs=vals("editions").map(e=>e.mymismo&&Object.assign({what:"MISMO Matters "+monthName(e.month)},e.mymismo)).concat(vals("episodes").map(e=>e.mymismo&&Object.assign({what:"Mic'd Up "+epTag(e)},e.mymismo))).filter(r=>r&&r.at)
+    .sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const r=recs[0];
+  if(!r) return hhRow("mymismo","Push to MyMISMO","off","Nothing pushed yet. Push to MyMISMO is on each MISMO Matters edition that has gone out and each Mic'd Up episode on YouTube; it only sends when someone presses it.");
+  return hhRow("mymismo","Push to MyMISMO","ok","Last push "+hhWhen(r.at)+(r.by?" by "+r.by:"")+": "+r.what+", to "+rsN(r.n||0)+" phone"+(+r.n===1?"":"s")+".");
+}
+(function(){
+  const st=document.createElement("style");
+  st.textContent='.myp-wrap{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}.myp-done{font-size:12px;color:var(--good)}'+
+    '#myp-pop{position:fixed;inset:0;z-index:9000;background:rgba(6,32,47,.55);display:flex;align-items:center;justify-content:center;padding:16px}'+
+    '.myp-card{background:var(--surface);color:var(--ink);border:1px solid var(--border);border-top:4px solid var(--sky);border-radius:8px;width:min(520px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:18px 20px 16px;box-shadow:0 18px 50px rgba(6,32,47,.35)}'+
+    '.myp-eye{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}.myp-card h2{margin:4px 0 12px;font-size:20px}'+
+    '.myp-card input,.myp-card textarea{width:100%;box-sizing:border-box}.myp-cnt{font-size:11.5px;color:var(--ink-3);text-align:right;margin:3px 0 10px}'+
+    '.myp-prev{display:grid;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:13px}.myp-prev .myp-app{font-size:11px;font-weight:700;color:var(--ink-3)}.myp-prev span{color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}'+
+    '.myp-who{font-size:13px;margin:10px 0 6px}.myp-was{font-size:13px;color:var(--warn);margin:0 0 10px}.myp-msg{font-size:13px;min-height:1.2em;margin:4px 0 8px}.myp-msg.bad{color:var(--bad)}'+
+    '.myp-btns{display:flex;gap:8px;flex-wrap:wrap}.myp-rules{margin:12px 0 4px;padding-left:18px;font-size:12px;color:var(--ink-2)}.myp-note{font-size:11.5px;color:var(--ink-3);margin:0}';
+  document.head.appendChild(st);
+})();
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
