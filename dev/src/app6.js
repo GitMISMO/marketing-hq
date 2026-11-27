@@ -108,7 +108,9 @@ const HELP = [
    <li>Emails sent as Perry (the quote request, the MISMO Connect post and the MBA newsroom copy) go through the <b>MISMO Media - Send As Perry</b> flow. It checks the resources.mismo.org sign-in and sends only when the person signed in is Perry; anyone else is refused. Amy's approval request goes through MISMO Media's usual notice email.</li>
    <li>The MISMO Media page checks the feed every five minutes while it's open.</li>
    <li>Help &rsaquo; System Health shows when the MMS feed was last rebuilt and any release that couldn't get a first draft.</li>
-  </ul>`},
+  </ul>
+  <h3>The Training Tour</h3>
+  <p>The MMS's <b>Work Request Journey</b> (resources.mismo.org/mms/journey/) walks new people through a work request from start to finish, and for the press release steps it opens this real page with made-up practice releases. A pointer moves to the real buttons. While MISMO Media is inside the tour, the menu says <b>Practice Mode</b>: nothing real is read, nothing is saved, and no email is sent (the tour shows the email instead). Close the tour and MISMO Media is exactly as you left it.</p>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
   <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which.</p>

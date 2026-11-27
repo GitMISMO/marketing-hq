@@ -83,6 +83,8 @@ function prLate(r){ const d=prReminderDue(r); return !!d && d<=T() && r.status==
 
 /* ---------- the feeds ---------- */
 async function prLoadFeed(force){
+  /* tour mode (CN-059): no feed check; the practice releases' own announcements stand in for the feed */
+  if(TOUR){ PR.feed={updated:new Date().toISOString(), list:vals("releases").map(r=>r.ann).filter(Boolean)}; PR.feedErr=""; PR.feedAt=Date.now(); return PR.feed; }
   if(!force && PR.feed && Date.now()-PR.feedAt<5*60000) return PR.feed;
   try{ const r=await fetch(PR_FEED,{cache:"no-store"}); if(!r.ok) throw new Error("the feed answered "+r.status);
     const j=await r.json(); PR.feed={updated:j.updated||"", list:Array.isArray(j.announcements)?j.announcements:[]}; PR.feedErr=""; }
@@ -90,6 +92,7 @@ async function prLoadFeed(force){
   PR.feedAt=Date.now(); return PR.feed;
 }
 async function prLoadCatalog(){
+  if(TOUR) return {};
   if(PR.cat && Date.now()-PR.catAt<60*60000) return PR.cat;
   try{ const r=await fetch(PR_CATALOG,{cache:"no-store"}); if(r.ok){ const j=await r.json(); const m={}; (j.products||[]).forEach(p=>{ m[p.id]=p; (p.aliases||[]).forEach(a=>{ m[a]=m[a]||p; }); }); PR.cat=m; PR.catAt=Date.now(); } }catch(e){}
   return PR.cat||{};

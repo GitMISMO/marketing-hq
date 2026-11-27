@@ -208,6 +208,207 @@
   window.__hqMerge = { merge: mergeDoc, clashes: clashes, sameVal: sameVal, normVal: normVal, sig: sig,
     getAt: getAt, setAt: setAt, clone: clone, GONE: GONE };
 
+  /* ---------- tour mode (CN-059, Nov 27, 2026) ----------
+     The MMS's Work Request Journey (resources.mismo.org/mms/journey/) opens MISMO Media in a frame at
+     /media/?tour=1 (or the old /marketing-hq/?tour=1) and hands it made-up practice records through
+     window.parent.__tourSeed. In tour mode this door never reaches the relay: the records live only in this
+     tab, saves change only this tab's copy, nothing is read from or sent to anywhere (the relay, SharePoint,
+     the flows, the MMS feed, MyMISMO), and an email a person "sends" is kept for the journey to show instead.
+     Today's date comes from window.parent.__tourClock ({base, at}). Only on resources.mismo.org, only when
+     the page that opened it offers __tourSeed; otherwise MISMO Media opens normally. Built like the MMS's own
+     tour branch (src/tour.js and the top of src/mms-door.js in GitMISMO/mms-data). app36.js is the other half:
+     window.__mmTour, which the journey drives. */
+  var TP = (function () {
+    try {
+      if (!/[?&]tour=1(?:&|$)/.test(location.search) || window.parent === window) return null;
+      var p = window.parent;
+      if (p.location.origin !== location.origin || p.location.hostname !== 'resources.mismo.org' || !p.__tourSeed) return null;
+      return p;
+    } catch (e) { return null; }   /* a page on another site can't be read: not a tour */
+  })();
+  if (TP) { tour(TP); return; }
+  function tour(TP) {
+    window.__mmTourOn = true;
+    var SHARED = function (k) { k = String(k); return k.indexOf('resources:') === 0 || k === 'mismo.portal.theme'; };
+    var RELAY_ORIGIN = new URL(RELAY_URL).origin;
+    var NO = 'Practice mode: nothing is read, saved or sent';
+    function no() { return Promise.reject(err('TOUR', NO, 0)); }
+
+    /* the clock: {base, at} is a practice moment and the real moment it was set; which is which is told apart by
+       which one is nearer the real time now, so either way round reads the same */
+    var RealDate = window.Date, realNow = RealDate.now.bind(RealDate), own = null;
+    function ms(v) { return typeof v === 'number' ? v : (v instanceof RealDate ? v.getTime() : RealDate.parse(v)); }
+    function clockNow() {
+      var c = own; if (!c) { try { c = TP.__tourClock; } catch (e) { c = null; } }
+      if (typeof c === 'function') { try { c = c(); } catch (e) { c = null; } }
+      if (c == null) return realNow();
+      if (typeof c !== 'object' || c instanceof RealDate) { var t = ms(c); return isNaN(t) ? realNow() : t; }
+      var a = ms(c.base), b = ms(c.at), r = realNow();
+      if (isNaN(a)) return realNow();
+      if (isNaN(b)) return a;
+      return Math.abs(b - r) <= Math.abs(a - r) ? a + (r - b) : b + (r - a);
+    }
+    function setToday(v) {
+      if (v === undefined) return;
+      if (v === null || v === '') { own = null; return; }
+      var m = typeof v === 'string' && v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      var t = m ? new RealDate(+m[1], +m[2] - 1, +m[3], 9, 0, 0).getTime() : ms(v);
+      if (!isNaN(t)) own = { base: t, at: realNow() };
+    }
+    var TourDate = function Date(a, b, c, d, e, f, g) {
+      var n = arguments.length;
+      if (!(this instanceof TourDate)) return new RealDate(clockNow()).toString();
+      return n === 0 ? new RealDate(clockNow()) : n === 1 ? new RealDate(a) : new RealDate(a, b, n > 2 ? c : 1, n > 3 ? d : 0, n > 4 ? e : 0, n > 5 ? f : 0, n > 6 ? g : 0);
+    };
+    TourDate.prototype = RealDate.prototype;
+    TourDate.now = clockNow; TourDate.parse = RealDate.parse; TourDate.UTC = RealDate.UTC;
+    try { Object.defineProperty(TourDate, Symbol.hasInstance, { value: function (v) { return v instanceof RealDate; } }); } catch (e) {}
+    window.Date = TourDate;
+
+    /* nothing leaves this tab: only the shared page code (/assets/), MISMO Media's own dictionary and pictures, and the
+       sign-in's own checks may load. An email to a flow is kept (sent()) and answered as sent; anything else is refused. */
+    var sent = [], blocked = [];
+    function allowed(u) {
+      var x; try { x = new URL(u, location.href); } catch (e) { return false; }
+      if (x.protocol === 'data:' || x.protocol === 'blob:') return true;
+      if (x.origin === location.origin) return /^\/assets\//.test(x.pathname) || /^\/(media|marketing-hq)\/(spell|mm-headers)\//.test(x.pathname);
+      if (x.origin === RELAY_ORIGIN) return x.pathname === '/version' || /^\/[a-z0-9-]+\/auth\/me$/.test(x.pathname);
+      return false;
+    }
+    function keep(mail) {
+      var m = clone(mail) || {}; delete m.token;
+      m.at = new RealDate(clockNow()).toISOString(); m.from = m.from || person.name;
+      sent.push(m);
+      try { if (typeof TP.__tourMail === 'function') TP.__tourMail(clone(m)); } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('mmtour:email', { detail: clone(m) })); } catch (e) {}
+    }
+    var realFetch = window.fetch;
+    window.fetch = function (input, init) {
+      var u = typeof input === 'string' ? input : (input && input.url) || String(input);
+      var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (allowed(u)) return realFetch.apply(this, arguments);
+      var host = ''; try { host = new URL(u, location.href).hostname; } catch (e) {}
+      if (method === 'POST' && /\.powerplatform\.com$/.test(host)) {
+        var body = null; try { body = JSON.parse((init && init.body) || 'null'); } catch (e) {}
+        if (body && body.to && (body.subject || body.html)) {
+          keep(body);
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, tour: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }
+      }
+      blocked.push({ method: method, url: String(u).split('?')[0], at: realNow() });
+      return Promise.reject(new TypeError(NO));
+    };
+    try {
+      var xo = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (m, u) { if (!allowed(u)) { blocked.push({ method: String(m).toUpperCase(), url: String(u).split('?')[0], at: realNow() }); throw err('TOUR', NO, 0); } return xo.apply(this, arguments); };
+    } catch (e) {}
+    try { if (navigator.sendBeacon) { var sb = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = function (u, d) { return allowed(u) ? sb(u, d) : false; }; } } catch (e) {}
+
+    /* this browser's storage: MISMO Media's own remembered settings stay in this tab during a tour */
+    try {
+      var SP = Storage.prototype, g = SP.getItem, s = SP.setItem, r = SP.removeItem, MEM = { l: {}, s: {} };
+      var box = function (st) { return st === window.sessionStorage ? MEM.s : MEM.l; };
+      SP.getItem = function (k) { if (SHARED(k)) return g.call(this, k); var o = box(this); return Object.prototype.hasOwnProperty.call(o, k) ? o[k] : null; };
+      SP.setItem = function (k, v) { if (SHARED(k)) return; box(this)[k] = String(v); };
+      SP.removeItem = function (k) { if (SHARED(k)) return; delete box(this)[k]; };
+    } catch (e) {}
+
+    /* the person the tour shows MISMO Media as */
+    var person = { name: 'Practice Person', email: 'practice@mismo.org' };
+    function setMe(m) {
+      if (!m) return;
+      if (typeof m === 'string') m = /@/.test(m) ? { email: m } : { name: m };
+      person = { name: String(m.name || m.email || 'Practice Person'), email: String(m.email || '').toLowerCase() };
+    }
+    var realRS = window.ResourcesSession || {};
+    var tourRS = Object.create(realRS);
+    tourRS.current = function () { return { name: person.name, email: person.email, token: 'tour-practice', expiresAt: new RealDate(realNow() + 864e5).toISOString() }; };
+    tourRS.token = function () { return 'tour-practice'; };
+    tourRS.canEdit = function () { return true; };
+    tourRS.role = function () { return 'editor'; };
+    tourRS.requireAccess = function () { return Promise.resolve(); };
+    tourRS.signIn = function () { return Promise.resolve(); };
+    tourRS.onChange = function () {};
+    try { window.ResourcesSession = tourRS; } catch (e) {}
+    var st = document.createElement('style');
+    st.textContent = 'html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:visible!important}';
+    (document.head || document.documentElement).appendChild(st);
+
+    /* the practice records, as {collection: {id: record}} (a list of records with ids, or "collection/id" keys, also do) */
+    var D = {}, L = {};
+    function normMem(mem) {
+      var out = {};
+      if (!mem || typeof mem !== 'object') return out;
+      Object.keys(mem).forEach(function (k) {
+        var v = mem[k];
+        if (k.indexOf('/') > 0) { var p = k.split('/'); (out[p[0]] = out[p[0]] || {})[p[1]] = clone(v); return; }
+        var c = out[k] = out[k] || {};
+        if (Array.isArray(v)) v.forEach(function (x, i) { if (x && typeof x === 'object') { var id = String(x.id || (k + '-' + i)); var y = clone(x); delete y.id; c[id] = y; } });
+        else if (v && typeof v === 'object') Object.keys(v).forEach(function (id) { var y = clone(v[id]); if (y && typeof y === 'object') delete y.id; c[id] = y; });
+      });
+      return out;
+    }
+    function snap(c) { var o = D[c] || {}; return { docs: Object.keys(o).map(function (id) { return { id: id, exists: true, data: function () { return clone(o[id]); } }; }) }; }
+    function fire(c) { (L[c] || []).forEach(function (cb) { try { cb(snap(c)); } catch (e) { console.error(e); } }); }
+    function soon(c) { setTimeout(function () { fire(c); }, 0); }
+    var seeded = Promise.resolve().then(function () {
+      var s = TP.__tourSeed;
+      return typeof s === 'function' ? s('media') : s;
+    }).then(function (v) {
+      if (v && typeof v === 'object' && v.media && typeof v.media === 'object' && !v.mem) v = v.media;
+      var arg = v && typeof v === 'object' && ('mem' in v || 'me' in v || 'today' in v || 'view' in v || 'open' in v) ? v : { mem: v || {} };
+      D = normMem(arg.mem); setMe(arg.me); setToday(arg.today);
+      return arg;
+    }).catch(function (e) { console.error('Tour: the practice records could not be read', e); return { mem: {} }; });
+    function coll(c) {
+      return {
+        onSnapshot: function (cb) { (L[c] = L[c] || []).push(cb); seeded.then(function () { cb(snap(c)); }); return function () { L[c] = (L[c] || []).filter(function (x) { return x !== cb; }); }; },
+        doc: function (id) {
+          return {
+            get: function () { var v = (D[c] || {})[id]; return seeded.then(function () { return { id: id, exists: v !== undefined, data: function () { return clone(v); } }; }); },
+            set: function (d) { (D[c] = D[c] || {})[id] = clone(d); soon(c); return Promise.resolve(); },
+            update: function (d) { if (!(D[c] || {})[id]) return Promise.reject(err('not-found', 'No such record', 404)); D[c][id] = Object.assign({}, D[c][id], clone(d)); soon(c); return Promise.resolve(); },
+            merge: function (d, base) { var cur = (D[c] || {})[id]; if (base && !cur) return Promise.reject(err('not-found', GONE, 404)); (D[c] = D[c] || {})[id] = base ? mergeDoc(cur, clone(d), clone(base)) : clone(d); soon(c); return Promise.resolve(); },
+            delete: function () { delete (D[c] || {})[id]; soon(c); return Promise.resolve(); }
+          };
+        }
+      };
+    }
+    var DB = { collection: coll };
+    var USER = {
+      id: function () { return Promise.resolve(person.email ? person.name + ' <' + person.email + '>' : person.name); },
+      profiles: function (ids) { var o = {}; (ids || []).forEach(function (id) { var i = String(id).indexOf(' <'); o[id] = { name: i > 0 ? String(id).slice(0, i) : '' }; }); return Promise.resolve(o); },
+      can: function () { return Promise.resolve(true); },
+      me: function () { return Promise.resolve({ name: person.name, email: person.email }); },
+      profile: function () { return Promise.resolve({ name: person.name, email: person.email }); }
+    };
+    window.claude = {
+      use: function (cap) {
+        if (cap === 'db') return seeded.then(function () { return DB; });
+        if (cap === 'user') return seeded.then(function () { return USER; });
+        return Promise.resolve(null);   /* no downloads to the computer, no uploads, no writer during a tour */
+      }
+    };
+    /* every other way out of the page answers "practice mode"; an email is kept instead of sent */
+    window.__hqImages = { get: no, list: no, save: no, mkdir: no, writer: no, drive: { list: no, get: no, write: no },
+      notify: function (to, subject, html) { keep({ kind: 'notify', to: to, subject: subject, html: html }); return Promise.resolve({ ok: true, tour: true }); } };
+    window.__hqSponsors = function () { return Promise.resolve([]); };
+    window.__hqTeamEvents = function () { return Promise.resolve([]); };
+    window.__hqTeamFile = no; window.__hqIncoming = no;
+    window.__hqFile = { get: function () { return Promise.resolve({ data: null, sha: null }); }, put: no };
+    window.__hqRelay = { files: {}, place: place, poll: function () {}, pending: function () { return false; }, status: { offline: false, lastError: '' },
+      why: function () { return ''; }, tour: true, config: { RELAY_URL: '', PROJECT: PROJECT, POLL_MS: 0 } };
+    /* what app36.js (window.__mmTour) works with */
+    window.__mmTourDoor = {
+      seeded: seeded,
+      load: function (mem) { D = normMem(mem); Object.keys(L).forEach(fire); },
+      mem: function () { return clone(D); },
+      setMe: setMe, me: function () { return clone(person); },
+      setToday: setToday, now: clockNow,
+      sent: function () { return clone(sent); }, blocked: function () { return clone(blocked); }
+    };
+  }
+
   function applyOps(f, content, ops, sending) {
     ops.forEach(function (op) {
       if (op.kind === 'merge') {        /* only what changed since op.base, onto this copy */

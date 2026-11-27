@@ -154,6 +154,8 @@ const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boo
 
 /* ================= the shared records ================= */
 const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}, informz:{}, summitphotos:{}};
+/* Tour mode (CN-059): the MMS's Work Request Journey runs MISMO Media on practice records; see app36.js and dev/shim.html */
+const TOUR=!!window.__mmTourOn;
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -182,7 +184,7 @@ async function connect(){
     let can=true; try{ const u=await c.use("user"); if(u && u.can) can = await u.can(); if(u && u.me){ const m=await u.me(); window.__hqWho = (m && (m.name||m.displayName)) || ""; } }catch(e){}
     const sb=$("#savebanner"); if(sb && can===false) sb.hidden=false;
     CANWRITE = can!==false;
-    const n=$("#rail-save"); if(n) n.innerHTML = CANWRITE ? '<b>Saving</b><span class="ok">To MISMO\'s records · saves as you press Save</span>' : '<b>Saving</b><span class="no">'+(document.querySelector("#savebanner b")||{}).textContent+'</span>';
+    const n=$("#rail-save"); if(n && TOUR) n.innerHTML='<b>Practice Mode</b><span class="ok">Made-up records · nothing is saved or sent</span>'; else if(n) n.innerHTML = CANWRITE ? '<b>Saving</b><span class="ok">To MISMO\'s records · saves as you press Save</span>' : '<b>Saving</b><span class="no">'+(document.querySelector("#savebanner b")||{}).textContent+'</span>';
   }
   syncFeed();
 }
@@ -191,7 +193,7 @@ let CANWRITE=true, FEED_DONE=false;
    YouTube (/podcast/micdup.json, rebuilt from the channel's feed). MISMO Media reads it so an
    episode is marked "on YouTube", with its link, the moment it goes up. */
 async function syncFeed(){
-  if(FEED_DONE || location.hostname!=="resources.mismo.org" || !CANWRITE) return;
+  if(FEED_DONE || TOUR || location.hostname!=="resources.mismo.org" || !CANWRITE) return;
   if(!LOADED.has("episodes")){ setTimeout(syncFeed, 1500); return; }
   FEED_DONE=true;
   try{
@@ -518,7 +520,7 @@ const MU_PAUSED = {spotify:true, clips:true};
 const STALE={base:null, on:false};
 function pageSig(t){ let h=0; for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return t.length+":"+h; }
 async function staleCheck(){
-  if(STALE.on) return;
+  if(STALE.on || TOUR) return;
   try{ const t=await fetch(location.pathname, {cache:"no-store"}).then(r=>r.ok?r.text():""); if(!t) return;
     const sig=pageSig(t); if(STALE.base===null){ STALE.base=sig; return; }
     if(sig!==STALE.base){ STALE.on=true; const b=document.createElement("div"); b.id="stale-bar";

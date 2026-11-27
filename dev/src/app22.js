@@ -10,7 +10,8 @@ const BUILD = "__BUILD__";
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
    to Amy). The browser hands this lock to one tab at a time; the others wait until that tab closes. */
 let LEADER = !(navigator.locks && navigator.locks.request);
-try{ if(navigator.locks && navigator.locks.request) navigator.locks.request("mismo-media-autopilot", ()=>{ LEADER=true; if(typeof schedule==="function") schedule(); return new Promise(()=>{}); }); }catch(e){ LEADER=true; }
+/* a tour (CN-059) never takes the background jobs from a real MISMO Media tab */
+try{ if(!TOUR && navigator.locks && navigator.locks.request) navigator.locks.request("mismo-media-autopilot", ()=>{ LEADER=true; if(typeof schedule==="function") schedule(); return new Promise(()=>{}); }); }catch(e){ LEADER=true; }
 
 /* ---------- background jobs ----------
    At most once a minute each, only in the autopilot tab, and after a failure a pause that doubles each
@@ -19,7 +20,7 @@ const JOBS = {};
 function job(name){ return JOBS[name] || (JOBS[name]={name, runs:0, fails:0, lastRun:0, lastOk:0, lastErr:"", lastErrAt:0, next:0, busy:false}); }
 function jobNote(name, err){ const j=job(name); j.fails++; j.lastErr=String((err&&(err.message||err.code))||err||"failed").slice(0,200); j.lastErrAt=Date.now(); j.next=Date.now()+Math.min(60, Math.pow(2, Math.min(6, j.fails-1)))*60000; }
 function runJob(name, fn, minMs){
-  if(!fn || !LEADER || (typeof STALE!=="undefined" && STALE.on)) return;
+  if(!fn || TOUR || !LEADER || (typeof STALE!=="undefined" && STALE.on)) return;
   const j=job(name), now=Date.now();
   if(j.busy || now<j.next || now-j.lastRun<(minMs||60000)) return;
   j.busy=true; j.lastRun=now; j.runs++;

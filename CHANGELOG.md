@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-27 · Tour mode for the MMS's Work Request Journey (CN-059)
+
+- Approved by Jonna Nov 27, 2026: MISMO Media has a tour mode like the MMS's. When the Work Request Journey (resources.mismo.org/mms/journey/) opens /media/?tour=1 (or the old /marketing-hq/?tour=1) in a frame and offers `window.parent.__tourSeed`, MISMO Media runs on the practice records it hands over instead of the relay: nothing is read, saved or sent, no feed checks, no background jobs, and an email a person sends is kept for the journey (`__mmTour.sent()`, and `window.parent.__tourMail` if it has one). Today's date comes from `window.parent.__tourClock` ({base, at}). The journey drives it with `window.__mmTour` (ready, load, go, open). The menu says Practice Mode. Help > Press Releases explains it. Nothing changes on the normal page. `dev/tests/tour.js` checks it.
+
 ## 2026-11-27 · Summit Photos from MyMISMO (CN-057)
 
 - Approved by Jonna Nov 27, 2026: the Summits page has **Summit Photos**. When Amy picks attendee and staff photos in MyMISMO and presses Send to MISMO Media, each send shows as a batch (newest first) with the captions, who took them, the Photo Challenge, who's in them and Amy's notes. Each photo is kept in SharePoint (Image Library, Summits), and one draft summit post per batch is made for Amy (Ready for Review). Nothing posts or sends on its own. Data: read-only collection `summitphotos` (data/summitphotos.json, listed by the new Summit Photos workflow in marketing-hq-data from incoming/summit-photos/); new images `imsp-…` and pieces `psp-…`. Nothing arrives until MyMISMO's relay part is live.
