@@ -276,6 +276,7 @@ function renderSummits(){
     '</div></div>'+
     '<div class="phase">'+col("before","Before the Summit","Announcements, registration, early-bird, agenda, countdown.")+col("at","At the Summit","Live posts, photos, Newcomer Orientation, award winners.")+col("after","After the Summit","Thank-you and survey, recap, recordings, the MISMO Matters recap.")+'</div>'+
     summitOrdersCard(s)+
+    (typeof summitPhotosCard==="function"?summitPhotosCard(s):"")+
     '<p class="foot">Planning, the agenda and the Run of Show stay in Summit HQ. This page is only the marketing: what gets posted and sent, and when.</p>';
   $("#sm-pick",el).onchange=e=>{ SM.id=e.target.value; renderSummits(); };
   wireSummitOrders(el,s);

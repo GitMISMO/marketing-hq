@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-27 · Summit Photos from MyMISMO (CN-057)
+
+- Approved by Jonna Nov 27, 2026: the Summits page has **Summit Photos**. When Amy picks attendee and staff photos in MyMISMO and presses Send to MISMO Media, each send shows as a batch (newest first) with the captions, who took them, the Photo Challenge, who's in them and Amy's notes. Each photo is kept in SharePoint (Image Library, Summits), and one draft summit post per batch is made for Amy (Ready for Review). Nothing posts or sends on its own. Data: read-only collection `summitphotos` (data/summitphotos.json, listed by the new Summit Photos workflow in marketing-hq-data from incoming/summit-photos/); new images `imsp-…` and pieces `psp-…`. Nothing arrives until MyMISMO's relay part is live.
+
 ## 2026-11-27 · Schedule first, no Home; eight kinds of work
 
 - Jonna: "no one is really using home, let's start on schedule remove home". MISMO Media opens on the Schedule and Home is gone from the menu (an old #home link opens the Schedule). Remind Amy, which lived on Home, is in the Schedule's navy band; the reminder email's button opens the Schedule.

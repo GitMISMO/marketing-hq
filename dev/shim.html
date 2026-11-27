@@ -731,6 +731,18 @@
     if (!/^(receipts|attachments)\/[^\/]+$/.test(String(id))) return Promise.reject(err('invalid_argument', 'Not a Team HQ file: ' + id));
     return teamHq('/file/' + String(id).split('/').map(encodeURIComponent).join('/')).then(function (b) { return unb64((b && b.content) || '', type); });
   };
+  /* Summit Photos from MyMISMO (CN-057, Nov 27, 2026): one JPEG Amy sent, as the relay filed it in MISMO Media's own data
+     (incoming/summit-photos/<summit>/<file>), read through the relay's file route with the person's own sign-in. Only
+     JPEGs in that folder; the list of batches is the read-only collection summitphotos. */
+  window.__hqIncoming = function (path) {
+    if (!/^incoming\/summit-photos\/[A-Za-z0-9][A-Za-z0-9._-]*\/[A-Za-z0-9][A-Za-z0-9._-]*\.jpe?g$/i.test(String(path)) || /\.\./.test(String(path)))
+      return Promise.reject(err('invalid_argument', 'Not a summit photo: ' + path));
+    var rs = RS(), tok = rs && rs.token();
+    if (!tok) return Promise.reject(err('SIGNED_OUT', 'Not signed in', 401));
+    return fetch(RELAY_URL + '/' + PROJECT + '/file/' + String(path).split('/').map(encodeURIComponent).join('/'), { cache: 'no-store', headers: { 'Authorization': 'Bearer ' + tok } })
+      .then(function (r) { if (!r.ok) throw err('HTTP_' + r.status, 'The photo couldn\u2019t be read (' + r.status + ')', r.status); return r.json(); })
+      .then(function (b) { return unb64(String((b && b.content) || '').replace(/\s/g, ''), 'image/jpeg'); });
+  };
   /* a plain data file of MISMO Media's own, not records: the feeds other systems read, such as the sponsor benefits
      feed the Sponsorship Portal reads (data/feed-sponsor-benefits.json, Nov 21, 2026). Only names starting "feed-". */
   window.__hqFile = {
