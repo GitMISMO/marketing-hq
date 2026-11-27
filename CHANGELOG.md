@@ -2,6 +2,14 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-27 · Schedule first, no Home; eight kinds of work
+
+- Jonna: "no one is really using home, let's start on schedule remove home". MISMO Media opens on the Schedule and Home is gone from the menu (an old #home link opens the Schedule). Remind Amy, which lived on Home, is in the Schedule's navy band; the reminder email's button opens the Schedule.
+- "+ New Item" asks what kind: Press Release, MISMO Matters, Mic'd Up Episode (on the next open Friday), LinkedIn Post, YouTube Video, Mailchimp Send, Summit or Industry Event. The + on a calendar day offers the same.
+- The calendar's Show filter is those eight (Getting Set Up is gone; setup tasks, orders, requests and the monthly numbers stay on their own pages). Team HQ's Industry Events show on the calendar for anyone whose sign-in can read Team HQ.
+- Next Two Weeks shows what the calendar shows and follows its filter; housekeeping like Stats Recorded is left out. The Next Four Weeks is gone. The six band tiles sit 6, 3 or 2 to a row.
+- New item kinds: Industry Event (with the event's name and link) and MISMO Matters (with the edition it's for).
+
 ## 2026-11-26 · Spelling everywhere, italic quotes, Push to MyMISMO, fewer GitHub calls
 
 - Masthead matches the other MISMO tools (CN-053): Certification Management's masthead to the pixel. The navy bar is 68px tall (was 64), the white logo box has 9px 13px padding and 5px corners with a sky line under it, a thin 42px divider, and the name in light sky at 16px. The left menu, the right-hand panel, Help's side list, the Brand Kit jumps and the top notice bar line up to the new height; the page's stray 8px outer margin is gone so the logo box sits 22px in and 13px down like every tool. The old December hat (and its script) is removed: the shared holiday hat (/assets/holiday.js, loaded by session.js) does December now.
