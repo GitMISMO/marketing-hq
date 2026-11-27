@@ -1178,7 +1178,7 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 :root[data-theme="dark"] .chip.in{color:var(--sky)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.in{color:var(--sky)}}
 .dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex:0 0 auto}
-.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)} .k-request{--k:#c0582b} .k-press{--k:#2477b8}
+.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)} .k-request{--k:#c0582b} .k-press{--k:#7b8fa6} .k-events{--k:#8a6bd1}
 .dot{background:var(--k,var(--ink-3))}
 .ticks{display:inline-flex;gap:3px;align-items:center}
 .tk{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--border-strong);color:var(--ink-3)}
@@ -2325,6 +2325,10 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .rs-mc{border:1px solid var(--border);border-radius:4px;padding:3px 8px;background:var(--surface);font-weight:600;color:var(--ink-2)}
 .rs-mc.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,var(--border))}
 .rs-band .tiles{grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+/* the Schedule's six tiles: 6, 3 or 2 to a row, never one left alone (Nov 27, 2026) */
+#page-overview .band .tiles{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:1280px){#page-overview .band .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){#page-overview .band .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .rs-band .tile .v{font-size:25px}
 .rs-sec{margin-bottom:22px}
 .rs-sec .ch .sp{flex:1}
@@ -2540,9 +2544,6 @@ c57 -33 76 -84 76 -200 0 -116 -19 -167 -76 -200 -32 -19 -52 -20 -294 -20
     <div class="railhits" id="rail-hits" hidden></div>
   </div>
   <nav aria-label="MISMO Media">
-    <button type="button" data-hq="home" title="Home">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>
-      <span>Home</span></button>
     <button type="button" data-hq="overview" title="Schedule">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
       <span>Schedule</span><b class="nbadge" id="nb-overview" hidden></b></button>
@@ -2703,7 +2704,7 @@ const SEC = Object.fromEntries(SECTIONS.map(s=>[s.key,s]));
 const PEOPLE = ["Jonna","Vanessa","Kelly","Amy","Brian","Jonathan","Perry","Kathryn"];
 const SSTAT = {waiting:["Waiting on Content","wait"], in:["Content In","in"], review:["With Amy for Review","review"], changes:["Changes Requested","changes"], approved:["Approved","ok"]};
 const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], staged:["Staged to Post","in"], done:["Posted / Sent","ok"], canceled:["Canceled","changes"]};
-const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", request:"Requests", press:"Press Releases", other:"Other"};
+const CH = {events:"Industry Events", matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", request:"Requests", press:"Press Releases", other:"Other"};
 const REUSE = [["linkedin","LinkedIn","LI"],["mailchimp","Mailchimp","MC"],["website","Website","WB"],["youtube","YouTube","YT"],["summit","Summit","SU"]];
 const MILES = [
   ["content","Content Due","Contributors to Kelly"],
@@ -3046,7 +3047,7 @@ function allEvents(){
   editionsSorted().forEach(ed=>{
     if(ed.archived || !ed.dates) return;
     const nm = MONL[+ed.month.slice(5)-1];
-    MILES.forEach(([k,l])=>{ if(ed.dates[k]) ev.push({date:ed.dates[k], k:"matters", label:"Matters · "+(k==="publish"?nm+" Edition Goes Out":l), done:!!(ed.done&&ed.done[k]), big:k==="publish", who:k==="review"||k==="approve"?"Amy":k==="content"||k==="draft"?"Kelly":"Vanessa", go:()=>{ go("matters"); MS.ed=ed.id; renderMatters(); }}); });
+    MILES.forEach(([k,l])=>{ if(ed.dates[k]) ev.push({date:ed.dates[k], k:"matters", mile:k, label:"Matters · "+(k==="publish"?nm+" Edition Goes Out":l), done:!!(ed.done&&ed.done[k]), big:k==="publish", who:k==="review"||k==="approve"?"Amy":k==="content"||k==="draft"?"Kelly":"Vanessa", go:()=>{ go("matters"); MS.ed=ed.id; renderMatters(); }}); });
   });
   vals("episodes").forEach(ep=>{
     if(!ep.airDate) return;
@@ -3067,6 +3068,9 @@ function allEvents(){
   if(typeof mnPeriod==="function"){ const per=mnPeriod(), first=T().slice(0,8)+"01", next=add(first,40).slice(0,8)+"01";
     ev.push({date:first, k:"results", label:"Results · Bring In "+mnName(per)+" Numbers", done:(LOADED.has("monthly")||!LIVE) && !mnOpen(per).length, who:"", go:()=>go("results")});
     ev.push({date:next, k:"results", label:"Results · Bring In "+mnName(first.slice(0,7))+" Numbers", done:false, who:"", go:()=>go("results")}); }
+  /* Team HQ's Industry Events (read only, for anyone whose sign-in can read Team HQ) */
+  (OV.te||[]).forEach(x=>{ const st=String(x.start||"").slice(0,10); if(!/^\d{4}-\d\d-\d\d$/.test(st)) return; const en=String(x.end||"").slice(0,10)>=st?String(x.end).slice(0,10):st;
+    let d=st, n=0; while(d<=en && n++<10){ ev.push({date:d, k:"events", label:"Industry Event · "+(x.name||"Event"), done:false, big:true, who:"", go:()=>toast((x.name||"This event")+" is kept in Team HQ's Industry Events.", 4000)}); d=add(d,1); } });
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
 }
@@ -3169,15 +3173,15 @@ function readFields(fields){
 
 /* ================= navigation ================= */
 const TABS=["home","overview","requests","press","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
-let TAB="home";
+let TAB="overview";   /* MISMO Media opens on the Schedule; Home is gone from the menu (Jonna, Nov 27, 2026) */
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
-  if(!TABS.includes(tab)) tab="home";
+  if(!TABS.includes(tab) || tab==="home") tab="overview";
   TAB=tab;
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
   if(typeof navOpenFor==="function") navOpenFor(tab);
-  /* the address stays clean, so a bookmark, a refresh or a reopened tab starts on Home */
+  /* the address stays clean, so a bookmark, a refresh or a reopened tab starts on the Schedule */
   try{ if(location.hash) history.replaceState(null,"",location.pathname+location.search); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
@@ -3250,27 +3254,43 @@ function badges(){
 /* ================= Schedule (overview) ================= */
 const OV = {month:null};
 function evHtml(e){ return '<button type="button" class="ev k-'+e.k+(e.done?" done":"")+(e.x?" x":"")+(e.big?" big":"")+'" title="'+esc(e.label)+'"'+(e.slot?' style="border-style:dashed"':'')+'><i class="dot"></i><span>'+esc(e.label)+'</span></button>'; }
-/* Calendar filter and "+ on a day" (Jonna, Nov 24, 2026: "add calendar filter and add ability to add new comms tracking
-   task to it"). The channels the calendar can show; a new item can be added on any day, for any channel that keeps its
-   own items here (MISMO Matters and Mic'd Up have their own pages). */
-const CAL_CHANS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community"],["orders","Orders"],["setup","Setup"],["other","Other"]];
-const CAL_ADD = [["linkedin","LinkedIn Post"],["mailchimp","Mailchimp Send"],["community","Community Post"],["summit","Summit Push"],["youtube","YouTube Video"],["other","Other Comms Task"],["setup","Setup Task"]];
+/* The Schedule's categories (Jonna, Nov 27, 2026): the calendar, its filter, Next Two Weeks and + New Item all use the
+   same eight, one for each kind of work in the menu. Setup tasks, orders, requests and the monthly numbers stay on
+   their own pages. Earlier: a channel filter and "+ on a day" (Nov 24, 2026). */
+const CAL_CHANS = [["press","Press Releases"],["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["events","Industry Events"]];
+const CAL_ADD = [["press","Press Release"],["matters","MISMO Matters"],["micdup","Mic'd Up Episode"],["linkedin","LinkedIn Post"],["youtube","YouTube Video"],["mailchimp","Mailchimp Send"],["summit","Summit"],["events","Industry Event"]];
+const calCat = e=>CAL_CHANS.some(c=>c[0]===e.k) ? e.k : "";
+/* the housekeeping steps that aren't work to plan around (Jonna: "remove stuff like stats recorded") */
+const AG_SKIP = {matters:["stats"]};
 try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.isArray(v)) OV.chans=v; }catch(e){}
+/* a new item of one kind: a Mic'd Up episode on the Friday of that week (or the next open Friday), anything else a
+   Schedule item on that day (or today) */
+function newItem(k, date){
+  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) while(epOn(f)) f=add(f,7); newEpisode(f); return; }
+  newPiece(k, date?{date}:{});
+}
 function calAdd(btn, date){
-  const one=(OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
-  if(one){ newPiece(one, {date}); return; }
+  const one=date && (OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
+  if(one){ newItem(one, date); return; }
   document.querySelectorAll(".calmenu").forEach(m=>m.remove());
   const m=document.createElement("div"); m.className="calmenu"; m.setAttribute("role","menu");
-  m.innerHTML='<small>Add on '+esc(fD(date))+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
+  m.innerHTML='<small>'+(date?'Add on '+esc(fD(date)):'Add a New Item')+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
   document.body.appendChild(m);
-  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12))+"px";
+  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.max(window.scrollX+8, Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12)))+"px";
   const close=()=>{ m.remove(); document.removeEventListener("click", away, true); document.removeEventListener("keydown", esc_); };
   const away=e=>{ if(!m.contains(e.target)) close(); }, esc_=e=>{ if(e.key==="Escape"){ close(); btn.focus(); } };
   setTimeout(()=>{ document.addEventListener("click", away, true); document.addEventListener("keydown", esc_); },0);
-  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newPiece(b.dataset.k, {date}); });
+  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newItem(b.dataset.k, date); });
   const f=m.querySelector("button"); if(f) f.focus();
 }
+/* Team HQ's Industry Events for the calendar: read once when the Schedule opens and then every 30 minutes */
+function ovTeamEvents(){
+  if(!window.__hqTeamEvents || OV.teBusy || Date.now()-(OV.teAt||0)<30*60000) return;
+  OV.teBusy=true; OV.teAt=Date.now();
+  window.__hqTeamEvents().then(list=>{ OV.te=(list||[]).filter(x=>x && !x.archived && x.status!=="canceled" && x.status!=="cancelled"); if(TAB==="overview") renderOverview(); }, ()=>{}).then(()=>{ OV.teBusy=false; });
+}
 function renderOverview(){
+  ovTeamEvents();
   const el=$("#page-overview"); const ev=allEvents(); const t=T();
   const ed=curEdition();
   const over=ev.filter(isOver);
@@ -3279,7 +3299,6 @@ function renderOverview(){
   const secs = ed? edSections(ed).filter(s=>s.on) : [];
   const inN = secs.filter(s=>s.meta.auto || s.doc.status!=="waiting").length;
   const amyKits = kitsWithAmy().length; const amy = secs.filter(s=>s.doc.status==="review").length + vals("pieces").filter(p=>p.status==="review").length + amyKits;
-  const setupOpen = vals("pieces").filter(p=>p.channel==="setup" && p.status!=="done");
   // next milestone sentence
   let say='';
   if(ed && ed.dates){
@@ -3289,14 +3308,13 @@ function renderOverview(){
   }
   if(over.length) say += '<span class="hot">'+over.length+' item'+(over.length>1?"s are":" is")+' past due.</span> ';
   { const nr=requests().filter(r=>r.status==="new").length; if(nr) say += '<span class="hot">'+nr+' new request'+(nr>1?"s":"")+' to review.</span> '; }
-  if(setupOpen.length) say += setupOpen.length+' setup item'+(setupOpen.length>1?"s":"")+' still open.';
   // calendar month
   if(!OV.month) OV.month = t.slice(0,7);
   const [yy,mm]=OV.month.split("-").map(Number);
   const first=new Date(yy,mm-1,1); const startOff=(first.getDay()+6)%7; let d=new Date(yy,mm-1,1-startOff);
   /* the calendar's channel filter (Nov 24, 2026): pick one or more channels; none picked shows everything */
   OV.chans=(OV.chans||[]).filter(k=>CAL_CHANS.some(c=>c[0]===k));
-  const calOn=e=>!OV.chans.length || OV.chans.includes(e.k==="news"||e.k==="press"||e.k==="request"?"other":e.k);
+  const calOn=e=>{ const c=calCat(e); return !!c && (!OV.chans.length || OV.chans.includes(c)); };
   const byDate={}; ev.filter(calOn).forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
   let cal='<div class="cal">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>'<div class="dh">'+x+'</div>').join("");
   for(let i=0;i<42;i++){
@@ -3307,8 +3325,8 @@ function renderOverview(){
     d.setDate(d.getDate()+1);
   }
   cal+='</div>';
-  // agenda: next 14 days + overdue (setup tasks live in Getting Set Up, so they aren't repeated here)
-  const ag = ev.filter(e=>!e.done && e.k!=="setup" && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && e.k==="summit")).sort((a,b)=>a.date<b.date?-1:1);
+  // agenda: next 14 days + overdue, the same categories the calendar shows, without housekeeping steps
+  const ag = ev.filter(e=>calOn(e) && !e.done && !(e.mile && (AG_SKIP[e.k]||[]).includes(e.mile)) && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && (e.k==="summit"||e.k==="events"))).sort((a,b)=>a.date<b.date?-1:1);
   const agList = [];
   const agItem = (e, late)=>{ const i=agList.push(e)-1; const tt=agTitle(e);
     return '<button type="button" class="agi k-'+e.k+(e.big?" big":"")+(e.slot?" slot":"")+'" data-agi="'+i+'"><span class="agk">'+esc(CHS[e.k]||CH[e.k]||"Other")+'</span><span class="tt">'+esc(tt)+(late?' <span class="agl">'+esc(fS(e.date))+'</span>':'')+'</span>'+whoHtml(e.who)+'</button>'; };
@@ -3325,20 +3343,8 @@ function renderOverview(){
       Object.keys(weeks[w]).sort().map(ds=>{ const d=P(ds);
         return '<div class="agday'+(ds===t?" today":"")+'"><div class="agdate'+(ds===t?" today":"")+'"><small>'+(ds===t?"Today":esc(["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]))+'</small><b>'+d.getDate()+'</b><small>'+esc(MON[d.getMonth()])+'</small></div><div class="agitems">'+weeks[w][ds].map(e=>agItem(e,false)).join("")+'</div></div>'; }).join("")+'</div>';
   });
-  // Getting Set Up: progress, open items grouped by when they're due, finished items tucked away
-  const setup = vals("pieces").filter(p=>p.channel==="setup" && !p.archived).sort((a,b)=>((a.date||"9")<(b.date||"9")?-1:1));
-  const sDone = setup.filter(p=>p.status==="done"), sOpen = setup.filter(p=>p.status!=="done");
-  const sPct = setup.length ? Math.round(sDone.length/setup.length*100) : 0;
-  const sGroups = [["Past Due", sOpen.filter(p=>p.date&&p.date<t), "late"], ["This Week", sOpen.filter(p=>p.date&&p.date>=t&&p.date<=add(thisWk,6)), "soon"], ["Coming Up", sOpen.filter(p=>p.date&&p.date>add(thisWk,6)), ""], ["No Date Yet", sOpen.filter(p=>!p.date), ""]].filter(g=>g[1].length);
-  const sRow = p=>{ const dn=p.status==="done", late=!dn&&p.date&&p.date<t, soon=!dn&&!late&&p.date&&p.date<=add(thisWk,6);
-    return '<div class="chk'+(dn?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(dn?" checked":"")+' aria-label="Mark done: '+esc(p.title||"")+'"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title||"Untitled")+'</b>'+(p.notes?'<small>'+esc(mdPlain(p.notes))+'</small>':'')+'</button><div class="meta">'+(p.date?'<span class="due'+(late?" late":soon?" soon":"")+'">'+esc(dn&&p.doneOn?fS(p.doneOn):fS(p.date))+'</span>':'')+whoHtml(p.owner)+'</div></div>'; };
-  const setupHtml = '<div class="sprog"><div class="sprog-t"><b>'+sDone.length+' of '+setup.length+' done</b><span>'+sPct+'%</span></div><div class="sbar"><i style="width:'+sPct+'%"></i></div></div>'+
-    (sGroups.map(g=>{ const cap = g[0]==="Coming Up" && !OV.showLater && g[1].length>5 ? 4 : g[1].length;
-      return '<div class="sgrp '+g[2]+'"><div class="agwh">'+esc(g[0])+'<span>'+g[1].length+'</span></div><div class="checks">'+g[1].slice(0,cap).map(sRow).join("")+'</div>'+
-        (g[0]==="Coming Up" && g[1].length>5 ? '<button type="button" class="sdone-t smore" id="ov-slater">'+(OV.showLater?"Show fewer":"Show "+(g[1].length-cap)+" more coming up")+'</button>' : '')+'</div>'; }).join("") || (setup.length?'<div class="empty sdone-all">Everything is set up.</div>':'<div class="empty">Nothing to set up.</div>'))+
-    (sDone.length?'<button type="button" class="sdone-t" id="ov-sdone" aria-expanded="'+(!!OV.showDone)+'">'+(OV.showDone?"Hide":"Show")+' '+sDone.length+' finished</button>'+(OV.showDone?'<div class="sgrp done"><div class="checks">'+sDone.slice().reverse().map(sRow).join("")+'</div></div>':''):'');
   el.innerHTML =
-    '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push, on one calendar.</div></div>'+
+    '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every press release, MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send, summit and industry event, on one calendar.</div></div>'+
     '<div class="tools"><button class="btn" type="button" id="ov-newpiece">+ New Item</button></div></div>'+
     '<div class="band"><div class="today">Today · '+esc(fL(t))+'</div><div class="say">'+say+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
@@ -3347,17 +3353,13 @@ function renderOverview(){
       '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
       '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
       '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
-    '</div></div>'+
-    '<div class="card"><div class="ch"><h2>The Next Four Weeks</h2><span class="note">every channel, one line each · hover a marker for what it is</span></div>'+lanesHtml(ev)+'</div>'+
+    '</div>'+(typeof amyRemindBar==="function"?amyRemindBar(String(window.__hqWho||"").split(" ")[0]):'')+'</div>'+
     '<div class="card"><div class="ch"><h2>Calendar</h2><div class="r calnav"><button class="btn sm" type="button" id="cal-prev" aria-label="Previous month">←</button><span class="m">'+esc(MONL[mm-1]+" "+yy)+'</span><button class="btn sm" type="button" id="cal-next" aria-label="Next month">→</button><button class="btn sm" type="button" id="cal-today">Today</button></div></div>'+
       '<div class="calfil" role="group" aria-label="Show on the calendar"><span>Show</span><button type="button" data-calch="" aria-pressed="'+!OV.chans.length+'">All</button>'+
         CAL_CHANS.map(([k,l])=>'<button type="button" data-calch="'+k+'" aria-pressed="'+OV.chans.includes(k)+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("")+'</div>'+
       '<div class="cb flush">'+cal+'</div>'+
-      '<div class="legend">'+["matters","micdup","linkedin","youtube","mailchimp","summit","community","setup"].map(k=>'<span><i class="dot k-'+k+'"></i>'+esc(CH[k])+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
-    '<div class="grid2" style="margin-top:22px">'+
-      '<div class="card agcard"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">setup tasks are under Getting Set Up</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks.</div>')+'</div></div>'+
-      '<div class="card setcard"><div class="ch"><h2>Getting Set Up</h2><span class="cnt">'+sOpen.length+' open</span><div class="r"><button class="btn sm" type="button" id="ov-newsetup">+ Add</button></div></div>'+setupHtml+'</div>'+
-    '</div>';
+      '<div class="legend">'+CAL_CHANS.map(([k,l])=>'<span><i class="dot k-'+k+'"></i>'+esc(l)+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
+    '<div class="card agcard" style="margin-top:22px"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">'+(OV.chans.length?'only '+esc(OV.chans.map(k=>(CAL_CHANS.find(c=>c[0]===k)||[k,k])[1]).join(", "))+', like the calendar':'the same as the calendar shows')+'</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks'+(OV.chans.length?' for what the calendar is showing':'')+'.</div>')+'</div></div>';
   // wire
   $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
   $("#cal-prev",el).onclick=()=>{ OV.month=iso(new Date(yy,mm-2,1)).slice(0,7); renderOverview(); };
@@ -3367,14 +3369,11 @@ function renderOverview(){
   $$("[data-calch]",el).forEach(b=>b.onclick=()=>{ const k=b.dataset.calch; if(!k) OV.chans=[]; else OV.chans=OV.chans.includes(k)?OV.chans.filter(x=>x!==k):OV.chans.concat([k]); try{ localStorage.setItem("mm.cal.chans", JSON.stringify(OV.chans)); }catch(e){} renderOverview(); });
   $$("[data-add]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); calAdd(b, b.dataset.add); });
   $$(".agi",el).forEach(b=>b.onclick=()=>agList[+b.dataset.agi].go());
-  const sd=$("#ov-sdone",el); if(sd) sd.onclick=()=>{ OV.showDone=!OV.showDone; renderOverview(); };
-  const sl=$("#ov-slater",el); if(sl) sl.onclick=()=>{ OV.showLater=!OV.showLater; renderOverview(); };
-  $("#ov-newpiece",el).onclick=()=>newPiece("linkedin");
-  $("#ov-newsetup",el).onclick=()=>newPiece("setup");
-  wireChecks(el); wireLanes(el);
+  const nb=$("#ov-newpiece",el); nb.setAttribute("aria-haspopup","menu"); nb.onclick=e=>{ e.stopPropagation(); calAdd(nb, ""); };
+  const rb=$("#hm-remind",el); if(rb) rb.onclick=async()=>{ rb.disabled=true; try{ await remindAmy(); } finally{ rb.disabled=false; } };
 }
 /* short channel names for the agenda tags, and the owner badge */
-const CHS = {matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", request:"Request", press:"Press", other:"Other"};
+const CHS = {events:"Event", matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", request:"Request", press:"Press", other:"Other"};
 function agTitle(e){ let l=String(e.label||""); [CH[e.k], CHS[e.k]].forEach(p=>{ if(p && l.indexOf(p+" · ")===0) l=l.slice(p.length+3); else if(p && l.indexOf(p+" ")===0 && e.k==="micdup") l=l.slice(p.length+1); }); return l; }
 const WHO_TONE = {Jonna:1,Vanessa:2,Kelly:3,Amy:4,Brian:5,Jonathan:6,Perry:7,Kathryn:8};
 function whoHtml(w){ if(!w) return '<span class="who none"></span>'; return '<span class="who" title="'+esc(w)+'"><i class="av t'+(WHO_TONE[w]||0)+'">'+esc(w.charAt(0))+'</i><span class="wn">'+esc(w)+'</span></span>'; }
@@ -4587,34 +4586,15 @@ const HELP = [
    <li><b>Delete</b> always asks you to press it twice.</li>
    <li><b>Dates</b> can be typed the way you'd write them (11/18/26, Nov 18) or picked from the calendar button beside the box.</li>
   </ul>`},
- {id:"home", t:"Home: the Studio", g:"Basics", b:`
-  <p><b>Home</b> is the first page. It shows everything MISMO is putting out, live, as a studio of screens. Click any screen to go there.</p>
-  <ul>
-   <li><b>The top band</b> says good morning, what's coming (the next Mic'd Up episode, the next MISMO Matters send, the next summit) and how many items are past due. <b>On Your Plate</b> lists what's yours in the next seven days, from your name on the schedule.</li>
-   <li><b>The week</b> runs across the top of the studio, one day per box, with a colored bar for each thing due (the channel colors). Click a day for the full schedule.</li>
-   <li><b>The screens:</b> Mic'd Up (on air, with a live countdown to Friday 8:30 AM ET and the episode's steps), MISMO Matters (a picture of the newsletter, colored by where each section stands), Summits (the countdown ring fills as marketing tasks are done), YouTube (what's waiting to upload), LinkedIn (the next post), Mailchimp (the next send), Requests, In the News, and <b>In MISMO Media</b>, the running totals.</li>
-   <li><b>How It All Connects</b> (the switch next to the Studio heading) shows the same things as a map of how work flows from what comes in to what goes out, with Follow the Story for the next episode and edition. Your choice is remembered.</li>
-  </ul>`},
- {id:"who", t:"Who Does What", g:"Basics", b:`
-  <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
-   <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
-   <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Approves who is quoted in each press release by replying to an email. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
-   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Tuesday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
-   <tr><td><b>Perry</b></td><td>Owns press releases: reviews Claude's first draft of each MMS announcement, picks who to quote, sends the quote request as himself, puts in the approved quote and gives final approval before it goes to MISMO Connect, MBA and MISMO Matters.</td></tr>
-   <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
-   <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
-   <tr><td><b>Contributors</b></td><td>Facilitators (through Kathryn), sponsors and members send copy, quotes and headshots to Kelly. They don't need to log in.</td></tr>
-  </tbody></table>`},
  {id:"schedule", t:"The Schedule", g:"Pages", b:`
-  <p>The Schedule page is the overview of everything.</p>
+  <p>MISMO Media opens on the Schedule, the overview of everything. (Home, the Studio, is gone from the menu since Nov 27, 2026; a bookmark to it opens the Schedule.)</p>
   <ul>
-   <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page.</li>
-   <li><b>The Next Four Weeks</b> shows one line per channel. Each marker is a day with something due; hover for what it is, click to open it. A filled marker is open, a check is done, a dashed outline is an open Mic'd Up slot, and a pulsing red marker is past due.</li>
-   <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back.</li>
-   <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. Each line shows its channel and who owns it; click a line to open it. Setup tasks aren't repeated here; they're under Getting Set Up.</li>
-   <li><b>Getting Set Up</b> is the checklist for launching the system. The bar shows how much is done. Open items are grouped into Past Due, This Week and Coming Up; finished items are tucked under <b>Show finished</b>. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
-  </ul>
-  <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
+   <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page. When anything is waiting on Amy, the band shows how many, with <b>Remind Amy</b>.</li>
+   <li><b>+ New Item</b> asks what kind: Press Release, MISMO Matters, Mic'd Up Episode, LinkedIn Post, YouTube Video, Mailchimp Send, Summit or Industry Event. A Mic'd Up episode goes on the next open Friday; the rest start on today's date. The <b>+</b> on a calendar day does the same for that day (straight to the kind when one kind is picked under Show).</li>
+   <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back. <b>Show</b> picks one or more of the same eight kinds (All shows all eight); your choice is remembered. Industry events come from Team HQ's Industry Events for anyone whose sign-in can read Team HQ.</li>
+   <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. It shows what the calendar shows: the same eight kinds, and only the ones picked under Show. Housekeeping steps like Stats Recorded aren't listed. Each line shows its kind and who owns it; click a line to open it.</li>
+   <li>Setup tasks, orders, requests and the monthly numbers stay on their own pages (Requests, Orders, Results); they aren't on the Schedule.</li>
+  </ul>`},
  {id:"requests", t:"Requests and the Request Form", g:"Pages", b:`
   <p>Staff and facilitators send marketing and communications requests through one form. Every request lands on the <b>Requests</b> page, where the team reviews it and turns it into work.</p>
   <ul>
@@ -4700,7 +4680,7 @@ const HELP = [
    <li><b>Start the edition.</b> On MISMO Matters, press <b>Start the Next Edition</b>. It creates the next month with all thirteen sections, waiting for content.</li>
    <li><b>Drop content in as it arrives.</b> Click a section, paste the headline, body copy, quote and link, add the image, and press <b>Save</b>. There's no need to wait for everything.</li>
    <li><b>Send each section to Amy.</b> <b>Save &amp; Send to Amy</b> marks it "With Amy for Review" and it shows in her count.</li>
-   <li><b>Reminding Amy:</b> when anything is waiting on her, Home's On Your Plate box shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
+   <li><b>Reminding Amy:</b> when anything is waiting on her, the Schedule's navy band shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
    <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
    <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
    <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b>, open the message in Informz, and replace everything in its HTML tab with it. <b>Copy Plain Text</b> is the text-only version.</li>
@@ -5035,7 +5015,7 @@ const HELP = [
    <dt>Copy HTML doesn't copy.</dt><dd>A box opens with the HTML already selected. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> (<kbd>⌘</kbd>+<kbd>C</kbd>).</dd>
    <dt>An episode is on YouTube but the page says it isn't.</dt><dd>The YouTube list refreshes every few hours. Open the episode, tick "Posted to YouTube" and paste the link.</dd>
    <dt>An article ran last month but wasn't in that edition.</dt><dd>Open it and set "Goes in MISMO Matters" to this month.</dd>
-   <dt>Where do I add something that isn't on any page?</dt><dd>Use <b>+ New Item</b> on the Schedule, or + Add under Getting Set Up.</dd>
+   <dt>Where do I add something that isn't on any page?</dt><dd>Use <b>+ New Item</b> on the Schedule and pick what kind it is.</dd>
   </dl>`}
 ];
 const HL = {id:"start", q:""};
@@ -6923,7 +6903,7 @@ function amyRemindEmail(w, from){
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, a quick reminder. These are ready for your OK.</div></td></tr>'+
     '<tr><td style="padding:6px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+
       w.kits.map(kitRow).join("")+w.secs.map(t=>row(t)).join("")+w.posts.map(t=>row(t)).join("")+'</table></td></tr>'+
-    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/media/#home" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
+    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/media/" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
     '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'.</td></tr>'+
     '</table></td></tr></table>';
 }
@@ -6935,7 +6915,7 @@ async function remindAmy(){
   try{ await send(LI_APPROVER.email, "Reminder: "+n+" item"+(n===1?"":"s")+" waiting on your approval in MISMO Media", amyRemindEmail(w, window.__hqWho||"")); }
   catch(e){ toast("The reminder didn't send: "+(e.message||"try again"), 6000); return; }
   try{ await put("settings","amy-remind",{at:new Date().toISOString(), by:window.__hqWho||"", count:n}); }catch(e){}
-  toast("Reminder sent to Amy ("+n+" item"+(n===1?"":"s")+")", 4000); if(TAB==="home") renderHome();
+  toast("Reminder sent to Amy ("+n+" item"+(n===1?"":"s")+")", 4000); if(TAB==="home") renderHome(); if(TAB==="overview") renderOverview();
 }
 function amyRemindBar(me){
   if(String(me||"").toLowerCase()==="amy") return "";
@@ -8124,7 +8104,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-26 18:29 ET · f1191c0";
+const BUILD = "2026-11-27 12:56 ET · 881f2fd";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -10647,11 +10627,13 @@ function pieceFields(ch){
     {k:"date",label:ch==="linkedin"?"Post Date":ch==="mailchimp"?"Send On":"Date",type:"date"},
     {k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true},
     {k:"status",label:"Status",type:"select",opts:Object.entries(PSTAT).map(([v,[l]])=>[v,l])},
-    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["matters","micdup","news","orders"].includes(k))}];
+    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["micdup","news","orders"].includes(k) && (!["setup","community","request","other"].includes(k) || k===ch))}];
   if(ch==="linkedin") base.push({k:"postTime",label:"Post Time",ph:"e.g. 9:00 AM"},{k:"autoPost",label:"Stage it: post on the MISMO page automatically at this date and time (link posts)",type:"cb",wide:true});
   if(ch==="linkedin") base.push({k:"kind",label:"Kind of Post",type:"select",opts:["Mic'd Up","In the News","Summit","Member Highlight","Sponsor Highlight","Certification","Press Release","Workgroup","MISMO Matters","Other"]});
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
   if(ch==="mailchimp") base.push({k:"sendTime",label:"Send Time",ph:"e.g. 10:00 AM ET"},{k:"audience",label:"Audience",ph:"e.g. Compliance list, Tech list"});
+  if(ch==="events") base.push({k:"eventName",label:"Event",ph:"e.g. MBA Annual Convention"},{k:"eventLink",label:"Event Link",type:"url",ph:"https://…"});
+  if(ch==="matters") base.push({k:"edition",label:"Edition",type:"select",opts:editionsSorted().filter(e=>!e.archived).map(e=>[e.id,monthName(e.month)]),blank:true});
   if(ch==="youtube") base.push({k:"kind",label:"Kind of Video",type:"select",opts:["FRAME","MISMO Initiatives Series","Webinar Recording","Summit","Special Content","Other"]});
   if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:(ch==="linkedin"||ch==="youtube")?"textarea":"rich",rows:7},(ch==="mailchimp"?{k:"reviewLink",label:"Review Link",type:"url",ph:"Paste the Mailchimp preview or share link",hint:"Where the reviewer can open the campaign and look it over before it sends. It shows as a Review button on the Mailchimp page."}:{k:"link",label:"Link It Points To",type:"url"}),{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":ch==="mailchimp"?"Link to the Sent Campaign":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
@@ -10675,7 +10657,7 @@ function openPiece(id, seed){
   const sbShow=b=>{ const box=$("#sb-pick",b); if(!box) return; const k=$("#f-kind",b), via=$("#f-via",b);
     const on = ch==="linkedin" ? (k && k.value==="Sponsor Highlight") : (!via || via.value==="LinkedIn");
     box.hidden=!on; const sec=box.closest(".field"); const head=sec && sec.parentElement && sec.parentElement.previousElementSibling; if(sec) sec.hidden=!on; if(head && head.classList.contains("fsec")) head.hidden=!on; };
-  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item")), fields, data:p,
+  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+((typeof CAL_ADD!=="undefined"&&(CAL_ADD.find(c=>c[0]===ch)||[])[1])||(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item"))), fields, data:p,
     after:b=>{ wireCx(b); if(sbCan){ sbShow(b); const k=$("#f-kind",b), via=$("#f-via",b); if(k) k.addEventListener("change",()=>sbShow(b)); if(via) via.addEventListener("change",()=>sbShow(b)); sbWirePicker(b, p, ch==="summit"?sbSummitName(p.summit):""); } },
     save:async v=>{ if(ch==="linkedin"){ if(v.status==="canceled") v.autoPost=false; else if(v.autoPost && v.status!=="done") v.status="staged"; else if(!v.autoPost && v.status==="staged") v.status="ready"; }
       if(sbCan){ const sp=sbRead($("#pane-body"), p); if(sp) Object.assign(v, sp); }
@@ -11027,7 +11009,7 @@ window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TA
      Only a link that names a page (like Amy's email, #micdup) opens that page instead. Old #overview links open Home. */
   const h=location.hash.slice(1);
   try{ sessionStorage.removeItem("mm.tab"); }catch(e){}
-  show(h && TABS.includes(h) && h!=="overview" ? h : "home");
+  show(h && TABS.includes(h) && h!=="home" ? h : "overview");
 })();
 badges();
 connect();
