@@ -41,6 +41,7 @@ const HELP = [
    <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back. <b>Show</b> picks one or more of the same eight kinds (All shows all eight); your choice is remembered. Industry events come from Team HQ's Industry Events for anyone whose sign-in can read Team HQ.</li>
    <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. It shows what the calendar shows: the same eight kinds, and only the ones picked under Show. Housekeeping steps like Stats Recorded aren't listed. Each line shows its kind and who owns it; click a line to open it.</li>
    <li>Setup tasks, orders, requests and the monthly numbers stay on their own pages (Requests, Orders, Results); they aren't on the Schedule.</li>
+   <li>If you're one of the people MyMISMO lets in and an attendee report is open, the band says so in red (<i>1 open attendee report in MyMISMO</i>); click it to go to the report. See <b>MyMISMO: Attendee Reports and Trivia</b>.</li>
   </ul>`},
  {id:"requests", t:"Requests and the Request Form", g:"Pages", b:`
   <p>Staff and facilitators send marketing and communications requests through one form. Every request lands on the <b>Requests</b> page, where the team reviews it and turns it into work.</p>
@@ -288,6 +289,32 @@ const HELP = [
    <li><b>Summit Photos</b> (from MyMISMO): attendees take selfies and photos with friends in the summit frame and send them to MISMO, ticking the box that says MISMO may use them and everyone in them is OK with it. Amy picks the ones she wants in MyMISMO and presses <b>Send to MISMO Media</b>. Each send shows here as a batch, newest first, with each photo's caption, who took it, the Photo Challenge, who's in it and Amy's note. MISMO Media keeps a copy of each photo in SharePoint (Image Library, Summits) and drafts one summit post per batch, set to Ready for Review for Amy, with the captions in the copy and the people to tag in the notes. <b>Nothing posts on its own</b>: Amy reads it, picks the photos and decides whether to post it. Photos without the consent box ticked never come over.</li>
    <li>Summit planning (the agenda, Run of Show, hotel) stays in Summit HQ. This page is only the marketing.</li>
   </ul>`},
+ {id:"mymismo-team", t:"MyMISMO: Attendee Reports and Trivia", g:"Events & Brand", b:`
+  <p>Everything the MISMO team does with MyMISMO, MISMO's app, is in MISMO Media (since Nov 27, 2026; it used to be on Team HQ). <b>MyMISMO</b> in the left menu, under Events &amp; Brand, has <b>Attendee Reports</b> and <b>MISMO Trivia</b>. MyMISMO's numbers are on <b>Results</b>, Summit Photos are on <b>Summits</b>, and <b>Push to MyMISMO</b> is on each MISMO Matters edition and Mic'd Up episode. Summit-day room-change alerts and slides stay in Summit HQ, where the summit is run.</p>
+  <p><b>Who sees it:</b> only the people Jonna named in MyMISMO (the same people who can push notifications). For anyone else, and until MyMISMO's team routes are live, the menu item and the Results card don't show at all. MISMO Media reads MyMISMO with your own sign-in when it opens and every 5 minutes while it's open, and keeps no copy.</p>
+  <h3>Attendee Reports</h3>
+  <p>Attendees can report another attendee's profile or a conversation in MyMISMO. Apple requires the MISMO team to respond in a timely way, so an open report shows as a red number on <b>MyMISMO</b> in the left menu and a red line on the Schedule until it's closed.</p>
+  <ol>
+   <li>Open <b>MyMISMO › Attendee Reports</b>. <b>Open</b> lists the reports still to handle, newest first: the summit, who it's about, who sent it, the reason, the attendee's note and when.</li>
+   <li>Look into it, then press <b>Close…</b>, type a short note of what was done (it's required) and press <b>Close Report</b>.</li>
+   <li>A closed report keeps that note on the <b>Closed</b> list. <b>Reopen</b> puts it back on the open list.</li>
+  </ol>
+  <p>Nothing is emailed. The reports stay in MyMISMO.</p>
+  <h3>MISMO Trivia</h3>
+  <ul>
+   <li><b>Monthly Winners:</b> the #1 of each finished month, for recognition.</li>
+   <li><b>Top 10 by Month:</b> this month (still being played) and the three before, with how many people played.</li>
+   <li><b>Quarterly Championship:</b> this quarter's and last quarter's three finalists, and the standings once it's played.</li>
+   <li><b>Championship Window:</b> type the quarter (like 2027-Q1), when it opens and closes (your own time zone) and the minutes to play (1 to 120), then press <b>Set the Window</b>. <b>Clear It</b> takes the window away.</li>
+  </ul>
+  <h3>MyMISMO on Results</h3>
+  <p>The <b>MyMISMO</b> card on Results shows people signed in and phones with alerts on. Press it for each summit: people signed in, summit alerts sent and delivered, conversations and messages, session check-ins, sessions and people scanning, Who I Met, touchpoints, photos submitted, picked and sent, and attendee reports, plus MISMO Trivia players by month. These are counts only; no names, emails or messages come to MISMO Media.</p>
+  <h3>What You Might See</h3>
+  <ul>
+   <li><b>Write a short note of what was done first:</b> Close needs the note.</li>
+   <li><b>Only the people Jonna named can…:</b> your sign-in isn't on MyMISMO's list.</li>
+   <li><b>Couldn't reach MyMISMO. Nothing changed:</b> check your connection and try again.</li>
+  </ul>`},
  {id:"news", t:"In the News", g:"Library", b:`
   <ul>
    <li>Log each MISMO press release and each article that mentions MISMO with <b>+ Add an Article</b>: headline, outlet, date, link, and whether it's a press release or a mention.</li>
@@ -298,7 +325,7 @@ const HELP = [
    <li>Outlets to check: HousingWire, National Mortgage News, Mortgage News Daily and Chrisman Commentary, Inside Mortgage Finance, Scotsman Guide, National Mortgage Professional, The Mortgage Point, Commercial Observer and MBA NewsLink.</li>
   </ul>`},
  {id:"results", t:"Results and Stats", g:"Pages", b:`
-  <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most.</p>
+  <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most. For the people MyMISMO lets in, a <b>MyMISMO</b> card shows the app's numbers for each summit and MISMO Trivia players by month (see <b>MyMISMO: Attendee Reports and Trivia</b>).</p>
   <h3>Bringing Numbers In by Hand</h3>
   <table class="t"><thead><tr><th>Platform</th><th>Where the Export Is</th><th>How It's Matched</th></tr></thead><tbody>
    <tr><td>YouTube</td><td>YouTube Studio › Analytics › Advanced mode › Content › Export</td><td>By the episode number in the title</td></tr>

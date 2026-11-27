@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-27 · MyMISMO: Attendee Reports, MISMO Trivia and MyMISMO on Results (CN-061)
+
+- Approved by Jonna Nov 27, 2026: everything the MISMO team does with MyMISMO now lives in MISMO Media (it was on Team HQ). A new **MyMISMO** item under Events & Brand has **Attendee Reports** (Close with a required note of what was done, and Reopen) and **MISMO Trivia** (each month's winner and top 10, the finalists and standings, and the championship window form). **Results** has a **MyMISMO** card with each summit's numbers (people signed in, phones with alerts on, alerts, messages, check-ins, sessions and scanners, Who I Met, touchpoints, photos, reports) and Trivia players by month. An open attendee report shows as a red number on the menu item and a line on the Schedule. Only the people MyMISMO lets in see any of it, and each part stays hidden until MyMISMO's route answers (reports and trivia: relay request 15; numbers: relay request 17). Nothing is stored in MISMO Media and nothing is emailed.
+
 ## 2026-11-27 · Tour mode for the MMS's Work Request Journey (CN-059)
 
 - Approved by Jonna Nov 27, 2026: MISMO Media has a tour mode like the MMS's. When the Work Request Journey (resources.mismo.org/mms/journey/) opens /media/?tour=1 (or the old /marketing-hq/?tour=1) in a frame and offers `window.parent.__tourSeed`, MISMO Media runs on the practice records it hands over instead of the relay: nothing is read, saved or sent, no feed checks, no background jobs, and an email a person sends is kept for the journey (`__mmTour.sent()`, and `window.parent.__tourMail` if it has one). Today's date comes from `window.parent.__tourClock` ({base, at}). The journey drives it with `window.__mmTour` (ready, load, go, open). The menu says Practice Mode. Help > Press Releases explains it. Nothing changes on the normal page. `dev/tests/tour.js` checks it.

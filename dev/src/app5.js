@@ -534,6 +534,7 @@ function rsCards(x){
       rows:(RSP.range!=="all"?[["New sign-ups "+rsPerIn(),rsN(x.newSub)],["New downloaders",rsN(x.newDl)],["Unsubscribed",rsN(x.newUns)]]:[["Website sign-ups, old site (May–Sept 8)",rsN(x.webOld)],["Website sign-ups, new form (since Nov 19)",rsN(x.webNew)],["Prospects from Member 360",rsN(x.pros.length)]]), more:"Every list, and who is on each"}),
     rsCard("dl",{eye:"What People Download", color:"--c6", v:rsN(x.dl.dls), vk:"people downloaded "+rsPerIn(), viz:rsMini(x.dl.what.slice(0,3),v=>rsN(v)), none:x.what.length?"No downloads "+rsPerIn():"Load the downloader list on Subscribers & Downloaders",
       rows:[["Work products downloaded",rsN(x.dl.what.length)]], more:"Every work product, most downloaded first"}),
+    (typeof mymCard==="function"?mymCard():""),
     rsCard("tools",{eye:"Bring In the Numbers", color:"--c4", v:[["matters"],["youtube"],["mailchimp"]].filter(([k])=>feed(k)).length+" of 3", vk:"daily feeds running",
       viz:'<span class="rs-feeds">'+[["matters","MISMO Matters"],["youtube","YouTube"],["mailchimp","Mailchimp"],["linkedin","LinkedIn"]].map(([k,l])=>'<span><i class="fdot'+(feed(k)?" on":"")+'"></i>'+l+'<small>'+(feed(k)?"daily":"by hand")+'</small></span>').join("")+'</span>',
       rows:[[mnName(x.per)+" numbers",x.due?'<span class="rs-due">'+mnOpen(x.per).length+' still due</span>':'all in']], more:"Drop an export from YouTube, LinkedIn or Mailchimp"})
@@ -541,7 +542,7 @@ function rsCards(x){
   return '<div class="res-cards" id="res-cards">'+cards.join("")+'</div>';
 }
 /* ---- the right-hand panel ---- */
-function rsRailHtml(k,x){ return '<div class="rs-rail">'+(k!=="tools"?'<div class="rs-perbar">'+rsPicker("rspr",k==="mm")+'</div>':'')+RS_SEC[k].d(x)+'</div>'; }
+function rsRailHtml(k,x){ return '<div class="rs-rail">'+(k!=="tools"&&k!=="mymismo"?'<div class="rs-perbar">'+rsPicker("rspr",k==="mm")+'</div>':'')+RS_SEC[k].d(x)+'</div>'; }
 function rsOpen(k){
   if(!RS_SEC[k]) return;
   const x=rsCtx(), i=RS_ORDER.indexOf(k), prev=RS_ORDER[(i+RS_ORDER.length-1)%RS_ORDER.length], next=RS_ORDER[(i+1)%RS_ORDER.length];

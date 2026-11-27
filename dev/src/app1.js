@@ -492,7 +492,7 @@ function readFields(fields){
 }
 
 /* ================= navigation ================= */
-const TABS=["home","overview","requests","press","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
+const TABS=["home","overview","requests","press","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","mymismo","people","lists","news","images","qr","help"];
 let TAB="overview";   /* MISMO Media opens on the Schedule; Home is gone from the menu (Jonna, Nov 27, 2026) */
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
@@ -547,7 +547,7 @@ function tabReady(t){ if(!CONNECTED) return !HOST_AT_BOOT; if(!LIVE) return true
 function renderTab(t){
   if(!tabReady(t)){ const el=$("#page-"+t); if(el && !el.querySelector(".ld-wait")) el.innerHTML='<div class="ld-wait" role="status"><span class="ld-dot"></span><span class="ld-dot"></span><span class="ld-dot"></span><b>Loading MISMO\'s records…</b></div>'; return; }
   try{
-    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, press:renderPress, people:renderPeople, results:renderResults, help:renderHelp})[t]();
+    ({home:renderHome, overview:renderOverview, matters:renderMatters, micdup:renderMicdup, linkedin:renderLinkedin, youtube:renderYoutube, mailchimp:renderMailchimp, summits:renderSummits, news:renderNews, lists:renderLists, images:renderImages, qr:renderQr, branding:renderBranding, orders:renderOrders, requests:renderRequests, press:renderPress, people:renderPeople, results:renderResults, mymismo:renderMyMISMO, help:renderHelp})[t]();
   }catch(e){ console.error(e); $("#page-"+t).innerHTML='<div class="empty">Something on this page didn\'t draw: '+esc(e.message)+'</div>'; }
 }
 function badge(id,n,hot){ const b=$("#nb-"+id); if(!b) return; b.hidden=!n; b.textContent=n||""; b.classList.toggle("hot",!!hot); if(typeof navBadges==="function") navBadges(); }
@@ -628,6 +628,7 @@ function renderOverview(){
   }
   if(over.length) say += '<span class="hot">'+over.length+' item'+(over.length>1?"s are":" is")+' past due.</span> ';
   { const nr=requests().filter(r=>r.status==="new").length; if(nr) say += '<span class="hot">'+nr+' new request'+(nr>1?"s":"")+' to review.</span> '; }
+  if(typeof mymSay==="function") say += mymSay();   /* open MyMISMO attendee reports (CN-061) */
   // calendar month
   if(!OV.month) OV.month = t.slice(0,7);
   const [yy,mm]=OV.month.split("-").map(Number);

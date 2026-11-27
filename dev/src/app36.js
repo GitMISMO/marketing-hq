@@ -18,7 +18,7 @@
    Built like the MMS's own window.__mmsTour (src/tour.js in GitMISMO/mms-data source). Never on the normal page. */
 if(TOUR) (function(){
   const door=window.__mmTourDoor;
-  const VIEWS=TABS.filter(t=>t!=="home");
+  const VIEWS=TABS.filter(t=>t!=="home" && t!=="mymismo");   /* MyMISMO never shows in a tour (CN-061): its routes are never asked */
   const tick=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
   const later=ms=>new Promise(r=>setTimeout(r,ms));
   /* drawn = connected, every collection read and the page drawn with it */
