@@ -247,6 +247,207 @@
   window.__hqMerge = { merge: mergeDoc, clashes: clashes, sameVal: sameVal, normVal: normVal, sig: sig,
     getAt: getAt, setAt: setAt, clone: clone, GONE: GONE };
 
+  /* ---------- tour mode (CN-059, Nov 27, 2026) ----------
+     The MMS's Work Request Journey (resources.mismo.org/mms/journey/) opens MISMO Media in a frame at
+     /media/?tour=1 (or the old /marketing-hq/?tour=1) and hands it made-up practice records through
+     window.parent.__tourSeed. In tour mode this door never reaches the relay: the records live only in this
+     tab, saves change only this tab's copy, nothing is read from or sent to anywhere (the relay, SharePoint,
+     the flows, the MMS feed, MyMISMO), and an email a person "sends" is kept for the journey to show instead.
+     Today's date comes from window.parent.__tourClock ({base, at}). Only on resources.mismo.org, only when
+     the page that opened it offers __tourSeed; otherwise MISMO Media opens normally. Built like the MMS's own
+     tour branch (src/tour.js and the top of src/mms-door.js in GitMISMO/mms-data). app36.js is the other half:
+     window.__mmTour, which the journey drives. */
+  var TP = (function () {
+    try {
+      if (!/[?&]tour=1(?:&|$)/.test(location.search) || window.parent === window) return null;
+      var p = window.parent;
+      if (p.location.origin !== location.origin || p.location.hostname !== 'resources.mismo.org' || !p.__tourSeed) return null;
+      return p;
+    } catch (e) { return null; }   /* a page on another site can't be read: not a tour */
+  })();
+  if (TP) { tour(TP); return; }
+  function tour(TP) {
+    window.__mmTourOn = true;
+    var SHARED = function (k) { k = String(k); return k.indexOf('resources:') === 0 || k === 'mismo.portal.theme'; };
+    var RELAY_ORIGIN = new URL(RELAY_URL).origin;
+    var NO = 'Practice mode: nothing is read, saved or sent';
+    function no() { return Promise.reject(err('TOUR', NO, 0)); }
+
+    /* the clock: {base, at} is a practice moment and the real moment it was set; which is which is told apart by
+       which one is nearer the real time now, so either way round reads the same */
+    var RealDate = window.Date, realNow = RealDate.now.bind(RealDate), own = null;
+    function ms(v) { return typeof v === 'number' ? v : (v instanceof RealDate ? v.getTime() : RealDate.parse(v)); }
+    function clockNow() {
+      var c = own; if (!c) { try { c = TP.__tourClock; } catch (e) { c = null; } }
+      if (typeof c === 'function') { try { c = c(); } catch (e) { c = null; } }
+      if (c == null) return realNow();
+      if (typeof c !== 'object' || c instanceof RealDate) { var t = ms(c); return isNaN(t) ? realNow() : t; }
+      var a = ms(c.base), b = ms(c.at), r = realNow();
+      if (isNaN(a)) return realNow();
+      if (isNaN(b)) return a;
+      return Math.abs(b - r) <= Math.abs(a - r) ? a + (r - b) : b + (r - a);
+    }
+    function setToday(v) {
+      if (v === undefined) return;
+      if (v === null || v === '') { own = null; return; }
+      var m = typeof v === 'string' && v.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      var t = m ? new RealDate(+m[1], +m[2] - 1, +m[3], 9, 0, 0).getTime() : ms(v);
+      if (!isNaN(t)) own = { base: t, at: realNow() };
+    }
+    var TourDate = function Date(a, b, c, d, e, f, g) {
+      var n = arguments.length;
+      if (!(this instanceof TourDate)) return new RealDate(clockNow()).toString();
+      return n === 0 ? new RealDate(clockNow()) : n === 1 ? new RealDate(a) : new RealDate(a, b, n > 2 ? c : 1, n > 3 ? d : 0, n > 4 ? e : 0, n > 5 ? f : 0, n > 6 ? g : 0);
+    };
+    TourDate.prototype = RealDate.prototype;
+    TourDate.now = clockNow; TourDate.parse = RealDate.parse; TourDate.UTC = RealDate.UTC;
+    try { Object.defineProperty(TourDate, Symbol.hasInstance, { value: function (v) { return v instanceof RealDate; } }); } catch (e) {}
+    window.Date = TourDate;
+
+    /* nothing leaves this tab: only the shared page code (/assets/), MISMO Media's own dictionary and pictures, and the
+       sign-in's own checks may load. An email to a flow is kept (sent()) and answered as sent; anything else is refused. */
+    var sent = [], blocked = [];
+    function allowed(u) {
+      var x; try { x = new URL(u, location.href); } catch (e) { return false; }
+      if (x.protocol === 'data:' || x.protocol === 'blob:') return true;
+      if (x.origin === location.origin) return /^\/assets\//.test(x.pathname) || /^\/(media|marketing-hq)\/(spell|mm-headers)\//.test(x.pathname);
+      if (x.origin === RELAY_ORIGIN) return x.pathname === '/version' || /^\/[a-z0-9-]+\/auth\/me$/.test(x.pathname);
+      return false;
+    }
+    function keep(mail) {
+      var m = clone(mail) || {}; delete m.token;
+      m.at = new RealDate(clockNow()).toISOString(); m.from = m.from || person.name;
+      sent.push(m);
+      try { if (typeof TP.__tourMail === 'function') TP.__tourMail(clone(m)); } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('mmtour:email', { detail: clone(m) })); } catch (e) {}
+    }
+    var realFetch = window.fetch;
+    window.fetch = function (input, init) {
+      var u = typeof input === 'string' ? input : (input && input.url) || String(input);
+      var method = String((init && init.method) || (input && input.method) || 'GET').toUpperCase();
+      if (allowed(u)) return realFetch.apply(this, arguments);
+      var host = ''; try { host = new URL(u, location.href).hostname; } catch (e) {}
+      if (method === 'POST' && /\.powerplatform\.com$/.test(host)) {
+        var body = null; try { body = JSON.parse((init && init.body) || 'null'); } catch (e) {}
+        if (body && body.to && (body.subject || body.html)) {
+          keep(body);
+          return Promise.resolve(new Response(JSON.stringify({ ok: true, tour: true }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+        }
+      }
+      blocked.push({ method: method, url: String(u).split('?')[0], at: realNow() });
+      return Promise.reject(new TypeError(NO));
+    };
+    try {
+      var xo = XMLHttpRequest.prototype.open;
+      XMLHttpRequest.prototype.open = function (m, u) { if (!allowed(u)) { blocked.push({ method: String(m).toUpperCase(), url: String(u).split('?')[0], at: realNow() }); throw err('TOUR', NO, 0); } return xo.apply(this, arguments); };
+    } catch (e) {}
+    try { if (navigator.sendBeacon) { var sb = navigator.sendBeacon.bind(navigator); navigator.sendBeacon = function (u, d) { return allowed(u) ? sb(u, d) : false; }; } } catch (e) {}
+
+    /* this browser's storage: MISMO Media's own remembered settings stay in this tab during a tour */
+    try {
+      var SP = Storage.prototype, g = SP.getItem, s = SP.setItem, r = SP.removeItem, MEM = { l: {}, s: {} };
+      var box = function (st) { return st === window.sessionStorage ? MEM.s : MEM.l; };
+      SP.getItem = function (k) { if (SHARED(k)) return g.call(this, k); var o = box(this); return Object.prototype.hasOwnProperty.call(o, k) ? o[k] : null; };
+      SP.setItem = function (k, v) { if (SHARED(k)) return; box(this)[k] = String(v); };
+      SP.removeItem = function (k) { if (SHARED(k)) return; delete box(this)[k]; };
+    } catch (e) {}
+
+    /* the person the tour shows MISMO Media as */
+    var person = { name: 'Practice Person', email: 'practice@mismo.org' };
+    function setMe(m) {
+      if (!m) return;
+      if (typeof m === 'string') m = /@/.test(m) ? { email: m } : { name: m };
+      person = { name: String(m.name || m.email || 'Practice Person'), email: String(m.email || '').toLowerCase() };
+    }
+    var realRS = window.ResourcesSession || {};
+    var tourRS = Object.create(realRS);
+    tourRS.current = function () { return { name: person.name, email: person.email, token: 'tour-practice', expiresAt: new RealDate(realNow() + 864e5).toISOString() }; };
+    tourRS.token = function () { return 'tour-practice'; };
+    tourRS.canEdit = function () { return true; };
+    tourRS.role = function () { return 'editor'; };
+    tourRS.requireAccess = function () { return Promise.resolve(); };
+    tourRS.signIn = function () { return Promise.resolve(); };
+    tourRS.onChange = function () {};
+    try { window.ResourcesSession = tourRS; } catch (e) {}
+    var st = document.createElement('style');
+    st.textContent = 'html.hq-out body > *:not(#hq-gate):not(.rs-scrim){visibility:visible!important}';
+    (document.head || document.documentElement).appendChild(st);
+
+    /* the practice records, as {collection: {id: record}} (a list of records with ids, or "collection/id" keys, also do) */
+    var D = {}, L = {};
+    function normMem(mem) {
+      var out = {};
+      if (!mem || typeof mem !== 'object') return out;
+      Object.keys(mem).forEach(function (k) {
+        var v = mem[k];
+        if (k.indexOf('/') > 0) { var p = k.split('/'); (out[p[0]] = out[p[0]] || {})[p[1]] = clone(v); return; }
+        var c = out[k] = out[k] || {};
+        if (Array.isArray(v)) v.forEach(function (x, i) { if (x && typeof x === 'object') { var id = String(x.id || (k + '-' + i)); var y = clone(x); delete y.id; c[id] = y; } });
+        else if (v && typeof v === 'object') Object.keys(v).forEach(function (id) { var y = clone(v[id]); if (y && typeof y === 'object') delete y.id; c[id] = y; });
+      });
+      return out;
+    }
+    function snap(c) { var o = D[c] || {}; return { docs: Object.keys(o).map(function (id) { return { id: id, exists: true, data: function () { return clone(o[id]); } }; }) }; }
+    function fire(c) { (L[c] || []).forEach(function (cb) { try { cb(snap(c)); } catch (e) { console.error(e); } }); }
+    function soon(c) { setTimeout(function () { fire(c); }, 0); }
+    var seeded = Promise.resolve().then(function () {
+      var s = TP.__tourSeed;
+      return typeof s === 'function' ? s('media') : s;
+    }).then(function (v) {
+      if (v && typeof v === 'object' && v.media && typeof v.media === 'object' && !v.mem) v = v.media;
+      var arg = v && typeof v === 'object' && ('mem' in v || 'me' in v || 'today' in v || 'view' in v || 'open' in v) ? v : { mem: v || {} };
+      D = normMem(arg.mem); setMe(arg.me); setToday(arg.today);
+      return arg;
+    }).catch(function (e) { console.error('Tour: the practice records could not be read', e); return { mem: {} }; });
+    function coll(c) {
+      return {
+        onSnapshot: function (cb) { (L[c] = L[c] || []).push(cb); seeded.then(function () { cb(snap(c)); }); return function () { L[c] = (L[c] || []).filter(function (x) { return x !== cb; }); }; },
+        doc: function (id) {
+          return {
+            get: function () { var v = (D[c] || {})[id]; return seeded.then(function () { return { id: id, exists: v !== undefined, data: function () { return clone(v); } }; }); },
+            set: function (d) { (D[c] = D[c] || {})[id] = clone(d); soon(c); return Promise.resolve(); },
+            update: function (d) { if (!(D[c] || {})[id]) return Promise.reject(err('not-found', 'No such record', 404)); D[c][id] = Object.assign({}, D[c][id], clone(d)); soon(c); return Promise.resolve(); },
+            merge: function (d, base) { var cur = (D[c] || {})[id]; if (base && !cur) return Promise.reject(err('not-found', GONE, 404)); (D[c] = D[c] || {})[id] = base ? mergeDoc(cur, clone(d), clone(base)) : clone(d); soon(c); return Promise.resolve(); },
+            delete: function () { delete (D[c] || {})[id]; soon(c); return Promise.resolve(); }
+          };
+        }
+      };
+    }
+    var DB = { collection: coll };
+    var USER = {
+      id: function () { return Promise.resolve(person.email ? person.name + ' <' + person.email + '>' : person.name); },
+      profiles: function (ids) { var o = {}; (ids || []).forEach(function (id) { var i = String(id).indexOf(' <'); o[id] = { name: i > 0 ? String(id).slice(0, i) : '' }; }); return Promise.resolve(o); },
+      can: function () { return Promise.resolve(true); },
+      me: function () { return Promise.resolve({ name: person.name, email: person.email }); },
+      profile: function () { return Promise.resolve({ name: person.name, email: person.email }); }
+    };
+    window.claude = {
+      use: function (cap) {
+        if (cap === 'db') return seeded.then(function () { return DB; });
+        if (cap === 'user') return seeded.then(function () { return USER; });
+        return Promise.resolve(null);   /* no downloads to the computer, no uploads, no writer during a tour */
+      }
+    };
+    /* every other way out of the page answers "practice mode"; an email is kept instead of sent */
+    window.__hqImages = { get: no, list: no, save: no, mkdir: no, writer: no, drive: { list: no, get: no, write: no },
+      notify: function (to, subject, html) { keep({ kind: 'notify', to: to, subject: subject, html: html }); return Promise.resolve({ ok: true, tour: true }); } };
+    window.__hqSponsors = function () { return Promise.resolve([]); };
+    window.__hqTeamEvents = function () { return Promise.resolve([]); };
+    window.__hqTeamFile = no; window.__hqIncoming = no;
+    window.__hqFile = { get: function () { return Promise.resolve({ data: null, sha: null }); }, put: no };
+    window.__hqRelay = { files: {}, place: place, poll: function () {}, pending: function () { return false; }, status: { offline: false, lastError: '' },
+      why: function () { return ''; }, tour: true, config: { RELAY_URL: '', PROJECT: PROJECT, POLL_MS: 0 } };
+    /* what app36.js (window.__mmTour) works with */
+    window.__mmTourDoor = {
+      seeded: seeded,
+      load: function (mem) { D = normMem(mem); Object.keys(L).forEach(fire); },
+      mem: function () { return clone(D); },
+      setMe: setMe, me: function () { return clone(person); },
+      setToday: setToday, now: clockNow,
+      sent: function () { return clone(sent); }, blocked: function () { return clone(blocked); }
+    };
+  }
+
   function applyOps(f, content, ops, sending) {
     ops.forEach(function (op) {
       if (op.kind === 'merge') {        /* only what changed since op.base, onto this copy */
@@ -2865,6 +3066,8 @@ const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boo
 
 /* ================= the shared records ================= */
 const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}, informz:{}, summitphotos:{}};
+/* Tour mode (CN-059): the MMS's Work Request Journey runs MISMO Media on practice records; see app36.js and dev/shim.html */
+const TOUR=!!window.__mmTourOn;
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
 function vals(c){ return Object.values(S[c]); }
 async function getClaude(){
@@ -2893,7 +3096,7 @@ async function connect(){
     let can=true; try{ const u=await c.use("user"); if(u && u.can) can = await u.can(); if(u && u.me){ const m=await u.me(); window.__hqWho = (m && (m.name||m.displayName)) || ""; } }catch(e){}
     const sb=$("#savebanner"); if(sb && can===false) sb.hidden=false;
     CANWRITE = can!==false;
-    const n=$("#rail-save"); if(n) n.innerHTML = CANWRITE ? '<b>Saving</b><span class="ok">To MISMO\'s records · saves as you press Save</span>' : '<b>Saving</b><span class="no">'+(document.querySelector("#savebanner b")||{}).textContent+'</span>';
+    const n=$("#rail-save"); if(n && TOUR) n.innerHTML='<b>Practice Mode</b><span class="ok">Made-up records · nothing is saved or sent</span>'; else if(n) n.innerHTML = CANWRITE ? '<b>Saving</b><span class="ok">To MISMO\'s records · saves as you press Save</span>' : '<b>Saving</b><span class="no">'+(document.querySelector("#savebanner b")||{}).textContent+'</span>';
   }
   syncFeed();
 }
@@ -2902,7 +3105,7 @@ let CANWRITE=true, FEED_DONE=false;
    YouTube (/podcast/micdup.json, rebuilt from the channel's feed). MISMO Media reads it so an
    episode is marked "on YouTube", with its link, the moment it goes up. */
 async function syncFeed(){
-  if(FEED_DONE || location.hostname!=="resources.mismo.org" || !CANWRITE) return;
+  if(FEED_DONE || TOUR || location.hostname!=="resources.mismo.org" || !CANWRITE) return;
   if(!LOADED.has("episodes")){ setTimeout(syncFeed, 1500); return; }
   FEED_DONE=true;
   try{
@@ -3229,7 +3432,7 @@ const MU_PAUSED = {spotify:true, clips:true};
 const STALE={base:null, on:false};
 function pageSig(t){ let h=0; for(let i=0;i<t.length;i++){ h=(h*31+t.charCodeAt(i))|0; } return t.length+":"+h; }
 async function staleCheck(){
-  if(STALE.on) return;
+  if(STALE.on || TOUR) return;
   try{ const t=await fetch(location.pathname, {cache:"no-store"}).then(r=>r.ok?r.text():""); if(!t) return;
     const sig=pageSig(t); if(STALE.base===null){ STALE.base=sig; return; }
     if(sig!==STALE.base){ STALE.on=true; const b=document.createElement("div"); b.id="stale-bar";
@@ -4690,7 +4893,9 @@ const HELP = [
    <li>Emails sent as Perry (the quote request, the MISMO Connect post and the MBA newsroom copy) go through the <b>MISMO Media - Send As Perry</b> flow. It checks the resources.mismo.org sign-in and sends only when the person signed in is Perry; anyone else is refused. Amy's approval request goes through MISMO Media's usual notice email.</li>
    <li>The MISMO Media page checks the feed every five minutes while it's open.</li>
    <li>Help &rsaquo; System Health shows when the MMS feed was last rebuilt and any release that couldn't get a first draft.</li>
-  </ul>`},
+  </ul>
+  <h3>The Training Tour</h3>
+  <p>The MMS's <b>Work Request Journey</b> (resources.mismo.org/mms/journey/) walks new people through a work request from start to finish, and for the press release steps it opens this real page with made-up practice releases. A pointer moves to the real buttons. While MISMO Media is inside the tour, the menu says <b>Practice Mode</b>: nothing real is read, nothing is saved, and no email is sent (the tour shows the email instead). Close the tour and MISMO Media is exactly as you left it.</p>`},
  {id:"matters", t:"The Monthly MISMO Matters Run", g:"MISMO Matters", b:`
   <p>MISMO Matters goes out on the <b>third Wednesday</b> of each month through Higher Logic. Every date below is set for you when an edition is started, skipping weekends and MISMO holidays.</p>
   <p><b>Moving a send date</b> (a holiday, a launch, someone out): open the edition, press <b>Change Dates</b>, change <b>Sent</b> and press Save. The test send, final approval and stats move with it, and the content deadlines stay where they are. You can also change any single date by hand. If a date lands on a weekend or MISMO holiday, a note tells you which.</p>
@@ -8134,13 +8339,14 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-27 14:26 ET · c2024cf";
+const BUILD = "2026-11-27 15:29 ET · 7a091d4";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
    to Amy). The browser hands this lock to one tab at a time; the others wait until that tab closes. */
 let LEADER = !(navigator.locks && navigator.locks.request);
-try{ if(navigator.locks && navigator.locks.request) navigator.locks.request("mismo-media-autopilot", ()=>{ LEADER=true; if(typeof schedule==="function") schedule(); return new Promise(()=>{}); }); }catch(e){ LEADER=true; }
+/* a tour (CN-059) never takes the background jobs from a real MISMO Media tab */
+try{ if(!TOUR && navigator.locks && navigator.locks.request) navigator.locks.request("mismo-media-autopilot", ()=>{ LEADER=true; if(typeof schedule==="function") schedule(); return new Promise(()=>{}); }); }catch(e){ LEADER=true; }
 
 /* ---------- background jobs ----------
    At most once a minute each, only in the autopilot tab, and after a failure a pause that doubles each
@@ -8149,7 +8355,7 @@ const JOBS = {};
 function job(name){ return JOBS[name] || (JOBS[name]={name, runs:0, fails:0, lastRun:0, lastOk:0, lastErr:"", lastErrAt:0, next:0, busy:false}); }
 function jobNote(name, err){ const j=job(name); j.fails++; j.lastErr=String((err&&(err.message||err.code))||err||"failed").slice(0,200); j.lastErrAt=Date.now(); j.next=Date.now()+Math.min(60, Math.pow(2, Math.min(6, j.fails-1)))*60000; }
 function runJob(name, fn, minMs){
-  if(!fn || !LEADER || (typeof STALE!=="undefined" && STALE.on)) return;
+  if(!fn || TOUR || !LEADER || (typeof STALE!=="undefined" && STALE.on)) return;
   const j=job(name), now=Date.now();
   if(j.busy || now<j.next || now-j.lastRun<(minMs||60000)) return;
   j.busy=true; j.lastRun=now; j.runs++;
@@ -8578,6 +8784,8 @@ function prLate(r){ const d=prReminderDue(r); return !!d && d<=T() && r.status==
 
 /* ---------- the feeds ---------- */
 async function prLoadFeed(force){
+  /* tour mode (CN-059): no feed check; the practice releases' own announcements stand in for the feed */
+  if(TOUR){ PR.feed={updated:new Date().toISOString(), list:vals("releases").map(r=>r.ann).filter(Boolean)}; PR.feedErr=""; PR.feedAt=Date.now(); return PR.feed; }
   if(!force && PR.feed && Date.now()-PR.feedAt<5*60000) return PR.feed;
   try{ const r=await fetch(PR_FEED,{cache:"no-store"}); if(!r.ok) throw new Error("the feed answered "+r.status);
     const j=await r.json(); PR.feed={updated:j.updated||"", list:Array.isArray(j.announcements)?j.announcements:[]}; PR.feedErr=""; }
@@ -8585,6 +8793,7 @@ async function prLoadFeed(force){
   PR.feedAt=Date.now(); return PR.feed;
 }
 async function prLoadCatalog(){
+  if(TOUR) return {};
   if(PR.cat && Date.now()-PR.catAt<60*60000) return PR.cat;
   try{ const r=await fetch(PR_CATALOG,{cache:"no-store"}); if(r.ok){ const j=await r.json(); const m={}; (j.products||[]).forEach(p=>{ m[p.id]=p; (p.aliases||[]).forEach(a=>{ m[a]=m[a]||p; }); }); PR.cat=m; PR.catAt=Date.now(); } }catch(e){}
   return PR.cat||{};
@@ -10633,6 +10842,95 @@ function hhSummitPhotos(){
   if(!bs.length) return hhRow("sumphotos","Summit Photos (MyMISMO)","off","No photos have come from MyMISMO yet. They arrive when Amy presses Send to MISMO Media there.");
   return hhRow("sumphotos","Summit Photos (MyMISMO)","ok",bs.length+" batch"+(bs.length===1?"":"es")+", "+n+" photo"+(n===1?"":"s")+"; "+have+" in SharePoint (Image Library, Summits). Draft posts wait for Amy; nothing posts on its own.");
 }
+
+/* ================= Tour mode (CN-059, approved by Jonna Nov 27, 2026) =================
+   The MMS's Work Request Journey (resources.mismo.org/mms/journey/) is the MMS's training tour. For MISMO Media's
+   steps (the first draft from the MMS feed, Perry's review, who to quote, the quote request, final approval,
+   Distribution, Ready to Post, the Out for Comment tag) it opens the real MISMO Media in a frame at /media/?tour=1
+   and moves its pointer to the real buttons. dev/shim.html does the safe part: practice records from
+   window.parent.__tourSeed instead of the relay, today's date from window.parent.__tourClock, nothing read, saved
+   or sent (an email is kept, not sent). This file is what the journey drives:
+     window.__mmTour.ready()            a promise: true once the practice records are drawn
+     window.__mmTour.load({mem, me, today, view, open})
+                                        replace the records (mem = {collection: {id: record}}) and show them as that
+                                        person ({name, email}), on that day ("YYYY-MM-DD"), on that view, with that
+                                        release (or request) open; every part is optional
+     window.__mmTour.go(view)           one of __mmTour.views ("press", "requests", "overview", ...)
+     window.__mmTour.open(id)           a release id ("pr-..."; opens Press Releases) or a request id
+     window.__mmTour.state() / sent() / blocked()
+                                        what is showing; the emails a person "sent"; anything that tried to leave
+   Built like the MMS's own window.__mmsTour (src/tour.js in GitMISMO/mms-data source). Never on the normal page. */
+if(TOUR) (function(){
+  const door=window.__mmTourDoor;
+  const VIEWS=TABS.filter(t=>t!=="home");
+  const tick=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+  const later=ms=>new Promise(r=>setTimeout(r,ms));
+  /* drawn = connected, every collection read and the page drawn with it */
+  async function drawn(){
+    const t0=performance.now();
+    while(!(CONNECTED && DB && Object.keys(S).every(c=>LOADED.has(c)))){ if(performance.now()-t0>20000) return false; await later(40); }
+    await later(0); await tick(); return true;
+  }
+  function setMe(me){
+    if(!me) return;
+    door.setMe(me); const m=door.me();
+    window.__hqWho=m.name; CANWRITE=true;
+  }
+  function showOpen(id){
+    id=String(id||""); if(!id) return false;
+    if((S.releases||{})[id]){
+      if(TAB!=="press") show("press");
+      const r=S.releases[id]; PR.q="";
+      if(r.status==="final" && !(prToPost(r) && !prPosted(r))) PR.showDone=true;
+      if(PR.view==="draftnow" && !prHeld(r) || PR.view==="ready" && !(prToPost(r) && !prPosted(r))) PR.view="";
+      PR.sel=id; renderPress();
+      const d=$("#pr-detail"); if(d) d.scrollIntoView({block:"start"});
+      return true;
+    }
+    if((S.requests||{})[id] && TAB!=="requests") show("requests");
+    const row=document.querySelector('#page-'+TAB+' [data-rq="'+CSS.escape(id)+'"], #page-'+TAB+' [data-pr="'+CSS.escape(id)+'"]');
+    if(row){ row.click(); return true; }
+    return false;
+  }
+  function state(){
+    return {view:TAB, open:PR.sel||(PANE&&PANE.id)||null, me:door.me(), today:T(), now:new Date().toISOString(), views:VIEWS.slice()};
+  }
+  let readyP=null;
+  const api={
+    views:VIEWS.slice(),
+    ready(){
+      if(!readyP) readyP=door.seeded.then(async a=>{
+        const ok=await drawn();
+        if(a && a.me) setMe(a.me);
+        if(typeof prApplyApprovals==="function") try{ await prApplyApprovals(); }catch(e){}
+        if(a && a.view) api.go(a.view);
+        if(a && a.open) showOpen(a.open);
+        await tick(); return ok;
+      });
+      return readyP;
+    },
+    async load(o){
+      o=o||{}; await api.ready();
+      if(o.me) setMe(o.me);
+      if("today" in o) door.setToday(o.today);
+      if(o.mem){
+        if(PANE) closePane(true);
+        PR.sel=null; PR.view=""; PR.q=""; PR.showDone=false; PR.feed=null;
+        door.load(o.mem); await later(0);
+        /* Amy's practice reply (an approvals record) is applied the way the background job applies a real one */
+        if(typeof prApplyApprovals==="function") try{ await prApplyApprovals(); }catch(e){}
+      }
+      if(o.view) api.go(o.view); else renderAll();
+      if(o.open) showOpen(o.open);
+      await tick(); return state();
+    },
+    go(view){ if(PANE) closePane(true); show(VIEWS.includes(view)?view:"overview"); return TAB; },
+    open(id){ return showOpen(id); },
+    state, sent:()=>door.sent(), blocked:()=>door.blocked(), mem:()=>door.mem()
+  };
+  window.__mmTour=api;
+  api.ready();
+})();
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
