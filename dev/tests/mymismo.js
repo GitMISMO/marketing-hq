@@ -1,5 +1,7 @@
 // MyMISMO team area (CN-061, Nov 27, 2026): Attendee Reports, MISMO Trivia and MyMISMO on Results, each hidden until its
 // route answers 200 (403 for anyone not in alertSenders). The relay is a stand-in here: nothing is sent anywhere.
+// Since CN-063 the menu item also shows (Summit Alerts and Slides, dev/tests/myslides.js) for anyone signed in who can
+// save, so the 403 checks look at the Attendee Reports and MISMO Trivia parts, not the menu item.
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:1300,height:900}});
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -19,12 +21,14 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
       if(o && o.method==="POST"){ const bd=JSON.parse(o.body); if(k==="reports"){ const x=reports.find(y=>y.id===bd.id); x.status=bd.status; x.action=bd.action; } else trivia.champ=bd.champ?Object.assign({open:false},bd.champ):null; return Promise.resolve(new Response('{"ok":true}',{status:200})); }
       const body={reports:{reports, open:reports.filter(x=>x.status==="open").length}, trivia, stats}[k];
       return Promise.resolve(new Response(code[k]===200?JSON.stringify(body):'{"error":"NOT_ALLOWED"}',{status:code[k]})); }
+    if(/summit-agenda|\/mymismo\/push\//.test(s)) return Promise.resolve(new Response('{}',{status:404}));
     return realFetch(u,o); };
+  const parts=()=>{ renderMyMISMO(); const pg=document.getElementById('page-mymismo'); return {rep:!!pg.querySelector('[data-mym-sub="reports"]'), tri:!!pg.querySelector('[data-mym-sub="trivia"]'), alerts:!!pg.querySelector('[data-mym-sub="alerts"]')}; };
   /* no sign-in: nothing is asked and nothing shows */
   await mymLoad(true); out.noTokenNoCall=calls.length===0 && nav().hidden;
   window.ResourcesSession={token:()=>"test-token"};
   /* 403 for anyone not in alertSenders: nothing shows */
-  await mymLoad(true); out.hidden403=nav().hidden && !document.querySelector('#nb-mymismo:not([hidden])') && RS_ORDER.indexOf("mymismo")<0 && calls.every(c=>c.auth==="Bearer test-token");
+  await mymLoad(true); const p403=parts(); out.hidden403=!nav().hidden && !p403.rep && !p403.tri && p403.alerts && !document.querySelector('#nb-mymismo:not([hidden])') && RS_ORDER.indexOf("mymismo")<0 && calls.every(c=>c.auth==="Bearer test-token");
   go("results"); await wait(100); out.noCard403=!document.querySelector('[data-rs-open="mymismo"]');
   go("overview"); await wait(60); out.noSay403=!document.querySelector('#page-overview .mym-say');
   /* reports and trivia live (relay request 15), stats not yet (relay request 17) */
@@ -65,7 +69,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   closePane(true);
   /* access taken away: everything hides again */
   code={reports:403, trivia:403, stats:403}; await mymLoad(true); await wait(60);
-  out.hiddenAgain=nav().hidden; out.cardGone=!document.querySelector('[data-rs-open="mymismo"]') && RS_ORDER.indexOf("mymismo")<0;
+  const pAgain=parts(); out.hiddenAgain=!pAgain.rep && !pAgain.tri && MYM.sub==="alerts"; out.cardGone=!document.querySelector('[data-rs-open="mymismo"]') && RS_ORDER.indexOf("mymismo")<0;
   window.fetch=realFetch; delete window.ResourcesSession;
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;

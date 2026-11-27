@@ -945,15 +945,18 @@
       .then(function (b) { return unb64(String((b && b.content) || '').replace(/\s/g, ''), 'image/jpeg'); });
   };
   /* a plain data file of MISMO Media's own, not records: the feeds other systems read, such as the sponsor benefits
-     feed the Sponsorship Portal reads (data/feed-sponsor-benefits.json, Nov 21, 2026). Only names starting "feed-". */
+     feed the Sponsorship Portal reads (data/feed-sponsor-benefits.json, Nov 21, 2026). Only names starting "feed-",
+     and MyMISMO's presentation slides (CN-063, Nov 27, 2026): slide-<id> (the head {chunked:{ver, n}}) and its parts
+     slide-<id>--<ver>-<i> ({s}), written as is in Summit HQ's chunked format for the save relay to serve. */
+  var RAW_NAME = /^(feed-[a-z0-9-]+|slide-[a-z0-9]+(--[a-z0-9]+-[0-9]+)?)$/;
   window.__hqFile = {
     get: function (name) {
-      if (!/^feed-[a-z0-9-]+$/.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
+      if (!RAW_NAME.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
       return net('GET', name).then(function (b) { var d = b && b.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = null; } } return { data: d || null, sha: (b && b.sha) || null }; },
         function (e) { if (e && e.status === 404 && (e.code === 'NOT_FOUND' || e.code === 'HTTP_404')) return { data: null, sha: null }; throw e; });
     },
     put: function (name, content, sha) {
-      if (!/^feed-[a-z0-9-]+$/.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
+      if (!RAW_NAME.test(String(name))) return Promise.reject(err('invalid_argument', 'Not a feed: ' + name));
       if (PREVIEW) return Promise.reject(err('PREVIEW', 'Nothing is saved in the preview', 0));
       return put(name, { content: content, sha: sha || null });
     }

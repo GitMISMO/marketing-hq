@@ -289,9 +289,24 @@ const HELP = [
    <li><b>Summit Photos</b> (from MyMISMO): attendees take selfies and photos with friends in the summit frame and send them to MISMO, ticking the box that says MISMO may use them and everyone in them is OK with it. Amy picks the ones she wants in MyMISMO and presses <b>Send to MISMO Media</b>. Each send shows here as a batch, newest first, with each photo's caption, who took it, the Photo Challenge, who's in it and Amy's note. MISMO Media keeps a copy of each photo in SharePoint (Image Library, Summits) and drafts one summit post per batch, set to Ready for Review for Amy, with the captions in the copy and the people to tag in the notes. <b>Nothing posts on its own</b>: Amy reads it, picks the photos and decides whether to post it. Photos without the consent box ticked never come over.</li>
    <li>Summit planning (the agenda, Run of Show, hotel) stays in Summit HQ. This page is only the marketing.</li>
   </ul>`},
- {id:"mymismo-team", t:"MyMISMO: Attendee Reports and Trivia", g:"Events & Brand", b:`
-  <p>Everything the MISMO team does with MyMISMO, MISMO's app, is in MISMO Media (since Nov 27, 2026; it used to be on Team HQ). <b>MyMISMO</b> in the left menu, under Events &amp; Brand, has <b>Attendee Reports</b> and <b>MISMO Trivia</b>. MyMISMO's numbers are on <b>Results</b>, Summit Photos are on <b>Summits</b>, and <b>Push to MyMISMO</b> is on each MISMO Matters edition and Mic'd Up episode. Summit-day room-change alerts and slides stay in Summit HQ, where the summit is run.</p>
-  <p><b>Who sees it:</b> only the people Jonna named in MyMISMO (the same people who can push notifications). For anyone else, and until MyMISMO's team routes are live, the menu item and the Results card don't show at all. MISMO Media reads MyMISMO with your own sign-in when it opens and every 5 minutes while it's open, and keeps no copy.</p>
+ {id:"mymismo-team", t:"MyMISMO: Summit Alerts, Slides, Reports and Trivia", g:"Events & Brand", b:`
+  <p>Everything the MISMO team does with MyMISMO, MISMO's app, is in MISMO Media (since Nov 27, 2026; it used to be on Team HQ). <b>MyMISMO</b> in the left menu, under Events &amp; Brand, has <b>Summit Alerts</b> and <b>Slides</b> (moved here from Summit HQ on Nov 27, 2026), <b>Attendee Reports</b> and <b>MISMO Trivia</b>. MyMISMO's numbers are on <b>Results</b>, Summit Photos are on <b>Summits</b>, and <b>Push to MyMISMO</b> is on each MISMO Matters edition and Mic'd Up episode. The agenda, the attendee list and the check-in sessions still come from Summit HQ.</p>
+  <p><b>Who sees it:</b> Summit Alerts and Slides show for everyone who can save in MISMO Media; only the people Jonna named in MyMISMO (the same people who can push notifications) get <b>Send to Phones</b>. Attendee Reports, MISMO Trivia and the Results card show only for those people, and only once MyMISMO's team routes are live. MISMO Media reads MyMISMO with your own sign-in when it opens and every 5 minutes while it's open, and keeps no copy.</p>
+  <h3>Summit Alerts</h3>
+  <p>For room changes and summit news, sent to every phone that turned on MyMISMO alerts for that summit. It also shows in the app's inbox.</p>
+  <ol>
+   <li>Open <b>MyMISMO › Summit Alerts</b>. The summits and their sessions come from the website agenda; pick the summit if there's more than one.</li>
+   <li>Write a <b>Title</b> (up to 80 characters) and a <b>Message</b> (up to 300). If it's about one session, pick it in <b>Session It's About</b>: tapping the alert opens that session. The phone on the right shows how it will look.</li>
+   <li>Press <b>Send to Phones</b> and say yes. <b>Nothing is sent until you do</b>, and it can't be taken back once sent.</li>
+   <li>It says how many phones it reached, and <b>Alerts Sent</b> keeps the list: when, by whom, the words, the session and the phones.</li>
+  </ol>
+  <p>Send to Phones shows only once MyMISMO's alerts are switched on (the save relay answers that it's ready). Until then you can write an alert, but not send it.</p>
+  <h3>Slides</h3>
+  <ul>
+   <li>Open <b>MyMISMO › Slides</b>. Every session on the summit's website agenda is listed by day. Press <b>Add Slides</b> on a session to add PDF or PowerPoint files (up to 25 MB each). Attendees signed in to MyMISMO can download them from that session; nobody else can.</li>
+   <li>Click a file's name to open it (a PowerPoint downloads). The <b>×</b> takes it off MyMISMO; the file itself is kept in MISMO Media's private records.</li>
+   <li>Slides are kept in MISMO Media's private data and listed for MyMISMO in its private slides list (feed-mymismo-slides). A session that drops off the agenda keeps its slides under <b>Slides on Sessions No Longer on the Agenda</b>.</li>
+  </ul>
   <h3>Attendee Reports</h3>
   <p>Attendees can report another attendee's profile or a conversation in MyMISMO. Apple requires the MISMO team to respond in a timely way, so an open report shows as a red number on <b>MyMISMO</b> in the left menu and a red line on the Schedule until it's closed.</p>
   <ol>
@@ -312,6 +327,9 @@ const HELP = [
   <h3>What You Might See</h3>
   <ul>
    <li><b>Write a short note of what was done first:</b> Close needs the note.</li>
+   <li><b>MyMISMO alerts aren't switched on yet:</b> the save relay isn't ready for summit alerts; nothing can be sent until it is.</li>
+   <li><b>isn't a PDF or PowerPoint file</b> or <b>slides can be up to 25 MB:</b> save a PDF, or a smaller copy (File › Compress Pictures).</li>
+   <li><b>MyMISMO's slides list didn't update:</b> the file is saved here; the list updates with the next change, or try again.</li>
    <li><b>Only the people Jonna named can…:</b> your sign-in isn't on MyMISMO's list.</li>
    <li><b>Couldn't reach MyMISMO. Nothing changed:</b> check your connection and try again.</li>
   </ul>`},

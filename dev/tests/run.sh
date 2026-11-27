@@ -54,4 +54,5 @@ out=$(node tabicon.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || f
 out=$(node backbtn.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node tour.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node mymismo.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node myslides.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 exit $fail

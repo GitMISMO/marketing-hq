@@ -1,9 +1,9 @@
 
 /* ================= MyMISMO: the MISMO team's area (CN-061, approved by Jonna Nov 27, 2026) =================
    Everything the MISMO team does with MyMISMO lives here (it was on Team HQ, CN-041 and CN-043; Team HQ removes its copy
-   in CN-062). Summit Photos (app35.js) and Push to MyMISMO (app34.js) were already here; summit-day room-change alerts
-   and slides stay in Summit HQ.
-   - MyMISMO page (left menu, under Events & Brand): Attendee Reports and MISMO Trivia.
+   in CN-062). Summit Photos (app35.js) and Push to MyMISMO (app34.js) were already here; Summit Alerts and Slides
+   moved here from Summit HQ in CN-063 (app38.js).
+   - MyMISMO page (left menu, under Events & Brand): Attendee Reports, MISMO Trivia, Summit Alerts and Slides.
        GET  /mymismo/staff/reports  -> { reports: [{ summit, id, about, aboutName, byName, reason, note, at, status, action }], open }
        POST /mymismo/staff/reports  { summit, id, status: 'closed' | 'open', action }   (relay request 15)
        GET  /mymismo/staff/trivia   -> { month, quarter, boards: [{ month, players, top: [{ rank, name, score, right }] }],
@@ -13,7 +13,8 @@
      text) plus Trivia players by month from /staff/trivia.
    Every route uses the person's own resources.mismo.org sign-in and answers 403 to anyone not in the mymismo entry's
    alertSenders. Each part stays hidden until its route answers 200, so nothing shows for anyone else, or before the
-   relay part is live. An open report is something needing action (Apple requires timely responses): it shows as a red
+   relay part is live. Summit Alerts and Slides (app38.js) show to anyone signed in who can save here (myaOn), so the
+   menu item shows for them too; only alertSenders get Send to Phones. An open report is something needing action (Apple requires timely responses): it shows as a red
    number on MyMISMO in the left menu and as a line on the Schedule. Read when the page opens and every 5 minutes while
    it's open; nothing is kept in MISMO Media's records, and nothing is ever emailed or posted. Never in tour mode.
    Contract: Connections Map row "MyMISMO (team area) → MISMO Media". dev/tests/mymismo.js checks it. */
@@ -44,7 +45,7 @@ async function mymLoad(force){
   mymApply();
 }
 const mymOn = part=>MYM[part].code===200 && !!MYM[part].data;
-function mymShown(){ return mymOn("rep") || mymOn("tri"); }
+function mymShown(){ return mymOn("rep") || mymOn("tri") || myaOn(); }
 function mymReports(){ const d=MYM.rep.data; return mymOn("rep") && Array.isArray(d.reports) ? d.reports.filter(r=>r && r.id) : []; }
 function mymOpenCount(){ return mymReports().filter(r=>r.status!=="closed").length; }
 /* show or hide the menu item, the open-reports number and the Results card, then redraw what's on screen */
@@ -80,17 +81,22 @@ document.addEventListener("click", e=>{ const b=e.target && e.target.closest && 
 /* ---- the MyMISMO page ---- */
 function renderMyMISMO(){
   const el=$("#page-mymismo");
-  const head='<div class="phead"><div><div class="eyebrow">MISMO\'s App</div><h1>MyMISMO</h1><div class="sub">Attendee reports and MISMO Trivia from MyMISMO. MyMISMO\'s numbers are on the Results page; Summit Photos are on Summits.</div></div></div>';
+  const head='<div class="phead"><div><div class="eyebrow">MISMO\'s App</div><h1>MyMISMO</h1><div class="sub">Summit alerts, presentation slides, attendee reports and MISMO Trivia for MyMISMO. MyMISMO\'s numbers are on the Results page; Summit Photos are on Summits.</div></div></div>';
   if(!mymShown()){ el.innerHTML=head+'<div class="card"><div class="empty">'+(MYM.busy||(!MYM.at&&mymTok()&&!TOUR)?'Checking MyMISMO…':'Nothing to show here. This page is for the people MyMISMO lets in, once its team routes are live.')+'</div></div>'; return; }
-  if(MYM.sub==="trivia" && !mymOn("tri")) MYM.sub="reports";
-  if(MYM.sub==="reports" && !mymOn("rep")) MYM.sub="trivia";
+  /* a part that isn't available falls back to the first one that is */
+  const avail=[mymOn("rep")&&"reports", mymOn("tri")&&"trivia", myaOn()&&"alerts", myaOn()&&"slides"].filter(Boolean);
+  if(!avail.includes(MYM.sub)) MYM.sub=avail[0];
   const open=mymOpenCount();
+  /* a redraw (records arriving) keeps the box being typed in, and where in it */
+  const a=document.activeElement, keep=a && el.contains(a) && a.id ? {id:a.id, s:a.selectionStart, e:a.selectionEnd} : null;
   const tabs='<div class="subtabs" role="group" aria-label="MyMISMO">'+
     (mymOn("rep")?'<button type="button" data-mym-sub="reports" aria-pressed="'+(MYM.sub==="reports")+'">Attendee Reports'+(open?' <span class="cnt">'+open+' open</span>':'')+'</button>':'')+
-    (mymOn("tri")?'<button type="button" data-mym-sub="trivia" aria-pressed="'+(MYM.sub==="trivia")+'">MISMO Trivia</button>':'')+'</div>';
-  el.innerHTML=head+tabs+(MYM.sub==="reports"?mymReportsHtml():mymTriviaHtml());
-  $$("[data-mym-sub]",el).forEach(b=>b.onclick=()=>{ MYM.sub=b.dataset.mymSub; MYM.msg=""; renderMyMISMO(); });
-  if(MYM.sub==="reports") mymWireReports(el); else mymWireTrivia(el);
+    (mymOn("tri")?'<button type="button" data-mym-sub="trivia" aria-pressed="'+(MYM.sub==="trivia")+'">MISMO Trivia</button>':'')+
+    (myaOn()?'<button type="button" data-mym-sub="alerts" aria-pressed="'+(MYM.sub==="alerts")+'">Summit Alerts</button><button type="button" data-mym-sub="slides" aria-pressed="'+(MYM.sub==="slides")+'">Slides</button>':'')+'</div>';
+  el.innerHTML=head+tabs+({reports:mymReportsHtml, trivia:mymTriviaHtml, alerts:myaAlertsHtml, slides:myaSlidesHtml})[MYM.sub]();
+  $$("[data-mym-sub]",el).forEach(b=>b.onclick=()=>{ MYM.sub=b.dataset.mymSub; MYM.msg=""; renderMyMISMO(); if(MYM.sub==="alerts"||MYM.sub==="slides") myaLoad(false); });
+  ({reports:mymWireReports, trivia:mymWireTrivia, alerts:myaWireAlerts, slides:myaWireSlides})[MYM.sub](el);
+  if(keep){ const n=document.getElementById(keep.id); if(n && n!==document.activeElement){ try{ n.focus(); if(keep.s!=null && n.setSelectionRange) n.setSelectionRange(keep.s, keep.e); }catch(e){} } }
 }
 
 /* Attendee Reports: newest first; Close needs a short note of what was done; Reopen keeps that note */
@@ -212,7 +218,7 @@ function mymRail(){
       MYM_ROWS.map(([k,l])=>'<tr><td>'+esc(l)+'</td>'+ss.map(s=>'<td class="num">'+rsN(mymV(s,k))+'</td>').join("")+'</tr>').join("")+'</tbody></table></div>':'<div class="empty">No summits in MyMISMO yet.</div>')+
     '<h3>MISMO Trivia Players by Month</h3>'+(boards.length?'<table class="t"><thead><tr><th>Month</th><th class="num">Players</th><th>Winner</th></tr></thead><tbody>'+boards.map(b=>'<tr><td>'+esc(mymMonth(b.month))+'</td><td class="num">'+rsN(b.players)+'</td><td>'+(b.month===MYM.tri.data.month?'<small class="t2">still being played</small>':esc(((b.top||[])[0]||{}).name||"—"))+'</td></tr>').join("")+'</tbody></table>':'<div class="empty">'+(mymOn("tri")?'No Trivia months yet.':'Trivia numbers show once MyMISMO\'s Trivia route is live.')+'</div>')+
     (mymShown()?'<p><button class="btn sm" type="button" data-go="mymismo">Open MyMISMO</button></p>':'')+
-    '<p class="mym-foot">Summit-day room-change alerts and slides are run in Summit HQ; their counts are here.</p></div>';
+    '<p class="mym-foot">Summit alerts and presentation slides are sent and added on the MyMISMO page; their counts are here.</p></div>';
 }
 RS_SEC.mymismo={t:()=>"MyMISMO", d:()=>mymRail()};
 (function(){
