@@ -27,10 +27,10 @@ const press=async sel=>{ const r=await p.evaluate(s=>{ const b=document.querySel
 const back=async()=>{ await p.evaluate(()=>history.back()); await p.waitForTimeout(1000); };
 const fwd=async()=>{ await p.evaluate(()=>history.forward()); await p.waitForTimeout(1000); };
 let st=await state(); out.helper=st.helper; const start=st.tab; out.opensSchedule=start==='overview';   /* MISMO Media opens on the Schedule since Nov 27, 2026 (Home is gone) */
-await go('results'); await go('lists'); await go('help');
+await go('summits'); await go('lists'); await go('help');   /* not Results: its monthly reminder can pop up over the menu */
 st=await state(); out.helpOpens=st.tab==='help';
 await back(); st=await state(); out.backToLists=st.tab==='lists';
-await back(); st=await state(); out.backToResults=st.tab==='results';
+await back(); st=await state(); out.backToSummits=st.tab==='summits';
 await fwd(); st=await state(); out.forwardToLists=st.tab==='lists';
 await back(); await back(); st=await state(); out.backToStart=st.tab===start;
 /* a record's panel: Back closes it and stays on the page */
