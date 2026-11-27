@@ -128,11 +128,13 @@ function pieceFields(ch){
     {k:"date",label:ch==="linkedin"?"Post Date":ch==="mailchimp"?"Send On":"Date",type:"date"},
     {k:"owner",label:"Owner",type:"select",opts:PEOPLE,blank:true},
     {k:"status",label:"Status",type:"select",opts:Object.entries(PSTAT).map(([v,[l]])=>[v,l])},
-    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["matters","micdup","news","orders"].includes(k))}];
+    {k:"channel",label:"Channel",type:"select",opts:Object.entries(CH).filter(([k])=>!["micdup","news","orders"].includes(k) && (!["setup","community","request","other"].includes(k) || k===ch))}];
   if(ch==="linkedin") base.push({k:"postTime",label:"Post Time",ph:"e.g. 9:00 AM"},{k:"autoPost",label:"Stage it: post on the MISMO page automatically at this date and time (link posts)",type:"cb",wide:true});
   if(ch==="linkedin") base.push({k:"kind",label:"Kind of Post",type:"select",opts:["Mic'd Up","In the News","Summit","Member Highlight","Sponsor Highlight","Certification","Press Release","Workgroup","MISMO Matters","Other"]});
   if(ch==="summit") base.push({k:"summit",label:"Summit",type:"select",opts:SUMMITS.map(s=>[s.id,s.name])},{k:"phase",label:"When",type:"select",opts:[["before","Before the Summit"],["at","At the Summit"],["after","After the Summit"]]},{k:"via",label:"Where It Goes",type:"select",opts:SUMMIT_VIA});
   if(ch==="mailchimp") base.push({k:"sendTime",label:"Send Time",ph:"e.g. 10:00 AM ET"},{k:"audience",label:"Audience",ph:"e.g. Compliance list, Tech list"});
+  if(ch==="events") base.push({k:"eventName",label:"Event",ph:"e.g. MBA Annual Convention"},{k:"eventLink",label:"Event Link",type:"url",ph:"https://…"});
+  if(ch==="matters") base.push({k:"edition",label:"Edition",type:"select",opts:editionsSorted().filter(e=>!e.archived).map(e=>[e.id,monthName(e.month)]),blank:true});
   if(ch==="youtube") base.push({k:"kind",label:"Kind of Video",type:"select",opts:["FRAME","MISMO Initiatives Series","Webinar Recording","Summit","Special Content","Other"]});
   if(ch!=="setup") base.push({sec:"Copy and Links"},{k:"copy",label:ch==="mailchimp"?"Email Copy":"Copy",type:(ch==="linkedin"||ch==="youtube")?"textarea":"rich",rows:7},(ch==="mailchimp"?{k:"reviewLink",label:"Review Link",type:"url",ph:"Paste the Mailchimp preview or share link",hint:"Where the reviewer can open the campaign and look it over before it sends. It shows as a Review button on the Mailchimp page."}:{k:"link",label:"Link It Points To",type:"url"}),{k:"postedUrl",label:ch==="linkedin"?"Link to the Live Post":ch==="mailchimp"?"Link to the Sent Campaign":"Link Once Live",type:"url"},{k:"imageNote",label:"Image",ph:"Where the image is, or reuse from a MISMO Matters section"});
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
@@ -156,7 +158,7 @@ function openPiece(id, seed){
   const sbShow=b=>{ const box=$("#sb-pick",b); if(!box) return; const k=$("#f-kind",b), via=$("#f-via",b);
     const on = ch==="linkedin" ? (k && k.value==="Sponsor Highlight") : (!via || via.value==="LinkedIn");
     box.hidden=!on; const sec=box.closest(".field"); const head=sec && sec.parentElement && sec.parentElement.previousElementSibling; if(sec) sec.hidden=!on; if(head && head.classList.contains("fsec")) head.hidden=!on; };
-  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item")), fields, data:p,
+  openPane({eye:CH[ch]||"Item", title:p.title||(id?"Untitled":"New "+((typeof CAL_ADD!=="undefined"&&(CAL_ADD.find(c=>c[0]===ch)||[])[1])||(CH[ch]&&ch!=="setup"?CH[ch]+" Item":"Setup Item"))), fields, data:p,
     after:b=>{ wireCx(b); if(sbCan){ sbShow(b); const k=$("#f-kind",b), via=$("#f-via",b); if(k) k.addEventListener("change",()=>sbShow(b)); if(via) via.addEventListener("change",()=>sbShow(b)); sbWirePicker(b, p, ch==="summit"?sbSummitName(p.summit):""); } },
     save:async v=>{ if(ch==="linkedin"){ if(v.status==="canceled") v.autoPost=false; else if(v.autoPost && v.status!=="done") v.status="staged"; else if(!v.autoPost && v.status==="staged") v.status="ready"; }
       if(sbCan){ const sp=sbRead($("#pane-body"), p); if(sp) Object.assign(v, sp); }
@@ -508,7 +510,7 @@ window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(TA
      Only a link that names a page (like Amy's email, #micdup) opens that page instead. Old #overview links open Home. */
   const h=location.hash.slice(1);
   try{ sessionStorage.removeItem("mm.tab"); }catch(e){}
-  show(h && TABS.includes(h) && h!=="overview" ? h : "home");
+  show(h && TABS.includes(h) && h!=="home" ? h : "overview");
 })();
 badges();
 connect();

@@ -105,7 +105,7 @@ function amyRemindEmail(w, from){
       '<div style="font-size:15px;line-height:1.6;color:#44607a">Hi Amy, a quick reminder. These are ready for your OK.</div></td></tr>'+
     '<tr><td style="padding:6px 28px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">'+
       w.kits.map(kitRow).join("")+w.secs.map(t=>row(t)).join("")+w.posts.map(t=>row(t)).join("")+'</table></td></tr>'+
-    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/media/#home" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
+    ((w.secs.length||w.posts.length)?'<tr><td style="padding:20px 28px 4px;'+F+'"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="background:#1a8fe3;border-radius:6px"><a href="https://resources.mismo.org/media/" style="display:inline-block;padding:12px 24px;'+F+'font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none">Open MISMO Media</a></td></tr></table><div style="font-size:13px;color:#44607a;line-height:1.6;margin-top:8px">Newsletter sections and posts are approved in MISMO Media; they&rsquo;re listed under On Your Plate when you sign in.</div></td></tr>':'')+
     '<tr><td style="padding:20px 28px 24px;'+F+'font-size:12px;color:#56718a;border-top:1px solid #e5eef5">Sent from MISMO Media'+(from?' by '+esc(from):'')+'.</td></tr>'+
     '</table></td></tr></table>';
 }
@@ -117,7 +117,7 @@ async function remindAmy(){
   try{ await send(LI_APPROVER.email, "Reminder: "+n+" item"+(n===1?"":"s")+" waiting on your approval in MISMO Media", amyRemindEmail(w, window.__hqWho||"")); }
   catch(e){ toast("The reminder didn't send: "+(e.message||"try again"), 6000); return; }
   try{ await put("settings","amy-remind",{at:new Date().toISOString(), by:window.__hqWho||"", count:n}); }catch(e){}
-  toast("Reminder sent to Amy ("+n+" item"+(n===1?"":"s")+")", 4000); if(TAB==="home") renderHome();
+  toast("Reminder sent to Amy ("+n+" item"+(n===1?"":"s")+")", 4000); if(TAB==="home") renderHome(); if(TAB==="overview") renderOverview();
 }
 function amyRemindBar(me){
   if(String(me||"").toLowerCase()==="amy") return "";

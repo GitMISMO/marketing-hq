@@ -22,7 +22,7 @@ const SEC = Object.fromEntries(SECTIONS.map(s=>[s.key,s]));
 const PEOPLE = ["Jonna","Vanessa","Kelly","Amy","Brian","Jonathan","Perry","Kathryn"];
 const SSTAT = {waiting:["Waiting on Content","wait"], in:["Content In","in"], review:["With Amy for Review","review"], changes:["Changes Requested","changes"], approved:["Approved","ok"]};
 const PSTAT = {idea:["Idea","wait"], draft:["Drafting","in"], review:["Ready for Review","review"], ready:["Approved","ok"], staged:["Staged to Post","in"], done:["Posted / Sent","ok"], canceled:["Canceled","changes"]};
-const CH = {matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", request:"Requests", press:"Press Releases", other:"Other"};
+const CH = {events:"Industry Events", matters:"MISMO Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summits", orders:"Orders", community:"Community Posts", news:"In the News", setup:"Setup", request:"Requests", press:"Press Releases", other:"Other"};
 const REUSE = [["linkedin","LinkedIn","LI"],["mailchimp","Mailchimp","MC"],["website","Website","WB"],["youtube","YouTube","YT"],["summit","Summit","SU"]];
 const MILES = [
   ["content","Content Due","Contributors to Kelly"],
@@ -365,7 +365,7 @@ function allEvents(){
   editionsSorted().forEach(ed=>{
     if(ed.archived || !ed.dates) return;
     const nm = MONL[+ed.month.slice(5)-1];
-    MILES.forEach(([k,l])=>{ if(ed.dates[k]) ev.push({date:ed.dates[k], k:"matters", label:"Matters · "+(k==="publish"?nm+" Edition Goes Out":l), done:!!(ed.done&&ed.done[k]), big:k==="publish", who:k==="review"||k==="approve"?"Amy":k==="content"||k==="draft"?"Kelly":"Vanessa", go:()=>{ go("matters"); MS.ed=ed.id; renderMatters(); }}); });
+    MILES.forEach(([k,l])=>{ if(ed.dates[k]) ev.push({date:ed.dates[k], k:"matters", mile:k, label:"Matters · "+(k==="publish"?nm+" Edition Goes Out":l), done:!!(ed.done&&ed.done[k]), big:k==="publish", who:k==="review"||k==="approve"?"Amy":k==="content"||k==="draft"?"Kelly":"Vanessa", go:()=>{ go("matters"); MS.ed=ed.id; renderMatters(); }}); });
   });
   vals("episodes").forEach(ep=>{
     if(!ep.airDate) return;
@@ -386,6 +386,9 @@ function allEvents(){
   if(typeof mnPeriod==="function"){ const per=mnPeriod(), first=T().slice(0,8)+"01", next=add(first,40).slice(0,8)+"01";
     ev.push({date:first, k:"results", label:"Results · Bring In "+mnName(per)+" Numbers", done:(LOADED.has("monthly")||!LIVE) && !mnOpen(per).length, who:"", go:()=>go("results")});
     ev.push({date:next, k:"results", label:"Results · Bring In "+mnName(first.slice(0,7))+" Numbers", done:false, who:"", go:()=>go("results")}); }
+  /* Team HQ's Industry Events (read only, for anyone whose sign-in can read Team HQ) */
+  (OV.te||[]).forEach(x=>{ const st=String(x.start||"").slice(0,10); if(!/^\d{4}-\d\d-\d\d$/.test(st)) return; const en=String(x.end||"").slice(0,10)>=st?String(x.end).slice(0,10):st;
+    let d=st, n=0; while(d<=en && n++<10){ ev.push({date:d, k:"events", label:"Industry Event · "+(x.name||"Event"), done:false, big:true, who:"", go:()=>toast((x.name||"This event")+" is kept in Team HQ's Industry Events.", 4000)}); d=add(d,1); } });
   SUMMITS.forEach(s=>{ let d=s.start; while(d<=s.end){ ev.push({date:d, k:"summit", label:s.name, done:false, big:true, who:"", go:()=>{ go("summits"); SM.id=s.id; renderSummits(); }}); d=add(d,1);} });
   return ev;
 }
@@ -488,15 +491,15 @@ function readFields(fields){
 
 /* ================= navigation ================= */
 const TABS=["home","overview","requests","press","results","matters","micdup","linkedin","youtube","mailchimp","summits","branding","orders","people","lists","news","images","qr","help"];
-let TAB="home";
+let TAB="overview";   /* MISMO Media opens on the Schedule; Home is gone from the menu (Jonna, Nov 27, 2026) */
 function go(tab){ const b=document.querySelector('.hq nav button[data-hq="'+tab+'"]'); if(b) show(tab); }
 function show(tab){
-  if(!TABS.includes(tab)) tab="home";
+  if(!TABS.includes(tab) || tab==="home") tab="overview";
   TAB=tab;
   $$(".hq nav button[data-hq]").forEach(b=>{ if(b.dataset.hq===tab) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current"); });
   TABS.forEach(t=>{ $("#page-"+t).hidden = t!==tab; });
   if(typeof navOpenFor==="function") navOpenFor(tab);
-  /* the address stays clean, so a bookmark, a refresh or a reopened tab starts on Home */
+  /* the address stays clean, so a bookmark, a refresh or a reopened tab starts on the Schedule */
   try{ if(location.hash) history.replaceState(null,"",location.pathname+location.search); }catch(e){}
   renderTab(tab); window.scrollTo(0,0);
 }
@@ -569,27 +572,43 @@ function badges(){
 /* ================= Schedule (overview) ================= */
 const OV = {month:null};
 function evHtml(e){ return '<button type="button" class="ev k-'+e.k+(e.done?" done":"")+(e.x?" x":"")+(e.big?" big":"")+'" title="'+esc(e.label)+'"'+(e.slot?' style="border-style:dashed"':'')+'><i class="dot"></i><span>'+esc(e.label)+'</span></button>'; }
-/* Calendar filter and "+ on a day" (Jonna, Nov 24, 2026: "add calendar filter and add ability to add new comms tracking
-   task to it"). The channels the calendar can show; a new item can be added on any day, for any channel that keeps its
-   own items here (MISMO Matters and Mic'd Up have their own pages). */
-const CAL_CHANS = [["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["community","Community"],["orders","Orders"],["setup","Setup"],["other","Other"]];
-const CAL_ADD = [["linkedin","LinkedIn Post"],["mailchimp","Mailchimp Send"],["community","Community Post"],["summit","Summit Push"],["youtube","YouTube Video"],["other","Other Comms Task"],["setup","Setup Task"]];
+/* The Schedule's categories (Jonna, Nov 27, 2026): the calendar, its filter, Next Two Weeks and + New Item all use the
+   same eight, one for each kind of work in the menu. Setup tasks, orders, requests and the monthly numbers stay on
+   their own pages. Earlier: a channel filter and "+ on a day" (Nov 24, 2026). */
+const CAL_CHANS = [["press","Press Releases"],["matters","MISMO Matters"],["micdup","Mic'd Up"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["summit","Summits"],["events","Industry Events"]];
+const CAL_ADD = [["press","Press Release"],["matters","MISMO Matters"],["micdup","Mic'd Up Episode"],["linkedin","LinkedIn Post"],["youtube","YouTube Video"],["mailchimp","Mailchimp Send"],["summit","Summit"],["events","Industry Event"]];
+const calCat = e=>CAL_CHANS.some(c=>c[0]===e.k) ? e.k : "";
+/* the housekeeping steps that aren't work to plan around (Jonna: "remove stuff like stats recorded") */
+const AG_SKIP = {matters:["stats"]};
 try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.isArray(v)) OV.chans=v; }catch(e){}
+/* a new item of one kind: a Mic'd Up episode on the Friday of that week (or the next open Friday), anything else a
+   Schedule item on that day (or today) */
+function newItem(k, date){
+  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) while(epOn(f)) f=add(f,7); newEpisode(f); return; }
+  newPiece(k, date?{date}:{});
+}
 function calAdd(btn, date){
-  const one=(OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
-  if(one){ newPiece(one, {date}); return; }
+  const one=date && (OV.chans||[]).length===1 && CAL_ADD.some(c=>c[0]===OV.chans[0]) ? OV.chans[0] : "";
+  if(one){ newItem(one, date); return; }
   document.querySelectorAll(".calmenu").forEach(m=>m.remove());
   const m=document.createElement("div"); m.className="calmenu"; m.setAttribute("role","menu");
-  m.innerHTML='<small>Add on '+esc(fD(date))+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
+  m.innerHTML='<small>'+(date?'Add on '+esc(fD(date)):'Add a New Item')+'</small>'+CAL_ADD.map(([k,l])=>'<button type="button" role="menuitem" data-k="'+k+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("");
   document.body.appendChild(m);
-  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12))+"px";
+  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.max(window.scrollX+8, Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12)))+"px";
   const close=()=>{ m.remove(); document.removeEventListener("click", away, true); document.removeEventListener("keydown", esc_); };
   const away=e=>{ if(!m.contains(e.target)) close(); }, esc_=e=>{ if(e.key==="Escape"){ close(); btn.focus(); } };
   setTimeout(()=>{ document.addEventListener("click", away, true); document.addEventListener("keydown", esc_); },0);
-  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newPiece(b.dataset.k, {date}); });
+  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newItem(b.dataset.k, date); });
   const f=m.querySelector("button"); if(f) f.focus();
 }
+/* Team HQ's Industry Events for the calendar: read once when the Schedule opens and then every 30 minutes */
+function ovTeamEvents(){
+  if(!window.__hqTeamEvents || OV.teBusy || Date.now()-(OV.teAt||0)<30*60000) return;
+  OV.teBusy=true; OV.teAt=Date.now();
+  window.__hqTeamEvents().then(list=>{ OV.te=(list||[]).filter(x=>x && !x.archived && x.status!=="canceled" && x.status!=="cancelled"); if(TAB==="overview") renderOverview(); }, ()=>{}).then(()=>{ OV.teBusy=false; });
+}
 function renderOverview(){
+  ovTeamEvents();
   const el=$("#page-overview"); const ev=allEvents(); const t=T();
   const ed=curEdition();
   const over=ev.filter(isOver);
@@ -598,7 +617,6 @@ function renderOverview(){
   const secs = ed? edSections(ed).filter(s=>s.on) : [];
   const inN = secs.filter(s=>s.meta.auto || s.doc.status!=="waiting").length;
   const amyKits = kitsWithAmy().length; const amy = secs.filter(s=>s.doc.status==="review").length + vals("pieces").filter(p=>p.status==="review").length + amyKits;
-  const setupOpen = vals("pieces").filter(p=>p.channel==="setup" && p.status!=="done");
   // next milestone sentence
   let say='';
   if(ed && ed.dates){
@@ -608,14 +626,13 @@ function renderOverview(){
   }
   if(over.length) say += '<span class="hot">'+over.length+' item'+(over.length>1?"s are":" is")+' past due.</span> ';
   { const nr=requests().filter(r=>r.status==="new").length; if(nr) say += '<span class="hot">'+nr+' new request'+(nr>1?"s":"")+' to review.</span> '; }
-  if(setupOpen.length) say += setupOpen.length+' setup item'+(setupOpen.length>1?"s":"")+' still open.';
   // calendar month
   if(!OV.month) OV.month = t.slice(0,7);
   const [yy,mm]=OV.month.split("-").map(Number);
   const first=new Date(yy,mm-1,1); const startOff=(first.getDay()+6)%7; let d=new Date(yy,mm-1,1-startOff);
   /* the calendar's channel filter (Nov 24, 2026): pick one or more channels; none picked shows everything */
   OV.chans=(OV.chans||[]).filter(k=>CAL_CHANS.some(c=>c[0]===k));
-  const calOn=e=>!OV.chans.length || OV.chans.includes(e.k==="news"||e.k==="press"||e.k==="request"?"other":e.k);
+  const calOn=e=>{ const c=calCat(e); return !!c && (!OV.chans.length || OV.chans.includes(c)); };
   const byDate={}; ev.filter(calOn).forEach(e=>{ (byDate[e.date]=byDate[e.date]||[]).push(e); });
   let cal='<div class="cal">'+["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(x=>'<div class="dh">'+x+'</div>').join("");
   for(let i=0;i<42;i++){
@@ -626,8 +643,8 @@ function renderOverview(){
     d.setDate(d.getDate()+1);
   }
   cal+='</div>';
-  // agenda: next 14 days + overdue (setup tasks live in Getting Set Up, so they aren't repeated here)
-  const ag = ev.filter(e=>!e.done && e.k!=="setup" && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && e.k==="summit")).sort((a,b)=>a.date<b.date?-1:1);
+  // agenda: next 14 days + overdue, the same categories the calendar shows, without housekeeping steps
+  const ag = ev.filter(e=>calOn(e) && !e.done && !(e.mile && (AG_SKIP[e.k]||[]).includes(e.mile)) && ((e.date>=t && e.date<=add(t,13)) || isOver(e)) && !(e.big && (e.k==="summit"||e.k==="events"))).sort((a,b)=>a.date<b.date?-1:1);
   const agList = [];
   const agItem = (e, late)=>{ const i=agList.push(e)-1; const tt=agTitle(e);
     return '<button type="button" class="agi k-'+e.k+(e.big?" big":"")+(e.slot?" slot":"")+'" data-agi="'+i+'"><span class="agk">'+esc(CHS[e.k]||CH[e.k]||"Other")+'</span><span class="tt">'+esc(tt)+(late?' <span class="agl">'+esc(fS(e.date))+'</span>':'')+'</span>'+whoHtml(e.who)+'</button>'; };
@@ -644,20 +661,8 @@ function renderOverview(){
       Object.keys(weeks[w]).sort().map(ds=>{ const d=P(ds);
         return '<div class="agday'+(ds===t?" today":"")+'"><div class="agdate'+(ds===t?" today":"")+'"><small>'+(ds===t?"Today":esc(["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][d.getDay()]))+'</small><b>'+d.getDate()+'</b><small>'+esc(MON[d.getMonth()])+'</small></div><div class="agitems">'+weeks[w][ds].map(e=>agItem(e,false)).join("")+'</div></div>'; }).join("")+'</div>';
   });
-  // Getting Set Up: progress, open items grouped by when they're due, finished items tucked away
-  const setup = vals("pieces").filter(p=>p.channel==="setup" && !p.archived).sort((a,b)=>((a.date||"9")<(b.date||"9")?-1:1));
-  const sDone = setup.filter(p=>p.status==="done"), sOpen = setup.filter(p=>p.status!=="done");
-  const sPct = setup.length ? Math.round(sDone.length/setup.length*100) : 0;
-  const sGroups = [["Past Due", sOpen.filter(p=>p.date&&p.date<t), "late"], ["This Week", sOpen.filter(p=>p.date&&p.date>=t&&p.date<=add(thisWk,6)), "soon"], ["Coming Up", sOpen.filter(p=>p.date&&p.date>add(thisWk,6)), ""], ["No Date Yet", sOpen.filter(p=>!p.date), ""]].filter(g=>g[1].length);
-  const sRow = p=>{ const dn=p.status==="done", late=!dn&&p.date&&p.date<t, soon=!dn&&!late&&p.date&&p.date<=add(thisWk,6);
-    return '<div class="chk'+(dn?" done":"")+'"><input type="checkbox" data-done="'+esc(p.id)+'"'+(dn?" checked":"")+' aria-label="Mark done: '+esc(p.title||"")+'"><button type="button" class="lnk ct" data-open="'+esc(p.id)+'"><b>'+esc(p.title||"Untitled")+'</b>'+(p.notes?'<small>'+esc(mdPlain(p.notes))+'</small>':'')+'</button><div class="meta">'+(p.date?'<span class="due'+(late?" late":soon?" soon":"")+'">'+esc(dn&&p.doneOn?fS(p.doneOn):fS(p.date))+'</span>':'')+whoHtml(p.owner)+'</div></div>'; };
-  const setupHtml = '<div class="sprog"><div class="sprog-t"><b>'+sDone.length+' of '+setup.length+' done</b><span>'+sPct+'%</span></div><div class="sbar"><i style="width:'+sPct+'%"></i></div></div>'+
-    (sGroups.map(g=>{ const cap = g[0]==="Coming Up" && !OV.showLater && g[1].length>5 ? 4 : g[1].length;
-      return '<div class="sgrp '+g[2]+'"><div class="agwh">'+esc(g[0])+'<span>'+g[1].length+'</span></div><div class="checks">'+g[1].slice(0,cap).map(sRow).join("")+'</div>'+
-        (g[0]==="Coming Up" && g[1].length>5 ? '<button type="button" class="sdone-t smore" id="ov-slater">'+(OV.showLater?"Show fewer":"Show "+(g[1].length-cap)+" more coming up")+'</button>' : '')+'</div>'; }).join("") || (setup.length?'<div class="empty sdone-all">Everything is set up.</div>':'<div class="empty">Nothing to set up.</div>'))+
-    (sDone.length?'<button type="button" class="sdone-t" id="ov-sdone" aria-expanded="'+(!!OV.showDone)+'">'+(OV.showDone?"Hide":"Show")+' '+sDone.length+' finished</button>'+(OV.showDone?'<div class="sgrp done"><div class="checks">'+sDone.slice().reverse().map(sRow).join("")+'</div></div>':''):'');
   el.innerHTML =
-    '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send and summit push, on one calendar.</div></div>'+
+    '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every press release, MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send, summit and industry event, on one calendar.</div></div>'+
     '<div class="tools"><button class="btn" type="button" id="ov-newpiece">+ New Item</button></div></div>'+
     '<div class="band"><div class="today">Today · '+esc(fL(t))+'</div><div class="say">'+say+'</div><div class="tiles">'+
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
@@ -666,17 +671,13 @@ function renderOverview(){
       '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
       '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
       '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
-    '</div></div>'+
-    '<div class="card"><div class="ch"><h2>The Next Four Weeks</h2><span class="note">every channel, one line each · hover a marker for what it is</span></div>'+lanesHtml(ev)+'</div>'+
+    '</div>'+(typeof amyRemindBar==="function"?amyRemindBar(String(window.__hqWho||"").split(" ")[0]):'')+'</div>'+
     '<div class="card"><div class="ch"><h2>Calendar</h2><div class="r calnav"><button class="btn sm" type="button" id="cal-prev" aria-label="Previous month">←</button><span class="m">'+esc(MONL[mm-1]+" "+yy)+'</span><button class="btn sm" type="button" id="cal-next" aria-label="Next month">→</button><button class="btn sm" type="button" id="cal-today">Today</button></div></div>'+
       '<div class="calfil" role="group" aria-label="Show on the calendar"><span>Show</span><button type="button" data-calch="" aria-pressed="'+!OV.chans.length+'">All</button>'+
         CAL_CHANS.map(([k,l])=>'<button type="button" data-calch="'+k+'" aria-pressed="'+OV.chans.includes(k)+'"><i class="dot k-'+k+'"></i>'+esc(l)+'</button>').join("")+'</div>'+
       '<div class="cb flush">'+cal+'</div>'+
-      '<div class="legend">'+["matters","micdup","linkedin","youtube","mailchimp","summit","community","setup"].map(k=>'<span><i class="dot k-'+k+'"></i>'+esc(CH[k])+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
-    '<div class="grid2" style="margin-top:22px">'+
-      '<div class="card agcard"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">setup tasks are under Getting Set Up</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks.</div>')+'</div></div>'+
-      '<div class="card setcard"><div class="ch"><h2>Getting Set Up</h2><span class="cnt">'+sOpen.length+' open</span><div class="r"><button class="btn sm" type="button" id="ov-newsetup">+ Add</button></div></div>'+setupHtml+'</div>'+
-    '</div>';
+      '<div class="legend">'+CAL_CHANS.map(([k,l])=>'<span><i class="dot k-'+k+'"></i>'+esc(l)+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
+    '<div class="card agcard" style="margin-top:22px"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">'+(OV.chans.length?'only '+esc(OV.chans.map(k=>(CAL_CHANS.find(c=>c[0]===k)||[k,k])[1]).join(", "))+', like the calendar':'the same as the calendar shows')+'</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks'+(OV.chans.length?' for what the calendar is showing':'')+'.</div>')+'</div></div>';
   // wire
   $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
   $("#cal-prev",el).onclick=()=>{ OV.month=iso(new Date(yy,mm-2,1)).slice(0,7); renderOverview(); };
@@ -686,14 +687,11 @@ function renderOverview(){
   $$("[data-calch]",el).forEach(b=>b.onclick=()=>{ const k=b.dataset.calch; if(!k) OV.chans=[]; else OV.chans=OV.chans.includes(k)?OV.chans.filter(x=>x!==k):OV.chans.concat([k]); try{ localStorage.setItem("mm.cal.chans", JSON.stringify(OV.chans)); }catch(e){} renderOverview(); });
   $$("[data-add]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); calAdd(b, b.dataset.add); });
   $$(".agi",el).forEach(b=>b.onclick=()=>agList[+b.dataset.agi].go());
-  const sd=$("#ov-sdone",el); if(sd) sd.onclick=()=>{ OV.showDone=!OV.showDone; renderOverview(); };
-  const sl=$("#ov-slater",el); if(sl) sl.onclick=()=>{ OV.showLater=!OV.showLater; renderOverview(); };
-  $("#ov-newpiece",el).onclick=()=>newPiece("linkedin");
-  $("#ov-newsetup",el).onclick=()=>newPiece("setup");
-  wireChecks(el); wireLanes(el);
+  const nb=$("#ov-newpiece",el); nb.setAttribute("aria-haspopup","menu"); nb.onclick=e=>{ e.stopPropagation(); calAdd(nb, ""); };
+  const rb=$("#hm-remind",el); if(rb) rb.onclick=async()=>{ rb.disabled=true; try{ await remindAmy(); } finally{ rb.disabled=false; } };
 }
 /* short channel names for the agenda tags, and the owner badge */
-const CHS = {matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", request:"Request", press:"Press", other:"Other"};
+const CHS = {events:"Event", matters:"Matters", micdup:"Mic'd Up", linkedin:"LinkedIn", youtube:"YouTube", mailchimp:"Mailchimp", summit:"Summit", orders:"Order", community:"Community", news:"News", setup:"Setup", request:"Request", press:"Press", other:"Other"};
 function agTitle(e){ let l=String(e.label||""); [CH[e.k], CHS[e.k]].forEach(p=>{ if(p && l.indexOf(p+" · ")===0) l=l.slice(p.length+3); else if(p && l.indexOf(p+" ")===0 && e.k==="micdup") l=l.slice(p.length+1); }); return l; }
 const WHO_TONE = {Jonna:1,Vanessa:2,Kelly:3,Amy:4,Brian:5,Jonathan:6,Perry:7,Kathryn:8};
 function whoHtml(w){ if(!w) return '<span class="who none"></span>'; return '<span class="who" title="'+esc(w)+'"><i class="av t'+(WHO_TONE[w]||0)+'">'+esc(w.charAt(0))+'</i><span class="wn">'+esc(w)+'</span></span>'; }

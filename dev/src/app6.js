@@ -33,34 +33,15 @@ const HELP = [
    <li><b>Delete</b> always asks you to press it twice.</li>
    <li><b>Dates</b> can be typed the way you'd write them (11/18/26, Nov 18) or picked from the calendar button beside the box.</li>
   </ul>`},
- {id:"home", t:"Home: the Studio", g:"Basics", b:`
-  <p><b>Home</b> is the first page. It shows everything MISMO is putting out, live, as a studio of screens. Click any screen to go there.</p>
-  <ul>
-   <li><b>The top band</b> says good morning, what's coming (the next Mic'd Up episode, the next MISMO Matters send, the next summit) and how many items are past due. <b>On Your Plate</b> lists what's yours in the next seven days, from your name on the schedule.</li>
-   <li><b>The week</b> runs across the top of the studio, one day per box, with a colored bar for each thing due (the channel colors). Click a day for the full schedule.</li>
-   <li><b>The screens:</b> Mic'd Up (on air, with a live countdown to Friday 8:30 AM ET and the episode's steps), MISMO Matters (a picture of the newsletter, colored by where each section stands), Summits (the countdown ring fills as marketing tasks are done), YouTube (what's waiting to upload), LinkedIn (the next post), Mailchimp (the next send), Requests, In the News, and <b>In MISMO Media</b>, the running totals.</li>
-   <li><b>How It All Connects</b> (the switch next to the Studio heading) shows the same things as a map of how work flows from what comes in to what goes out, with Follow the Story for the next episode and edition. Your choice is remembered.</li>
-  </ul>`},
- {id:"who", t:"Who Does What", g:"Basics", b:`
-  <table class="t"><thead><tr><th>Person</th><th>What They Do Here</th></tr></thead><tbody>
-   <tr><td><b>Kelly</b></td><td>Collects MISMO Matters content and drops each piece into its section as it arrives. Sends sections to Amy for review. Keeps the subscriber and downloader lists loaded. Owns most summit marketing tasks.</td></tr>
-   <tr><td><b>Amy</b></td><td>Reviews and edits sections, then approves them or sends them back with notes. Gives final approval before a send. Approves who is quoted in each press release by replying to an email. Runs Engagements &amp; Events (MISMO on the Move) and onsite summit moments.</td></tr>
-   <tr><td><b>Vanessa</b></td><td>Builds each edition in Higher Logic from the HTML, runs the Mic'd Up YouTube upload and Tuesday LinkedIn post, posts press releases on MISMO Connect, logs In the News, and records stats.</td></tr>
-   <tr><td><b>Perry</b></td><td>Owns press releases: reviews Claude's first draft of each MMS announcement, picks who to quote, sends the quote request as himself, puts in the approved quote and gives final approval before it goes to MISMO Connect, MBA and MISMO Matters.</td></tr>
-   <tr><td><b>Jonna</b></td><td>Owns the system, the lists and unsubscribes, the Higher Logic setup and the automations.</td></tr>
-   <tr><td><b>Brian</b></td><td>Writes the President's Vieaux Point and records Mic'd Up. Sends each guest the guest form, then drops the finished video, thumbnails and transcript into the episode's SharePoint folder. MISMO Media does the rest.</td></tr>
-   <tr><td><b>Contributors</b></td><td>Facilitators (through Kathryn), sponsors and members send copy, quotes and headshots to Kelly. They don't need to log in.</td></tr>
-  </tbody></table>`},
  {id:"schedule", t:"The Schedule", g:"Pages", b:`
-  <p>The Schedule page is the overview of everything.</p>
+  <p>MISMO Media opens on the Schedule, the overview of everything. (Home, the Studio, is gone from the menu since Nov 27, 2026; a bookmark to it opens the Schedule.)</p>
   <ul>
-   <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page.</li>
-   <li><b>The Next Four Weeks</b> shows one line per channel. Each marker is a day with something due; hover for what it is, click to open it. A filled marker is open, a check is done, a dashed outline is an open Mic'd Up slot, and a pulsing red marker is past due.</li>
-   <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back.</li>
-   <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. Each line shows its channel and who owns it; click a line to open it. Setup tasks aren't repeated here; they're under Getting Set Up.</li>
-   <li><b>Getting Set Up</b> is the checklist for launching the system. The bar shows how much is done. Open items are grouped into Past Due, This Week and Coming Up; finished items are tucked under <b>Show finished</b>. Tick items off as they're done; <b>+ Add</b> puts a new one on it.</li>
-  </ul>
-  <p>Colors match everywhere: MISMO Matters blue, Mic'd Up orange, LinkedIn aqua, YouTube pink, Mailchimp gold, Summits green, Community Posts purple, Setup navy.</p>`},
+   <li><b>The navy band</b> says what's next for MISMO Matters and how many items are past due. Click a box to jump to that page. When anything is waiting on Amy, the band shows how many, with <b>Remind Amy</b>.</li>
+   <li><b>+ New Item</b> asks what kind: Press Release, MISMO Matters, Mic'd Up Episode, LinkedIn Post, YouTube Video, Mailchimp Send, Summit or Industry Event. A Mic'd Up episode goes on the next open Friday; the rest start on today's date. The <b>+</b> on a calendar day does the same for that day (straight to the kind when one kind is picked under Show).</li>
+   <li><b>Calendar</b> is the month view. Use the arrows to move months and Today to come back. <b>Show</b> picks one or more of the same eight kinds (All shows all eight); your choice is remembered. Industry events come from Team HQ's Industry Events for anyone whose sign-in can read Team HQ.</li>
+   <li><b>Next Two Weeks</b> lists what's due by day, grouped into this week and next, with anything past due in red at the top. It shows what the calendar shows: the same eight kinds, and only the ones picked under Show. Housekeeping steps like Stats Recorded aren't listed. Each line shows its kind and who owns it; click a line to open it.</li>
+   <li>Setup tasks, orders, requests and the monthly numbers stay on their own pages (Requests, Orders, Results); they aren't on the Schedule.</li>
+  </ul>`},
  {id:"requests", t:"Requests and the Request Form", g:"Pages", b:`
   <p>Staff and facilitators send marketing and communications requests through one form. Every request lands on the <b>Requests</b> page, where the team reviews it and turns it into work.</p>
   <ul>
@@ -146,7 +127,7 @@ const HELP = [
    <li><b>Start the edition.</b> On MISMO Matters, press <b>Start the Next Edition</b>. It creates the next month with all thirteen sections, waiting for content.</li>
    <li><b>Drop content in as it arrives.</b> Click a section, paste the headline, body copy, quote and link, add the image, and press <b>Save</b>. There's no need to wait for everything.</li>
    <li><b>Send each section to Amy.</b> <b>Save &amp; Send to Amy</b> marks it "With Amy for Review" and it shows in her count.</li>
-   <li><b>Reminding Amy:</b> when anything is waiting on her, Home's On Your Plate box shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
+   <li><b>Reminding Amy:</b> when anything is waiting on her, the Schedule's navy band shows how many, with <b>Remind Amy</b>. It sends her one email listing everything waiting: Mic'd Up wording keeps its Approve and Request Changes reply buttons, and sections and posts link to MISMO Media. It notes who reminded her and when, and asks before reminding again within four hours.</li>
    <li><b>Amy reviews.</b> She edits right in the section, then presses <b>Approve</b>, or writes in <b>Amy's Notes</b> and presses <b>Request Changes</b> to send it back.</li>
    <li><b>Check the preview.</b> <b>Preview &amp; HTML</b> shows the email as readers will see it, on desktop or phone.</li>
    <li><b>Build it in Higher Logic.</b> Press <b>Copy HTML for Higher Logic</b>, open the message in Informz, and replace everything in its HTML tab with it. <b>Copy Plain Text</b> is the text-only version.</li>
@@ -481,7 +462,7 @@ const HELP = [
    <dt>Copy HTML doesn't copy.</dt><dd>A box opens with the HTML already selected. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> (<kbd>⌘</kbd>+<kbd>C</kbd>).</dd>
    <dt>An episode is on YouTube but the page says it isn't.</dt><dd>The YouTube list refreshes every few hours. Open the episode, tick "Posted to YouTube" and paste the link.</dd>
    <dt>An article ran last month but wasn't in that edition.</dt><dd>Open it and set "Goes in MISMO Matters" to this month.</dd>
-   <dt>Where do I add something that isn't on any page?</dt><dd>Use <b>+ New Item</b> on the Schedule, or + Add under Getting Set Up.</dd>
+   <dt>Where do I add something that isn't on any page?</dt><dd>Use <b>+ New Item</b> on the Schedule and pick what kind it is.</dd>
   </dl>`}
 ];
 const HL = {id:"start", q:""};

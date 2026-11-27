@@ -366,7 +366,7 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 :root[data-theme="dark"] .chip.in{color:var(--sky)}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .chip.in{color:var(--sky)}}
 .dot{display:inline-block;width:9px;height:9px;border-radius:2px;flex:0 0 auto}
-.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)} .k-request{--k:#c0582b} .k-press{--k:#2477b8}
+.k-matters{--k:var(--c1)} .k-micdup{--k:var(--c2)} .k-linkedin{--k:var(--c3)} .k-youtube{--k:var(--c5)} .k-mailchimp{--k:var(--c4)} .k-summit{--k:var(--c6)} .k-orders{--k:var(--warn)} .k-news{--k:var(--ink-3)} .k-setup{--k:var(--navy-mid)} .k-community{--k:#8a6bd1} .k-other{--k:var(--ink-3)} .k-request{--k:#c0582b} .k-press{--k:#7b8fa6} .k-events{--k:#8a6bd1}
 .dot{background:var(--k,var(--ink-3))}
 .ticks{display:inline-flex;gap:3px;align-items:center}
 .tk{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:700;border:1px solid var(--border-strong);color:var(--ink-3)}
@@ -1513,6 +1513,10 @@ body.railmini #hh-btn .hh-dot{left:24px;top:7px}
 .rs-mc{border:1px solid var(--border);border-radius:4px;padding:3px 8px;background:var(--surface);font-weight:600;color:var(--ink-2)}
 .rs-mc.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 35%,var(--border))}
 .rs-band .tiles{grid-template-columns:repeat(auto-fit,minmax(128px,1fr))}
+/* the Schedule's six tiles: 6, 3 or 2 to a row, never one left alone (Nov 27, 2026) */
+#page-overview .band .tiles{grid-template-columns:repeat(6,minmax(0,1fr))}
+@media(max-width:1280px){#page-overview .band .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){#page-overview .band .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .rs-band .tile .v{font-size:25px}
 .rs-sec{margin-bottom:22px}
 .rs-sec .ch .sp{flex:1}
