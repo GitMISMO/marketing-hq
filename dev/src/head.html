@@ -168,6 +168,10 @@ main select{max-width:260px}
 .phead h1{font-size:27px;font-weight:700;line-height:1.15;color:var(--ink)}
 .phead .sub{color:var(--ink-2);font-size:13.5px;margin-top:3px}
 .phead .tools{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+/* the title block takes the room and the buttons sit beside it, not on a line of their own under a long description (Nov 27, 2026) */
+.phead>div:first-child{flex:1 1 360px;min-width:0}
+.phead>div:first-child .sub{max-width:78ch}
+.phead .tools{flex:0 1 auto;min-width:0}
 .field{display:flex;flex-direction:column;gap:4px;min-width:0}
 .field>label,.flabel{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--ink-3)}
 select,input[type=text],input[type=number],input[type=url],input[type=search].plain,textarea{
