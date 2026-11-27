@@ -26,11 +26,11 @@ const go=async t=>{ await p.click('.hq nav button[data-hq="'+t+'"]'); await p.wa
 const press=async sel=>{ const r=await p.evaluate(s=>{ const b=document.querySelector(s).getBoundingClientRect(); return {x:b.x+b.width/2,y:b.y+b.height/2}; },sel); await p.mouse.click(r.x,r.y); };
 const back=async()=>{ await p.evaluate(()=>history.back()); await p.waitForTimeout(1000); };
 const fwd=async()=>{ await p.evaluate(()=>history.forward()); await p.waitForTimeout(1000); };
-let st=await state(); out.helper=st.helper; const start=st.tab; out.opensHome=start==='home';
-await go('overview'); await go('lists'); await go('help');
+let st=await state(); out.helper=st.helper; const start=st.tab; out.opensSchedule=start==='overview';   /* MISMO Media opens on the Schedule since Nov 27, 2026 (Home is gone) */
+await go('results'); await go('lists'); await go('help');
 st=await state(); out.helpOpens=st.tab==='help';
 await back(); st=await state(); out.backToLists=st.tab==='lists';
-await back(); st=await state(); out.backToSchedule=st.tab==='overview';
+await back(); st=await state(); out.backToResults=st.tab==='results';
 await fwd(); st=await state(); out.forwardToLists=st.tab==='lists';
 await back(); await back(); st=await state(); out.backToStart=st.tab===start;
 /* a record's panel: Back closes it and stays on the page */
