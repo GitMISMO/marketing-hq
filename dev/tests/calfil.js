@@ -21,12 +21,12 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   document.querySelector('[data-calch=""]').click(); await wait(100); seen=null;
   day().querySelector("[data-add]").click(); await wait(80);
   const menu=document.querySelector(".calmenu");
-  out.menu=!!menu && /Other Comms Task/.test(menu.innerText) && /Mailchimp Send/.test(menu.innerText);
-  menu.querySelector('[data-k="other"]').click(); await wait(50);
-  out.addPicked=!!seen && seen.ch==="other" && seen.seed.date===d1 && !document.querySelector(".calmenu");
+  out.menu=!!menu && /Press Release/.test(menu.innerText) && /Industry Event/.test(menu.innerText) && /Mailchimp Send/.test(menu.innerText) && !/Setup|Other Comms/.test(menu.innerText);
+  menu.querySelector('[data-k="events"]').click(); await wait(50);
+  out.addPicked=!!seen && seen.ch==="events" && seen.seed.date===d1 && !document.querySelector(".calmenu");
   window.newPiece=keep;
   /* the real pane opens with the date filled in */
-  newPiece("other",{date:d1}); await wait(150); const di=[...document.querySelectorAll("input[type=date]")].find(i=>i.value===d1);
+  newPiece("events",{date:d1}); await wait(150); const di=[...document.querySelectorAll("input[type=date]")].find(i=>i.value===d1);
   out.pane=!!di && di.value===d1; if(typeof closePane==="function") closePane();
   /* downloads: date filter */
   const now=Date.now(), dayAgo=n=>new Date(now-n*864e5).toISOString();
