@@ -4,8 +4,9 @@ Newest first. One line per change people would notice, plus anything that change
 
 ## 2026-11-28 · Bring In the Numbers, corrected
 
-- Jonna: "is bring in the numbers tile correct?" It wasn't: it counted Mailchimp as fully automatic, said YouTube comes in every morning (GitHub usually runs that read in the afternoon), told people to drop exports that aren't needed any more, and was tagged By Hand.
-- The card now reads "2 of 4 fully automatic, 1 partly" (YouTube once a day, LinkedIn every 3 hours, Mailchimp partly by hand, MISMO Matters by hand) and shows how many Mailchimp sends are waiting for their real numbers. Its panel starts with **Still Needs Someone** (MISMO Matters' stats with Record Stats, and any Mailchimp send waiting for its real opens and clicks, each with Open), then how each channel comes in, then the export drops marked as only needed if an automatic read stops.
+- Jonna: "is bring in the numbers tile correct?" It wasn't: it counted Mailchimp as fully automatic, said YouTube comes in every morning and LinkedIn every 3 hours (GitHub runs the YouTube read once a day, usually in the afternoon, and the 3-hourly reads only two or three times a day), told people to drop exports that aren't needed any more, and was tagged By Hand.
+- The card now reads "2 of 4 fully automatic, 1 partly" (YouTube once a day, LinkedIn a few times a day, Mailchimp partly by hand, MISMO Matters by hand) and shows how many Mailchimp sends are waiting for their real numbers. Its panel starts with **Still Needs Someone** (MISMO Matters' stats with Record Stats, and any Mailchimp send waiting for its real opens and clicks, each with Open), then how each channel comes in, then the export drops marked as only needed if an automatic read stops.
+- System Health no longer warns about LinkedIn or the website after 8 hours (16 now) or Mailchimp after 14 (20 now), since GitHub runs those schedules less often than set.
 
 ## 2026-11-28 · Mailchimp: whole list against whole list
 
