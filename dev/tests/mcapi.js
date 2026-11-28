@@ -6,7 +6,7 @@ const {chromium}=require('playwright');
 const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto('file://'+process.cwd()+'/live.html');await p.waitForTimeout(2500);
 const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,ms)); const out={};
-  if(typeof mcNeedsReal!=="function") return {ok:true, skipped:"the page this was built from predates the bot split"};
+  if(typeof mcNeedsReal!=="function" || typeof rsMcWhole!=="function") return {ok:true, skipped:"the page this was built from predates the bot split"};
   document.querySelectorAll('[id^=mn-pop]').forEach(e=>e.remove());
   out.notYet=!mcLive() && rsSrc("mc").a==="hand";
   S.mailchimp={_run:{waiting:true, ok:false, error:"Not connected yet: the MAILCHIMP_API_KEY secret isn't set on marketing-hq-data", at:new Date().toISOString()}}; LOADED.add("mailchimp");
@@ -35,6 +35,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const chip=document.querySelector('[data-rs-open="mc"] .rs-src'); out.chip=!!chip && chip.textContent==="Partly by Hand";
   rsOpen("mc"); await wait(250); const pb=document.getElementById("pane-body").innerText;
   out.botsBox=/Real People and Bots/i.test(pb) && /Bot Opens Left Out/i.test(pb) && /counting bots/.test(pb) && /Real Numbers Due/i.test(pb);
+  out.wholeList=!!document.querySelector("#pane-body #rs-mcwhole") && /Whole List Against Whole List/i.test(document.querySelector("#pane-body #rs-mcwhole").innerText) && !/Test B RESEND/i.test(document.querySelector("#pane-body #rs-mcwhole").innerText);
   closePane(true); RSP.range="30";
   S.mailchimp={_run:{ok:false, at:now, lastOk:"", error:"Mailchimp 401: bad key"}}; out.healthBad=hhMailchimp().level==="bad" && !mcLive();
   ["mct-a","mct-b","mc-ccc333"].forEach(k=>delete S.pieces[k]); S.mailchimp={};
