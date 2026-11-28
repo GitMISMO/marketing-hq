@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Mailchimp numbers read automatically
+
+- Jonna: "is there a mailchimp api thing like linkedin we can do?" A new **Mailchimp reports** workflow in marketing-hq-data reads every sent campaign's report through Mailchimp's API every 6 hours (read only) into data/mailchimp.json. MISMO Media fills each campaign's numbers into its Mailchimp record (by campaign id, or the same subject within a day) and adds campaigns nobody logged. Results tags Mailchimp **Automatic** once it reads, the monthly Mailchimp line ticks itself, and System Health has a Mailchimp Reports row. Needs the MAILCHIMP_API_KEY secret; until then Mailchimp stays By Hand.
+
 ## 2026-11-28 · Results: last 30 days, and what's automatic or by hand
 
 - Jonna: "results default to last 30 days". Results opens on Last 30 Days; another pick holds until MISMO Media is closed (it was remembered in the browser and started on This Year).
