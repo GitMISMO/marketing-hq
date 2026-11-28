@@ -2,6 +2,12 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · No Mic'd Up on holiday Fridays
+
+- Brian: no Mic'd Up on Nov 27, Dec 25 or Jan 1. A Friday that's a MISMO holiday is now a **No Episode** Friday: the Schedule doesn't ask for an episode, the Mic'd Up page and The Weekly Run show it as No Episode with the holiday's name, and + Add Episode or + New Item puts a new episode on the next open Friday.
+- Winter Break 2026 (Dec 25 to Jan 1) added to the holidays, so deadlines move off it too.
+- Episode 4 (guest to come), which was down for Nov 27, moved to Friday, Dec 4.
+
 ## 2026-11-27 · MyMISMO: Summit Alerts and Slides move here from Summit HQ (CN-063)
 
 - Approved by Jonna Nov 27, 2026: the MyMISMO page has **Summit Alerts** and **Slides**, moved from Summit HQ so everything about the app is in one place. Summit Alerts: write a title (80) and message (300), optionally pick the session it's about (from the website agenda), see it on a phone, and press **Send to Phones** (only for the people Jonna named in MyMISMO, and only once MyMISMO's alerts are switched on; nothing sends on its own). It shows how many phones it reached and keeps a list of what was sent (new collection `mymismoalerts`). Slides: **Add Slides** on each agenda session (PDF or PowerPoint, up to 25 MB), stored in the private data repo in Summit HQ's chunked format (`data/slide-<id>.json` plus parts) and listed for MyMISMO in `data/feed-mymismo-slides.json`, the same shape as Summit HQ's (new collection `mymismoslides`; taking a file off keeps it). The MyMISMO menu item now shows for everyone who can save, for these two parts; Attendee Reports and MISMO Trivia still show only for MyMISMO's people. Summit HQ had no slides or alerts stored, so there was nothing to copy. `dev/tests/myslides.js` checks it.
