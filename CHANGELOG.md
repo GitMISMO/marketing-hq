@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Bring In the Numbers, corrected
+
+- Jonna: "is bring in the numbers tile correct?" It wasn't: it counted Mailchimp as fully automatic, said YouTube comes in every morning (GitHub usually runs that read in the afternoon), told people to drop exports that aren't needed any more, and was tagged By Hand.
+- The card now reads "2 of 4 fully automatic, 1 partly" (YouTube once a day, LinkedIn every 3 hours, Mailchimp partly by hand, MISMO Matters by hand) and shows how many Mailchimp sends are waiting for their real numbers. Its panel starts with **Still Needs Someone** (MISMO Matters' stats with Record Stats, and any Mailchimp send waiting for its real opens and clicks, each with Open), then how each channel comes in, then the export drops marked as only needed if an automatic read stops.
+
 ## 2026-11-28 · Mailchimp: whole list against whole list
 
 - Approved by Jonna after a preview ("sure"). Results' Mailchimp panel has **Whole List Against Whole List**: only Mailchimp sends that went to its whole list (at least 80% of its largest send in the last six months), with their real and counting-bots open rates and real click rates, beside MISMO Matters, so the audiences are about the same size.
