@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Mailchimp: whole list against whole list
+
+- Approved by Jonna after a preview ("sure"). Results' Mailchimp panel has **Whole List Against Whole List**: only Mailchimp sends that went to its whole list (at least 80% of its largest send in the last six months), with their real and counting-bots open rates and real click rates, beside MISMO Matters, so the audiences are about the same size.
+
 ## 2026-11-28 · The MMS learns what was published (CN-078)
 
 - Jonna approved: "if it happens in Media instead of perry recording the action, can it be recorded automatically". MISMO Media now publishes **resources.mismo.org/media/announcements-done.json**: each call for participation or release announcement the MMS asked for, once it has its published link under Distribution and has gone out (or has final approval), with the MMS request id, type, date and link. The new **Announcements done** workflow rebuilds it every 5 minutes from the release records and the MMS marks the request Done on its next pass. Entries are never taken out. Pasting the link now also records when it was added. The workflow needs the read-only secret MARKETING_HQ_DATA_TOKEN; until it's set the file stays as published (empty today, since nothing has been published yet).
