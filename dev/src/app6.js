@@ -345,6 +345,9 @@ const HELP = [
   </ul>`},
  {id:"results", t:"Results and Stats", g:"Pages", b:`
   <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most. For the people MyMISMO lets in, a <b>MyMISMO</b> card shows the app's numbers for each summit and MISMO Trivia players by month (see <b>MyMISMO: Attendee Reports and Trivia</b>).</p>
+  <p>Results opens on the <b>last 30 days</b>. Pick another period at the top; it holds until MISMO Media is closed.</p>
+  <h3>Automatic or By Hand</h3>
+  <p>Each card is tagged. <b>Automatic</b> numbers come in by themselves: the website (Cloudflare, every night), LinkedIn (every 3 hours), Mic'd Up's YouTube views (every morning) and MISMO's LinkedIn Live numbers, visitor comments, downloads and sign-ups. <b>By Hand</b> numbers need someone: MISMO Matters (typed in from Higher Logic's report) and Mailchimp (the campaigns export). <b>Partly by Hand</b> mixes the two. The navy band lists which is which, and each card's panel says where its numbers come from and when they last came in.</p>
   <h3>Bringing Numbers In by Hand</h3>
   <table class="t"><thead><tr><th>Platform</th><th>Where the Export Is</th><th>How It's Matched</th></tr></thead><tbody>
    <tr><td>YouTube</td><td>YouTube Studio › Analytics › Advanced mode › Content › Export</td><td>By the episode number in the title</td></tr>
@@ -352,7 +355,7 @@ const HELP = [
    <tr><td>Mailchimp</td><td>Campaigns › Reports › Export</td><td>By subject; unmatched campaigns are added</td></tr>
    <tr><td>MISMO Matters</td><td>Higher Logic's report for the mailing</td><td>Typed into Record Stats on the edition</td></tr>
   </tbody></table>
-  <p>Once the daily feed is running (see <b>Daily Stats from Power Automate</b>), YouTube, MISMO Matters and Mailchimp numbers fill themselves in every morning and these exports are only needed for LinkedIn.</p>
+  <p>YouTube and LinkedIn now come in by themselves, so their exports are only needed if the automatic read stops (the YouTube export also adds watch time). MISMO Matters and Mailchimp are still by hand.</p>
   <h3>The Monthly Reminder</h3>
   <p>On the 1st of each month, the previous month's numbers come due. A checklist sits at the top of Results (LinkedIn's line also shows on the LinkedIn page), a pop-up appears on those pages until everything is in, Results shows a count in the menu, and the date is on the Schedule. Each line ticks itself off when its file is dropped in (or the MISMO Matters stats are typed in), and channels the daily feed already covers tick themselves off. <b>Mark Done</b> ticks one off by hand; <b>Remind Me Tomorrow</b> hides the pop-up for the day.</p>`},
  {id:"people", t:"Subscribers and Downloaders", g:"Audience", b:`
