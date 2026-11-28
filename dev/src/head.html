@@ -410,6 +410,13 @@ table.t tr.slot td{color:var(--ink-3);font-style:normal}
 .calmenu small{font-size:11px;color:var(--ink-3);padding:4px 8px 6px;font-weight:600}
 .calmenu button{display:flex;align-items:center;gap:8px;border:0;background:none;color:var(--ink);font:inherit;font-size:13px;text-align:left;padding:7px 8px;border-radius:5px;cursor:pointer}
 .calmenu button:hover,.calmenu button:focus-visible{background:var(--surface-3);outline:none}
+.tilemenu{max-width:min(380px,calc(100vw - 24px));max-height:60vh;overflow-y:auto}
+.tilemenu button{align-items:flex-start}
+.tilemenu button .dot{margin-top:5px;flex:none}
+.tilemenu button span{display:flex;flex-direction:column;min-width:0}
+.tilemenu button b{font-weight:600;line-height:1.35}
+.tilemenu button em{font-style:normal;font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.tilemenu .tm-all{color:var(--ink);font-weight:600;border-top:1px solid var(--rule);border-radius:0 0 5px 5px;margin-top:4px}
 .dlsum{padding:8px 16px;font-size:13px;color:var(--ink-2);border-bottom:1px solid var(--rule);background:var(--surface-2)}
 /* Results: one period for every card and panel (Nov 24, 2026) */
 .rs-bandtop{display:flex;align-items:center;justify-content:space-between;gap:10px 16px;flex-wrap:wrap;margin-bottom:8px}

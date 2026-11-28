@@ -608,6 +608,22 @@ function calAdd(btn, date){
   m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); newItem(b.dataset.k, date); });
   const f=m.querySelector("button"); if(f) f.focus();
 }
+/* the list behind a Schedule tile number: one item opens straight away, more show a menu to pick from */
+function tileList(btn, title, rows, none, all){
+  document.querySelectorAll(".calmenu").forEach(m=>m.remove());
+  if(!rows.length){ if(all) all(); else toast(none, 3500); return; }
+  if(rows.length===1 && !all){ rows[0].go(); return; }
+  const m=document.createElement("div"); m.className="calmenu tilemenu"; m.setAttribute("role","menu");
+  m.innerHTML='<small>'+esc(title)+'</small>'+rows.map((r,i)=>'<button type="button" role="menuitem" data-i="'+i+'"><i class="dot k-'+esc(r.k||"other")+'"></i><span><b>'+esc(r.label)+'</b><em>'+esc([r.kind,r.sub].filter(Boolean).join(" · "))+'</em></span></button>').join("")+
+    (all?'<button type="button" role="menuitem" data-all="1" class="tm-all">Open the Edition →</button>':'');
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); m.style.top=Math.round(r.bottom+window.scrollY+4)+"px"; m.style.left=Math.round(Math.max(window.scrollX+8, Math.min(r.left+window.scrollX, window.scrollX+document.documentElement.clientWidth-m.offsetWidth-12)))+"px";
+  const close=()=>{ m.remove(); document.removeEventListener("click", away, true); document.removeEventListener("keydown", esc_); };
+  const away=e=>{ if(!m.contains(e.target)) close(); }, esc_=e=>{ if(e.key==="Escape"){ close(); btn.focus(); } };
+  setTimeout(()=>{ document.addEventListener("click", away, true); document.addEventListener("keydown", esc_); },0);
+  m.querySelectorAll("button").forEach(b=>b.onclick=()=>{ close(); if(b.dataset.all) all(); else rows[+b.dataset.i].go(); });
+  const f=m.querySelector("button"); if(f) f.focus();
+}
 /* Team HQ's Industry Events for the calendar: read once when the Schedule opens and then every 30 minutes */
 function ovTeamEvents(){
   if(!window.__hqTeamEvents || OV.teBusy || Date.now()-(OV.teAt||0)<30*60000) return;
@@ -673,12 +689,12 @@ function renderOverview(){
     '<div class="phead"><div><div class="eyebrow">MISMO Media</div><h1>Schedule</h1><div class="sub">Every press release, MISMO Matters edition, Mic\'d Up episode, LinkedIn post, YouTube upload, Mailchimp send, summit and industry event, on one calendar.</div></div>'+
     '<div class="tools"><button class="btn" type="button" id="ov-newpiece">+ New Item</button></div></div>'+
     '<div class="band"><div class="today">Today · '+esc(fL(t))+'</div><div class="say">'+say+'</div><div class="tiles">'+
-      '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
-      '<button class="tile" type="button" data-go="matters"><div class="v">'+inN+' of '+secs.length+'</div><div class="k">Sections In</div><div class="s">'+(ed?esc(monthName(ed.month))+' edition':'')+'</div></button>'+
-      '<button class="tile" type="button" data-go="'+(amyKits && amy===amyKits?"micdup":"matters")+'"><div class="v">'+amy+'</div><div class="k">Waiting on Amy</div><div class="s">'+(amyKits?amyKits+" Mic\'d Up LinkedIn Live"+(amyKits>1?"s":"")+" to approve":"sections and posts to review")+'</div></button>'+
-      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep||micOff(fri)?"":" hot")+'">'+(ep?esc(epTag(ep)):micOff(fri)?"No Episode":"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+(micOff(fri)&&!ep?" · "+esc(micOff(fri)):"")+'</div></button>'+
-      '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
-      '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
+      '<button class="tile" type="button" data-tl="days" title="Open the '+(ed?esc(monthName(ed.month)):"")+' edition"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
+      '<button class="tile" type="button" data-tl="secs" title="See the sections"><div class="v">'+inN+' of '+secs.length+'</div><div class="k">Sections In</div><div class="s">'+(ed?esc(monthName(ed.month))+' edition':'')+'</div></button>'+
+      '<button class="tile" type="button" data-tl="amy" title="See what is waiting on Amy"><div class="v">'+amy+'</div><div class="k">Waiting on Amy</div><div class="s">'+(amyKits?amyKits+" Mic\'d Up LinkedIn Live"+(amyKits>1?"s":"")+" to approve":"sections and posts to review")+'</div></button>'+
+      '<button class="tile" type="button" data-tl="fri" title="'+(ep?"Open the episode":"Open Mic\'d Up")+'"><div class="v'+(ep||micOff(fri)?"":" hot")+'">'+(ep?esc(epTag(ep)):micOff(fri)?"No Episode":"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+(micOff(fri)&&!ep?" · "+esc(micOff(fri)):"")+'</div></button>'+
+      '<button class="tile" type="button" data-tl="week" title="See what is due this week"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></button>'+
+      '<button class="tile" type="button" data-tl="over" title="See what is past due"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></button>'+
     '</div>'+(typeof amyRemindBar==="function"?amyRemindBar(String(window.__hqWho||"").split(" ")[0]):'')+'</div>'+
     '<div class="card"><div class="ch"><h2>Calendar</h2><div class="r calnav"><button class="btn sm" type="button" id="cal-prev" aria-label="Previous month">←</button><span class="m">'+esc(MONL[mm-1]+" "+yy)+'</span><button class="btn sm" type="button" id="cal-next" aria-label="Next month">→</button><button class="btn sm" type="button" id="cal-today">Today</button></div></div>'+
       '<div class="calfil" role="group" aria-label="Show on the calendar"><span>Show</span><button type="button" data-calch="" aria-pressed="'+!OV.chans.length+'">All</button>'+
@@ -687,7 +703,23 @@ function renderOverview(){
       '<div class="legend">'+CAL_CHANS.map(([k,l])=>'<span><i class="dot k-'+k+'"></i>'+esc(l)+'</span>').join("")+'<span><i class="dot" style="background:transparent;border:1px dashed var(--ink-3)"></i>Open Mic\'d Up slot</span></div></div>'+
     '<div class="card agcard" style="margin-top:22px"><div class="ch"><h2>Next Two Weeks</h2><span class="cnt">'+ag.length+'</span><span class="note">'+(OV.chans.length?'only '+esc(OV.chans.map(k=>(CAL_CHANS.find(c=>c[0]===k)||[k,k])[1]).join(", "))+', like the calendar':'the same as the calendar shows')+'</span></div><div class="agenda">'+(agh||'<div class="empty">Nothing due in the next two weeks'+(OV.chans.length?' for what the calendar is showing':'')+'.</div>')+'</div></div>';
   // wire
-  $$(".tile[data-go]",el).forEach(b=>b.onclick=()=>go(b.dataset.go));
+  /* every tile number opens what it counts (Jonna, Nov 28, 2026): one item opens straight away, more show a list */
+  const toEd=()=>{ go("matters"); if(ed){ MS.ed=ed.id; renderMatters(); } };
+  const evRow=e=>{ const kind=CHS[e.k]||CH[e.k]||({request:"Request",orders:"Order",results:"Results"})[e.k]||"Other"; let l=agTitle(e); if(l.indexOf(kind+" · ")===0) l=l.slice(kind.length+3); return {label:l, kind, sub:fS(e.date)+(e.who?" · "+e.who:""), k:e.k, go:e.go}; };
+  const amyRows=()=>[].concat(
+    kitsWithAmy().map(k=>S.episodes[k.id]).filter(Boolean).map(e=>({label:"Mic'd Up "+epTag(e)+" LinkedIn Live wording", kind:"Mic'd Up", sub:e.guests||"", k:"micdup", go:()=>openEpisode(e.id)})),
+    secs.filter(x=>x.doc.status==="review").map(x=>({label:x.doc.name||x.meta.name, kind:"MISMO Matters", sub:ed?monthName(ed.month)+" edition":"", k:"matters", go:()=>{ toEd(); openSection(ed,x.k); }})),
+    vals("pieces").filter(p=>p.status==="review").map(p=>({label:p.title||"Untitled", kind:CHS[p.channel]||CH[p.channel]||"Post", sub:p.date?fS(p.date):"", k:p.channel||"other", go:()=>openPiece(p.id)})));
+  const TL={
+    days:()=>toEd(),
+    secs:()=>tileList(this_, "Sections In · "+(ed?monthName(ed.month):""), secs.map(x=>{ const inn=x.meta.auto||x.doc.status!=="waiting"; return {label:x.doc.name||x.meta.name, kind:inn?"In":"Waiting", sub:(x.doc.owner||x.meta.owner||""), k:"matters", go:()=>{ toEd(); openSection(ed,x.k); }}; }), "No edition started.", toEd),
+    amy:()=>tileList(this_, "Waiting on Amy", amyRows(), "Nothing is waiting on Amy."),
+    fri:()=>ep?openEpisode(ep.id):go("micdup"),
+    week:()=>tileList(this_, "Due This Week", week.slice().sort((a,b)=>a.date<b.date?-1:1).map(evRow), "Nothing is due this week."),
+    over:()=>tileList(this_, "Past Due", over.slice().sort((a,b)=>a.date<b.date?-1:1).map(evRow), "Nothing is past due.")
+  };
+  let this_=null;
+  $$(".tile[data-tl]",el).forEach(b=>b.onclick=e=>{ e.stopPropagation(); this_=b; TL[b.dataset.tl](); });
   $("#cal-prev",el).onclick=()=>{ OV.month=iso(new Date(yy,mm-2,1)).slice(0,7); renderOverview(); };
   $("#cal-next",el).onclick=()=>{ OV.month=iso(new Date(yy,mm,1)).slice(0,7); renderOverview(); };
   $("#cal-today",el).onclick=()=>{ OV.month=T().slice(0,7); renderOverview(); };
