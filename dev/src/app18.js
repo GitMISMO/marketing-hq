@@ -21,7 +21,7 @@ function mnTasks(per){
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
       why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
-    {k:"mc", t:"Mailchimp", feed:"mailchimp",
+    {k:"mc", t:"Mailchimp", feed:"mailchimp", auto: typeof mcApiCovers==="function" && mcApiCovers(per),
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
       why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mcfile"},
     {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,

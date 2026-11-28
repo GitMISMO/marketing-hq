@@ -311,7 +311,7 @@ function rsSrc(k){
   const li=typeof liLive==="function" && liLive(), lr=typeof liRun==="function"?liRun():null, yt=feed("youtube");
   const S_={
     mm:{a:"hand", t:"Typed in from Higher Logic's mailing report (Record Stats). Higher Logic has no way for MISMO Media to read it by itself.", w:ed&&edStats(ed).asOf?"numbers as of "+String(edStats(ed).asOf).split(",")[0]:""},
-    mc:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers.", w:mcL?"latest send logged "+fS(mcL):""},
+    mc:(typeof mcLive==="function" && mcLive())?{a:"auto", t:"Read from Mailchimp every 6 hours.", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
     web:{a:"auto", t:"Counted by Cloudflare every night, plus today so far.", w:typeof wtUpdated==="function"&&wtUpdated()?"last "+wtUpdated():""},
     li:li?{a:"auto", t:"Read from MISMO's LinkedIn page every 3 hours.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
     mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views every morning; MISMO's LinkedIn Live numbers every 3 hours.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views every morning and LinkedIn every 3 hours by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
@@ -506,9 +506,10 @@ function rsDTools(x){
 /* the channels that can fill themselves: YouTube (every morning) and LinkedIn (every 3 hours) do; MISMO Matters
    (Higher Logic) and Mailchimp come in by hand */
 const RS_FEEDS=[["youtube","YouTube"],["linkedin","LinkedIn"],["matters","MISMO Matters"],["mailchimp","Mailchimp"]];
-function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : !!feed(k); }
+function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : k==="mailchimp" ? ((typeof mcLive==="function" && mcLive()) || !!feed(k)) : !!feed(k); }
 function rsFeedSay(k){
   if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, every 3 hours"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
+  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic, every 6 hours · last "+wtStamp(mcRun().lastOk);
   if(feed(k)) return "Automatic, every morning · last "+feedAge(k);
   return k==="matters"?"By hand: Record Stats from Higher Logic's report":k==="mailchimp"?"By hand: drop the campaigns export":"By hand";
 }
@@ -576,7 +577,7 @@ function rsCards(x){
       rows:[["Work products downloaded",rsN(x.dl.what.length)]], more:"Every work product, most downloaded first"}),
     (typeof mymCard==="function"?mymCard():""),
     rsCard("tools",{eye:"Bring In the Numbers", color:"--c4", v:RS_FEEDS.filter(([k])=>rsFeedOn(k)).length+" of "+RS_FEEDS.length, vk:"come in by themselves",
-      viz:'<span class="rs-feeds">'+RS_FEEDS.map(([k,l])=>'<span><i class="fdot'+(rsFeedOn(k)?" on":"")+'"></i>'+l+'<small>'+(rsFeedOn(k)?(k==="linkedin"?"every 3 hours":"every morning"):"by hand")+'</small></span>').join("")+'</span>',
+      viz:'<span class="rs-feeds">'+RS_FEEDS.map(([k,l])=>'<span><i class="fdot'+(rsFeedOn(k)?" on":"")+'"></i>'+l+'<small>'+(rsFeedOn(k)?(k==="linkedin"?"every 3 hours":k==="mailchimp"&&typeof mcLive==="function"&&mcLive()?"every 6 hours":"every morning"):"by hand")+'</small></span>').join("")+'</span>',
       rows:[[mnName(x.per)+" numbers",x.due?'<span class="rs-due">'+mnOpen(x.per).length+' still due</span>':'all in']], more:"Drop an export from YouTube, LinkedIn or Mailchimp"})
   ];
   return '<div class="res-cards" id="res-cards">'+cards.join("")+'</div>';
