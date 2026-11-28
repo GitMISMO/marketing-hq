@@ -204,7 +204,7 @@ function hhWebNews(){
   return hhRow("webnews","In the News Web Search","ok","Last searched "+hhWhen(r.at)+". "+n+" stor"+(n===1?"y":"ies")+" found this month.");
 }
 function hhResults(){
-  const f=feed("youtube"); if(!f || !f.updated) return LOADED.has("feeds")? hhRow("feed","Results Feed","off","Hasn't run yet. It runs every morning; the first run starts it.") : null;
+  const f=feed("youtube"); if(!f || !f.updated) return LOADED.has("feeds")? hhRow("feed","Results Feed","off","Hasn't run yet. It runs once a day; the first run starts it.") : null;
   const hrs=(Date.now()-Date.parse(f.updated))/36e5, n=Object.keys(f.videos||{}).length;
   if(hrs>36) return hhRow("feed","Results Feed","warn","YouTube numbers last came in "+hhWhen(f.updated)+", more than a day ago. The \"Results feed\" workflow in marketing-hq-data may be paused.");
   return hhRow("feed","Results Feed","ok","YouTube views for "+n+" video"+(n===1?"":"s")+", updated "+hhWhen(f.updated)+".");
