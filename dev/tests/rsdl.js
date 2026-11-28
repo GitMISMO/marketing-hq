@@ -19,14 +19,14 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const rg=document.querySelector("#pane-body [data-rsp=range]"); rg.value="week"; rg.onchange(); await wait(150);
   out.week=/3 people/.test(bar("Alpha")) && /1 people/.test(bar("Beta")) && !bar("Gamma") && !bar("Delta") && / to /i.test(sec().querySelector("h3").innerText);
   out.note=/first and last download dates/.test(sec().innerText);
-  out.kept=JSON.parse(localStorage.getItem("mm.rs.period")).range==="week" && document.querySelector("#page-results [data-rsp=range]").value==="week" && /people downloaded in the last 7 days/i.test(document.querySelector('[data-rs-open="dl"]').innerText);
+  out.kept=JSON.parse(sessionStorage.getItem("mm.rs.period")||localStorage.getItem("mm.rs.period")).range==="week" && document.querySelector("#page-results [data-rsp=range]").value==="week" && /people downloaded in the last 7 days/i.test(document.querySelector('[data-rs-open="dl"]').innerText);
   const rg2=document.querySelector("#pane-body [data-rsp=range]"); rg2.value="custom"; rg2.onchange(); await wait(150);
   const f=document.querySelector("#pane-body [data-rsp=from]"), to=document.querySelector("#pane-body [data-rsp=to]"); out.custom=!!f && !!to;
   f.value=ago(130); f.onchange(); await wait(100); const to2=document.querySelector("#pane-body [data-rsp=to]"); to2.value=ago(90); to2.onchange(); await wait(150);
   out.customRange=!!bar("Delta") && !bar("Alpha") && !/first and last download dates/.test(sec().innerText);
   const f3=document.querySelector("#pane-body [data-rsp=from]"); f3.value=ago(20); f3.onchange(); await wait(100); const t3=document.querySelector("#pane-body [data-rsp=to]"); t3.value=ago(10); t3.onchange(); await wait(150);
   out.empty=/No downloads/.test(sec().innerText) && !!document.querySelector("#pane-body [data-rsp=range]") && !!document.querySelector("#page-results [data-rsp=range]");
-  RSP.range="year"; try{ localStorage.removeItem("mm.rs.period"); }catch(e){} if(typeof closePane==="function") closePane();
+  RSP.range="year"; try{ sessionStorage.removeItem("mm.rs.period"); localStorage.removeItem("mm.rs.period"); }catch(e){} if(typeof closePane==="function") closePane();
   out.ok=Object.values(out).every(v=>v===true); return out; });
 console.log(JSON.stringify(r), errs.length?errs:"errors []"); if(errs.length) r.ok=false;
 await b.close(); process.exit(r.ok?0:1);})();
