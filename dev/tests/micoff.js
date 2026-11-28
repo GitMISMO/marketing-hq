@@ -25,7 +25,7 @@ const r=await p.evaluate(async()=>{ const wait=ms=>new Promise(r=>setTimeout(r,m
   const rows=[...pg.querySelectorAll("tr.slot")];
   out.runRow=rows.some(r=>/Dec 25/.test(r.innerText) && /No episode · Winter Break/.test(r.innerText) && !r.dataset.new);
   go("overview"); renderOverview(); await wait(150);
-  const tile=document.querySelector('#page-overview [data-go="micdup"]');
+  const tile=document.querySelector('#page-overview [data-tl="fri"], #page-overview [data-go="micdup"]');
   out.overviewTile=!!tile && /No Episode/.test(tile.innerText) && !tile.querySelector(".v.hot");
   S.episodes=keep; go("overview"); renderOverview();
   out.ok=Object.values(out).every(v=>v===true); return out; });
