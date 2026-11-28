@@ -2956,6 +2956,7 @@ const MILES = [
 const MILE_OFFS = {content:-14, draft:-13, review:-6, build:-5, test:-2, approve:-1, publish:0, stats:7};
 const SEND_SIDE = ["test","approve","publish","stats"];  // the steps that move when the send date moves
 const HOLIDAYS = {"2026-11-11":"Veterans Day","2026-11-26":"Thanksgiving","2026-11-27":"the day after Thanksgiving",
+  "2026-12-25":"Winter Break","2026-12-28":"Winter Break","2026-12-29":"Winter Break","2026-12-30":"Winter Break","2026-12-31":"Winter Break","2027-01-01":"Winter Break",
   "2027-01-18":"MLK Jr. Birthday","2027-02-15":"Presidents' Day","2027-05-31":"Memorial Day","2027-06-18":"Juneteenth (observed)","2027-07-05":"Independence Day (observed)",
   "2027-09-06":"Labor Day","2027-11-11":"Veterans Day","2027-11-25":"Thanksgiving","2027-11-26":"the day after Thanksgiving",
   "2027-12-27":"Winter Break","2027-12-28":"Winter Break","2027-12-29":"Winter Break","2027-12-30":"Winter Break","2027-12-31":"Winter Break"};
@@ -3277,6 +3278,10 @@ function newsInWindow(ed){
 function normUrl(u){ return String(u||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
 function fridays(from, n){ const out=[]; let d=nextDow(from,5); for(let i=0;i<n;i++){ out.push(d); d=add(d,7); } return out; }
 function epOn(fri){ return vals("episodes").find(e=>e.airDate===fri); }
+/* No Mic'd Up on a Friday that's a MISMO holiday (Brian, Nov 28, 2026: none on Nov 27, Dec 25 or Jan 1). The schedule
+   doesn't ask for an episode then, and a new episode goes to the next open Friday. */
+function micOff(f){ return HOLIDAYS[f]||""; }
+function nextMicFri(f){ let n=0; while((epOn(f)||micOff(f)) && n++<60) f=add(f,7); return f; }
 /* Mic'd Up's MISMO LinkedIn post goes up the Tuesday after the Friday episode at 1 PM ET (Jonna, Nov 23, 2026; was Monday) */
 function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,4) : ""); }
 
@@ -3294,7 +3299,7 @@ function allEvents(){
     if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up "+epTag(ep)+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
     const l=liDate(ep); if(l && (!old || liDone(ep))) ev.push({date:l, k:"linkedin", label:(ep.liCanceled?"Canceled · ":"")+"LinkedIn · Mic'd Up "+epTag(ep), done:liClosed(ep), x:!!ep.liCanceled, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
-  fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
+  fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && !micOff(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.status==="canceled"?"Canceled · ":"")+(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), x:p.status==="canceled", done:pClosed(p)||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
   vals("orders").filter(o=>!o.archived && o.status!=="cancelled").forEach(o=>{
     const pre=["toorder","quote"].includes(o.status||"toorder");
@@ -3505,7 +3510,7 @@ try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.is
 /* a new item of one kind: a Mic'd Up episode on the Friday of that week (or the next open Friday), anything else a
    Schedule item on that day (or today) */
 function newItem(k, date){
-  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) while(epOn(f)) f=add(f,7); newEpisode(f); return; }
+  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) f=nextMicFri(f); else while(micOff(f)) f=add(f,7); newEpisode(f); return; }
   newPiece(k, date?{date}:{});
 }
 function calAdd(btn, date){
@@ -3590,7 +3595,7 @@ function renderOverview(){
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
       '<button class="tile" type="button" data-go="matters"><div class="v">'+inN+' of '+secs.length+'</div><div class="k">Sections In</div><div class="s">'+(ed?esc(monthName(ed.month))+' edition':'')+'</div></button>'+
       '<button class="tile" type="button" data-go="'+(amyKits && amy===amyKits?"micdup":"matters")+'"><div class="v">'+amy+'</div><div class="k">Waiting on Amy</div><div class="s">'+(amyKits?amyKits+" Mic\'d Up LinkedIn Live"+(amyKits>1?"s":"")+" to approve":"sections and posts to review")+'</div></button>'+
-      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
+      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep||micOff(fri)?"":" hot")+'">'+(ep?esc(epTag(ep)):micOff(fri)?"No Episode":"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+(micOff(fri)&&!ep?" · "+esc(micOff(fri)):"")+'</div></button>'+
       '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
       '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
     '</div>'+(typeof amyRemindBar==="function"?amyRemindBar(String(window.__hqWho||"").split(" ")[0]):'')+'</div>'+
@@ -4972,6 +4977,7 @@ const HELP = [
    <div><span>Tuesday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
   </div>
+  <p><b>No episode on a MISMO holiday Friday</b> (the day after Thanksgiving, Winter Break). The Weekly Run and the Schedule show that Friday as <b>No Episode</b> and don't ask for one, and a new episode goes to the next open Friday. The holidays are on Help › Holidays and Key Dates.</p>
   <h3>Before Recording</h3>
   <ol>
    <li><b>Add the episode</b> on The Weekly Run (or open Friday's row): guest, company, guest email.</li>
@@ -8393,7 +8399,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-27 17:04 ET · 599b4c2";
+const BUILD = "2026-11-28 09:44 ET · e78c096";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -11511,7 +11517,7 @@ function myaWireSlides(el){
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
 function renderMicdup(){
   const el=$("#page-micdup"), t=T();
-  const fri=nextDow(t,5), ep=epOn(fri);
+  const fri=nextDow(t,5), ep=epOn(fri), off=ep?"":micOff(fri);
   const lastFri = add(fri,-7), lastEp=epOn(lastFri);
   const eps=epsSorted();
   const ytDue=vals("episodes").filter(e=>owes(e)&&e.airDate&&e.airDate<=t&&!e.youtubeDone);
@@ -11520,6 +11526,7 @@ function renderMicdup(){
   const webMissing=vals("episodes").filter(e=>owes(e)&&e.youtubeDone&&!e.websiteDone);
   const slots=fridays(add(t,-21),12).filter(f=>{ if(f>=t) return true; const e=epOn(f); return !!(e && owes(e) && !(e.youtubeDone&&liClosed(e)&&e.websiteDone)); }).slice(0,9);  // past Fridays only while their episode still has work left
   const run = slots.map(f=>{ const e=epOn(f); const past=f<t;
+    if(!e && micOff(f)) return '<tr class="slot off"><td><b>'+esc(fD(f))+'</b></td><td colspan="2"><span style="color:var(--ink-3)">No episode · '+esc(micOff(f))+'</span></td><td></td><td></td><td></td><td></td><td></td><td></td>'+(MU_PAUSED.spotify?'':'<td></td>')+'</tr>';
     if(!e) return '<tr class="click slot" data-new="'+f+'"><td><b>'+esc(fD(f))+'</b></td><td colspan="2">'+(f<MICDUP_START?'Before the new routine':'<span style="color:'+(past?"var(--bad)":"var(--ink-3)")+'">No episode yet · press to add it</span>')+'</td><td></td><td></td><td></td><td></td><td></td><td></td>'+(MU_PAUSED.spotify?'':'<td></td>')+'</tr>';
     const ed=editionFor(f);
     return '<tr class="click'+(past&&e.youtubeDone&&liClosed(e)?" past":"")+'" data-ep="'+esc(e.id)+'"><td><b>'+esc(fD(f))+'</b></td><td><b>'+esc(epTag(e))+'</b> '+esc(e.title||"")+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td>'+
@@ -11527,8 +11534,8 @@ function renderMicdup(){
   }).join("");
   const all = eps.map(e=>'<tr class="click" data-ep="'+esc(e.id)+'"><td class="n"><b>'+esc(e.num||"")+'</b></td><td>'+esc(e.title||"(title needed)")+(e.notes?'<span class="t2">'+esc(mdPlain(e.notes))+'</span>':'')+'</td><td>'+esc(e.guests||"")+(e.company?'<span class="t2">'+esc(e.company)+'</span>':'')+'</td><td>'+esc(e.airDate?fS(e.airDate):"—")+'</td><td class="ck">'+tk(e.youtubeDone,false,"YouTube")+'</td><td class="ck">'+tk(e.linkedinDone,false,"LinkedIn")+'</td><td class="ck">'+tk(e.websiteDone,false,"Website")+'</td></tr>').join("");
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Weekly Podcast</div><h1>MISMO Mic\'d Up</h1><div class="sub">Recorded in Riverside a week or two ahead. Live Friday at 8:30 AM ET on Brian\'s LinkedIn'+(MU_PAUSED.spotify?'':' and Spotify (6:30 AM)')+', on YouTube that afternoon, MISMO\'s LinkedIn Live Tuesday at 1:00 PM ET, then the next MISMO Matters.</div></div><div class="tools"><a class="btn" href="https://www.youtube.com/@MISMOStandards/videos" target="_blank" rel="noopener">Open the Channel →</a><button class="btn pri" type="button" id="mu-new">+ Add Episode</button></div></div>'+
-    '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":"Open Slot")+' · Friday 8:30 AM ET</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
-      '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+' · 8:30 AM ET</div></button>'+
+    '<div class="band"><div class="onair"><div><span class="lbl"><i></i>'+(ep?"On Air":off?"No Episode":"Open Slot")+' · Friday 8:30 AM ET</span><div class="epn">'+(ep?"Episode "+esc(ep.num||"?"):off?"Off This Week":"Episode "+(Math.max(0,...vals("episodes").map(e=>+e.num||0))+1))+'<small>'+esc(fD(fri))+'</small></div><div class="ept">'+esc(ep&&ep.title?ep.title:(ep?"Title to come":off?"No Mic\'d Up on "+off+". Next one runs "+fD(nextMicFri(fri))+".":"Waiting on the file and Brian\'s description"))+'</div><div class="epg">'+esc(ep?[ep.guests,ep.company].filter(Boolean).join(", "):off?"":"Press the first box below to add it")+'</div></div>'+waveHtml(!!ep)+'</div><div class="say" style="font-size:14.5px">'+(ep?'<em>Episode '+esc(ep.num||"?")+'</em>'+(ep.title?': '+esc(ep.title):'')+(ep.guests?' with '+esc(ep.guests):'')+'.':'<span class="hot">No episode is set for this Friday yet.</span> Add it once Brian sends the file and his description.')+(ytDue.length?' <span class="hot">'+ytDue.length+' episode'+(ytDue.length>1?"s":"")+' still need to go up on YouTube.</span>':'')+'</div><div class="tiles">'+
+      '<button class="tile" type="button" data-tile="fri"><div class="v'+(ep||off?"":" hot")+'">'+(ep?esc(epTag(ep)):off?"No Episode":"Needed")+'</div><div class="k">This Friday</div><div class="s">'+esc(fS(fri))+(off&&!ep?" · "+esc(off):' · 8:30 AM ET')+'</div></button>'+
       '<div class="tile"><div class="v'+(notRec.length?" hot":"")+'">'+notRec.length+'</div><div class="k">Not Recorded Yet</div><div class="s">running in the next two weeks</div></div>'+
       '<div class="tile"><div class="v'+(ytDue.length?" hot":"")+'">'+ytDue.length+'</div><div class="k">Waiting for YouTube</div><div class="s">aired, not uploaded</div></div>'+
       '<div class="tile"><div class="v">'+liDue.length+'</div><div class="k">LinkedIn Posts Due</div><div class="s">Tuesday after each episode</div></div>'+
@@ -11543,10 +11550,10 @@ function renderMicdup(){
     kitCardHtml()+
     '<div class="card"><div class="ch"><h2>The Weekly Run</h2><span class="note">Recorded · Captions · '+(MU_PAUSED.spotify?'':'Spotify · ')+'YouTube · LinkedIn · Website</span></div><div class="tw"><table class="t"><thead><tr><th>Friday</th><th>Episode</th><th>Guest</th><th class="ck">Recorded</th><th class="ck">Captions</th>'+(MU_PAUSED.spotify?'':'<th class="ck">Spotify</th>')+'<th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th><th>MISMO Matters</th></tr></thead><tbody>'+run+'</tbody></table></div></div>'+
     '<div class="card"><div class="ch"><h2>All Episodes</h2><span class="cnt">'+eps.length+'</span></div>'+(all?'<div class="tw"><table class="t"><thead><tr><th class="n">Ep</th><th>Title</th><th>Guest</th><th>Friday</th><th class="ck">YouTube</th><th class="ck">LinkedIn</th><th class="ck">Website</th></tr></thead><tbody>'+all+'</tbody></table></div>':'<div class="empty">'+(LIVE&&!LOADED.has("episodes")?"Loading episodes…":"No episodes logged yet. Add the first one above.")+'</div>')+'</div>';
-  $("#mu-new",el).onclick=()=>newEpisode(epOn(fri)?add(fri,7):fri);
+  $("#mu-new",el).onclick=()=>newEpisode(nextMicFri(fri));
   $$("[data-ep]",el).forEach(r=>r.onclick=()=>openEpisode(r.dataset.ep));
   $$("[data-new]",el).forEach(r=>r.onclick=()=>newEpisode(r.dataset.new));
-  const tf=$('[data-tile="fri"]',el); if(tf) tf.onclick=()=>ep?openEpisode(ep.id):newEpisode(fri);
+  const tf=$('[data-tile="fri"]',el); if(tf) tf.onclick=()=>ep?openEpisode(ep.id):newEpisode(nextMicFri(fri));
   wireKit(el);
 }
 function isRecorded(e){ return !!(e.recordDate && e.recordDate<=T()); }
