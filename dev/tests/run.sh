@@ -50,6 +50,7 @@ out=$(node ratelimit.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' ||
 out=$(node spell.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node mypush.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node schedule.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
+out=$(node micoff.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node tabicon.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node backbtn.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
 out=$(node tour.js 2>&1); echo "$out"; echo "$out" | grep -q '"ok":true' || fail=1
