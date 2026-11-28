@@ -1,0 +1,59 @@
+# CN-078 (approved by Jonna Nov 28, 2026): publishes resources.mismo.org/media/announcements-done.json, the list of
+# calls for participation and release announcements MISMO Media has published for the MMS, so the MMS marks each
+# request Done by itself. Built by .github/announcements-done.mjs from the release records in the private
+# GitMISMO/marketing-hq-data, read with the read-only secret MARKETING_HQ_DATA_TOKEN (the same one the browser tests
+# use). Without that secret, or if the records can't be read, the file stays exactly as it is. The file changes only
+# when a new published announcement appears. Run it by hand from the Actions tab at any time.
+name: Announcements done
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: announcements-done
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Read the release records
+        id: read
+        env:
+          GH_TOKEN: ${{ secrets.MARKETING_HQ_DATA_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::The secret MARKETING_HQ_DATA_TOKEN (read-only access to GitMISMO/marketing-hq-data) isn't set, so announcements-done.json can't be updated. It stays as it is."
+            echo "go=no" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if gh api repos/GitMISMO/marketing-hq-data/contents/data/releases.json -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/releases.json"; then
+            echo "go=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::The release records couldn't be read; announcements-done.json stays as it is."; echo "go=no" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Build the list
+        if: steps.read.outputs.go == 'yes'
+        run: |
+          node .github/announcements-done.test.mjs
+          node .github/announcements-done.mjs "$RUNNER_TEMP/releases.json" announcements-done.json
+          rm -f "$RUNNER_TEMP/releases.json"
+      - name: Publish it
+        if: steps.read.outputs.go == 'yes'
+        run: |
+          git add announcements-done.json
+          if git diff --cached --quiet; then echo "Nothing new."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Announcements done: update the list for the MMS (CN-078)"
+          for i in 1 2 3 4 5; do
+            if git pull --rebase -q origin main && git push -q origin HEAD:main; then echo "Published."; exit 0; fi
+            sleep $((i*3))
+          done
+          exit 1

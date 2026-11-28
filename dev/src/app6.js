@@ -95,6 +95,7 @@ const HELP = [
      <li><b>Offer to MISMO Matters:</b> adds the release to In the News for that month's edition.</li>
      <li><b>Request a LinkedIn Post:</b> adds a LinkedIn post request to Requests.</li>
     </ul></li>
+   <li><b>Telling the MMS.</b> Paste the link to the published release (or call for participation) under Distribution. Once it has gone out to MISMO Connect or the MBA newsroom (or has final approval) and the link is there, MISMO Media adds it to <b>resources.mismo.org/media/announcements-done.json</b> within about 5 minutes, and the MMS marks the request Done with that link and date on its next pass. Nobody needs to record it in the MMS by hand (doing it by hand still works; whichever comes first counts). Only published releases are listed, and once listed one stays listed.</li>
   </ol>
   <h3>Who Can Do What</h3>
   <ul>

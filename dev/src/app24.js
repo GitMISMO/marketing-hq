@@ -523,6 +523,7 @@ function prDetail(r){
       prSec(6,"Distribution",st("out"),
         (held?'<div class="pr-note">'+(r.final?'<b>Finished and held.</b> ':'')+'Draft Now: the work is still on its way to Release in the MMS'+(a.stage?' ('+esc(a.stage)+')':'')+'. This release goes out once the MMS marks it <b>Ready to Post</b>; the same release moves here, nothing is started again.</div>':r.final?'':'<div class="pr-note">Opens after Perry\'s final approval.</div>')+
         '<label class="pr-l">Link to the published release (MBA newsroom), once it\'s up<input type="url" id="pr-link" value="'+esc(o.link||"")+'"></label>'+
+        '<div class="pr-note">Once the link is here and the release has gone out (or has final approval), the MMS marks its request Done by itself within about 10 minutes (CN-078).</div>'+
         '<div class="pr-dist">'+
           prDist("MISMO Connect post","Branded HTML post, sent to Vanessa Rios to post on MISMO Connect.",o.vanessaAt,'<button class="btn" type="button" id="pr-chtml">Copy Connect HTML</button><button class="btn pri" type="button" id="pr-van"'+(perry&&go?"":" disabled")+'>Send to Vanessa as Perry</button>')+
           prDist("MBA newsroom","A copy for Brittney Prophete at MBA ("+prSettings().brittney+"). Her edits stay on her side.",o.mbaAt,'<button class="btn pri" type="button" id="pr-brit"'+(perry&&go?"":" disabled")+'>Send to Brittney as Perry</button>')+
@@ -571,7 +572,7 @@ function prWire(el, r){
   $("#pr-tput",el).onclick=()=>prPutQuote(id, {text:v("#pr-tt"), name:v("#pr-tn"), title:v("#pr-ti"), company:v("#pr-tc"), approval:v("#pr-ta"), approvalAt:v("#pr-td")});
   const fin=$("#pr-final",el); if(fin) fin.onclick=async()=>{ await saveDraft("Saved the draft before final approval"); const r2=prGet(id); if(!prReady(r2).every(x=>x[0])){ toast("Not ready yet: see the list above.", 5000); renderPress(); return; } await prSave(id, {status:"final", final:{at:new Date().toISOString(), by:prWho()}}, "Perry gave final approval"); toast(prHeld(prGet(id))?"Approved and held. It goes out once the MMS marks it Ready to Post.":"Approved. Distribution is open.", 5000); renderPress(); };
   const unf=$("#pr-unfinal",el); if(unf) unf.onclick=async()=>{ await prSave(id, {status:"quote", final:null}, "Reopened for changes"); renderPress(); };
-  const link=$("#pr-link",el); if(link) link.onchange=async()=>{ await prSave(id, {out:Object.assign({}, r.out||{}, {link:link.value.trim()})}, "Added the published link"); };
+  const link=$("#pr-link",el); if(link) link.onchange=async()=>{ await prSave(id, {out:Object.assign({}, r.out||{}, {link:link.value.trim(), linkAt:link.value.trim()?((r.out||{}).linkAt||new Date().toISOString()):null})}, "Added the published link"); };
   $("#pr-chtml",el).onclick=()=>copyText(prConnectHtml(prGet(id)),"The MISMO Connect post (HTML)");
   $("#pr-van",el).onclick=()=>prSendVanessa(id);
   $("#pr-brit",el).onclick=()=>prSendBrittney(id);

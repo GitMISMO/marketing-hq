@@ -52,6 +52,10 @@ jobs:
           if ! cmp -s <(norm index.html) <(norm dev/out/site.html); then
             echo "::notice::index.html is not yet what dev/src builds. On main, the publish job below brings it up to date once every check passes."
           fi
+      - name: The announcements-done list for the MMS (CN-078)
+        run: |
+          node .github/announcements-done.test.mjs
+          node -e "const f=JSON.parse(require('fs').readFileSync('announcements-done.json','utf8')); if(f.source!=='MISMO Media'||!Array.isArray(f.announcements)) process.exit(1)"
       - name: Code check (common mistakes, not style)
         run: |
           python3 - <<'PY'
@@ -101,7 +105,10 @@ jobs:
       - name: Only the newest change publishes
         id: newest
         run: |
-          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ]; then
+          # Commits by the Announcements done workflow (CN-078) touch only announcements-done.json and start no run
+          # of their own, so they don't count as a newer change.
+          other=$(git diff --name-only "$GITHUB_SHA" HEAD | grep -vx 'announcements-done.json' || true)
+          if [ "$(git rev-parse HEAD)" != "$GITHUB_SHA" ] && [ -n "$other" ]; then
             echo "main has moved on since this change was checked; the run for the newer change publishes instead."
             echo "go=no" >> "$GITHUB_OUTPUT"
           else

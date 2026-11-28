@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · The MMS learns what was published (CN-078)
+
+- Jonna approved: "if it happens in Media instead of perry recording the action, can it be recorded automatically". MISMO Media now publishes **resources.mismo.org/media/announcements-done.json**: each call for participation or release announcement the MMS asked for, once it has its published link under Distribution and has gone out (or has final approval), with the MMS request id, type, date and link. The new **Announcements done** workflow rebuilds it every 5 minutes from the release records and the MMS marks the request Done on its next pass. Entries are never taken out. Pasting the link now also records when it was added. The workflow needs the read-only secret MARKETING_HQ_DATA_TOKEN; until it's set the file stays as published (empty today, since nothing has been published yet).
+
 ## 2026-11-28 · Mailchimp: real people and bots, separately
 
 - The first read showed Mailchimp's API counts bot opens and clicks (security scanners): for the Nov 20 Winter Summit email it gave 8,211 opens and 2,180 clicks, against 6,976 and 418 on Mailchimp's bot-filtered report screen. The workflow was paused and turned off before anything was filled in.
