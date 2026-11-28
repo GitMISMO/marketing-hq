@@ -431,6 +431,27 @@ function rsMcBots(x){
     '<div><h4 class="rs-h4">Click Rate</h4>'+hbars([bar("Mailchimp, counting bots",x.mcClickAll,"--c5"),bar("Mailchimp, real people",x.mcClickRealB,"--c4")].concat(mm&&mm.dl?[bar("MISMO Matters, "+monthName(x.ed.month),mm.ctr,"--c1")]:[]),pctFmt)+'</div></div>'+
     '<p class="rs-note">Mailchimp\'s own count includes opens and clicks from bots and email security scanners; its report screen leaves them out, and so do the real numbers here. Counted only where both are in ('+x.mcB.length+' first send'+(x.mcB.length===1?'':'s')+' '+esc(rsPerIn())+'). MISMO Matters is Higher Logic\'s count for the edition.'+(x.mcWait.length?' '+x.mcWait.length+' send'+(x.mcWait.length===1?' is':'s are')+' still waiting for the real numbers.':'')+'</p></div>';
 }
+/* Whole list against whole list (Jonna, Nov 28, 2026): only Mailchimp sends that went to its whole list (at least 80%
+   of its largest send in the last six months), beside MISMO Matters, so the audiences are about the same size. */
+function rsMcWhole(x){
+  const orig=x.mc.filter(m=>!m.resend && m.real), mx=Math.max(0,...orig.filter(m=>m.date>=add(T(),-180)).map(m=>m.sent));
+  const whole=x.mcY.filter(m=>!m.resend && m.real && m.sent>=0.8*mx), eds=x.eds||[];
+  if(!whole.length) return '';
+  const sum=(a,f)=>a.reduce((n,m)=>n+f(m),0);
+  const dl=sum(whole,m=>m.dl), or=dl?sum(whole,m=>m.o)/dl:0, cr=dl?sum(whole,m=>m.c)/dl:0;
+  const wb=whole.filter(m=>m.hasAll), dlb=sum(wb,m=>m.dl), orB=dlb?sum(wb,m=>m.oAll)/dlb:0, crB=dlb?sum(wb,m=>m.cAll)/dlb:0;
+  const mmS=eds.map(e=>statsCalc(edStats(e))), mmDl=sum(mmS,s=>s.dl), mmOr=mmDl?sum(mmS,s=>s.o)/mmDl:0, mmCr=mmDl?sum(mmS,s=>s.c)/mmDl:0;
+  const rows=whole.map(m=>({d:m.date, l:m.name.replace(/^Resend:\s*/i,""), r:m.sent, or:m.or, cr:m.cr, all:m.hasAll&&m.dl?m.oAll/m.dl:null, k:"mc"}))
+    .concat(eds.map((e,i)=>({d:(e.dates||{}).publish||"", l:"MISMO Matters, "+monthName(e.month), r:mmS[i].r, or:mmS[i].openRate, cr:mmS[i].ctr, all:null, k:"mm"})))
+    .sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+  const bar=(l,v,c)=>({l,v:Math.round(v*1000)/10,c}), f=v=>v.toFixed(1)+"%";
+  const bars=(a,b,m)=>hbars([bar("Mailchimp, counting bots",a,"--c5"),bar("Mailchimp, real people",b,"--c4")].concat(mmDl?[bar("MISMO Matters",m,"--c1")]:[]),f);
+  return '<div class="rs-box rs-whole" id="rs-mcwhole"><h3>Whole List Against Whole List</h3>'+
+    '<p class="rs-note rs-lead">Only Mailchimp sends that went to its whole list (at least 80% of its largest send, '+rsN(mx)+' people), beside MISMO Matters, so the audiences are about the same size. Resends and sends to a tag or segment are left out.</p>'+
+    '<div class="rs-g2"><div><h4 class="rs-h4">Open Rate</h4>'+bars(orB,or,mmOr)+'</div><div><h4 class="rs-h4">Click Rate</h4>'+bars(crB,cr,mmCr)+'</div></div>'+
+    '<div class="tw"><table class="t"><thead><tr><th>Sent</th><th>Email</th><th class="n">Sent To</th><th class="n">Open, Real</th><th class="n">Open, Counting Bots</th><th class="n">Click, Real</th></tr></thead><tbody>'+
+    rows.map(r=>'<tr><td class="nw">'+esc(fS(r.d))+'</td><td>'+(r.k==="mm"?'<b>'+esc(r.l)+'</b> <span class="rs-tag">Higher Logic</span>':esc(r.l))+'</td><td class="n">'+rsN(r.r)+'</td><td class="n">'+pct(r.or)+'</td><td class="n">'+(r.all==null?'<span class="t2">—</span>':pct(r.all))+'</td><td class="n">'+pct(r.cr)+'</td></tr>').join("")+'</tbody></table></div></div>';
+}
 function rsDMC(x){
   const {mc,mcY,mcO,yr,sum,mcOpen,mcClick}=x;
   if(!mc.length) return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp</h2></div><div class="empty">No Mailchimp sends logged yet. Drop the Mailchimp campaigns export in Bring In the Numbers.</div></div>';
@@ -446,7 +467,7 @@ function rsDMC(x){
     rsKpis([{v:rsN(mcY.length),k:"Sends",s:mcO.length+" originals · "+(mcY.length-mcO.length)+" resends"},{v:rsN(sum(mcY,"dl")),k:"Delivered",s:pct(sum(mcY,"sent")?sum(mcY,"dl")/sum(mcY,"sent"):0)+" of sent"},
       {v:pct(mcOpen),k:"Open Rate",s:"real people, first sends",tip:"Bot-filtered opens (Mailchimp's report screen) divided by deliveries across every original send "+rsPerIn()},{v:pct(mcClick),k:"Click Rate",s:"real people, first sends"},
       {v:rsN(sum(mcY,"u")),k:"Unsubscribes",s:pct(sum(mcY,"dl")?sum(mcY,"u")/sum(mcY,"dl"):0)+" of delivered"},{v:pct(sum(mcY,"sent")?sum(mcY,"b")/sum(mcY,"sent"):0),k:"Bounce Rate",s:rsN(sum(mcY,"b"))+" bounced"}])+
-    rsMcBots(x)+
+    rsMcBots(x)+rsMcWhole(x)+
     '<div class="rs-box"><h3>Open Rate for Every Send</h3>'+mcChart(mcY.filter(m=>m.real))+'</div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>By Topic</h3><div class="tw"><table class="t"><thead><tr><th>Topic</th><th class="n" title="original sends, plus resends to people who didn&rsquo;t open">Sends</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th></tr></thead><tbody>'+tRows+'</tbody></table></div></div>'+
       '<div class="rs-box"><h3>Most-Clicked Links</h3>'+(topL.length?hbars(topL,v=>v+" clicks"):'<div class="empty sm">No link clicks logged.</div>')+'</div></div>'+
