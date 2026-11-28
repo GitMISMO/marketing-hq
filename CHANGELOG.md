@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Results: last 30 days, and what's automatic or by hand
+
+- Jonna: "results default to last 30 days". Results opens on Last 30 Days; another pick holds until MISMO Media is closed (it was remembered in the browser and started on This Year).
+- "make it easier for me to see what is automatic and what is still manual". Every Results card is tagged **Automatic**, **By Hand** or **Partly by Hand**, with when its numbers last came in; the navy band lists which channels are which; each card's panel starts with where its numbers come from. Bring In the Numbers now shows LinkedIn as automatic (every 3 hours) and MISMO Matters and Mailchimp as by hand.
+
 ## 2026-11-28 · Every Schedule number opens what it counts
 
 - Jonna: "can i have the ability to click on the number to get to it, same for the other numbers". On the Schedule's navy band, Past Due, Due This Week and Waiting on Amy now show the items they count (press one to open it; a single item opens straight away). Sections In lists the edition's sections with Open the Edition, Days to MISMO Matters opens the edition, and Mic'd Up This Friday opens that episode.
