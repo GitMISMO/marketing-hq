@@ -3097,7 +3097,7 @@ function toast(msg, ms){ const t=$("#toast"); t.textContent=msg; t.hidden=false;
 const words = s=>mdPlain(s).replace(/^• /gm,"").trim().split(/\s+/).filter(Boolean).length;
 
 /* ================= the shared records ================= */
-const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}, informz:{}, summitphotos:{}, mymismoalerts:{}, mymismoslides:{}};
+const S = {editions:{}, sections:{}, episodes:{}, pieces:{}, news:{}, lists:{}, audience:{}, feeds:{}, posted:{}, signups:{}, images:{}, branding:{}, orders:{}, requests:{}, inbox:{}, kits:{}, chat:{}, approvals:{}, guests:{}, newsin:{}, monthly:{}, unsubs:{}, unsubhl:{}, settings:{}, newsweb:{}, wpdl:{}, releases:{}, webtraffic:{}, aifeedback:{}, websiteproblems:{}, linkedin:{}, certnews:{}, informz:{}, summitphotos:{}, mymismoalerts:{}, mymismoslides:{}, mailchimp:{}};
 /* Tour mode (CN-059): the MMS's Work Request Journey runs MISMO Media on practice records; see app36.js and dev/shim.html */
 const TOUR=!!window.__mmTourOn;
 let DB=null, ASSETS=null, SAMPLE=null, LIVE=false, LOADED=new Set(), CONNECTED=false, FIRST_LOAD=0; const HOST_AT_BOOT=!!(window.claude && window.claude.use);
@@ -3228,7 +3228,7 @@ async function restoreRec(col,id){
   delete TRASH[col][id]; const back=Object.assign({}, rec); delete back._deletedAt; delete back._deletedBy; S[col][id]=back; schedule();
   try{ await DB.collection(col).doc(id).update({_deletedAt:null, _deletedBy:null}); toast("Brought back"); }catch(e){ toast("Couldn't bring it back: "+(e.message||"try again"),4000); }
 }
-let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(typeof cnSync==="function") setTimeout(cnSync, 2000); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
+let _raf=0; function schedule(){ if(typeof sbSoon==="function") sbSoon(); if(typeof liSoon==="function") liSoon(); if(typeof mcSoon==="function") mcSoon(); if(typeof cnSync==="function") setTimeout(cnSync, 2000); if(_raf) return; _raf=requestAnimationFrame(()=>{ _raf=0; renderAll(); }); }
 
 /* ================= derived data ================= */
 function editionsSorted(){ return vals("editions").sort((a,b)=>(a.month<b.month?-1:1)); }
@@ -4548,7 +4548,7 @@ function rsSrc(k){
   const li=typeof liLive==="function" && liLive(), lr=typeof liRun==="function"?liRun():null, yt=feed("youtube");
   const S_={
     mm:{a:"hand", t:"Typed in from Higher Logic's mailing report (Record Stats). Higher Logic has no way for MISMO Media to read it by itself.", w:ed&&edStats(ed).asOf?"numbers as of "+String(edStats(ed).asOf).split(",")[0]:""},
-    mc:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers.", w:mcL?"latest send logged "+fS(mcL):""},
+    mc:(typeof mcLive==="function" && mcLive())?{a:"auto", t:"Read from Mailchimp every 6 hours.", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
     web:{a:"auto", t:"Counted by Cloudflare every night, plus today so far.", w:typeof wtUpdated==="function"&&wtUpdated()?"last "+wtUpdated():""},
     li:li?{a:"auto", t:"Read from MISMO's LinkedIn page every 3 hours.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
     mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views every morning; MISMO's LinkedIn Live numbers every 3 hours.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views every morning and LinkedIn every 3 hours by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
@@ -4743,9 +4743,10 @@ function rsDTools(x){
 /* the channels that can fill themselves: YouTube (every morning) and LinkedIn (every 3 hours) do; MISMO Matters
    (Higher Logic) and Mailchimp come in by hand */
 const RS_FEEDS=[["youtube","YouTube"],["linkedin","LinkedIn"],["matters","MISMO Matters"],["mailchimp","Mailchimp"]];
-function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : !!feed(k); }
+function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : k==="mailchimp" ? ((typeof mcLive==="function" && mcLive()) || !!feed(k)) : !!feed(k); }
 function rsFeedSay(k){
   if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, every 3 hours"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
+  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic, every 6 hours · last "+wtStamp(mcRun().lastOk);
   if(feed(k)) return "Automatic, every morning · last "+feedAge(k);
   return k==="matters"?"By hand: Record Stats from Higher Logic's report":k==="mailchimp"?"By hand: drop the campaigns export":"By hand";
 }
@@ -4813,7 +4814,7 @@ function rsCards(x){
       rows:[["Work products downloaded",rsN(x.dl.what.length)]], more:"Every work product, most downloaded first"}),
     (typeof mymCard==="function"?mymCard():""),
     rsCard("tools",{eye:"Bring In the Numbers", color:"--c4", v:RS_FEEDS.filter(([k])=>rsFeedOn(k)).length+" of "+RS_FEEDS.length, vk:"come in by themselves",
-      viz:'<span class="rs-feeds">'+RS_FEEDS.map(([k,l])=>'<span><i class="fdot'+(rsFeedOn(k)?" on":"")+'"></i>'+l+'<small>'+(rsFeedOn(k)?(k==="linkedin"?"every 3 hours":"every morning"):"by hand")+'</small></span>').join("")+'</span>',
+      viz:'<span class="rs-feeds">'+RS_FEEDS.map(([k,l])=>'<span><i class="fdot'+(rsFeedOn(k)?" on":"")+'"></i>'+l+'<small>'+(rsFeedOn(k)?(k==="linkedin"?"every 3 hours":k==="mailchimp"&&typeof mcLive==="function"&&mcLive()?"every 6 hours":"every morning"):"by hand")+'</small></span>').join("")+'</span>',
       rows:[[mnName(x.per)+" numbers",x.due?'<span class="rs-due">'+mnOpen(x.per).length+' still due</span>':'all in']], more:"Drop an export from YouTube, LinkedIn or Mailchimp"})
   ];
   return '<div class="res-cards" id="res-cards">'+cards.join("")+'</div>';
@@ -5242,7 +5243,7 @@ const HELP = [
   <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most. For the people MyMISMO lets in, a <b>MyMISMO</b> card shows the app's numbers for each summit and MISMO Trivia players by month (see <b>MyMISMO: Attendee Reports and Trivia</b>).</p>
   <p>Results opens on the <b>last 30 days</b>. Pick another period at the top; it holds until MISMO Media is closed.</p>
   <h3>Automatic or By Hand</h3>
-  <p>Each card is tagged. <b>Automatic</b> numbers come in by themselves: the website (Cloudflare, every night), LinkedIn (every 3 hours), Mic'd Up's YouTube views (every morning) and MISMO's LinkedIn Live numbers, visitor comments, downloads and sign-ups. <b>By Hand</b> numbers need someone: MISMO Matters (typed in from Higher Logic's report) and Mailchimp (the campaigns export). <b>Partly by Hand</b> mixes the two. The navy band lists which is which, and each card's panel says where its numbers come from and when they last came in.</p>
+  <p>Each card is tagged. <b>Automatic</b> numbers come in by themselves: the website (Cloudflare, every night), LinkedIn (every 3 hours), Mic'd Up's YouTube views (every morning) and MISMO's LinkedIn Live numbers, visitor comments, downloads and sign-ups. <b>By Hand</b> numbers need someone: MISMO Matters (typed in from Higher Logic's report). Mailchimp is read every 6 hours once its API key is saved (see below); until then it's the campaigns export. <b>Partly by Hand</b> mixes the two. The navy band lists which is which, and each card's panel says where its numbers come from and when they last came in.</p>
   <h3>Bringing Numbers In by Hand</h3>
   <table class="t"><thead><tr><th>Platform</th><th>Where the Export Is</th><th>How It's Matched</th></tr></thead><tbody>
    <tr><td>YouTube</td><td>YouTube Studio › Analytics › Advanced mode › Content › Export</td><td>By the episode number in the title</td></tr>
@@ -5250,7 +5251,9 @@ const HELP = [
    <tr><td>Mailchimp</td><td>Campaigns › Reports › Export</td><td>By subject; unmatched campaigns are added</td></tr>
    <tr><td>MISMO Matters</td><td>Higher Logic's report for the mailing</td><td>Typed into Record Stats on the edition</td></tr>
   </tbody></table>
-  <p>YouTube and LinkedIn now come in by themselves, so their exports are only needed if the automatic read stops (the YouTube export also adds watch time). MISMO Matters and Mailchimp are still by hand.</p>
+  <p>YouTube and LinkedIn now come in by themselves, so their exports are only needed if the automatic read stops (the YouTube export also adds watch time). MISMO Matters is still by hand.</p>
+  <h3>Mailchimp, Read Automatically</h3>
+  <p>The <b>Mailchimp reports</b> workflow in marketing-hq-data reads every sent campaign's report through Mailchimp's API every 6 hours (read only; it never sends anything). Each campaign fills in its Mailchimp record here (matched by campaign, or the same subject within a day), and campaigns nobody logged are added. It needs a Mailchimp API key saved as the <b>MAILCHIMP_API_KEY</b> secret on marketing-hq-data: in Mailchimp, open your profile › <b>Extras</b> › <b>API keys</b> › <b>Create A Key</b>, then paste the whole key (it ends in -us16) into the secret. System Health shows whether it's reading.</p>
   <h3>The Monthly Reminder</h3>
   <p>On the 1st of each month, the previous month's numbers come due. A checklist sits at the top of Results (LinkedIn's line also shows on the LinkedIn page), a pop-up appears on those pages until everything is in, Results shows a count in the menu, and the date is on the Schedule. Each line ticks itself off when its file is dropped in (or the MISMO Matters stats are typed in), and channels the daily feed already covers tick themselves off. <b>Mark Done</b> ticks one off by hand; <b>Remind Me Tomorrow</b> hides the pop-up for the day.</p>`},
  {id:"people", t:"Subscribers and Downloaders", g:"Audience", b:`
@@ -7926,7 +7929,7 @@ function mnTasks(per){
     {k:"yt", t:"YouTube", feed:"youtube",
       how:'In <b>YouTube Studio › Analytics › Advanced mode › Content</b>, set the dates to <b>'+m+'</b>, then <b>Export › Comma-separated values</b>. Drop the file into <b>YouTube Studio Export</b> below.',
       why:'Views and likes now come in every morning by themselves (the Results feed), so this line ticks itself; the Studio export only adds watch time.', link:["Open YouTube Studio","https://studio.youtube.com/"], drop:"rs-yt"},
-    {k:"mc", t:"Mailchimp", feed:"mailchimp",
+    {k:"mc", t:"Mailchimp", feed:"mailchimp", auto: typeof mcApiCovers==="function" && mcApiCovers(per),
       how:'In <b>Mailchimp › Campaigns › Reports</b>, export the campaigns sent in <b>'+m+'</b> (CSV). Drop the file into <b>Mailchimp Campaigns Export</b> below.',
       why:'Sends, opens, clicks and unsubscribes for each campaign.', link:["Open Mailchimp Reports","https://admin.mailchimp.com/reports/"], drop:"rs-mcfile"},
     {k:"mm", t:"MISMO Matters", feed:"matters", skip:!ed,
@@ -8498,7 +8501,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-28 10:28 ET · fa54888";
+const BUILD = "2026-11-28 10:57 ET · 4ac66d1";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -8715,7 +8718,7 @@ function hhErrors(){
   return hhRow("err","Errors on This Page","warn",n+" error"+(n>1?"s":"")+" since this page was opened. Usually harmless; they go to the team log below.", L.slice(-4).reverse().map(e=>hhWhen(e.at)+": "+String(e.msg).slice(0,110)));
 }
 function hhRun(){
-  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), (typeof hhTeamEvents==="function"?hhTeamEvents():null), (typeof hhSummitPhotos==="function"?hhSummitPhotos():null), (typeof hhMyMISMO==="function"?hhMyMISMO():null), (typeof hhSpelling==="function"?hhSpelling():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
+  const rows=[hhSaving(), hhStorage(), hhJobs(), hhSignups(), hhDownloads(), hhPress(), hhChatLinks(), hhNews(), hhWebNews(), hhResults(), (typeof hhWebTraffic==="function"?hhWebTraffic():null), (typeof hhSponsorFeed==="function"?hhSponsorFeed():null), (typeof hhLinkedIn==="function"?hhLinkedIn():null), (typeof hhMailchimp==="function"?hhMailchimp():null), (typeof hhCertNews==="function"?hhCertNews():null), (typeof hhInformz==="function"?hhInformz():null), (typeof hhTeamEvents==="function"?hhTeamEvents():null), (typeof hhSummitPhotos==="function"?hhSummitPhotos():null), (typeof hhMyMISMO==="function"?hhMyMISMO():null), (typeof hhSpelling==="function"?hhSpelling():null), hhDates(), hhErrors(), hhVersion()].filter(Boolean);
   HH.last={at:new Date().toISOString(), rows}; hhPaint(); return HH.last;
 }
 /* at the bottom of the left menu, above Dark Mode, as in Summit HQ (Jonna, Nov 7, 2026) */
@@ -11611,6 +11614,57 @@ function myaWireSlides(el){
     '.mya-add{cursor:pointer}';
   document.head.appendChild(st);
 })();
+/* ================= Mailchimp numbers, read automatically (Nov 28, 2026) =================
+   Jonna: "is there a mailchimp api thing like linkedin we can do?" The "Mailchimp reports" workflow in
+   marketing-hq-data reads every sent campaign's report through Mailchimp's Marketing API every 6 hours (read only;
+   nothing is ever sent) into data/mailchimp.json: "mailchimp/c-<campaign id>" per campaign and "mailchimp/_run".
+   Here each campaign is matched to its Mailchimp record (by campaign id, or the same subject within a day) and its
+   numbers are filled in; campaigns nobody logged are added, so nobody drops the export any more. */
+const MC_API={done:"", busy:false, timer:0, err:""};
+function mcRun(){ return (S.mailchimp||{})._run || null; }
+function mcLive(){ const r=mcRun(); return !!(r && r.ok && r.lastOk && (Date.now()-Date.parse(r.lastOk))<3*864e5); }
+function mcApiCamps(){ return Object.values(S.mailchimp||{}).filter(d=>d && d.id && d.date && +d.sent); }
+/* the month's Mailchimp numbers are in once a good read happened after the month ended */
+function mcApiCovers(per){ const r=mcRun(); if(!r || !r.lastOk) return false; const [y,m]=per.split("-").map(Number); return r.lastOk.slice(0,10) > new Date(Date.UTC(y,m,0)).toISOString().slice(0,10); }
+const mcNums=x=>({sent:+x.sent||0, delivered:+x.delivered||0, opens:+x.opens||0, clicks:+x.clicks||0, unsubs:+x.unsubs||0, bounces:+x.bounces||0,
+  totalOpens:+x.totalOpens||0, totalClicks:+x.totalClicks||0, forwards:+x.forwards||0, links:(x.links||[]).map(l=>[String(l[0]), +l[1]||0])});
+const mcSame=(rec, part)=>Object.keys(part).every(k=>JSON.stringify(rec[k]==null?"":rec[k])===JSON.stringify(part[k]==null?"":part[k]));
+function mcFindPiece(x, taken){
+  const ps=vals("pieces").filter(p=>p.channel==="mailchimp" && !p.archived && !taken.has(p.id));
+  const exact=ps.find(p=>p.mcId===x.id); if(exact) return exact;
+  const subj=String(x.subject||"").trim().toLowerCase(), resend=!!x.resend;
+  return ps.find(p=>!p.mcId && String(p.title||"").trim().toLowerCase()===subj && !!(p.resend||/^resend:/i.test(p.mcName||""))===resend && p.date && Math.abs((Date.parse(p.date)-Date.parse(x.date))/864e5)<=1) || null;
+}
+function mcSoon(){ clearTimeout(MC_API.timer); MC_API.timer=setTimeout(mcApiSync, 3500); }
+async function mcApiSync(){
+  const r=mcRun();
+  if(MC_API.busy || (typeof STALE!=="undefined" && STALE.on) || !CANWRITE || !r || !r.ok || !LOADED.has("mailchimp") || !LOADED.has("pieces")) return 0;
+  if(MC_API.done===r.at) return 0;
+  MC_API.busy=true; let n=0;
+  try{
+    const taken=new Set();
+    for(const x of mcApiCamps().sort((a,b)=>String(b.at).localeCompare(String(a.at)))){
+      const nums=mcNums(x), p=mcFindPiece(x, taken);
+      if(p){ taken.add(p.id); const part=Object.assign({mcId:x.id}, nums, p.mcName?{}:{mcName:x.name}, p.status==="done"?{}:{status:"done"});
+        if(!mcSame(p, part)){ await patch("pieces", p.id, part); n++; } continue; }
+      const nid="mc-"+x.id; if(S.pieces[nid]) continue;
+      await put("pieces", nid, Object.assign({channel:"mailchimp", title:x.subject||x.name||"Mailchimp campaign", mcName:x.name||"", mcId:x.id, date:x.date, sentAt:x.date,
+        status:"done", kind:"Email", owner:"", segment:"", resend:!!x.resend, mcFrom:"Mailchimp (read automatically)"}, nums)); n++;
+    }
+    MC_API.done=r.at; MC_API.err="";
+  }catch(e){ MC_API.err=(e&&e.message)||"couldn't save"; }
+  finally{ MC_API.busy=false; }
+  return n;
+}
+/* System Health */
+function hhMailchimp(){
+  const r=mcRun();
+  if(!r) return LOADED.has("mailchimp") ? hhRow("mcapi","Mailchimp Reports","off","Not connected yet. Once a Mailchimp API key is saved as the MAILCHIMP_API_KEY secret on marketing-hq-data, every campaign's numbers come in by themselves every 6 hours.") : null;
+  if(r.waiting) return hhRow("mcapi","Mailchimp Reports","off",(r.error||"Not connected yet.")+" Until then, drop the Mailchimp campaigns export on Results.");
+  if(!r.ok) return hhRow("mcapi","Mailchimp Reports","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+" The export can still be dropped on Results.");
+  if((Date.now()-Date.parse(r.at))/36e5>14) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 14 hours ago (it runs every 6). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
+  return hhRow("mcapi","Mailchimp Reports","ok","Read "+hhWhen(r.at)+": "+rsN(r.campaigns)+" campaigns from the last 120 days."+(MC_API.err?" Matching them here hit a problem: "+MC_API.err:""));
+}
 
 /* ================= MISMO Mic'd Up ================= */
 function tk(on, due, label){ return '<span class="tk'+(on?" on":(due?" due":""))+'" title="'+esc(label)+'">'+(on?"✓":"·")+'</span>'; }
