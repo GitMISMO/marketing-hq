@@ -37,6 +37,7 @@ const MILES = [
 const MILE_OFFS = {content:-14, draft:-13, review:-6, build:-5, test:-2, approve:-1, publish:0, stats:7};
 const SEND_SIDE = ["test","approve","publish","stats"];  // the steps that move when the send date moves
 const HOLIDAYS = {"2026-11-11":"Veterans Day","2026-11-26":"Thanksgiving","2026-11-27":"the day after Thanksgiving",
+  "2026-12-25":"Winter Break","2026-12-28":"Winter Break","2026-12-29":"Winter Break","2026-12-30":"Winter Break","2026-12-31":"Winter Break","2027-01-01":"Winter Break",
   "2027-01-18":"MLK Jr. Birthday","2027-02-15":"Presidents' Day","2027-05-31":"Memorial Day","2027-06-18":"Juneteenth (observed)","2027-07-05":"Independence Day (observed)",
   "2027-09-06":"Labor Day","2027-11-11":"Veterans Day","2027-11-25":"Thanksgiving","2027-11-26":"the day after Thanksgiving",
   "2027-12-27":"Winter Break","2027-12-28":"Winter Break","2027-12-29":"Winter Break","2027-12-30":"Winter Break","2027-12-31":"Winter Break"};
@@ -358,6 +359,10 @@ function newsInWindow(ed){
 function normUrl(u){ return String(u||"").trim().toLowerCase().replace(/^https?:\/\/(www\.)?/,"").replace(/[?#].*$/,"").replace(/\/+$/,""); }
 function fridays(from, n){ const out=[]; let d=nextDow(from,5); for(let i=0;i<n;i++){ out.push(d); d=add(d,7); } return out; }
 function epOn(fri){ return vals("episodes").find(e=>e.airDate===fri); }
+/* No Mic'd Up on a Friday that's a MISMO holiday (Brian, Nov 28, 2026: none on Nov 27, Dec 25 or Jan 1). The schedule
+   doesn't ask for an episode then, and a new episode goes to the next open Friday. */
+function micOff(f){ return HOLIDAYS[f]||""; }
+function nextMicFri(f){ let n=0; while((epOn(f)||micOff(f)) && n++<60) f=add(f,7); return f; }
 /* Mic'd Up's MISMO LinkedIn post goes up the Tuesday after the Friday episode at 1 PM ET (Jonna, Nov 23, 2026; was Monday) */
 function liDate(ep){ return ep.linkedinDate || (ep.airDate ? add(ep.airDate,4) : ""); }
 
@@ -375,7 +380,7 @@ function allEvents(){
     if(!old || ep.youtubeDone) ev.push({date:ep.airDate, k:"micdup", label:"Mic'd Up "+epTag(ep)+" · YouTube", done:!!ep.youtubeDone, who:"Vanessa", go:()=>openEpisode(ep.id)});
     const l=liDate(ep); if(l && (!old || liDone(ep))) ev.push({date:l, k:"linkedin", label:(ep.liCanceled?"Canceled · ":"")+"LinkedIn · Mic'd Up "+epTag(ep), done:liClosed(ep), x:!!ep.liCanceled, who:"Vanessa", go:()=>openEpisode(ep.id)});
   });
-  fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
+  fridays(MICDUP_START, Math.ceil((Date.parse(add(T(),130))-Date.parse(MICDUP_START))/(7*864e5))+1).forEach(f=>{ if(!epOn(f) && !micOff(f) && f>=T() && f<=add(T(),120)) ev.push({date:f, k:"micdup", label:"Mic'd Up · Episode Needed", done:false, slot:true, who:"Brian", go:()=>newEpisode(f)}); });
   vals("pieces").forEach(p=>{ if(p.date) ev.push({date:p.date, k:p.channel||"other", label:(p.status==="canceled"?"Canceled · ":"")+(p.channel==="setup"?"Setup · ":CH[p.channel]?CH[p.channel]+" · ":"")+(p.title||"Untitled"), x:p.status==="canceled", done:pClosed(p)||!!p.done, who:p.owner||"", go:()=>openPiece(p.id)}); });
   vals("orders").filter(o=>!o.archived && o.status!=="cancelled").forEach(o=>{
     const pre=["toorder","quote"].includes(o.status||"toorder");
@@ -586,7 +591,7 @@ try{ const v=JSON.parse(localStorage.getItem("mm.cal.chans")||"[]"); if(Array.is
 /* a new item of one kind: a Mic'd Up episode on the Friday of that week (or the next open Friday), anything else a
    Schedule item on that day (or today) */
 function newItem(k, date){
-  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) while(epOn(f)) f=add(f,7); newEpisode(f); return; }
+  if(k==="micdup"){ const t=T(); let f=date ? nextDow(date,5) : nextDow(t,5); if(!date) f=nextMicFri(f); else while(micOff(f)) f=add(f,7); newEpisode(f); return; }
   newPiece(k, date?{date}:{});
 }
 function calAdd(btn, date){
@@ -671,7 +676,7 @@ function renderOverview(){
       '<button class="tile" type="button" data-go="matters"><div class="v sky">'+(ed&&ed.dates?Math.max(0,diff(ed.dates.publish,t)):"—")+'</div><div class="k">Days to MISMO Matters</div><div class="s">'+(ed?esc(fD(ed.dates.publish)):"No edition started")+'</div></button>'+
       '<button class="tile" type="button" data-go="matters"><div class="v">'+inN+' of '+secs.length+'</div><div class="k">Sections In</div><div class="s">'+(ed?esc(monthName(ed.month))+' edition':'')+'</div></button>'+
       '<button class="tile" type="button" data-go="'+(amyKits && amy===amyKits?"micdup":"matters")+'"><div class="v">'+amy+'</div><div class="k">Waiting on Amy</div><div class="s">'+(amyKits?amyKits+" Mic\'d Up LinkedIn Live"+(amyKits>1?"s":"")+" to approve":"sections and posts to review")+'</div></button>'+
-      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep?"":" hot")+'">'+(ep?esc(epTag(ep)):"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+'</div></button>'+
+      '<button class="tile" type="button" data-go="micdup"><div class="v'+(ep||micOff(fri)?"":" hot")+'">'+(ep?esc(epTag(ep)):micOff(fri)?"No Episode":"Needed")+'</div><div class="k">Mic\'d Up This Friday</div><div class="s">'+esc(fD(fri))+(micOff(fri)&&!ep?" · "+esc(micOff(fri)):"")+'</div></button>'+
       '<div class="tile"><div class="v">'+week.length+'</div><div class="k">Due This Week</div><div class="s">across every channel</div></div>'+
       '<div class="tile"><div class="v'+(over.length?" hot":"")+'">'+over.length+'</div><div class="k">Past Due</div><div class="s">not marked done</div></div>'+
     '</div>'+(typeof amyRemindBar==="function"?amyRemindBar(String(window.__hqWho||"").split(" ")[0]):'')+'</div>'+

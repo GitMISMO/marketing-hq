@@ -178,6 +178,7 @@ const HELP = [
    <div><span>Tuesday · 1:00 PM ET</span><b>MISMO LinkedIn Live</b><small>Streamed from Riverside, once Amy approves the wording</small></div>
    <div><span>Following Weeks</span><b>Clips and MISMO Matters</b><small>Four clip posts; listed in the next edition</small></div>
   </div>
+  <p><b>No episode on a MISMO holiday Friday</b> (the day after Thanksgiving, Winter Break). The Weekly Run and the Schedule show that Friday as <b>No Episode</b> and don't ask for one, and a new episode goes to the next open Friday. The holidays are on Help › Holidays and Key Dates.</p>
   <h3>Before Recording</h3>
   <ol>
    <li><b>Add the episode</b> on The Weekly Run (or open Friday's row): guest, company, guest email.</li>
