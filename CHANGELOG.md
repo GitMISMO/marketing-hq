@@ -2,6 +2,11 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Mailchimp: real people and bots, separately
+
+- The first read showed Mailchimp's API counts bot opens and clicks (security scanners): for the Nov 20 Winter Summit email it gave 8,211 opens and 2,180 clicks, against 6,976 and 418 on Mailchimp's bot-filtered report screen. The workflow was paused and turned off before anything was filled in.
+- Jonna: "i want the accurate numbers and the bot number separated so i can show that mailchimp isn't actually higher than informz because it counts bots". The API's opens and clicks now go into their own fields (Opens and Clicks Counting Bots) and never over the real ones; sends, deliveries, bounces, unsubscribes and forwards fill in by themselves. Results' Mailchimp panel has **Real People and Bots** (bot opens and clicks left out, open and click rates with and without bots, MISMO Matters beside them) and Bot Opens and Bot Clicks columns. A send still missing its real numbers shows **Real Numbers Due** and stays out of the rates. Mailchimp is tagged **Partly by Hand**.
+
 ## 2026-11-28 · Mailchimp numbers read automatically
 
 - Jonna: "is there a mailchimp api thing like linkedin we can do?" A new **Mailchimp reports** workflow in marketing-hq-data reads every sent campaign's report through Mailchimp's API every 6 hours (read only) into data/mailchimp.json. MISMO Media fills each campaign's numbers into its Mailchimp record (by campaign id, or the same subject within a day) and adds campaigns nobody logged. Results tags Mailchimp **Automatic** once it reads, the monthly Mailchimp line ticks itself, and System Health has a Mailchimp Reports row. Needs the MAILCHIMP_API_KEY secret; until then Mailchimp stays By Hand.
