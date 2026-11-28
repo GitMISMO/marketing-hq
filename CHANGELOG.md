@@ -2,6 +2,10 @@
 
 Newest first. One line per change people would notice, plus anything that changes how data is saved.
 
+## 2026-11-28 · Every Schedule number opens what it counts
+
+- Jonna: "can i have the ability to click on the number to get to it, same for the other numbers". On the Schedule's navy band, Past Due, Due This Week and Waiting on Amy now show the items they count (press one to open it; a single item opens straight away). Sections In lists the edition's sections with Open the Edition, Days to MISMO Matters opens the edition, and Mic'd Up This Friday opens that episode.
+
 ## 2026-11-28 · No Mic'd Up on holiday Fridays
 
 - Brian: no Mic'd Up on Nov 27, Dec 25 or Jan 1. A Friday that's a MISMO holiday is now a **No Episode** Friday: the Schedule doesn't ask for an episode, the Mic'd Up page and The Weekly Run show it as No Episode with the holiday's name, and + Add Episode or + New Item puts a new episode on the next open Friday.
