@@ -4562,10 +4562,10 @@ function rsSrc(k){
   const li=typeof liLive==="function" && liLive(), lr=typeof liRun==="function"?liRun():null, yt=feed("youtube");
   const S_={
     mm:{a:"hand", t:"Typed in from Higher Logic's mailing report (Record Stats). Higher Logic has no way for MISMO Media to read it by itself.", w:ed&&edStats(ed).asOf?"numbers as of "+String(edStats(ed).asOf).split(",")[0]:""},
-    mc:(typeof mcLive==="function" && mcLive())?{a:"mix", t:"Sends, deliveries, bounces, unsubscribes and the counts with bots are read from Mailchimp every 6 hours; the real (bot-filtered) opens and clicks come from Mailchimp's report screen"+(mcNeedsReal().length?" ("+mcNeedsReal().length+" send"+(mcNeedsReal().length===1?"":"s")+" waiting)":"")+".", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
+    mc:(typeof mcLive==="function" && mcLive())?{a:"mix", t:"Sends, deliveries, bounces, unsubscribes and the counts with bots are read from Mailchimp a few times a day; the real (bot-filtered) opens and clicks come from Mailchimp's report screen"+(mcNeedsReal().length?" ("+mcNeedsReal().length+" send"+(mcNeedsReal().length===1?"":"s")+" waiting)":"")+".", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
     web:{a:"auto", t:"Counted by Cloudflare every night, plus today so far.", w:typeof wtUpdated==="function"&&wtUpdated()?"last "+wtUpdated():""},
-    li:li?{a:"auto", t:"Read from MISMO's LinkedIn page every 3 hours.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
-    mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views once a day; MISMO's LinkedIn Live numbers every 3 hours.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views once a day and LinkedIn every 3 hours by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
+    li:li?{a:"auto", t:"Read from MISMO's LinkedIn page a few times a day.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
+    mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views once a day; MISMO's LinkedIn Live numbers a few times a day.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views once a day and LinkedIn a few times a day by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
     voices:{a:"auto", t:"Arrives from the website's AI answer feedback and problem form as people send them.", w:""},
     lists:{a:"mix", t:"Sign-ups, unsubscribes and downloaders come in by themselves; the MISMO Matters list size comes from its Higher Logic stats, typed in.", w:""},
     dl:{a:"auto", t:"From the website's Before You Download form, as people download.", w:""},
@@ -4732,7 +4732,7 @@ function rsDLI(x){
         let g=''; for(let v=0; v<=top; v+=top/4){ const y=Tp+(1-v/top)*(H-Tp-B); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" class="rs-grid"/><text x="'+(L-6)+'" y="'+(y+4)+'" class="rs-ax" text-anchor="end">'+rsN(v)+'</text>'; }
         return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="LinkedIn page impressions each day">'+g+d.map((p,i)=>{ const v=+p.impressions||0, h=Math.max(1,v/top*(H-Tp-B)); return '<rect class="wt-bar" x="'+(L+i*bw+bw*0.15)+'" width="'+(bw*0.7)+'" y="'+(H-B-h)+'" height="'+h+'" rx="1.5" data-tip="'+esc(fS(p.date)+"\n"+rsN(v)+" impressions · "+rsN(p.clicks)+" clicks · "+rsN(p.reactions)+" reactions")+'"/>'+((i%Math.max(5,Math.ceil(d.length/12))===0||i===d.length-1)?'<text x="'+(L+i*bw+bw/2)+'" y="'+(H-7)+'" class="rs-ax" text-anchor="middle">'+(d.length>40?fS(p.date):+p.date.slice(8))+'</text>':''); }).join("")+'</svg>'; })()+
       '</div><p class="rs-note">Every post on MISMO\'s page added together, one bar a day. These come from the daily sheet of the LinkedIn export, so they can\'t say which post a day\'s views went to.</p></div>':'';
-  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · '+(typeof liLive==="function" && liLive() ? 'read from LinkedIn every 3 hours' : 'from the monthly export and impressions typed on a post')+'</span></div>'+
+  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · '+(typeof liLive==="function" && liLive() ? 'read from LinkedIn a few times a day' : 'from the monthly export and impressions typed on a post')+'</span></div>'+
     ((posts.length||x.liMo.length)?rsKpis((x.liMo.length?[{v:rsN(x.liMoImp),k:"Page Impressions",s:x.pt+", every post together"},{v:rsN(dsum("clicks")),k:"Page Clicks",s:x.pt},{v:rsN(dsum("reactions")),k:"Page Reactions",s:x.pt},{v:x.liBest?rsN(x.liBest.impressions):"—",k:"Busiest Day",s:x.liBest?fS(x.liBest.date):""}]:[])
         .concat(posts.length?[{v:rsN(posts.length),k:"Posts Logged",s:rsN(tot("i"))+" impressions"}]:[])
         .concat(typeof liRun==="function" && liRun() && liRun().followers ? [{v:rsN(liRun().followers),k:"Followers",s:"read "+hhWhen(liRun().at)}] : []))+daily+
@@ -4803,19 +4803,19 @@ function rsDTools(x){
     '<div class="rs-box"><h3>How Each Channel Comes In</h3><div class="feedrow">'+RS_FEEDS.map(([k,l])=>{ const s=rsFeedState(k); return '<div class="feedst"><span class="fdot'+(s==="auto"?" on":s==="part"?" part":"")+'"></span><b>'+l+'</b><small>'+esc(rsFeedSay(k))+'</small></div>'; }).join("")+'</div></div>'+
     '<div class="rs-box rs-tools" id="rs-tools"><h3>Export Drops, Only If an Automatic Read Stops</h3><div class="fgrid">'+
       '<div class="field"><label class="flabel" for="rs-yt">YouTube Studio Export</label><input type="file" id="rs-yt" accept=".csv,.xlsx"><span class="hint">Views come in by themselves; this only adds watch time. Analytics › Advanced mode › Content › Export, matched by the episode number in the title.</span></div>'+
-      '<div class="field"><label class="flabel" for="rs-lifile">LinkedIn Page Analytics Export</label><input type="file" id="rs-lifile" accept=".csv,.xlsx,.xls"><span class="hint">Only needed if the 3-hourly LinkedIn read stops. MISMO page › Analytics › Content › Export (the All Posts tab).</span></div>'+
+      '<div class="field"><label class="flabel" for="rs-lifile">LinkedIn Page Analytics Export</label><input type="file" id="rs-lifile" accept=".csv,.xlsx,.xls"><span class="hint">Only needed if the LinkedIn read stops. MISMO page › Analytics › Content › Export (the All Posts tab).</span></div>'+
       '<div class="field"><label class="flabel" for="rs-mcfile">Mailchimp Campaigns Export</label><input type="file" id="rs-mcfile" accept=".csv,.xlsx"><span class="hint">Only needed if the Mailchimp read stops. Campaigns › Reports › Export, matched by subject and send date.</span></div>'+
     '</div><p class="hint" id="rs-msg" style="margin-top:10px">'+esc(RS.msg||"")+'</p></div>'+(x.due?'':mnCard());
 }
 /* the channels that can fill themselves: YouTube (once a day; GitHub usually runs it in the afternoon) and LinkedIn
-   (every 3 hours) do; Mailchimp does except its real (bot-filtered) opens and clicks; MISMO Matters (Higher Logic) is by hand */
+   (a few times a day) do; Mailchimp does except its real (bot-filtered) opens and clicks; MISMO Matters (Higher Logic) is by hand */
 const RS_FEEDS=[["youtube","YouTube"],["linkedin","LinkedIn"],["matters","MISMO Matters"],["mailchimp","Mailchimp"]];
 function rsFeedState(k){ if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "part"; return rsFeedOn(k)?"auto":"hand"; }
-function rsFeedShort(k,s){ return s==="hand"?"by hand":s==="part"?"partly by hand":k==="linkedin"?"every 3 hours":"once a day"; }
+function rsFeedShort(k,s){ return s==="hand"?"by hand":s==="part"?"partly by hand":k==="linkedin"?"a few times a day":"once a day"; }
 function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : k==="mailchimp" ? ((typeof mcLive==="function" && mcLive()) || !!feed(k)) : !!feed(k); }
 function rsFeedSay(k){
-  if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, every 3 hours"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
-  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic every 6 hours, except the real (bot-filtered) opens and clicks · last "+wtStamp(mcRun().lastOk);
+  if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, a few times a day"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
+  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic a few times a day, except the real (bot-filtered) opens and clicks · last "+wtStamp(mcRun().lastOk);
   if(feed(k)) return "Automatic, once a day · last "+wtStamp(feed(k).updated);
   return k==="matters"?"By hand: Record Stats from Higher Logic's report":k==="mailchimp"?"By hand: drop the campaigns export":"By hand";
 }
@@ -5316,7 +5316,7 @@ const HELP = [
   <p>Results puts every channel's numbers side by side: MISMO Matters open rate, LinkedIn impressions, Mic'd Up views, Mailchimp open rate, subscribers, the most-watched episodes, the posts that reached the most people, and what people download most. For the people MyMISMO lets in, a <b>MyMISMO</b> card shows the app's numbers for each summit and MISMO Trivia players by month (see <b>MyMISMO: Attendee Reports and Trivia</b>).</p>
   <p>Results opens on the <b>last 30 days</b>. Pick another period at the top; it holds until MISMO Media is closed.</p>
   <h3>Automatic or By Hand</h3>
-  <p>Each card is tagged. <b>Automatic</b> numbers come in by themselves: the website (Cloudflare, every night), LinkedIn (every 3 hours), Mic'd Up's YouTube views (once a day) and MISMO's LinkedIn Live numbers, visitor comments, downloads and sign-ups. <b>By Hand</b> numbers need someone: MISMO Matters (typed in from Higher Logic's report). Mailchimp is <b>Partly by Hand</b>: everything but the real opens and clicks is read every 6 hours (see below). <b>Partly by Hand</b> mixes the two. The navy band lists which is which, and each card's panel says where its numbers come from and when they last came in.</p>
+  <p>Each card is tagged. <b>Automatic</b> numbers come in by themselves: the website (Cloudflare, every night), LinkedIn (a few times a day), Mic'd Up's YouTube views (once a day) and MISMO's LinkedIn Live numbers, visitor comments, downloads and sign-ups. <b>By Hand</b> numbers need someone: MISMO Matters (typed in from Higher Logic's report). Mailchimp is <b>Partly by Hand</b>: everything but the real opens and clicks is read a few times a day (see below). <b>Partly by Hand</b> mixes the two. The navy band lists which is which, and each card's panel says where its numbers come from and when they last came in.</p>
   <h3>Bringing Numbers In by Hand</h3>
   <table class="t"><thead><tr><th>Platform</th><th>Where the Export Is</th><th>How It's Matched</th></tr></thead><tbody>
    <tr><td>YouTube</td><td>YouTube Studio › Analytics › Advanced mode › Content › Export</td><td>By the episode number in the title</td></tr>
@@ -5326,7 +5326,7 @@ const HELP = [
   </tbody></table>
   <p>YouTube and LinkedIn now come in by themselves, so their exports are only needed if the automatic read stops (the YouTube export also adds watch time). MISMO Matters is still by hand.</p>
   <h3>Mailchimp, Read Automatically</h3>
-  <p>The <b>Mailchimp reports</b> workflow in marketing-hq-data reads every sent campaign's report through Mailchimp's API every 6 hours (read only; it never sends anything). Each campaign fills in its Mailchimp record here (matched by campaign, or the same subject within a day), and campaigns nobody logged are added. <b>Bots:</b> Mailchimp's count includes opens and clicks from bots and email security scanners, and its API can't leave them out, while its report screen does. So the API's numbers are kept as <b>Opens Counting Bots</b> and <b>Clicks Counting Bots</b>, and the real opens and clicks are typed in from the report screen (bot filtering on) into <b>Unique Opens</b> and <b>Unique Clicks</b>. A send waiting for them shows <b>Real Numbers Due</b>; open and click rates count only real numbers. Results' Mailchimp panel shows <b>Real People and Bots</b>: the bot opens and clicks left out, the rates with and without bots, and MISMO Matters' rate beside them. It needs a Mailchimp API key saved as the <b>MAILCHIMP_API_KEY</b> secret on marketing-hq-data: in Mailchimp, open your profile › <b>Extras</b> › <b>API keys</b> › <b>Create A Key</b>, then paste the whole key (it ends in -us16) into the secret. System Health shows whether it's reading.</p>
+  <p>The <b>Mailchimp reports</b> workflow in marketing-hq-data reads every sent campaign's report through Mailchimp's API a few times a day (it's set for every 6 hours; GitHub often runs it less often; read only, it never sends anything). Each campaign fills in its Mailchimp record here (matched by campaign, or the same subject within a day), and campaigns nobody logged are added. <b>Bots:</b> Mailchimp's count includes opens and clicks from bots and email security scanners, and its API can't leave them out, while its report screen does. So the API's numbers are kept as <b>Opens Counting Bots</b> and <b>Clicks Counting Bots</b>, and the real opens and clicks are typed in from the report screen (bot filtering on) into <b>Unique Opens</b> and <b>Unique Clicks</b>. A send waiting for them shows <b>Real Numbers Due</b>; open and click rates count only real numbers. Results' Mailchimp panel shows <b>Real People and Bots</b>: the bot opens and clicks left out, the rates with and without bots, and MISMO Matters' rate beside them. It needs a Mailchimp API key saved as the <b>MAILCHIMP_API_KEY</b> secret on marketing-hq-data: in Mailchimp, open your profile › <b>Extras</b> › <b>API keys</b> › <b>Create A Key</b>, then paste the whole key (it ends in -us16) into the secret. System Health shows whether it's reading.</p>
   <h3>The Monthly Reminder</h3>
   <p>On the 1st of each month, the previous month's numbers come due. A checklist sits at the top of Results (LinkedIn's line also shows on the LinkedIn page), a pop-up appears on those pages until everything is in, Results shows a count in the menu, and the date is on the Schedule. Each line ticks itself off when its file is dropped in (or the MISMO Matters stats are typed in), and channels the daily feed already covers tick themselves off. <b>Mark Done</b> ticks one off by hand; <b>Remind Me Tomorrow</b> hides the pop-up for the day.</p>`},
  {id:"people", t:"Subscribers and Downloaders", g:"Audience", b:`
@@ -8574,7 +8574,7 @@ function wireCert(b, doc, ed){
    Delete (with a way to bring it back). Also: the background-job runner, one autopilot tab per browser,
    the spreadsheet reader loaded on demand, keyboard access to clickable rows, and
    a download of all the data. (Approvals show in Home's On Your Plate list, not a card of their own.) */
-const BUILD = "2026-11-28 12:23 ET · 1210823";
+const BUILD = "2026-11-28 12:36 ET · a715e8e";
 
 /* ---------- one autopilot tab per browser ----------
    Two tabs open in the same browser used to both run the Mic'd Up autopilot (two kits written, two emails
@@ -9912,7 +9912,7 @@ function rsWebsiteHL(){
 }
 function rsWebsite(){
   const all=wtDays(), run=wtRun();
-  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed every 3 hours</span></div>';
+  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed a few times a day</span></div>';
   if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first pull from Cloudflare hasn\'t run yet. It runs every 3 hours and brings today so far; numbers start with Nov 20, 2026.')+
     (wtHL()?'':' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.')+'</div>'+rsWebsiteHL()+'</div>';
   /* the days in the Results period */
@@ -9965,13 +9965,13 @@ function wtWire(el){ const s=$("#wt-days",el); if(s) s.onchange=()=>{ WT.days=+s
 /* System Health: the nightly pull and the token's end date */
 function hhWebTraffic(){
   const r=wtRun();
-  if(!r) return LOADED.has("webtraffic")? hhRow("cfwa","Cloudflare Web Analytics","off","Hasn't run yet. It pulls www.mismo.org's visit counts every 3 hours, with today so far.") : null;
+  if(!r) return LOADED.has("webtraffic")? hhRow("cfwa","Cloudflare Web Analytics","off","Hasn't run yet. It pulls www.mismo.org's visit counts a few times a day, with today so far.") : null;
   const left=Math.ceil((Date.parse(WT_TOKEN_EXPIRES+"T00:00:00Z")-Date.now())/864e5);
   const tok=left<=30 ? " The Cloudflare token "+(left<=0?"expired":"expires")+" Nov 20, 2027"+(left>0?" (in "+left+" day"+(left===1?"":"s")+")":"")+": ask for a new read-only one and put it in the CLOUDFLARE_ANALYTICS_TOKEN secret on marketing-hq-data." : "";
   if(!r.ok) return hhRow("cfwa","Cloudflare Web Analytics","bad","The nightly pull failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good pull "+hhWhen(r.lastOk)+".":"No good pull yet.")+tok);
   if(left<=30) return hhRow("cfwa","Cloudflare Web Analytics","warn",tok.trim());
   const hrs=(Date.now()-Date.parse(r.at))/36e5;
-  if(hrs>8) return hhRow("cfwa","Cloudflare Web Analytics","warn","Last pulled "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"Web traffic\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
+  if(hrs>16) return hhRow("cfwa","Cloudflare Web Analytics","warn","Last pulled "+hhWhen(r.at)+", more than 16 hours ago (it's set for every 3 hours, and GitHub usually runs it two or three times a day). The \"Web traffic\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
   const d=wtDays(), last=d[d.length-1];
   return hhRow("cfwa","Cloudflare Web Analytics","ok","Pulled "+hhWhen(r.at)+"."+(last?" "+fS(last.date)+": "+rsN(last.visits)+" visits, "+rsN(last.views)+" page views.":""));
 }
@@ -10176,13 +10176,13 @@ async function liSync(){
 /* System Health */
 function hhLinkedIn(){
   const r=liRun();
-  if(!r) return LOADED.has("linkedin") ? hhRow("liapi","LinkedIn Page","off","Not connected yet. Once LinkedIn approves the MISMO Media Page Reporting app, the LinkedIn page workflow reads posts and numbers every 3 hours.") : null;
+  if(!r) return LOADED.has("linkedin") ? hhRow("liapi","LinkedIn Page","off","Not connected yet. Once LinkedIn approves the MISMO Media Page Reporting app, the LinkedIn page workflow reads posts and numbers a few times a day.") : null;
   if(r.waiting) return hhRow("liapi","LinkedIn Page","off",r.error||"Not connected yet.");
   const left=r.tokenExpires ? Math.ceil((Date.parse(r.tokenExpires+"T00:00:00Z")-Date.now())/864e5) : null;
   const tok=left!=null && left<=10 ? " The LinkedIn token "+(left<=0?"ran out":"runs out")+" "+fS(r.tokenExpires)+": a page admin makes a new one in LinkedIn's token generator and saves it as the LINKEDIN_TOKEN secret on marketing-hq-data (and the new date in LINKEDIN_TOKEN_EXPIRES)." : "";
   if(!r.ok) return hhRow("liapi","LinkedIn Page","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+tok);
   if(left!=null && left<=10) return hhRow("liapi","LinkedIn Page","warn",tok.trim());
-  if((Date.now()-Date.parse(r.at))/36e5>8) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
+  if((Date.now()-Date.parse(r.at))/36e5>16) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 16 hours ago (it's set for every 3 hours, and GitHub usually runs it two or three times a day). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
   return hhRow("liapi","LinkedIn Page","ok","Read "+hhWhen(r.at)+": "+rsN(r.posts)+" posts"+(r.followers?", "+rsN(r.followers)+" followers":"")+"."+(LI_API.err?" Matching them here hit a problem: "+LI_API.err:""));
 }
 /* ================= New certifications from the CMS, for MISMO Matters (Nov 21, 2026) =================
@@ -11741,10 +11741,10 @@ async function mcApiSync(){
 /* System Health */
 function hhMailchimp(){
   const r=mcRun();
-  if(!r) return LOADED.has("mailchimp") ? hhRow("mcapi","Mailchimp Reports","off","Not connected yet. Once a Mailchimp API key is saved as the MAILCHIMP_API_KEY secret on marketing-hq-data, every campaign's numbers come in by themselves every 6 hours.") : null;
+  if(!r) return LOADED.has("mailchimp") ? hhRow("mcapi","Mailchimp Reports","off","Not connected yet. Once a Mailchimp API key is saved as the MAILCHIMP_API_KEY secret on marketing-hq-data, every campaign's numbers come in by themselves a few times a day.") : null;
   if(r.waiting) return hhRow("mcapi","Mailchimp Reports","off",(r.error||"Not connected yet.")+" Until then, drop the Mailchimp campaigns export on Results.");
   if(!r.ok) return hhRow("mcapi","Mailchimp Reports","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+" The export can still be dropped on Results.");
-  if((Date.now()-Date.parse(r.at))/36e5>14) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 14 hours ago (it runs every 6). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
+  if((Date.now()-Date.parse(r.at))/36e5>20) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 20 hours ago (it's set for every 6 hours, and GitHub often runs it less often). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
   return hhRow("mcapi","Mailchimp Reports","ok","Read "+hhWhen(r.at)+": "+rsN(r.campaigns)+" campaigns from the last 120 days."+(MC_API.err?" Matching them here hit a problem: "+MC_API.err:""));
 }
 /* the Mailchimp sends still missing their real (bot-filtered) opens and clicks, newest first */
@@ -11892,7 +11892,7 @@ function pieceFields(ch){
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
   if(ch==="youtube") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"watchHours",label:"Watch Time (Hours)",type:"number"});
   if(ch==="community") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"replies",label:"Replies",type:"number"});
-  if(ch==="mailchimp") base.push({sec:"Results"},{k:"sent",label:"Sent To",type:"number"},{k:"opens",label:"Unique Opens",type:"number",hint:"Real people: the opened count on Mailchimp's report screen, bot filtering on"},{k:"clicks",label:"Unique Clicks",type:"number",hint:"Real people: the clicked count, bot filtering on"},{k:"unsubs",label:"Unsubscribes",type:"number"},{k:"opensAll",label:"Opens Counting Bots",type:"number",hint:"Filled in from Mailchimp every 6 hours"},{k:"clicksAll",label:"Clicks Counting Bots",type:"number",hint:"Filled in from Mailchimp every 6 hours"});
+  if(ch==="mailchimp") base.push({sec:"Results"},{k:"sent",label:"Sent To",type:"number"},{k:"opens",label:"Unique Opens",type:"number",hint:"Real people: the opened count on Mailchimp's report screen, bot filtering on"},{k:"clicks",label:"Unique Clicks",type:"number",hint:"Real people: the clicked count, bot filtering on"},{k:"unsubs",label:"Unsubscribes",type:"number"},{k:"opensAll",label:"Opens Counting Bots",type:"number",hint:"Filled in from Mailchimp automatically"},{k:"clicksAll",label:"Clicks Counting Bots",type:"number",hint:"Filled in from Mailchimp automatically"});
   base.push({sec:"Also Use It In"},{k:"touch",label:"Other places this goes",type:"checks",opts:[["matters","MISMO Matters"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["website","Website"]]});
   base.push({k:"notes",label:"Notes",type:"rich",rows:3});
   return base;
