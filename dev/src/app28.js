@@ -76,12 +76,12 @@ async function liSync(){
 /* System Health */
 function hhLinkedIn(){
   const r=liRun();
-  if(!r) return LOADED.has("linkedin") ? hhRow("liapi","LinkedIn Page","off","Not connected yet. Once LinkedIn approves the MISMO Media Page Reporting app, the LinkedIn page workflow reads posts and numbers every 3 hours.") : null;
+  if(!r) return LOADED.has("linkedin") ? hhRow("liapi","LinkedIn Page","off","Not connected yet. Once LinkedIn approves the MISMO Media Page Reporting app, the LinkedIn page workflow reads posts and numbers a few times a day.") : null;
   if(r.waiting) return hhRow("liapi","LinkedIn Page","off",r.error||"Not connected yet.");
   const left=r.tokenExpires ? Math.ceil((Date.parse(r.tokenExpires+"T00:00:00Z")-Date.now())/864e5) : null;
   const tok=left!=null && left<=10 ? " The LinkedIn token "+(left<=0?"ran out":"runs out")+" "+fS(r.tokenExpires)+": a page admin makes a new one in LinkedIn's token generator and saves it as the LINKEDIN_TOKEN secret on marketing-hq-data (and the new date in LINKEDIN_TOKEN_EXPIRES)." : "";
   if(!r.ok) return hhRow("liapi","LinkedIn Page","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+tok);
   if(left!=null && left<=10) return hhRow("liapi","LinkedIn Page","warn",tok.trim());
-  if((Date.now()-Date.parse(r.at))/36e5>8) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
+  if((Date.now()-Date.parse(r.at))/36e5>16) return hhRow("liapi","LinkedIn Page","warn","Last read "+hhWhen(r.at)+", more than 16 hours ago (it's set for every 3 hours, and GitHub usually runs it two or three times a day). The \"LinkedIn page\" workflow in marketing-hq-data may be paused.");
   return hhRow("liapi","LinkedIn Page","ok","Read "+hhWhen(r.at)+": "+rsN(r.posts)+" posts"+(r.followers?", "+rsN(r.followers)+" followers":"")+"."+(LI_API.err?" Matching them here hit a problem: "+LI_API.err:""));
 }

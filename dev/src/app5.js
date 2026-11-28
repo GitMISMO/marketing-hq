@@ -315,10 +315,10 @@ function rsSrc(k){
   const li=typeof liLive==="function" && liLive(), lr=typeof liRun==="function"?liRun():null, yt=feed("youtube");
   const S_={
     mm:{a:"hand", t:"Typed in from Higher Logic's mailing report (Record Stats). Higher Logic has no way for MISMO Media to read it by itself.", w:ed&&edStats(ed).asOf?"numbers as of "+String(edStats(ed).asOf).split(",")[0]:""},
-    mc:(typeof mcLive==="function" && mcLive())?{a:"mix", t:"Sends, deliveries, bounces, unsubscribes and the counts with bots are read from Mailchimp every 6 hours; the real (bot-filtered) opens and clicks come from Mailchimp's report screen"+(mcNeedsReal().length?" ("+mcNeedsReal().length+" send"+(mcNeedsReal().length===1?"":"s")+" waiting)":"")+".", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
+    mc:(typeof mcLive==="function" && mcLive())?{a:"mix", t:"Sends, deliveries, bounces, unsubscribes and the counts with bots are read from Mailchimp a few times a day; the real (bot-filtered) opens and clicks come from Mailchimp's report screen"+(mcNeedsReal().length?" ("+mcNeedsReal().length+" send"+(mcNeedsReal().length===1?"":"s")+" waiting)":"")+".", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
     web:{a:"auto", t:"Counted by Cloudflare every night, plus today so far.", w:typeof wtUpdated==="function"&&wtUpdated()?"last "+wtUpdated():""},
-    li:li?{a:"auto", t:"Read from MISMO's LinkedIn page every 3 hours.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
-    mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views once a day; MISMO's LinkedIn Live numbers every 3 hours.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views once a day and LinkedIn every 3 hours by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
+    li:li?{a:"auto", t:"Read from MISMO's LinkedIn page a few times a day.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
+    mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views once a day; MISMO's LinkedIn Live numbers a few times a day.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views once a day and LinkedIn a few times a day by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
     voices:{a:"auto", t:"Arrives from the website's AI answer feedback and problem form as people send them.", w:""},
     lists:{a:"mix", t:"Sign-ups, unsubscribes and downloaders come in by themselves; the MISMO Matters list size comes from its Higher Logic stats, typed in.", w:""},
     dl:{a:"auto", t:"From the website's Before You Download form, as people download.", w:""},
@@ -485,7 +485,7 @@ function rsDLI(x){
         let g=''; for(let v=0; v<=top; v+=top/4){ const y=Tp+(1-v/top)*(H-Tp-B); g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+y+'" y2="'+y+'" class="rs-grid"/><text x="'+(L-6)+'" y="'+(y+4)+'" class="rs-ax" text-anchor="end">'+rsN(v)+'</text>'; }
         return '<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="LinkedIn page impressions each day">'+g+d.map((p,i)=>{ const v=+p.impressions||0, h=Math.max(1,v/top*(H-Tp-B)); return '<rect class="wt-bar" x="'+(L+i*bw+bw*0.15)+'" width="'+(bw*0.7)+'" y="'+(H-B-h)+'" height="'+h+'" rx="1.5" data-tip="'+esc(fS(p.date)+"\n"+rsN(v)+" impressions · "+rsN(p.clicks)+" clicks · "+rsN(p.reactions)+" reactions")+'"/>'+((i%Math.max(5,Math.ceil(d.length/12))===0||i===d.length-1)?'<text x="'+(L+i*bw+bw/2)+'" y="'+(H-7)+'" class="rs-ax" text-anchor="middle">'+(d.length>40?fS(p.date):+p.date.slice(8))+'</text>':''); }).join("")+'</svg>'; })()+
       '</div><p class="rs-note">Every post on MISMO\'s page added together, one bar a day. These come from the daily sheet of the LinkedIn export, so they can\'t say which post a day\'s views went to.</p></div>':'';
-  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · '+(typeof liLive==="function" && liLive() ? 'read from LinkedIn every 3 hours' : 'from the monthly export and impressions typed on a post')+'</span></div>'+
+  return '<div class="card rs-sec" id="rs-li"><div class="ch"><h2>LinkedIn</h2><span class="note">MISMO\'s LinkedIn page · '+(typeof liLive==="function" && liLive() ? 'read from LinkedIn a few times a day' : 'from the monthly export and impressions typed on a post')+'</span></div>'+
     ((posts.length||x.liMo.length)?rsKpis((x.liMo.length?[{v:rsN(x.liMoImp),k:"Page Impressions",s:x.pt+", every post together"},{v:rsN(dsum("clicks")),k:"Page Clicks",s:x.pt},{v:rsN(dsum("reactions")),k:"Page Reactions",s:x.pt},{v:x.liBest?rsN(x.liBest.impressions):"—",k:"Busiest Day",s:x.liBest?fS(x.liBest.date):""}]:[])
         .concat(posts.length?[{v:rsN(posts.length),k:"Posts Logged",s:rsN(tot("i"))+" impressions"}]:[])
         .concat(typeof liRun==="function" && liRun() && liRun().followers ? [{v:rsN(liRun().followers),k:"Followers",s:"read "+hhWhen(liRun().at)}] : []))+daily+
@@ -556,19 +556,19 @@ function rsDTools(x){
     '<div class="rs-box"><h3>How Each Channel Comes In</h3><div class="feedrow">'+RS_FEEDS.map(([k,l])=>{ const s=rsFeedState(k); return '<div class="feedst"><span class="fdot'+(s==="auto"?" on":s==="part"?" part":"")+'"></span><b>'+l+'</b><small>'+esc(rsFeedSay(k))+'</small></div>'; }).join("")+'</div></div>'+
     '<div class="rs-box rs-tools" id="rs-tools"><h3>Export Drops, Only If an Automatic Read Stops</h3><div class="fgrid">'+
       '<div class="field"><label class="flabel" for="rs-yt">YouTube Studio Export</label><input type="file" id="rs-yt" accept=".csv,.xlsx"><span class="hint">Views come in by themselves; this only adds watch time. Analytics › Advanced mode › Content › Export, matched by the episode number in the title.</span></div>'+
-      '<div class="field"><label class="flabel" for="rs-lifile">LinkedIn Page Analytics Export</label><input type="file" id="rs-lifile" accept=".csv,.xlsx,.xls"><span class="hint">Only needed if the 3-hourly LinkedIn read stops. MISMO page › Analytics › Content › Export (the All Posts tab).</span></div>'+
+      '<div class="field"><label class="flabel" for="rs-lifile">LinkedIn Page Analytics Export</label><input type="file" id="rs-lifile" accept=".csv,.xlsx,.xls"><span class="hint">Only needed if the LinkedIn read stops. MISMO page › Analytics › Content › Export (the All Posts tab).</span></div>'+
       '<div class="field"><label class="flabel" for="rs-mcfile">Mailchimp Campaigns Export</label><input type="file" id="rs-mcfile" accept=".csv,.xlsx"><span class="hint">Only needed if the Mailchimp read stops. Campaigns › Reports › Export, matched by subject and send date.</span></div>'+
     '</div><p class="hint" id="rs-msg" style="margin-top:10px">'+esc(RS.msg||"")+'</p></div>'+(x.due?'':mnCard());
 }
 /* the channels that can fill themselves: YouTube (once a day; GitHub usually runs it in the afternoon) and LinkedIn
-   (every 3 hours) do; Mailchimp does except its real (bot-filtered) opens and clicks; MISMO Matters (Higher Logic) is by hand */
+   (a few times a day) do; Mailchimp does except its real (bot-filtered) opens and clicks; MISMO Matters (Higher Logic) is by hand */
 const RS_FEEDS=[["youtube","YouTube"],["linkedin","LinkedIn"],["matters","MISMO Matters"],["mailchimp","Mailchimp"]];
 function rsFeedState(k){ if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "part"; return rsFeedOn(k)?"auto":"hand"; }
-function rsFeedShort(k,s){ return s==="hand"?"by hand":s==="part"?"partly by hand":k==="linkedin"?"every 3 hours":"once a day"; }
+function rsFeedShort(k,s){ return s==="hand"?"by hand":s==="part"?"partly by hand":k==="linkedin"?"a few times a day":"once a day"; }
 function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : k==="mailchimp" ? ((typeof mcLive==="function" && mcLive()) || !!feed(k)) : !!feed(k); }
 function rsFeedSay(k){
-  if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, every 3 hours"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
-  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic every 6 hours, except the real (bot-filtered) opens and clicks · last "+wtStamp(mcRun().lastOk);
+  if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, a few times a day"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
+  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic a few times a day, except the real (bot-filtered) opens and clicks · last "+wtStamp(mcRun().lastOk);
   if(feed(k)) return "Automatic, once a day · last "+wtStamp(feed(k).updated);
   return k==="matters"?"By hand: Record Stats from Higher Logic's report":k==="mailchimp"?"By hand: drop the campaigns export":"By hand";
 }

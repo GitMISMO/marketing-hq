@@ -78,7 +78,7 @@ function rsWebsiteHL(){
 }
 function rsWebsite(){
   const all=wtDays(), run=wtRun();
-  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed every 3 hours</span></div>';
+  const head='<div class="ch"><h2>Website · www.mismo.org</h2><span class="note">'+(wtUpdated()?'<b>Updated '+esc(wtUpdated())+'</b> · ':'')+'counted by Cloudflare Web Analytics since Nov 20, 2026 · no cookies · site admins not counted · refreshed a few times a day</span></div>';
   if(!all.length) return '<div class="card rs-sec" id="rs-web">'+head+'<div class="empty">'+(run&&!run.ok?'The pull from Cloudflare didn\'t work: '+esc(run.error||"no reason given")+'. System Health shows it too.':'The first pull from Cloudflare hasn\'t run yet. It runs every 3 hours and brings today so far; numbers start with Nov 20, 2026.')+
     (wtHL()?'':' For traffic before Nov 20, use Higher Logic\'s Site Traffic report.')+'</div>'+rsWebsiteHL()+'</div>';
   /* the days in the Results period */
@@ -131,13 +131,13 @@ function wtWire(el){ const s=$("#wt-days",el); if(s) s.onchange=()=>{ WT.days=+s
 /* System Health: the nightly pull and the token's end date */
 function hhWebTraffic(){
   const r=wtRun();
-  if(!r) return LOADED.has("webtraffic")? hhRow("cfwa","Cloudflare Web Analytics","off","Hasn't run yet. It pulls www.mismo.org's visit counts every 3 hours, with today so far.") : null;
+  if(!r) return LOADED.has("webtraffic")? hhRow("cfwa","Cloudflare Web Analytics","off","Hasn't run yet. It pulls www.mismo.org's visit counts a few times a day, with today so far.") : null;
   const left=Math.ceil((Date.parse(WT_TOKEN_EXPIRES+"T00:00:00Z")-Date.now())/864e5);
   const tok=left<=30 ? " The Cloudflare token "+(left<=0?"expired":"expires")+" Nov 20, 2027"+(left>0?" (in "+left+" day"+(left===1?"":"s")+")":"")+": ask for a new read-only one and put it in the CLOUDFLARE_ANALYTICS_TOKEN secret on marketing-hq-data." : "";
   if(!r.ok) return hhRow("cfwa","Cloudflare Web Analytics","bad","The nightly pull failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good pull "+hhWhen(r.lastOk)+".":"No good pull yet.")+tok);
   if(left<=30) return hhRow("cfwa","Cloudflare Web Analytics","warn",tok.trim());
   const hrs=(Date.now()-Date.parse(r.at))/36e5;
-  if(hrs>8) return hhRow("cfwa","Cloudflare Web Analytics","warn","Last pulled "+hhWhen(r.at)+", more than 8 hours ago (it runs every 3). The \"Web traffic\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
+  if(hrs>16) return hhRow("cfwa","Cloudflare Web Analytics","warn","Last pulled "+hhWhen(r.at)+", more than 16 hours ago (it's set for every 3 hours, and GitHub usually runs it two or three times a day). The \"Web traffic\" workflow in marketing-hq-data may be paused; GitHub pauses scheduled runs after 60 days without changes.");
   const d=wtDays(), last=d[d.length-1];
   return hhRow("cfwa","Cloudflare Web Analytics","ok","Pulled "+hhWhen(r.at)+"."+(last?" "+fS(last.date)+": "+rsN(last.visits)+" visits, "+rsN(last.views)+" page views.":""));
 }

@@ -51,10 +51,10 @@ async function mcApiSync(){
 /* System Health */
 function hhMailchimp(){
   const r=mcRun();
-  if(!r) return LOADED.has("mailchimp") ? hhRow("mcapi","Mailchimp Reports","off","Not connected yet. Once a Mailchimp API key is saved as the MAILCHIMP_API_KEY secret on marketing-hq-data, every campaign's numbers come in by themselves every 6 hours.") : null;
+  if(!r) return LOADED.has("mailchimp") ? hhRow("mcapi","Mailchimp Reports","off","Not connected yet. Once a Mailchimp API key is saved as the MAILCHIMP_API_KEY secret on marketing-hq-data, every campaign's numbers come in by themselves a few times a day.") : null;
   if(r.waiting) return hhRow("mcapi","Mailchimp Reports","off",(r.error||"Not connected yet.")+" Until then, drop the Mailchimp campaigns export on Results.");
   if(!r.ok) return hhRow("mcapi","Mailchimp Reports","bad","The read failed "+hhWhen(r.at)+": "+(r.error||"no reason given")+". "+(r.lastOk?"Last good read "+hhWhen(r.lastOk)+".":"No good read yet.")+" The export can still be dropped on Results.");
-  if((Date.now()-Date.parse(r.at))/36e5>14) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 14 hours ago (it runs every 6). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
+  if((Date.now()-Date.parse(r.at))/36e5>20) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 20 hours ago (it's set for every 6 hours, and GitHub often runs it less often). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
   return hhRow("mcapi","Mailchimp Reports","ok","Read "+hhWhen(r.at)+": "+rsN(r.campaigns)+" campaigns from the last 120 days."+(MC_API.err?" Matching them here hit a problem: "+MC_API.err:""));
 }
 /* the Mailchimp sends still missing their real (bot-filtered) opens and clicks, newest first */
