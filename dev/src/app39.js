@@ -3,15 +3,23 @@
    marketing-hq-data reads every sent campaign's report through Mailchimp's Marketing API every 6 hours (read only;
    nothing is ever sent) into data/mailchimp.json: "mailchimp/c-<campaign id>" per campaign and "mailchimp/_run".
    Here each campaign is matched to its Mailchimp record (by campaign id, or the same subject within a day) and its
-   numbers are filled in; campaigns nobody logged are added, so nobody drops the export any more. */
+   numbers are filled in; campaigns nobody logged are added, so nobody drops the export any more.
+   Bots (Jonna, Nov 28, 2026: "i want the accurate numbers and the bot number separated so i can show that mailchimp
+   isn't actually higher than informz because it counts bots"): Mailchimp's API counts bot opens and clicks (security
+   scanners); its report screen leaves them out and the API has no way to. So the API's opens and clicks are kept in
+   their own fields (opensAll, clicksAll, totalOpensAll, totalClicksAll, linksAll) and never written over the real ones
+   (opens, clicks, totalOpens, totalClicks, links), which come from Mailchimp's report screen. Bots = all minus real.
+   Sends, deliveries, bounces, unsubscribes and forwards aren't touched by bots and fill in by themselves. */
 const MC_API={done:"", busy:false, timer:0, err:""};
 function mcRun(){ return (S.mailchimp||{})._run || null; }
 function mcLive(){ const r=mcRun(); return !!(r && r.ok && r.lastOk && (Date.now()-Date.parse(r.lastOk))<3*864e5); }
 function mcApiCamps(){ return Object.values(S.mailchimp||{}).filter(d=>d && d.id && d.date && +d.sent); }
 /* the month's Mailchimp numbers are in once a good read happened after the month ended */
 function mcApiCovers(per){ const r=mcRun(); if(!r || !r.lastOk) return false; const [y,m]=per.split("-").map(Number); return r.lastOk.slice(0,10) > new Date(Date.UTC(y,m,0)).toISOString().slice(0,10); }
-const mcNums=x=>({sent:+x.sent||0, delivered:+x.delivered||0, opens:+x.opens||0, clicks:+x.clicks||0, unsubs:+x.unsubs||0, bounces:+x.bounces||0,
-  totalOpens:+x.totalOpens||0, totalClicks:+x.totalClicks||0, forwards:+x.forwards||0, links:(x.links||[]).map(l=>[String(l[0]), +l[1]||0])});
+const mcNums=x=>({sent:+x.sent||0, delivered:+x.delivered||0, unsubs:+x.unsubs||0, bounces:+x.bounces||0, forwards:+x.forwards||0,
+  opensAll:+x.opens||0, clicksAll:+x.clicks||0, totalOpensAll:+x.totalOpens||0, totalClicksAll:+x.totalClicks||0, linksAll:(x.links||[]).map(l=>[String(l[0]), +l[1]||0])});
+/* a send has its real (bot-filtered) numbers once someone has brought them in from Mailchimp's report screen */
+const mcHasReal=p=>p.opens!=null && p.opens!=="";
 const mcSame=(rec, part)=>Object.keys(part).every(k=>JSON.stringify(rec[k]==null?"":rec[k])===JSON.stringify(part[k]==null?"":part[k]));
 function mcFindPiece(x, taken){
   const ps=vals("pieces").filter(p=>p.channel==="mailchimp" && !p.archived && !taken.has(p.id));
@@ -49,3 +57,5 @@ function hhMailchimp(){
   if((Date.now()-Date.parse(r.at))/36e5>14) return hhRow("mcapi","Mailchimp Reports","warn","Last read "+hhWhen(r.at)+", more than 14 hours ago (it runs every 6). The \"Mailchimp reports\" workflow in marketing-hq-data may be paused.");
   return hhRow("mcapi","Mailchimp Reports","ok","Read "+hhWhen(r.at)+": "+rsN(r.campaigns)+" campaigns from the last 120 days."+(MC_API.err?" Matching them here hit a problem: "+MC_API.err:""));
 }
+/* the Mailchimp sends still missing their real (bot-filtered) opens and clicks, newest first */
+function mcNeedsReal(per){ return vals("pieces").filter(p=>p.channel==="mailchimp" && !p.archived && +p.sent && p.mcId && !mcHasReal(p) && (!per || String(p.date||"").slice(0,7)===per)).sort((a,b)=>String(b.date).localeCompare(String(a.date))); }

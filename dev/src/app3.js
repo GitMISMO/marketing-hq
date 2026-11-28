@@ -141,7 +141,7 @@ function pieceFields(ch){
   if(ch==="linkedin") base.push({sec:"Results"},{k:"impressions",label:"Impressions",type:"number"},{k:"clicks",label:"Clicks",type:"number"},{k:"reactions",label:"Reactions",type:"number"},{k:"comments",label:"Comments",type:"number"},{k:"reposts",label:"Reposts",type:"number"});
   if(ch==="youtube") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"watchHours",label:"Watch Time (Hours)",type:"number"});
   if(ch==="community") base.push({sec:"Results"},{k:"views",label:"Views",type:"number"},{k:"replies",label:"Replies",type:"number"});
-  if(ch==="mailchimp") base.push({sec:"Results"},{k:"sent",label:"Sent To",type:"number"},{k:"opens",label:"Unique Opens",type:"number"},{k:"clicks",label:"Unique Clicks",type:"number"},{k:"unsubs",label:"Unsubscribes",type:"number"});
+  if(ch==="mailchimp") base.push({sec:"Results"},{k:"sent",label:"Sent To",type:"number"},{k:"opens",label:"Unique Opens",type:"number",hint:"Real people: the opened count on Mailchimp's report screen, bot filtering on"},{k:"clicks",label:"Unique Clicks",type:"number",hint:"Real people: the clicked count, bot filtering on"},{k:"unsubs",label:"Unsubscribes",type:"number"},{k:"opensAll",label:"Opens Counting Bots",type:"number",hint:"Filled in from Mailchimp every 6 hours"},{k:"clicksAll",label:"Clicks Counting Bots",type:"number",hint:"Filled in from Mailchimp every 6 hours"});
   base.push({sec:"Also Use It In"},{k:"touch",label:"Other places this goes",type:"checks",opts:[["matters","MISMO Matters"],["linkedin","LinkedIn"],["youtube","YouTube"],["mailchimp","Mailchimp"],["website","Website"]]});
   base.push({k:"notes",label:"Notes",type:"rich",rows:3});
   return base;
@@ -171,7 +171,7 @@ function pieceRows(list, cols){
   return list.map(p=>'<tr class="click'+(pClosed(p)?" past":"")+(p.status==="canceled"?" cxrow":"")+'" data-pc="'+esc(p.id||"")+'"'+(p._ep?' data-epi="'+esc(p._ep)+'"':'')+(p._sec?' data-sec="'+esc(p._sec)+'"':'')+'><td><b>'+esc(fD(p.date))+'</b>'+(p.date&&pOpen(p)&&p.date<T()?'<span class="t2" style="color:var(--bad)">past due</span>':'')+'</td><td>'+esc(p.title||"Untitled")+(cols.includes("review")&&p.reviewLink?' <a class="revlink" href="'+esc(p.reviewLink)+'" target="_blank" rel="noopener" data-stop="1">Review ↗</a>':'')+(p.status==="canceled"&&p.cancelReason?'<span class="t2 cxwhy">Canceled: '+esc(p.cancelReason.slice(0,120))+'</span>':p.notes?'<span class="t2">'+esc(mdPlain(p.notes).slice(0,90))+'</span>':'')+'</td>'+
     (cols.includes("kind")?'<td>'+esc(p.kind||p.via||"")+'</td>':'')+(cols.includes("aud")?'<td>'+esc(p.audience||"")+'</td>':'')+
     '<td>'+esc(p.owner||"")+'</td><td>'+chip(PSTAT,p.status||"idea")+'</td>'+
-    (cols.includes("stats")?'<td class="n">'+(p.sent?pct((+p.opens||0)/p.sent):"—")+'</td><td class="n">'+(p.sent?pct((+p.clicks||0)/p.sent):"—")+'</td>':'')+'</tr>').join("");
+    (cols.includes("stats")?'<td class="n">'+(p.sent&&p.opens!=null&&p.opens!==""?pct((+p.opens||0)/p.sent):"—")+'</td><td class="n">'+(p.sent&&p.opens!=null&&p.opens!==""?pct((+p.clicks||0)/p.sent):"—")+'</td>':'')+'</tr>').join("");
 }
 function wirePieceRows(el){
   $$("a[data-stop]",el).forEach(a=>a.addEventListener("click",e=>e.stopPropagation()));
@@ -244,7 +244,7 @@ function renderMailchimp(){
   const list=vals("pieces").filter(p=>p.channel==="mailchimp").sort((a,b)=>(a.date||"")<(b.date||"")?1:-1);
   const up=list.filter(pOpen), done=list.filter(p=>p.status==="done"), cxd=list.filter(p=>p.status==="canceled");
   const month=list.filter(p=>p.date&&p.date.slice(0,7)===t.slice(0,7)).length;
-  const sent=done.filter(p=>+p.sent); const avgOpen = sent.length ? sent.reduce((n,p)=>n+(+p.opens||0)/(+p.sent),0)/sent.length : 0;
+  const sent=done.filter(p=>+p.sent && p.opens!=null && p.opens!=="");   /* only sends with their real (bot-filtered) opens in */ const avgOpen = sent.length ? sent.reduce((n,p)=>n+(+p.opens||0)/(+p.sent),0)/sent.length : 0;
   el.innerHTML='<div class="phead"><div><div class="eyebrow">Marketing Email</div><h1>Mailchimp</h1><div class="sub">Campaign sends while marketing email moves into Higher Logic. Unsubscribes from here go into the one unsubscribe list.</div></div><div class="tools"><button class="btn pri" type="button" id="mc-new">+ New Campaign</button></div></div>'+
     '<div class="band">'+mailchimpHero(list)+'<div class="say">'+(up.length?'<em>'+up.length+' campaign'+(up.length>1?"s":"")+'</em> in the works. ':'No campaigns in the works. ')+'Before any send, pull the latest unsubscribes so the unified list stays whole.</div><div class="tiles">'+
       '<div class="tile"><div class="v sky">'+up.length+'</div><div class="k">In the Works</div><div class="s">not sent yet</div></div>'+

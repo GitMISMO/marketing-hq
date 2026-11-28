@@ -221,8 +221,12 @@ function mcTopic(s){ const t=String(s||"").toLowerCase();
 function mcSends(){
   const own=vals("pieces").filter(p=>p.channel==="mailchimp" && +p.sent && !p.archived);
   const fc=feedCampaigns().filter(c=>+c.sent && !own.some(p=>(p.title||"").toLowerCase()===(c.subject||"").toLowerCase()));
-  return own.map(p=>({id:p.id, name:p.mcName||p.title||"", subject:p.title||"", date:p.date||"", sent:+p.sent, dl:+p.delivered||+p.sent, o:+p.opens||0, c:+p.clicks||0, u:+p.unsubs||0, b:+p.bounces||0, resend:!!p.resend || /^resend:/i.test(p.mcName||""), seg:p.segment||"", links:p.links||[]}))
-    .concat(fc.map(c=>({id:"feed-"+(c.id||c.subject), name:c.subject, subject:c.subject, date:String(c.date||c.sent_at||"").slice(0,10), sent:+c.sent, dl:+c.delivered||+c.sent, o:+c.opens||0, c:+c.clicks||0, u:+c.unsubs||0, b:+c.bounces||0, resend:false, seg:"", links:[]})))
+  /* real = bot-filtered, from Mailchimp's report screen; all = the API's count, bots included (app39) */
+  const real=p=>p.opens!=null && p.opens!=="";
+  return own.map(p=>({id:p.id, name:p.mcName||p.title||"", subject:p.title||"", date:p.date||"", sent:+p.sent, dl:+p.delivered||+p.sent, o:+p.opens||0, c:+p.clicks||0, u:+p.unsubs||0, b:+p.bounces||0, resend:!!p.resend || /^resend:/i.test(p.mcName||""), seg:p.segment||"", links:(p.links&&p.links.length?p.links:p.linksAll)||[],
+      real:real(p), oAll:+p.opensAll||0, cAll:+p.clicksAll||0, hasAll:p.opensAll!=null && p.opensAll!=="",
+      oBot:(real(p) && p.opensAll!=null && p.opensAll!=="") ? Math.max(0,(+p.opensAll||0)-(+p.opens||0)) : null, cBot:(real(p) && p.clicksAll!=null && p.clicksAll!=="") ? Math.max(0,(+p.clicksAll||0)-(+p.clicks||0)) : null}))
+    .concat(fc.map(c=>({id:"feed-"+(c.id||c.subject), name:c.subject, subject:c.subject, date:String(c.date||c.sent_at||"").slice(0,10), sent:+c.sent, dl:+c.delivered||+c.sent, o:+c.opens||0, c:+c.clicks||0, u:+c.unsubs||0, b:+c.bounces||0, resend:false, seg:"", links:[], real:true, oBot:null, cBot:null})))
     .map(x=>Object.assign(x,{topic:mcTopic(x.name+" "+x.subject), or:x.dl?x.o/x.dl:0, cr:x.dl?x.c/x.dl:0}))
     .sort((a,b)=>String(b.date).localeCompare(String(a.date)));
 }
@@ -311,7 +315,7 @@ function rsSrc(k){
   const li=typeof liLive==="function" && liLive(), lr=typeof liRun==="function"?liRun():null, yt=feed("youtube");
   const S_={
     mm:{a:"hand", t:"Typed in from Higher Logic's mailing report (Record Stats). Higher Logic has no way for MISMO Media to read it by itself.", w:ed&&edStats(ed).asOf?"numbers as of "+String(edStats(ed).asOf).split(",")[0]:""},
-    mc:(typeof mcLive==="function" && mcLive())?{a:"auto", t:"Read from Mailchimp every 6 hours.", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
+    mc:(typeof mcLive==="function" && mcLive())?{a:"mix", t:"Sends, deliveries, bounces, unsubscribes and the counts with bots are read from Mailchimp every 6 hours; the real (bot-filtered) opens and clicks come from Mailchimp's report screen"+(mcNeedsReal().length?" ("+mcNeedsReal().length+" send"+(mcNeedsReal().length===1?"":"s")+" waiting)":"")+".", w:ago(mcRun().lastOk)}:{a:"hand", t:"From the Mailchimp campaigns export, dropped into Bring In the Numbers"+((typeof mcRun==="function" && mcRun() && mcRun().waiting)?" (the automatic read starts once the Mailchimp API key is saved).":"."), w:mcL?"latest send logged "+fS(mcL):""},
     web:{a:"auto", t:"Counted by Cloudflare every night, plus today so far.", w:typeof wtUpdated==="function"&&wtUpdated()?"last "+wtUpdated():""},
     li:li?{a:"auto", t:"Read from MISMO's LinkedIn page every 3 hours.", w:lr?ago(lr.lastOk):""}:{a:"hand", t:"From the LinkedIn page analytics export (the automatic read isn't running).", w:lr&&lr.lastOk?"last read "+wtStamp(lr.lastOk):""},
     mu:MU_PAUSED.spotify?{a:"auto", t:"YouTube views every morning; MISMO's LinkedIn Live numbers every 3 hours.", w:yt&&yt.updated?ago(yt.updated):""}:{a:"mix", t:"YouTube views every morning and LinkedIn every 3 hours by themselves; Spotify plays are typed in.", w:yt&&yt.updated?ago(yt.updated):""},
@@ -344,7 +348,12 @@ function rsCtx(){
   x.st=x.ed?edStats(x.ed):{}; x.c=statsCalc(x.st); x.md=mmDetail(x.st);
   x.mc=mcSends(); x.yr=x.pn; x.mcY=x.mc.filter(m=>rsIn(m.date)); x.mcO=x.mcY.filter(m=>!m.resend);
   const sum=x.sum=(a,k)=>a.reduce((n,m)=>n+(+m[k]||0),0);
-  x.mcOpen=sum(x.mcO,"dl")?sum(x.mcO,"o")/sum(x.mcO,"dl"):0; x.mcClick=sum(x.mcO,"dl")?sum(x.mcO,"c")/sum(x.mcO,"dl"):0;
+  /* rates count only sends with their real (bot-filtered) numbers in; bots are counted where both are known */
+  x.mcR=x.mcO.filter(m=>m.real); x.mcOpen=sum(x.mcR,"dl")?sum(x.mcR,"o")/sum(x.mcR,"dl"):0; x.mcClick=sum(x.mcR,"dl")?sum(x.mcR,"c")/sum(x.mcR,"dl"):0;
+  x.mcB=x.mcO.filter(m=>m.oBot!=null); x.mcBotO=sum(x.mcB,"oBot"); x.mcBotC=x.mcB.reduce((n,m)=>n+(+m.cBot||0),0);
+  x.mcOpenAll=sum(x.mcB,"dl")?sum(x.mcB,"oAll")/sum(x.mcB,"dl"):0; x.mcClickAll=sum(x.mcB,"dl")?sum(x.mcB,"cAll")/sum(x.mcB,"dl"):0;
+  x.mcOpenRealB=sum(x.mcB,"dl")?sum(x.mcB,"o")/sum(x.mcB,"dl"):0; x.mcClickRealB=sum(x.mcB,"dl")?sum(x.mcB,"c")/sum(x.mcB,"dl"):0;
+  x.mcWait=x.mcY.filter(m=>!m.real);
   x.li=vals("pieces").filter(p=>p.channel==="linkedin" && +p.impressions && !liIsDay(p) && rsIn(p.date));
   /* the page's daily totals from the export's daily sheet (every post together, one row a day) */
   x.liDays=vals("pieces").filter(p=>p.channel==="linkedin" && liIsDay(p) && p.date).sort((a,b)=>a.date.localeCompare(b.date));
@@ -408,6 +417,20 @@ function rsDMM(x){
     (hist?'<div class="rs-box rs-hist"><h3>Every Edition</h3><div class="tw"><table class="t"><thead><tr><th>Edition</th><th class="n">Sent</th><th class="n">Delivered</th><th class="n">Open Rate</th><th class="n">Click to Open</th><th class="n">Unsubscribes</th></tr></thead><tbody>'+hist+'</tbody></table></div><p class="rs-note">Axios never shared its numbers, so the record starts with November 2026.</p></div>':'')+
   '</div>';
 }
+/* Real people versus bots (Jonna, Nov 28, 2026): Mailchimp's own count includes bot opens and link-scanner clicks;
+   its report screen leaves them out. Side by side, with MISMO Matters (Higher Logic) for comparison. */
+function rsMcBots(x){
+  if(!x.mcB.length) return x.mcWait.length?'<div class="rs-box"><h3>Real People and Bots</h3><p class="rs-note">'+x.mcWait.length+' send'+(x.mcWait.length===1?' is':'s are')+' waiting for the bot-filtered opens and clicks from Mailchimp\'s report screen.</p></div>':'';
+  const mm=x.ed?statsCalc(edStats(x.ed)):null;
+  const bar=(l,v,c)=>({l,v:Math.round(v*1000)/10,c});
+  const pctFmt=v=>v.toFixed(1)+"%";
+  return '<div class="rs-box rs-bots"><h3>Real People and Bots</h3>'+
+    rsKpis([{v:rsN(x.mcBotO),k:"Bot Opens Left Out",s:"across "+x.mcB.length+" first send"+(x.mcB.length===1?"":"s")},{v:rsN(x.mcBotC),k:"Bot Clicks Left Out",s:"link scanners, mostly"},
+      {v:pct(x.mcOpenRealB),k:"Open Rate, Real",s:pct(x.mcOpenAll)+" counting bots"},{v:pct(x.mcClickRealB),k:"Click Rate, Real",s:pct(x.mcClickAll)+" counting bots"}])+
+    '<div class="rs-g2"><div><h4 class="rs-h4">Open Rate</h4>'+hbars([bar("Mailchimp, counting bots",x.mcOpenAll,"--c5"),bar("Mailchimp, real people",x.mcOpenRealB,"--c4")].concat(mm&&mm.dl?[bar("MISMO Matters, "+monthName(x.ed.month),mm.openRate,"--c1")]:[]),pctFmt)+'</div>'+
+    '<div><h4 class="rs-h4">Click Rate</h4>'+hbars([bar("Mailchimp, counting bots",x.mcClickAll,"--c5"),bar("Mailchimp, real people",x.mcClickRealB,"--c4")].concat(mm&&mm.dl?[bar("MISMO Matters, "+monthName(x.ed.month),mm.ctr,"--c1")]:[]),pctFmt)+'</div></div>'+
+    '<p class="rs-note">Mailchimp\'s own count includes opens and clicks from bots and email security scanners; its report screen leaves them out, and so do the real numbers here. Counted only where both are in ('+x.mcB.length+' first send'+(x.mcB.length===1?'':'s')+' '+esc(rsPerIn())+'). MISMO Matters is Higher Logic\'s count for the edition.'+(x.mcWait.length?' '+x.mcWait.length+' send'+(x.mcWait.length===1?' is':'s are')+' still waiting for the real numbers.':'')+'</p></div>';
+}
 function rsDMC(x){
   const {mc,mcY,mcO,yr,sum,mcOpen,mcClick}=x;
   if(!mc.length) return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp</h2></div><div class="empty">No Mailchimp sends logged yet. Drop the Mailchimp campaigns export in Bring In the Numbers.</div></div>';
@@ -417,15 +440,17 @@ function rsDMC(x){
   const topL=Object.entries(lk).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l,v,c:"--c4"}));
   if(!mcY.length) return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp · '+esc(yr)+'</h2></div><div class="empty">No Mailchimp sends '+esc(rsPerIn())+'. The latest went out '+esc(rsDY(mc[0].date||T()))+'.</div></div>';
   const shown=RS.mcAll?mcY:mcY.slice(0,12);
-  const rows=shown.map(m=>'<tr><td class="nw">'+esc(fS(m.date))+'</td><td><b>'+esc(m.name.replace(/^Resend:\s*/i,""))+'</b>'+(m.resend?' <span class="rs-tag">Resend</span>':'')+'<small class="t2 rs-subj">'+esc(m.subject)+'</small></td><td class="n">'+rsN(m.dl)+'</td><td class="n">'+pct(m.or)+'</td><td class="n">'+pct(m.cr)+'</td><td class="n">'+rsN(m.u)+'</td></tr>').join("");
+  const bot=v=>v==null?'<span class="t2">—</span>':rsN(v);
+  const rows=shown.map(m=>'<tr><td class="nw">'+esc(fS(m.date))+'</td><td><b>'+esc(m.name.replace(/^Resend:\s*/i,""))+'</b>'+(m.resend?' <span class="rs-tag">Resend</span>':'')+(m.real?'':' <span class="rs-tag rs-wait" title="Bring in the bot-filtered opens and clicks from Mailchimp\'s report screen">Real Numbers Due</span>')+'<small class="t2 rs-subj">'+esc(m.subject)+'</small></td><td class="n">'+rsN(m.dl)+'</td><td class="n">'+(m.real?pct(m.or):'—')+'</td><td class="n">'+(m.real?pct(m.cr):'—')+'</td><td class="n">'+bot(m.oBot)+'</td><td class="n">'+bot(m.cBot)+'</td><td class="n">'+rsN(m.u)+'</td></tr>').join("");
   return '<div class="card rs-sec" id="rs-mc"><div class="ch"><h2>Mailchimp · '+esc(yr)+'</h2><span class="note">'+mcO.length+' sends and '+(mcY.length-mcO.length)+' resends to people who didn\'t open the first time</span></div>'+
     rsKpis([{v:rsN(mcY.length),k:"Sends",s:mcO.length+" originals · "+(mcY.length-mcO.length)+" resends"},{v:rsN(sum(mcY,"dl")),k:"Delivered",s:pct(sum(mcY,"sent")?sum(mcY,"dl")/sum(mcY,"sent"):0)+" of sent"},
-      {v:pct(mcOpen),k:"Open Rate",s:"first sends, all together",tip:"Opens divided by deliveries across every original send "+rsPerIn()},{v:pct(mcClick),k:"Click Rate",s:"first sends, all together"},
+      {v:pct(mcOpen),k:"Open Rate",s:"real people, first sends",tip:"Bot-filtered opens (Mailchimp's report screen) divided by deliveries across every original send "+rsPerIn()},{v:pct(mcClick),k:"Click Rate",s:"real people, first sends"},
       {v:rsN(sum(mcY,"u")),k:"Unsubscribes",s:pct(sum(mcY,"dl")?sum(mcY,"u")/sum(mcY,"dl"):0)+" of delivered"},{v:pct(sum(mcY,"sent")?sum(mcY,"b")/sum(mcY,"sent"):0),k:"Bounce Rate",s:rsN(sum(mcY,"b"))+" bounced"}])+
-    '<div class="rs-box"><h3>Open Rate for Every Send</h3>'+mcChart(mcY)+'</div>'+
+    rsMcBots(x)+
+    '<div class="rs-box"><h3>Open Rate for Every Send</h3>'+mcChart(mcY.filter(m=>m.real))+'</div>'+
     '<div class="rs-g2"><div class="rs-box"><h3>By Topic</h3><div class="tw"><table class="t"><thead><tr><th>Topic</th><th class="n" title="original sends, plus resends to people who didn&rsquo;t open">Sends</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th></tr></thead><tbody>'+tRows+'</tbody></table></div></div>'+
       '<div class="rs-box"><h3>Most-Clicked Links</h3>'+(topL.length?hbars(topL,v=>v+" clicks"):'<div class="empty sm">No link clicks logged.</div>')+'</div></div>'+
-    '<div class="rs-box rs-hist"><h3>Every Send</h3><div class="tw"><table class="t"><thead><tr><th>Sent</th><th>Campaign</th><th class="n">Delivered</th><th class="n">Open</th><th class="n">Click</th><th class="n">Unsubs</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
+    '<div class="rs-box rs-hist"><h3>Every Send</h3><div class="tw"><table class="t"><thead><tr><th>Sent</th><th>Campaign</th><th class="n">Delivered</th><th class="n" title="Real people: bot-filtered, as on Mailchimp\'s report screen">Open</th><th class="n" title="Real people: bot-filtered">Click</th><th class="n" title="Opens Mailchimp\'s count includes that came from bots and scanners">Bot Opens</th><th class="n" title="Clicks from bots and link scanners">Bot Clicks</th><th class="n">Unsubs</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+
       (mcY.length>12?'<div class="rs-more"><button class="btn sm" type="button" id="rs-mcall">'+(RS.mcAll?"Show the Latest 12":"Show All "+mcY.length)+'</button></div>':'')+'</div>'+
   '</div>';
 }
@@ -509,7 +534,7 @@ const RS_FEEDS=[["youtube","YouTube"],["linkedin","LinkedIn"],["matters","MISMO 
 function rsFeedOn(k){ return k==="linkedin" ? (typeof liLive==="function" && liLive()) : k==="mailchimp" ? ((typeof mcLive==="function" && mcLive()) || !!feed(k)) : !!feed(k); }
 function rsFeedSay(k){
   if(k==="linkedin"){ const r=typeof liRun==="function"?liRun():null; return rsFeedOn(k)?"Automatic, every 3 hours"+(r&&r.lastOk?" · last "+wtStamp(r.lastOk):""):"Not reading right now: drop the export by hand"; }
-  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic, every 6 hours · last "+wtStamp(mcRun().lastOk);
+  if(k==="mailchimp" && typeof mcLive==="function" && mcLive()) return "Automatic every 6 hours, except the real (bot-filtered) opens and clicks · last "+wtStamp(mcRun().lastOk);
   if(feed(k)) return "Automatic, every morning · last "+feedAge(k);
   return k==="matters"?"By hand: Record Stats from Higher Logic's report":k==="mailchimp"?"By hand: drop the campaigns export":"By hand";
 }
@@ -557,9 +582,9 @@ function rsCards(x){
     rsCard("mm",{eye:ed?"MISMO Matters · "+monthName(ed.month):"MISMO Matters", color:"--c1", v:ed?pct(c.openRate):"—", vk:ed?"opened it":x.edsAll.length?((rsRange()[1]&&rsRange()[1]<rsMMStart())?"numbers start "+rsDY(rsMMStart()):"no edition "+rsPerIn()):"from November on",
       viz:ed?rsMini([{l:"Delivered",v:c.dl,c:"--c1"},{l:"Opened",v:c.o,c:"--c3"},{l:"Clicked",v:c.c,c:"--c2"}]):"", none:x.edsAll.length?"Pick another period to see an edition":"Record the November stats on the MISMO Matters page",
       rows:ed?[["Sent to",rsN(c.r)],["Click to open",pct(c.cto)],["Unsubscribes",rsN(c.u)]]:[], more:"Waves, delivery, links and every edition"}),
-    rsCard("mc",{eye:"Mailchimp · "+x.yr, color:"--c4", v:mcO.length?pct(x.mcOpen):"—", vk:"open rate, first sends",
+    rsCard("mc",{eye:"Mailchimp · "+x.yr, color:"--c4", v:x.mcR.length?pct(x.mcOpen):"—", vk:"open rate, real people",
       viz:rsSpark(mcSpark,"--c4"), none:mcY.length?"Open rate over time shows after two larger sends":x.mc.length?"No sends "+rsPerIn():"No sends logged yet",
-      rows:[["Sends",mcO.length+(mcY.length-mcO.length?' + '+(mcY.length-mcO.length)+' resends':'')],["Delivered",rsN(sum(mcY,"dl"))],["Unsubscribes",rsN(sum(mcY,"u"))]], more:"Every send, topics and top links"}),
+      rows:[["Sends",mcO.length+(mcY.length-mcO.length?' + '+(mcY.length-mcO.length)+' resends':'')],["Delivered",rsN(sum(mcY,"dl"))],x.mcB.length?["Bot opens left out",rsN(x.mcBotO)+' <small class="t2">'+pct(x.mcOpenAll)+' with bots</small>']:["Unsubscribes",rsN(sum(mcY,"u"))]], more:"Every send, real people and bots, top links"}),
     rsCard("web",{eye:"Website · www.mismo.org", color:"--c1", v:x.wt.length?rsN(x.wtVisits):"—", vk:x.wt.length?"visits, "+x.pt.charAt(0).toLowerCase()+x.pt.slice(1):"counting from Nov 20, 2026",
       viz:rsSpark(x.wt.map(d=>+d.visits||0),"--c1",true), none:x.wt.length?"A picture of each day shows from the second day":wtDays().length?"No counts "+rsPerIn()+" (Cloudflare starts Nov 20, 2026)":"The first nightly count arrives Nov 21",
       rows:[(()=>{ const l=x.wt[x.wt.length-1]; return l&&l.partial?["Today so far",rsN(l.visits)+' <small class="t2">as of '+esc(wtTime(l.pulledAt))+'</small>']:["Page views",rsN(x.wtViews)]; })(),["Pages per visit",x.wtVisits?(x.wtViews/x.wtVisits).toFixed(1):"—"],["Top page",top?esc(top.k||"/"):"—"],["Updated",(typeof wtUpdated==="function"&&wtUpdated())?esc(wtUpdated()):"—"]], more:"Each day, top pages, sources and devices"}),
